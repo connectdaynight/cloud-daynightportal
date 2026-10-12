@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#FFFDF8">
+  <title>Admin Dashboard · Day Night Media</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,600;1,500;1,600&display=swap">
+  <style>
+    /* ==========================================================================
+       DAY NIGHT MEDIA - FULL PAGE ADMIN DASHBOARD SYSTEM
+       Theme: Preserved signature milk-white luxury palette with desktop-grade layout
+       ========================================================================== */
+    :root {
+      --bg: #FFFDF8;
+      --card: #FFFFFF;
+      --line: #EEE8DD;
+      --soft: #F7F3EC;
+      --ink: #1D2433;
+      --navy: #12294A;
+      --mute: #7A7468;
+      --gold: #B8935A;
+      --red: #E53225;
+      --rose: #E8457A;
+      --teal: #17A598;
+      --amber: #F2992E;
+      --violet: #6C5CE7;
+      --blue: #2F7DF6;
+      --green: #16884D;
+      --f: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --serif: 'Cormorant Garamond', Georgia, serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--f);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+
+    /* Top Navigation Header */
+    .admin-header {
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      box-shadow: 0 2px 12px rgba(29, 36, 51, 0.03);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--red);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 12px rgba(229, 50, 37, 0.25);
+    }
+    .brand-mark svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 2.2; }
+
+    .brand-title b {
+      display: block;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--navy);
+      letter-spacing: -0.01em;
+    }
+    .brand-title span {
+      display: block;
+      font-size: 11px;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+    }
+    .status-dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .status-dot.offline { background: var(--red); }
+
+    .btn-portal {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+      transition: all 0.15s ease;
+    }
+    .btn-portal:hover { border-color: var(--navy); background: var(--soft); }
+
+    /* Main Layout */
+    .admin-layout {
+      display: flex;
+      flex: 1;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 28px;
+      gap: 28px;
+    }
+
+    /* Sidebar Navigation */
+    .admin-sidebar {
+      width: 240px;
+      flex: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--mute);
+      border: 1px solid transparent;
+      background: none;
+      text-align: left;
+      width: 100%;
+      transition: all 0.15s ease;
+    }
+    .nav-item:hover { color: var(--navy); background: var(--soft); }
+    .nav-item.active {
+      color: var(--navy);
+      background: var(--card);
+      border-color: var(--line);
+      box-shadow: 0 4px 14px rgba(29, 36, 51, 0.04);
+    }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+    /* Content Area */
+    .admin-content {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* Stats Overview Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: 0 4px 16px rgba(29, 36, 51, 0.03);
+    }
+    .stat-card small { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--mute); letter-spacing: 0.05em; }
+    .stat-card b { font-size: 28px; font-weight: 700; color: var(--navy); line-height: 1.1; }
+    .stat-card span { font-size: 11px; color: var(--green); font-weight: 500; }
+
+    /* Action Bar */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .action-bar h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-input {
+      padding: 10px 16px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 999px;
+      font-size: 13px;
+      width: 240px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--navy); }
+
+    .btn-primary {
+      background: var(--navy);
+      color: #fff;
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 18px rgba(18, 41, 74, 0.18);
+      transition: all 0.15s ease;
+    }
+    .btn-primary:hover { background: #1C3A63; }
+
+    /* Reels Grid Desktop */
+    .reels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .reel-box {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 4px 14px rgba(29, 36, 51, 0.04);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .reel-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(29, 36, 51, 0.08);
+    }
+
+    .reel-thumb-wrap {
+      aspect-ratio: 9/16;
+      border-radius: 14px;
+      background: radial-gradient(120% 80% at 50% 30%, #B8935A 0%, #12294A 100%);
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      cursor: pointer;
+    }
+    .reel-thumb-wrap img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .reel-thumb-wrap .dur {
+      position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.45);
+      padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600;
+    }
+    .reel-thumb-wrap .play-badge {
+      width: 44px; height: 44px; border-radius: 50%; background: #fff; color: var(--navy);
+      display: grid; place-items: center; box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    }
+    .reel-thumb-wrap .zari {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 6px;
+      background: repeating-linear-gradient(90deg, #E9C77B 0 6px, #B8935A 6px 9px, #F6E3B4 9px 12px);
+    }
+
+    .reel-details h4 {
+      font-size: 13px; font-weight: 600; color: var(--navy); line-height: 1.3;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .reel-details p {
+      font-size: 11px; color: var(--mute); margin-top: 2px;
+    }
+    .reel-meta-row {
+      display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--mute);
+    }
+
+    .badge-status {
+      font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 6px;
+    }
+    .badge-status.approved { background: rgba(22, 136, 77, 0.12); color: var(--green); }
+    .badge-status.review { background: rgba(242, 153, 46, 0.15); color: var(--amber); }
+    .badge-status.draft { background: rgba(122, 116, 104, 0.15); color: var(--mute); }
+    .badge-status.hidden { background: rgba(229, 50, 37, 0.12); color: var(--red); }
+
+    .reel-box-actions {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-top: 4px; border-top: 1px solid var(--line);
+    }
+    .reel-box-actions button {
+      border: 0; background: none; font-size: 11px; font-weight: 600; padding: 4px 6px; border-radius: 6px;
+    }
+    .reel-box-actions button:hover { background: var(--soft); }
+    .action-edit { color: var(--blue); }
+    .action-hide { color: var(--amber); }
+    .action-delete { color: var(--red); }
+
+    /* Client Cards Grid */
+    .clients-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 18px;
+    }
+
+    .client-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 4px 16px rgba(29, 36, 51, 0.03);
+    }
+
+    .client-card-head {
+      display: flex; align-items: center; gap: 14px;
+    }
+    .client-logo-box {
+      width: 70px; height: 42px; border-radius: 12px; border: 1px solid var(--line);
+      display: grid; place-items: center; padding: 6px; background: #fff; flex: none;
+    }
+    .client-logo-box img { max-width: 100%; max-height: 100%; }
+
+    .client-info h3 { font-size: 16px; font-weight: 700; color: var(--navy); }
+    .client-info p { font-size: 11px; color: var(--mute); }
+
+    .client-url-box {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      word-break: break-all;
+    }
+    .client-url-box button {
+      border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; flex: none;
+    }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-pill {
+      font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 999px;
+      background: var(--soft); color: var(--mute);
+    }
+
+    /* Modal Sheet Backdrop */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(29, 36, 51, 0.45); backdrop-filter: blur(4px);
+      z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-window {
+      background: var(--card); border-radius: 24px; padding: 28px; width: 100%; max-width: 540px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2); max-height: 90vh; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .modal-window h3 { font-size: 20px; color: var(--navy); font-weight: 700; }
+
+    /* Form Fields */
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 11px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 11px 14px; border: 1px solid var(--line); background: var(--bg); border-radius: 12px;
+      font-size: 13px; width: 100%; outline: none;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--navy); }
+    .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Floating Toast Alerts */
+    .toast-tray {
+      position: fixed; top: 20px; right: 28px; z-index: 100; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+    }
+    .toast-box {
+      padding: 12px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #fff;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.18); pointer-events: auto; animation: toastIn 0.3s ease;
+    }
+    @keyframes toastIn { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .toast-box.success { background: var(--green); }
+    .toast-box.error { background: var(--red); }
+    .toast-box.info { background: var(--navy); }
+
+    /* Video Player Modal */
+    .video-dialog-wrap {
+      display: flex; flex-direction: column; gap: 14px; align-items: center; width: 100%; max-width: 360px;
+    }
+    .video-viewport {
+      width: 100%; aspect-ratio: 9/16; border-radius: 20px; overflow: hidden; background: #000;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+    }
+    .video-viewport iframe { width: 100%; height: 100%; border: 0; }
+
+    /* Responsive Design */
+    @media (max-width: 900px) {
+      .admin-layout { flex-direction: column; padding: 16px; }
+      .admin-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 6px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toast-tray" id="toasts"></div>
+
+  <!-- Top Navigation Header -->
+  <header class="admin-header">
+    <div class="brand-group">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="brand-title">
+        <b id="hdr-agency">Day Night Media</b>
+        <span>Executive Production Control</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="status-pill">
+        <span class="status-dot" id="hdr-dot"></span>
+        <span id="hdr-status">Checking Connection...</span>
+      </div>
+      <a href="/" target="_blank" class="btn-portal">↗ View Client Portal</a>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <div class="admin-layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar">
+      <button class="nav-item active" data-tab="dashboard"><span class="icon">📊</span> Overview</button>
+      <button class="nav-item" data-tab="reels"><span class="icon">🎬</span> Reels &amp; Videos</button>
+      <button class="nav-item" data-tab="clients"><span class="icon">🏢</span> Clients &amp; URLs</button>
+      <button class="nav-item" data-tab="folders"><span class="icon">📁</span> Drive Folders</button>
+      <button class="nav-item" data-tab="engine"><span class="icon">⚙️</span> Google Drive Engine</button>
+      <button class="nav-item" data-tab="branding"><span class="icon">🎨</span> Agency Branding</button>
+    </aside>
+
+    <!-- Content Workspace -->
+    <main class="admin-content" id="workspace"></main>
+
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    const GAS_URL = localStorage.getItem('dn_gas_url') || 'https://script.google.com/macros/s/AKfycbxo--i9HaTv4ejd6iYFweq3W-a-I3zzqp0rI2ACMjY5cyJ26-yh3byNRn8u0IrpRkdt/exec';
+    const PASSKEY = localStorage.getItem('dn_admin_passkey') || 'DN@2026';
+
+    let DATA = {
+      settings: { agency: "Day Night Media", agencySub: "Production Company", slogan: "Creating impact that brands remember" },
+      clients: [
+        {
+          id: "tcs", slug: "tcs", name: "The Chennai Silks", code: "4821",
+          tagline: "Let the celebrations begin!", accent: "celebrations", animStyle: "confetti",
+          branches: ["T. Nagar", "Velachery", "Chromepet", "Thiruvallur"],
+          albums: ["Diwali 2026", "Bridal Edit", "Festive Specials"]
+        }
+      ],
+      reels: []
+    };
+
+    let activeTab = 'dashboard';
+    let searchQuery = '';
+    const workspace = document.getElementById('workspace');
+    const toastTray = document.getElementById('toasts');
+
+    function toast(msg, type = 'info') {
+      const el = document.createElement('div');
+      el.className = 'toast-box ' + type;
+      el.textContent = msg;
+      toastTray.appendChild(el);
+      setTimeout(() => el.remove(), 2800);
+    }
+
+    function modal(html, onMount) {
+      document.querySelector('.modal-backdrop')?.remove();
+      const wrap = document.createElement('div');
+      wrap.className = 'modal-backdrop';
+      wrap.innerHTML = `<div class="modal-window">${html}</div>`;
+      wrap.onclick = e => { if (e.target === wrap || e.target.closest('[data-close]')) wrap.remove(); };
+      document.body.appendChild(wrap);
+      onMount && onMount(wrap);
+      return wrap;
+    }
+
+    async function api(action, payload = {}) {
+      payload.action = action;
+      payload.passkey = PASSKEY;
+      const res = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    }
+
+    async function sync() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getData`);
+        const json = await res.json();
+        if (json.success && json.data) {
+          DATA = json.data;
+          document.getElementById('hdr-dot').className = 'status-dot online';
+          document.getElementById('hdr-status').textContent = 'Google Drive Connected';
+          document.getElementById('hdr-agency').textContent = DATA.settings?.agency || 'Day Night Media';
+          render();
+        }
+      } catch(e) {
+        document.getElementById('hdr-dot').className = 'status-dot offline';
+        document.getElementById('hdr-status').textContent = 'Drive Engine Offline';
+      }
+    }
+
+    function render() {
+      if (activeTab === 'dashboard') renderDashboard();
+      else if (activeTab === 'reels') renderReels();
+      else if (activeTab === 'clients') renderClients();
+      else if (activeTab === 'folders') renderFolders();
+      else if (activeTab === 'engine') renderEngine();
+      else if (activeTab === 'branding') renderBranding();
+    }
+
+    // TAB 1: OVERVIEW DASHBOARD
+    function renderDashboard() {
+      const totalReels = (DATA.reels || []).length;
+      const totalClients = (DATA.clients || []).length;
+      const totalViews = (DATA.reels || []).reduce((acc, r) => acc + (r.views || 0), 0);
+      const totalDl = (DATA.reels || []).reduce((acc, r) => acc + (r.downloads || 0), 0);
+
+      workspace.innerHTML = `
+        <div class="stats-grid">
+          <div class="stat-card">
+            <small>Total Delivered Reels</small>
+            <b>${totalReels}</b>
+            <span>Across all client stores</span>
+          </div>
+          <div class="stat-card">
+            <small>Active Clients</small>
+            <b>${totalClients}</b>
+            <span>With dedicated URLs</span>
+          </div>
+          <div class="stat-card">
+            <small>Total Client Views</small>
+            <b>${totalViews}</b>
+            <span>In-app video streams</span>
+          </div>
+          <div class="stat-card">
+            <small>Total Downloads</small>
+            <b>${totalDl}</b>
+            <span>Full HD video files</span>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <h2>Recent Reel Deliveries</h2>
+          <button class="btn-primary" id="btn-quick-upload">+ Upload New Reel</button>
+        </div>
+
+        <div class="reels-grid">
+          ${(DATA.reels || []).slice(-6).reverse().map(r => renderReelCard(r)).join('')}
+        </div>`;
+
+      document.getElementById('btn-quick-upload').onclick = openUploadModal;
+      bindReelActions();
+    }
+
+    // TAB 2: REELS MANAGER
+    function renderReels() {
+      const filtered = (DATA.reels || []).filter(r => {
+        if (!searchQuery) return true;
+        return (r.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || (r.b || '').toLowerCase().includes(searchQuery.toLowerCase());
+      });
+
+      workspace.innerHTML = `
+        <div class="action-bar">
+          <div>
+            <h2>Reels &amp; Video Storage</h2>
+            <p style="font-size:12px;color:var(--mute)">Manage video files in Google Drive, custom thumbnails, visibility, and direct downloads.</p>
+          </div>
+          <div class="action-group">
+            <input type="text" class="search-input" id="search-reels" placeholder="Search reels or branch..." value="${searchQuery}">
+            <button class="btn-primary" id="btn-add-reel">+ Upload Reel</button>
+          </div>
+        </div>
+
+        <div class="reels-grid">
+          ${filtered.length ? filtered.map(r => renderReelCard(r)).join('') : '<p style="grid-column:1/-1;text-align:center;padding:40px;color:var(--mute);">No reels found matching your criteria.</p>'}
+        </div>`;
+
+      document.getElementById('btn-add-reel').onclick = openUploadModal;
+      document.getElementById('search-reels').oninput = e => {
+        searchQuery = e.target.value;
+        renderReels();
+      };
+      bindReelActions();
+    }
+
+    function renderReelCard(r) {
+      const isHidden = r.hidden === true;
+      const clientObj = (DATA.clients || []).find(c => c.id === r.c) || { name: 'Client' };
+      return `
+        <div class="reel-box">
+          <div class="reel-thumb-wrap" data-play="${r.id}">
+            ${r.coverUrl ? `<img src="${r.coverUrl}" alt="">` : ''}
+            ${r.dur ? `<span class="dur">${r.dur}</span>` : ''}
+            <div class="play-badge">▶</div>
+            <div class="zari"></div>
+          </div>
+          <div class="reel-details">
+            <h4>${r.title}</h4>
+            <p>${clientObj.name} · ${r.b || r.album || 'Main'}</p>
+          </div>
+          <div class="reel-meta-row">
+            <span>👁️ ${r.views || 0} · ⬇️ ${r.downloads || 0}</span>
+            <span class="badge-status ${isHidden ? 'hidden' : (r.status || 'approved')}">${isHidden ? 'HIDDEN' : (r.status || 'APPROVED')}</span>
+          </div>
+          <div class="reel-box-actions">
+            <button class="action-edit" data-edit="${r.id}">Edit</button>
+            <button class="action-hide" data-hide="${r.id}">${isHidden ? 'Unhide' : 'Hide'}</button>
+            <button class="action-delete" data-del="${r.id}">Delete</button>
+          </div>
+        </div>`;
+    }
+
+    function bindReelActions() {
+      document.querySelectorAll('[data-play]').forEach(b => {
+        b.onclick = () => {
+          const r = DATA.reels.find(x => x.id === b.dataset.play);
+          if (r) openVideoModal(r);
+        };
+      });
+      document.querySelectorAll('[data-edit]').forEach(b => {
+        b.onclick = () => {
+          const r = DATA.reels.find(x => x.id === b.dataset.edit);
+          if (r) openEditModal(r);
+        };
+      });
+      document.querySelectorAll('[data-hide]').forEach(b => {
+        b.onclick = async () => {
+          const r = DATA.reels.find(x => x.id === b.dataset.hide);
+          if (r) {
+            r.hidden = !r.hidden;
+            await api('toggleHideReel', { id: r.id });
+            toast(r.hidden ? 'Reel hidden from client' : 'Reel visible to client', 'info');
+            render();
+          }
+        };
+      });
+      document.querySelectorAll('[data-del]').forEach(b => {
+        b.onclick = async () => {
+          const r = DATA.reels.find(x => x.id === b.dataset.del);
+          if (r && confirm(`Are you sure you want to delete "${r.title}"? This will trash the file in Google Drive.`)) {
+            DATA.reels = DATA.reels.filter(x => x.id !== r.id);
+            await api('deleteReel', { id: r.id });
+            toast('Reel removed from Google Drive & database', 'error');
+            render();
+          }
+        };
+      });
+    }
+
+    // TAB 3: CLIENTS & DEDICATED URLS
+    function renderClients() {
+      workspace.innerHTML = `
+        <div class="action-bar">
+          <div>
+            <h2>Client Profiles &amp; Dedicated URLs</h2>
+            <p style="font-size:12px;color:var(--mute)">Each client gets their own branded link, custom loading animation, and PIN.</p>
+          </div>
+          <button class="btn-primary" id="btn-add-client">+ Add New Client</button>
+        </div>
+
+        <div class="clients-grid">
+          ${(DATA.clients || []).map(c => {
+            const clientUrl = `${location.origin}/?client=${c.slug || c.id}`;
+            const reelCount = (DATA.reels || []).filter(r => r.c === c.id).length;
+            return `
+              <div class="client-card">
+                <div class="client-card-head">
+                  <div class="client-logo-box">${c.logo ? `<img src="${c.logo}" alt="">` : 'Logo'}</div>
+                  <div class="client-info">
+                    <h3>${c.name}</h3>
+                    <p>PIN: <b>${c.code}</b> · ${reelCount} Delivered Reels</p>
+                  </div>
+                </div>
+
+                <div class="client-url-box">
+                  <span>${clientUrl}</span>
+                  <button data-copy="${clientUrl}">Copy Link</button>
+                </div>
+
+                <div>
+                  <small style="font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;">Store Branches</small>
+                  <div class="tag-row" style="margin-top:4px;">
+                    ${(c.branches || ['Main']).map(b => `<span class="tag-pill">${b}</span>`).join('')}
+                  </div>
+                </div>
+
+                <div>
+                  <small style="font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;">Albums / Campaigns</small>
+                  <div class="tag-row" style="margin-top:4px;">
+                    ${(c.albums || ['General']).map(a => `<span class="tag-pill">${a}</span>`).join('')}
+                  </div>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid var(--line);">
+                  <span style="font-size:11px;color:var(--navy);font-weight:600;">FX: ${c.animStyle || 'confetti'}</span>
+                  <button class="btn-portal" data-edit-client="${c.id}">Edit Client</button>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`;
+
+      document.getElementById('btn-add-client').onclick = () => openClientModal(null);
+      document.querySelectorAll('[data-copy]').forEach(b => {
+        b.onclick = () => {
+          navigator.clipboard.writeText(b.dataset.copy);
+          toast('Client URL copied to clipboard!', 'success');
+        };
+      });
+      document.querySelectorAll('[data-edit-client]').forEach(b => {
+        b.onclick = () => {
+          const c = DATA.clients.find(x => x.id === b.dataset.editClient);
+          openClientModal(c);
+        };
+      });
+    }
+
+    // TAB 4: DRIVE FOLDERS
+    function renderFolders() {
+      workspace.innerHTML = `
+        <div class="action-bar">
+          <div>
+            <h2>Google Drive Folders &amp; Collections</h2>
+            <p style="font-size:12px;color:var(--mute)">Structured subfolders in Google Drive: <code>Day Night Media Portal / Reels / {Client} / {Folder}</code>.</p>
+          </div>
+        </div>
+
+        <div class="clients-grid">
+          ${(DATA.clients || []).map(c => `
+            <div class="client-card">
+              <h3>${c.name} Folders</h3>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                ${(c.albums || []).map(a => `
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--soft);border-radius:12px;">
+                    <span>📁 ${a}</span>
+                    <small>${(DATA.reels || []).filter(r => r.c === c.id && (r.album === a || r.b === a)).length} files</small>
+                  </div>`).join('')}
+              </div>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    // TAB 5: ENGINE CONFIG
+    function renderEngine() {
+      workspace.innerHTML = `
+        <div class="stat-card" style="max-width:600px;">
+          <h3>Google Drive Engine &amp; API</h3>
+          <p style="font-size:12px;color:var(--mute)">Connects your Google Apps Script Web App for automated video uploads and storage.</p>
+          
+          <div class="form-group" style="margin-top:14px;">
+            <label>Apps Script Web App URL</label>
+            <input id="cfg-gas" value="${GAS_URL}">
+          </div>
+
+          <div class="form-group">
+            <label>Admin Passkey</label>
+            <input id="cfg-pass" type="password" value="${PASSKEY}">
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:12px;">
+            <button class="btn-primary" id="btn-save-cfg">Save &amp; Test Connection</button>
+            <button class="btn-portal" id="btn-force-sync">Force Database Sync</button>
+          </div>
+        </div>`;
+
+      document.getElementById('btn-save-cfg').onclick = () => {
+        const u = document.getElementById('cfg-gas').value.trim();
+        const p = document.getElementById('cfg-pass').value.trim();
+        localStorage.setItem('dn_gas_url', u);
+        localStorage.setItem('dn_admin_passkey', p);
+        toast('Testing connection...', 'info');
+        sync();
+      };
+      document.getElementById('btn-force-sync').onclick = () => {
+        toast('Syncing with Google Drive...', 'info');
+        sync();
+      };
+    }
+
+    // TAB 6: BRANDING
+    function renderBranding() {
+      const s = DATA.settings || {};
+      workspace.innerHTML = `
+        <div class="stat-card" style="max-width:600px;">
+          <h3>Agency Front Page Branding</h3>
+          
+          <div class="form-group" style="margin-top:14px;">
+            <label>Agency Name</label>
+            <input id="br-name" value="${s.agency || 'Day Night Media'}">
+          </div>
+
+          <div class="form-group">
+            <label>Subtitle</label>
+            <input id="br-sub" value="${s.agencySub || 'Production Company'}">
+          </div>
+
+          <div class="form-group">
+            <label>Tagline</label>
+            <input id="br-slogan" value="${s.slogan || 'Creating impact that brands remember'}">
+          </div>
+
+          <button class="btn-primary" style="margin-top:12px;width:fit-content;" id="btn-save-branding">Save Branding</button>
+        </div>`;
+
+      document.getElementById('btn-save-branding').onclick = async () => {
+        DATA.settings = {
+          agency: document.getElementById('br-name').value.trim(),
+          agencySub: document.getElementById('br-sub').value.trim(),
+          slogan: document.getElementById('br-slogan').value.trim()
+        };
+        await api('saveSettings', { settings: DATA.settings });
+        toast('Branding saved successfully!', 'success');
+        sync();
+      };
+    }
+
+    // MODAL: UPLOAD / ADD REEL
+    function openUploadModal() {
+      const clients = DATA.clients || [];
+      const firstClient = clients[0] || { branches: ['Main'], albums: ['General'] };
+
+      modal(`
+        <h3>Upload / Publish Reel</h3>
+        <div class="form-group">
+          <label>Reel Title</label>
+          <input id="f-title" placeholder="e.g. Diwali Silk Collection Launch">
+        </div>
+
+        <div class="form-row2">
+          <div class="form-group">
+            <label>Client</label>
+            <select id="f-client">
+              ${clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Branch</label>
+            <select id="f-branch">
+              ${(firstClient.branches || ['Main']).map(b => `<option value="${b}">${b}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row2">
+          <div class="form-group">
+            <label>Album / Campaign</label>
+            <select id="f-album">
+              ${(firstClient.albums || ['General']).map(a => `<option value="${a}">${a}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Approval Status</label>
+            <select id="f-status">
+              <option value="approved">Approved</option>
+              <option value="review">In Review</option>
+              <option value="draft">Draft</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Upload MP4 directly to Google Drive</label>
+          <input id="f-file" type="file" accept="video/mp4,video/quicktime,video/webm">
+        </div>
+
+        <div class="form-group">
+          <label>Or Paste Google Drive Video Link</label>
+          <input id="f-url" placeholder="https://drive.google.com/file/d/…/view">
+        </div>
+
+        <div class="form-group">
+          <label>Custom Cover / Thumbnail Image (URL or upload)</label>
+          <input id="f-cover" placeholder="https://…">
+        </div>
+
+        <div class="form-row2">
+          <div class="form-group">
+            <label>Delivered Date</label>
+            <input id="f-date" type="date" value="${new Date().toISOString().slice(0,10)}">
+          </div>
+          <div class="form-group">
+            <label>Duration</label>
+            <input id="f-dur" value="0:30">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+          <button class="btn-portal" data-close>Cancel</button>
+          <button class="btn-primary" id="f-submit">Publish Reel</button>
+        </div>`, sc => {
+        sc.querySelector('#f-submit').onclick = async () => {
+          const title = sc.querySelector('#f-title').value.trim();
+          const clientId = sc.querySelector('#f-client').value;
+          const branch = sc.querySelector('#f-branch').value;
+          const album = sc.querySelector('#f-album').value;
+          const status = sc.querySelector('#f-status').value;
+          const file = sc.querySelector('#f-file').files[0];
+          const url = sc.querySelector('#f-url').value.trim();
+          const coverUrl = sc.querySelector('#f-cover').value.trim();
+          const date = sc.querySelector('#f-date').value;
+          const dur = sc.querySelector('#f-dur').value.trim();
+
+          if (!title) { toast('Please enter a reel title', 'error'); return; }
+
+          if (file) {
+            toast('Uploading MP4 to Google Drive...', 'info');
+            const reader = new FileReader();
+            reader.onload = async () => {
+              const res = await api('uploadVideo', {
+                clientName: DATA.clients.find(c => c.id === clientId)?.name,
+                clientId, branch, album, title, coverUrl, status, date, dur,
+                filename: file.name, mimeType: file.type || 'video/mp4', base64Data: reader.result
+              });
+              if (res.success) {
+                toast('Video saved to Google Drive!', 'success');
+                sc.remove();
+                sync();
+              } else {
+                toast('Upload failed: ' + res.error, 'error');
+              }
+            };
+            reader.readAsDataURL(file);
+          } else if (url) {
+            toast('Registering reel...', 'info');
+            const newReel = {
+              id: 'r' + Date.now().toString(36),
+              c: clientId, y: +date.slice(0,4), m: +date.slice(5,7) - 1, b: branch, album,
+              title, date, url, dur, coverUrl, hidden: false, status, views: 0, downloads: 0, sample: false
+            };
+            await api('addReel', { reel: newReel });
+            toast('Reel published!', 'success');
+            sc.remove();
+            sync();
+          } else {
+            toast('Please choose a file or paste a video link', 'error');
+          }
+        };
+      });
+    }
+
+    // MODAL: EDIT REEL
+    function openEditModal(r) {
+      modal(`
+        <h3>Edit Reel · ${r.title}</h3>
+        <div class="form-group">
+          <label>Title</label>
+          <input id="e-title" value="${r.title}">
+        </div>
+        <div class="form-group">
+          <label>Video Link</label>
+          <input id="e-url" value="${r.url}">
+        </div>
+        <div class="form-group">
+          <label>Cover / Thumbnail URL</label>
+          <input id="e-cover" value="${r.coverUrl || ''}">
+        </div>
+        <div class="form-row2">
+          <div class="form-group">
+            <label>Branch</label>
+            <input id="e-branch" value="${r.b || ''}">
+          </div>
+          <div class="form-group">
+            <label>Album / Campaign</label>
+            <input id="e-album" value="${r.album || ''}">
+          </div>
+        </div>
+        <div class="form-row2">
+          <div class="form-group">
+            <label>Date</label>
+            <input id="e-date" type="date" value="${r.date}">
+          </div>
+          <div class="form-group">
+            <label>Approval Status</label>
+            <select id="e-status">
+              <option value="approved" ${r.status === 'approved' ? 'selected' : ''}>Approved</option>
+              <option value="review" ${r.status === 'review' ? 'selected' : ''}>In Review</option>
+              <option value="draft" ${r.status === 'draft' ? 'selected' : ''}>Draft</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+          <button class="btn-portal" data-close>Cancel</button>
+          <button class="btn-primary" id="e-save">Save Changes</button>
+        </div>`, sc => {
+        sc.querySelector('#e-save').onclick = async () => {
+          r.title = sc.querySelector('#e-title').value.trim();
+          r.url = sc.querySelector('#e-url').value.trim();
+          r.coverUrl = sc.querySelector('#e-cover').value.trim();
+          r.b = sc.querySelector('#e-branch').value.trim();
+          r.album = sc.querySelector('#e-album').value.trim();
+          r.date = sc.querySelector('#e-date').value;
+          r.status = sc.querySelector('#e-status').value;
+          await api('modifyReel', { reel: r });
+          toast('Reel updated successfully', 'success');
+          sc.remove();
+          sync();
+        };
+      });
+    }
+
+    // MODAL: ADD / EDIT CLIENT
+    function openClientModal(c) {
+      const isNew = !c;
+      const client = c || { name: '', slug: '', code: '', tagline: '', accent: '', animStyle: 'confetti', branches: ['Main Store'], albums: ['Highlights'] };
+
+      modal(`
+        <h3>${isNew ? 'Create New Client' : 'Edit Client Profile'}</h3>
+        <div class="form-group">
+          <label>Client Name</label>
+          <input id="cl-name" value="${client.name}" placeholder="e.g. The Chennai Silks">
+        </div>
+        <div class="form-row2">
+          <div class="form-group">
+            <label>Dedicated URL Slug</label>
+            <input id="cl-slug" value="${client.slug || ''}" placeholder="e.g. tcs">
+          </div>
+          <div class="form-group">
+            <label>4-Digit PIN</label>
+            <input id="cl-code" maxlength="4" value="${client.code}" placeholder="4821">
+          </div>
+        </div>
+        <div class="form-row2">
+          <div class="form-group">
+            <label>Loading Animation</label>
+            <select id="cl-anim">
+              <option value="confetti" ${client.animStyle === 'confetti' ? 'selected' : ''}>Confetti Burst</option>
+              <option value="pulse" ${client.animStyle === 'pulse' ? 'selected' : ''}>Mandala Pulse</option>
+              <option value="shimmer" ${client.animStyle === 'shimmer' ? 'selected' : ''}>Editorial Shimmer</option>
+              <option value="rings" ${client.animStyle === 'rings' ? 'selected' : ''}>Concentric Rings</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Rainbow Accent Word</label>
+            <input id="cl-accent" value="${client.accent || ''}" placeholder="celebrations">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Brand Line / Tagline</label>
+          <input id="cl-tag" value="${client.tagline || ''}" placeholder="Let the celebrations begin!">
+        </div>
+        <div class="form-group">
+          <label>Branches (Comma Separated)</label>
+          <input id="cl-branches" value="${(client.branches || []).join(', ')}">
+        </div>
+        <div class="form-group">
+          <label>Albums / Campaigns (Comma Separated)</label>
+          <input id="cl-albums" value="${(client.albums || []).join(', ')}">
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+          <button class="btn-portal" data-close>Cancel</button>
+          <button class="btn-primary" id="cl-submit">Save Client</button>
+        </div>`, sc => {
+        sc.querySelector('#cl-submit').onclick = async () => {
+          const name = sc.querySelector('#cl-name').value.trim();
+          const slug = sc.querySelector('#cl-slug').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+          const code = sc.querySelector('#cl-code').value.trim();
+          const branches = sc.querySelector('#cl-branches').value.split(',').map(x => x.trim()).filter(Boolean);
+          const albums = sc.querySelector('#cl-albums').value.split(',').map(x => x.trim()).filter(Boolean);
+          const animStyle = sc.querySelector('#cl-anim').value;
+          const tagline = sc.querySelector('#cl-tag').value.trim();
+          const accent = sc.querySelector('#cl-accent').value.trim();
+
+          if (!name || !code) { toast('Name and 4-digit code required', 'error'); return; }
+
+          const rec = Object.assign({}, client, {
+            id: client.id || ('c' + Date.now().toString(36)),
+            name, slug: slug || name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+            code, branches, albums, animStyle, tagline, accent
+          });
+
+          await api('saveClient', { client: rec });
+          toast('Client profile saved!', 'success');
+          sc.remove();
+          sync();
+        };
+      });
+    }
+
+    // IN-APP 9:16 VIDEO PLAYER MODAL
+    function openVideoModal(r) {
+      function driveId(u) {
+        if (!u) return null;
+        const m = u.match(/\/d\/([\w-]{15,})/) || u.match(/[?&]id=([\w-]{15,})/) || u.match(/([\w-]{25,})/);
+        return m ? m[1] : null;
+      }
+      const id = driveId(r.url);
+      const embedSrc = id ? `https://drive.google.com/file/d/${id}/preview` : r.url;
+
+      modal(`
+        <div class="video-dialog-wrap">
+          <div style="width:100%;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <h4 style="font-size:16px;color:var(--navy);">${r.title}</h4>
+              <p style="font-size:11px;color:var(--mute);">${r.date} · ${r.b || r.album || 'Reel'}</p>
+            </div>
+            <button class="btn-portal" data-close>Close</button>
+          </div>
+          <div class="video-viewport">
+            <iframe src="${embedSrc}" allow="autoplay; fullscreen" allowfullscreen></iframe>
+          </div>
+          <div style="display:flex;gap:10px;width:100%;">
+            <a href="https://drive.google.com/uc?export=download&id=${id}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;">Direct Download</a>
+            <a href="https://drive.google.com/file/d/${id}/view" target="_blank" class="btn-portal" style="flex:1;justify-content:center;">Drive View</a>
+          </div>
+        </div>`, () => {});
+    }
+
+    // Sidebar Tab Switching
+    document.querySelectorAll('.nav-item').forEach(b => {
+      b.onclick = () => {
+        document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        activeTab = b.dataset.tab;
+        render();
+      };
+    });
+
+    // Initial Load
+    sync();
+
+  })();
+  </script>
+</body>
+</html>

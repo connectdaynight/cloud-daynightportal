@@ -1446,6 +1446,7 @@
           </span>
         </div>
         <div class="menu">
+          <button class="go" id="m-full-panel" style="background:var(--navy);font-size:14px;padding:14px;">🖥️ Open Full Desktop Dashboard</button>
           <button class="ghost" id="m-add">+ Upload Reel / Add Video</button>
           <button class="ghost" id="m-folders">📁 Drive Folders &amp; Albums</button>
           <button class="ghost" id="m-cl">🏢 Client Profiles &amp; Dedicated URLs</button>
@@ -1454,6 +1455,7 @@
           <button class="ghost" id="m-sync">🔄 Synchronize Database Now</button>
         </div>
         <button class="ghost" data-close>Close</button>`, sc => {
+        sc.querySelector('#m-full-panel').onclick = () => { window.location.href = '/admin'; };
         sc.querySelector('#m-add').onclick = openAdd;
         sc.querySelector('#m-folders').onclick = openFolderManager;
         sc.querySelector('#m-cl').onclick = openClients;
@@ -2024,6 +2026,10 @@
     // Check for direct client routing via URL query or hash:
     // e.g. /?client=tcs or /?c=tcs or /#tcs
     const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('admin') === '1' || urlParams.get('admin') === 'true') {
+      window.location.href = '/admin';
+      return;
+    }
     const targetSlug = urlParams.get('client') || urlParams.get('c') || window.location.hash.replace(/^#[/]?/, '').toLowerCase();
 
     if (targetSlug) {
