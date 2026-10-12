@@ -1255,7 +1255,7 @@
 
     // Configuration for Google Apps Script & Admin Mode
     const CONFIG = {
-      gasUrl: localStorage.getItem('dn_gas_url') || '',
+      gasUrl: localStorage.getItem('dn_gas_url') || 'https://script.google.com/macros/s/AKfycbxo--i9HaTv4ejd6iYFweq3W-a-I3zzqp0rI2ACMjY5cyJ26-yh3byNRn8u0IrpRkdt/exec',
       adminPasskey: localStorage.getItem('dn_admin_passkey') || 'DN@2026',
       isAdmin: localStorage.getItem('dn_is_admin') === 'true' || location.search.includes('admin=1')
     };
