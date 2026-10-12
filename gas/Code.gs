@@ -100,13 +100,13 @@ function doPost(e) {
     // 2. Upload Video to Google Drive & Create Reel
     if (action === "uploadVideo") {
       const clientName = payload.clientName || "General";
-      const branch = payload.branch || "Main";
-      const album = payload.album || "Default";
+      const branch = payload.branch || "";
+      const album = payload.album || "";
       const title = payload.title || "Untitled Reel";
       const clientId = payload.clientId;
-      const year = Number(payload.year) || new Date().getFullYear();
-      const month = Number(payload.month) || new Date().getMonth();
       const date = payload.date || new Date().toISOString().slice(0, 10);
+      const year = (payload.year !== undefined && payload.year !== null && payload.year !== "") ? Number(payload.year) : Number(date.slice(0, 4));
+      const month = (payload.month !== undefined && payload.month !== null && payload.month !== "") ? Number(payload.month) : (Number(date.slice(5, 7)) - 1);
       const dur = payload.dur || "0:30";
       const coverUrl = payload.coverUrl || "";
       const base64Data = payload.base64Data;
@@ -378,6 +378,7 @@ function getClientFolder(clientName, branch) {
   const master = getOrCreateMasterFolder();
   let reelsFolder = getSubfolder(master, "Reels");
   let clientFolder = getSubfolder(reelsFolder, clientName);
+  if (!branch || branch === "Main") return clientFolder;
   return getSubfolder(clientFolder, branch);
 }
 

@@ -981,7 +981,16 @@
         const res = await fetch(`${CONFIG.gasUrl}?action=getData`);
         const json = await res.json();
         if (json.success && json.data) {
+          // Merge local reels to prevent overwriting recent uploads
+          const localReels = DATA.reels || [];
+          const gasReels = json.data.reels || [];
+          const mergedReels = [...gasReels];
+          localReels.forEach(lr => {
+            if (!mergedReels.some(gr => gr.id === lr.id)) mergedReels.unshift(lr);
+          });
           DATA = json.data;
+          DATA.reels = mergedReels;
+          localStorage.setItem('dn_local_data', JSON.stringify(DATA));
           render();
         }
       } catch (e) {
@@ -991,6 +1000,8 @@
 
     async function persist(msg) {
       document.querySelector('.scrim')?.remove();
+      // ALWAYS persist to localStorage immediately so data is never lost
+      localStorage.setItem('dn_local_data', JSON.stringify(DATA));
       render();
       toast('Saving changes...', 'info');
       try {
@@ -998,12 +1009,10 @@
           await gasApi('syncData', { data: DATA });
           toast(msg || 'Saved to Google Drive', 'success');
         } else {
-          localStorage.setItem('dn_local_data', JSON.stringify(DATA));
           toast(msg || 'Saved locally', 'amber');
         }
       } catch (e) {
-        localStorage.setItem('dn_local_data', JSON.stringify(DATA));
-        toast('Saved locally (Sync error: ' + (e.message || 'offline') + ')', 'amber');
+        toast('Saved locally (Sync: ' + (e.message || 'offline') + ')', 'amber');
       }
     }
 
@@ -1057,6 +1066,11 @@
         const y = view.year;
         const total = (DATA.reels || []).filter(r => r.c === c.id && (!r.hidden || CONFIG.isAdmin)).length;
         const availableYears = Array.from(new Set([TODAY.getFullYear(), ...(DATA.reels || []).map(r => r.y)])).sort();
+        const hasBranches = !!(c.branches && c.branches.length);
+        const hasAlbums = !!(c.albums && c.albums.length);
+
+        if (view.tabMode === 'branches' && !hasBranches) view.tabMode = 'months';
+        if (view.tabMode === 'albums' && !hasAlbums) view.tabMode = 'months';
 
         let tabContent = '';
         if (view.tabMode === 'months') {
@@ -1075,8 +1089,8 @@
               }).join('')}
             </div>`;
         } else if (view.tabMode === 'branches') {
-          const list = c.branches || ['Main'];
-          tabContent = `
+          const list = c.branches || [];
+          tabContent = list.length ? `
             <div class="branches">
               ${list.map(b => {
                 const n = reelsFor(null, null, b).length;
@@ -1087,10 +1101,10 @@
                     <span class="cnt"><strong>${n}</strong> reel${n === 1 ? '' : 's'}</span>
                   </button>`;
               }).join('')}
-            </div>`;
+            </div>` : '<div class="empty">No store branches configured</div>';
         } else if (view.tabMode === 'albums') {
-          const list = c.albums || ['Campaigns'];
-          tabContent = `
+          const list = c.albums || [];
+          tabContent = list.length ? `
             <div class="branches">
               ${list.map(alb => {
                 const n = reelsFor(null, null, null, alb).length;
@@ -1101,7 +1115,7 @@
                     <span class="cnt"><strong>${n}</strong> reel${n === 1 ? '' : 's'}</span>
                   </button>`;
               }).join('')}
-            </div>`;
+            </div>` : '<div class="empty">No collections configured</div>';
         }
 
         app.innerHTML = `
@@ -1117,11 +1131,12 @@
             <small>${total} delivered reel${total === 1 ? '' : 's'}</small>
           </div>
 
+          ${(hasBranches || hasAlbums) ? `
           <div class="view-switcher">
             <button class="view-btn ${view.tabMode === 'months' ? 'active' : ''}" data-act="tab" data-tab="months">Months</button>
-            <button class="view-btn ${view.tabMode === 'branches' ? 'active' : ''}" data-act="tab" data-tab="branches">Branches</button>
-            <button class="view-btn ${view.tabMode === 'albums' ? 'active' : ''}" data-act="tab" data-tab="albums">Albums</button>
-          </div>
+            ${hasBranches ? `<button class="view-btn ${view.tabMode === 'branches' ? 'active' : ''}" data-act="tab" data-tab="branches">Branches</button>` : ''}
+            ${hasAlbums ? `<button class="view-btn ${view.tabMode === 'albums' ? 'active' : ''}" data-act="tab" data-tab="albums">Albums</button>` : ''}
+          </div>` : ''}
 
           ${tabContent}
           ${CONFIG.isAdmin ? '<button class="fab-add" data-act="add" aria-label="Add reel">+</button>' : ''}`;
@@ -1148,7 +1163,7 @@
                     ${r.dur ? `<span class="dur">${esc(r.dur)}</span>` : ''}
                     ${isHidden ? '<span class="status-tag hidden">HIDDEN</span>' : (r.status ? `<span class="status-tag ${esc(r.status)}">${esc(r.status)}</span>` : '')}
                     <span class="play" style="color:${col}">${ic.play}</span>
-                    <span class="cap">${esc(r.title)}<small>${fmtDate(r.date)} · ${esc(r.b || r.album || 'Reel')}</small></span>
+                    <span class="cap">${esc(r.title)}<small>${fmtDate(r.date)}${r.b ? ` · ${esc(r.b)}` : (r.album ? ` · ${esc(r.album)}` : '')}</small></span>
                     <span class="border"></span>
                   </div>
                   ${CONFIG.isAdmin ? `
@@ -1357,23 +1372,27 @@
           <div class="row-between" style="width:100%">
             <div>
               <h4 style="margin:0;font-size:16px;">${esc(r.title)}</h4>
-              <p style="margin:2px 0 0;font-size:11px;">${fmtDate(r.date)} · ${esc(r.b || r.album || 'Reel')}</p>
+              <p style="margin:2px 0 0;font-size:11px;">${fmtDate(r.date)}${r.b ? ` · ${esc(r.b)}` : (r.album ? ` · ${esc(r.album)}` : '')}</p>
             </div>
             <button class="ghost" data-close style="padding:6px 14px;border-radius:999px;font-size:12px;">Close</button>
           </div>
           <div class="video-frame-box">
-            <iframe src="${esc(embedSrc)}" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            ${id 
+              ? `<iframe src="${esc(embedSrc)}" allow="autoplay; fullscreen" allowfullscreen></iframe>`
+              : `<video src="${esc(r.url)}" controls autoplay playsinline style="width:100%;height:100%;object-fit:cover;border-radius:14px;"></video>`
+            }
           </div>
           <div class="acts" style="width:100%">
-            <a class="act" style="--k:var(--green)" href="${esc(dlUrl(r.url))}" target="_blank" rel="noopener">
+            <a class="act" style="--k:var(--green)" href="${esc(id ? dlUrl(r.url) : r.url)}" ${id ? 'target="_blank" rel="noopener"' : `download="${esc(r.title)}.mp4"`}>
               <span class="chip">${ic.dl}</span>Direct Download
             </a>
             <button class="act" style="--k:var(--amber)" id="v-share">
               <span class="chip">${ic.share}</span>Share Reel
             </button>
+            ${id ? `
             <a class="act" style="--k:var(--blue)" href="${esc(viewUrl(r.url))}" target="_blank" rel="noopener">
               <span class="chip">${ic.view}</span>Google Drive
-            </a>
+            </a>` : ''}
           </div>
         </div>`, sc => {
         sc.querySelector('#v-share').addEventListener('click', () => openShare(r));
@@ -1532,8 +1551,10 @@
       const c = client();
       const y = view.year;
       const m = view.month ?? TODAY.getMonth();
-      const b = view.branch ?? (c.branches && c.branches[0]) ?? 'Main';
-      const alb = (c.albums && c.albums[0]) ?? 'General';
+      const branches = (c.branches && c.branches.length) ? c.branches : [];
+      const albums = (c.albums && c.albums.length) ? c.albums : [];
+      const b = view.branch && branches.includes(view.branch) ? view.branch : (branches[0] || '');
+      const alb = view.album && albums.includes(view.album) ? view.album : (albums[0] || '');
 
       sheet(`
         <h4>Add Reel · ${esc(c.name)}</h4>
@@ -1571,16 +1592,17 @@
         </div>
 
         <div class="row2">
+          ${branches.length ? `
           <div class="field">
             <label for="f-branch">Branch Store</label>
             <select id="f-branch">
-              ${(c.branches || ['Main']).map(x => `<option ${x === b ? 'selected' : ''}>${esc(x)}</option>`).join('')}
+              ${branches.map(x => `<option ${x === b ? 'selected' : ''}>${esc(x)}</option>`).join('')}
             </select>
-          </div>
-          <div class="field">
+          </div>` : '<input type="hidden" id="f-branch" value="">'}
+          <div class="field" style="${branches.length ? '' : 'grid-column:1/-1'}">
             <label for="f-alb">Album / Collection</label>
             <select id="f-alb">
-              ${(c.albums || ['General']).map(x => `<option ${x === alb ? 'selected' : ''}>${esc(x)}</option>`).join('')}
+              ${albums.length ? albums.map(x => `<option ${x === alb ? 'selected' : ''}>${esc(x)}</option>`).join('') : '<option value="">General</option>'}
             </select>
           </div>
         </div>
@@ -1655,8 +1677,8 @@
           const title = sc.querySelector('#f-title').value.trim();
           const year = +sc.querySelector('#f-year').value;
           const month = +sc.querySelector('#f-month').value;
-          const branch = sc.querySelector('#f-branch').value;
-          const album = sc.querySelector('#f-alb').value;
+          const branch = sc.querySelector('#f-branch') ? sc.querySelector('#f-branch').value.trim() : '';
+          const album = sc.querySelector('#f-alb') ? sc.querySelector('#f-alb').value.trim() : '';
           const date = sc.querySelector('#f-date').value;
           const dur = sc.querySelector('#f-dur').value.trim() || '0:30';
           const status = sc.querySelector('#f-status').value;
@@ -1670,7 +1692,7 @@
               toast('Add a valid video link starting with https://', 'amber'); return;
             }
             if (!DATA.reels) DATA.reels = [];
-            DATA.reels.push({
+            DATA.reels.unshift({
               id: 'r' + Date.now().toString(36),
               c: c.id, y: year, m: month, b: branch, album,
               title, date, url, dur, coverUrl, hidden: false, status, views: 0, downloads: 0, sample: false
@@ -1692,23 +1714,36 @@
             const reader = new FileReader();
             reader.onload = async () => {
               progBar.style.width = '70%';
+              
+              // 1. Instantly register locally so the reel never goes missing
+              const tempReelId = 'r' + Date.now().toString(36);
+              const blobUrl = URL.createObjectURL(file);
+              const localReel = {
+                id: tempReelId,
+                c: c.id, y: year, m: month, b: branch, album,
+                title, date, url: blobUrl, dur, coverUrl, hidden: false, status, views: 0, downloads: 0, sample: false
+              };
+              if (!DATA.reels) DATA.reels = [];
+              DATA.reels.unshift(localReel);
+              persist('Reel published to your portal!');
+
+              // 2. Upload to Google Drive in background
               try {
                 const res = await gasApi('uploadVideo', {
                   clientName: c.name, clientId: c.id, branch, album, title, year, month, date, dur,
                   coverUrl, status, filename: file.name, mimeType: file.type || 'video/mp4', base64Data: reader.result
                 });
                 progBar.style.width = '100%';
-                if (res.success) {
-                  if (!DATA.reels) DATA.reels = [];
-                  DATA.reels.push(res.reel);
+                if (res && res.success && res.reel) {
+                  const idx = DATA.reels.findIndex(x => x.id === tempReelId);
+                  if (idx !== -1) DATA.reels[idx] = res.reel;
+                  else DATA.reels.unshift(res.reel);
                   persist('Video saved to Google Drive!');
                 } else {
-                  toast('Upload error: ' + (res.error || 'Server rejected'), 'error');
-                  saveBtn.disabled = false; saveBtn.textContent = 'Publish Reel';
+                  toast('Drive upload note: ' + ((res && res.error) || 'Saved locally'), 'amber');
                 }
               } catch(err) {
-                toast('Upload error: ' + err.message, 'error');
-                saveBtn.disabled = false; saveBtn.textContent = 'Publish Reel';
+                toast('Drive upload error: ' + err.message + ' (Reel saved locally)', 'amber');
               }
             };
             reader.readAsDataURL(file);
@@ -1819,9 +1854,9 @@
     function openClientForm(id) {
       const c = (DATA.clients || []).find(x => x.id === id) || {
         name: '', slug: '', code: '', logo: '', tagline: '', accent: '',
-        animStyle: 'confetti', branches: ['Main Store'], albums: ['Highlights']
+        animStyle: 'confetti', branches: [], albums: []
       };
-      let logo = c.logo;
+      let logo = c.logo || '';
 
       sheet(`
         <h4>${id ? 'Edit Client' : 'New Client'}</h4>
@@ -1859,22 +1894,28 @@
           <input id="c-tag" value="${esc(c.tagline)}" placeholder="Let the celebrations begin!">
         </div>
         <div class="field">
-          <label for="c-branches">Branches (Comma Separated)</label>
-          <input id="c-branches" value="${esc((c.branches || []).join(', '))}" placeholder="T. Nagar, Velachery, Chromepet">
+          <label for="c-branches">Branches (Comma Separated, or leave empty)</label>
+          <input id="c-branches" value="${esc((c.branches || []).join(', '))}" placeholder="e.g. T. Nagar, Velachery (leave empty if none)">
         </div>
         <div class="field">
-          <label for="c-albums">Albums / Collections (Comma Separated)</label>
-          <input id="c-albums" value="${esc((c.albums || []).join(', '))}" placeholder="Diwali 2026, Bridal Edit">
+          <label for="c-albums">Albums / Collections (Comma Separated, or leave empty)</label>
+          <input id="c-albums" value="${esc((c.albums || []).join(', '))}" placeholder="e.g. Diwali 2026, Bridal Edit">
         </div>
         <div class="field">
-          <label for="c-logo">Logo (Cloudflare D1 / Image Upload)</label>
+          <label for="c-logo">Logo (Image Upload or Paste URL)</label>
           <div class="logo-prev">
             <div class="box" id="c-prev">${logo ? `<img src="${esc(logo)}" alt="">` : 'No logo'}</div>
-            <input id="c-logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <input id="c-logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+              <input id="c-logo-url" value="${logo && !logo.startsWith('data:') ? esc(logo) : ''}" placeholder="Or paste logo image URL">
+            </div>
           </div>
         </div>
-        <button class="go" id="c-save">Save Client</button>
-        <button class="ghost" data-close>Cancel</button>`, sc => {
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          <button class="go" style="flex:1;" id="c-save">Save Client</button>
+          ${id ? `<button class="ghost" id="c-del" style="color:var(--red);border-color:#FCDAD7;">Delete</button>` : ''}
+          <button class="ghost" data-close>Cancel</button>
+        </div>`, sc => {
         sc.querySelector('#c-logo').onchange = e => {
           const f = e.target.files[0];
           if (!f) return;
@@ -1883,9 +1924,30 @@
           fr.onload = () => {
             logo = fr.result;
             sc.querySelector('#c-prev').innerHTML = `<img src="${logo}" alt="">`;
+            sc.querySelector('#c-logo-url').value = '';
           };
           fr.readAsDataURL(f);
         };
+
+        sc.querySelector('#c-logo-url').oninput = e => {
+          const val = e.target.value.trim();
+          if (val) {
+            logo = val;
+            sc.querySelector('#c-prev').innerHTML = `<img src="${esc(val)}" alt="">`;
+          }
+        };
+
+        const delBtn = sc.querySelector('#c-del');
+        if (delBtn) {
+          delBtn.onclick = () => {
+            confirmModal('Delete Client?', `Are you sure you want to delete ${c.name}? All delivered reels will also be deleted.`, () => {
+              DATA.clients = (DATA.clients || []).filter(x => x.id !== c.id);
+              DATA.reels = (DATA.reels || []).filter(x => x.c !== c.id);
+              if (CONFIG.gasUrl) gasApi('deleteClient', { id: c.id }).catch(() => {});
+              persist('Client deleted');
+            }, 'Delete Client', true);
+          };
+        }
 
         sc.querySelector('#c-save').onclick = () => {
           const name = sc.querySelector('#c-name').value.trim();

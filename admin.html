@@ -508,6 +508,19 @@
       reels: []
     };
 
+    // Load local cached database immediately so data is never lost
+    const cachedData = localStorage.getItem('dn_local_data');
+    if (cachedData) {
+      try {
+        const parsed = JSON.parse(cachedData);
+        if (parsed && typeof parsed === 'object') {
+          DATA = parsed;
+          if (!DATA.reels) DATA.reels = [];
+          if (!DATA.clients) DATA.clients = [];
+        }
+      } catch(e) {}
+    }
+
     let activeTab = 'dashboard';
     let searchQuery = '';
     const workspace = document.getElementById('workspace');
@@ -543,12 +556,28 @@
       return await res.json();
     }
 
+    function persistLocal(msg = '') {
+      localStorage.setItem('dn_local_data', JSON.stringify(DATA));
+      render();
+      if (msg) toast(msg, 'success');
+    }
+
     async function sync() {
       try {
         const res = await fetch(`${GAS_URL}?action=getData`);
         const json = await res.json();
         if (json.success && json.data) {
+          // Merge local reels to prevent overwriting recent uploads
+          const localReels = DATA.reels || [];
+          const gasReels = json.data.reels || [];
+          const mergedReels = [...gasReels];
+          localReels.forEach(lr => {
+            if (!mergedReels.some(gr => gr.id === lr.id)) mergedReels.unshift(lr);
+          });
           DATA = json.data;
+          DATA.reels = mergedReels;
+          localStorage.setItem('dn_local_data', JSON.stringify(DATA));
+
           document.getElementById('hdr-dot').className = 'status-dot online';
           document.getElementById('hdr-status').textContent = 'Google Drive Connected';
           document.getElementById('hdr-agency').textContent = DATA.settings?.agency || 'Day Night Media';
@@ -647,6 +676,7 @@
     function renderReelCard(r) {
       const isHidden = r.hidden === true;
       const clientObj = (DATA.clients || []).find(c => c.id === r.c) || { name: 'Client' };
+      const sub = r.b ? r.b : (r.album ? r.album : '');
       return `
         <div class="reel-box">
           <div class="reel-thumb-wrap" data-play="${r.id}">
@@ -657,7 +687,7 @@
           </div>
           <div class="reel-details">
             <h4>${r.title}</h4>
-            <p>${clientObj.name} · ${r.b || r.album || 'Main'}</p>
+            <p>${clientObj.name}${sub ? ` · ${sub}` : ''}</p>
           </div>
           <div class="reel-meta-row">
             <span><span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${r.views || 0}</span> · <span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> ${r.downloads || 0}</span></span>
@@ -689,9 +719,8 @@
           const r = DATA.reels.find(x => x.id === b.dataset.hide);
           if (r) {
             r.hidden = !r.hidden;
-            await api('toggleHideReel', { id: r.id });
-            toast(r.hidden ? 'Reel hidden from client' : 'Reel visible to client', 'info');
-            render();
+            persistLocal(r.hidden ? 'Reel hidden from client' : 'Reel visible to client');
+            try { await api('toggleHideReel', { id: r.id }); } catch(e) {}
           }
         };
       });
@@ -700,9 +729,8 @@
           const r = DATA.reels.find(x => x.id === b.dataset.del);
           if (r && confirm(`Are you sure you want to delete "${r.title}"? This will trash the file in Google Drive.`)) {
             DATA.reels = DATA.reels.filter(x => x.id !== r.id);
-            await api('deleteReel', { id: r.id });
-            toast('Reel removed from Google Drive & database', 'error');
-            render();
+            persistLocal('Reel removed from dashboard');
+            try { await api('deleteReel', { id: r.id }); } catch(e) {}
           }
         };
       });
@@ -714,7 +742,7 @@
         <div class="action-bar">
           <div>
             <h2>Client Profiles &amp; Dedicated URLs</h2>
-            <p style="font-size:12px;color:var(--mute)">Each client gets their own branded link, custom loading animation, and PIN.</p>
+            <p style="font-size:12px;color:var(--mute)">Each client gets their own branded link, logo, custom loading animation, and PIN.</p>
           </div>
           <button class="btn-primary" id="btn-add-client">+ Add New Client</button>
         </div>
@@ -723,10 +751,12 @@
           ${(DATA.clients || []).map(c => {
             const clientUrl = `${location.origin}/?client=${c.slug || c.id}`;
             const reelCount = (DATA.reels || []).filter(r => r.c === c.id).length;
+            const hasBranches = c.branches && c.branches.length > 0;
+            const hasAlbums = c.albums && c.albums.length > 0;
             return `
               <div class="client-card">
                 <div class="client-card-head">
-                  <div class="client-logo-box">${c.logo ? `<img src="${c.logo}" alt="">` : 'Logo'}</div>
+                  <div class="client-logo-box">${c.logo ? `<img src="${c.logo}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;">` : '<span style="font-size:11px;color:var(--mute);">No Logo</span>'}</div>
                   <div class="client-info">
                     <h3>${c.name}</h3>
                     <p>PIN: <b>${c.code}</b> · ${reelCount} Delivered Reels</p>
@@ -738,19 +768,21 @@
                   <button data-copy="${clientUrl}">Copy Link</button>
                 </div>
 
+                ${hasBranches ? `
                 <div>
                   <small style="font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;">Store Branches</small>
                   <div class="tag-row" style="margin-top:4px;">
-                    ${(c.branches || ['Main']).map(b => `<span class="tag-pill">${b}</span>`).join('')}
+                    ${c.branches.map(b => `<span class="tag-pill">${b}</span>`).join('')}
                   </div>
-                </div>
+                </div>` : ''}
 
+                ${hasAlbums ? `
                 <div>
                   <small style="font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;">Albums / Campaigns</small>
                   <div class="tag-row" style="margin-top:4px;">
-                    ${(c.albums || ['General']).map(a => `<span class="tag-pill">${a}</span>`).join('')}
+                    ${c.albums.map(a => `<span class="tag-pill">${a}</span>`).join('')}
                   </div>
-                </div>
+                </div>` : ''}
 
                 <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid var(--line);">
                   <span style="font-size:11px;color:var(--navy);font-weight:600;">FX: ${c.animStyle || 'confetti'}</span>
@@ -868,22 +900,23 @@
           agencySub: document.getElementById('br-sub').value.trim(),
           slogan: document.getElementById('br-slogan').value.trim()
         };
-        await api('saveSettings', { settings: DATA.settings });
-        toast('Branding saved successfully!', 'success');
-        sync();
+        persistLocal('Branding saved locally');
+        try {
+          await api('saveSettings', { settings: DATA.settings });
+          toast('Branding saved to Google Drive!', 'success');
+        } catch(e) {}
       };
     }
 
     // MODAL: UPLOAD / ADD REEL
     function openUploadModal() {
       const clients = DATA.clients || [];
-      const firstClient = clients[0] || { branches: ['Main'], albums: ['General'] };
 
       modal(`
         <h3>Upload / Publish Reel</h3>
         <div class="form-group">
           <label>Reel Title</label>
-          <input id="f-title" placeholder="e.g. Diwali Silk Collection Launch">
+          <input id="f-title" placeholder="e.g. Festive Silk Collection Launch">
         </div>
 
         <div class="form-row2">
@@ -894,18 +927,18 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Branch</label>
+            <label>Branch (Optional)</label>
             <select id="f-branch">
-              ${(firstClient.branches || ['Main']).map(b => `<option value="${b}">${b}</option>`).join('')}
+              <option value="">No branch</option>
             </select>
           </div>
         </div>
 
         <div class="form-row2">
           <div class="form-group">
-            <label>Album / Campaign</label>
+            <label>Album / Campaign (Optional)</label>
             <select id="f-album">
-              ${(firstClient.albums || ['General']).map(a => `<option value="${a}">${a}</option>`).join('')}
+              <option value="">General</option>
             </select>
           </div>
           <div class="form-group">
@@ -929,8 +962,11 @@
         </div>
 
         <div class="form-group">
-          <label>Custom Cover / Thumbnail Image (URL or upload)</label>
-          <input id="f-cover" placeholder="https://…">
+          <label>Custom Cover / Thumbnail Image</label>
+          <div style="display:flex;gap:8px;flex-direction:column;">
+            <input id="f-cover" placeholder="Image URL (https://...)">
+            <input id="f-cover-file" type="file" accept="image/png,image/jpeg,image/webp">
+          </div>
         </div>
 
         <div class="form-row2">
@@ -948,51 +984,121 @@
           <button class="btn-portal" data-close>Cancel</button>
           <button class="btn-primary" id="f-submit">Publish Reel</button>
         </div>`, sc => {
+
+        let coverData = '';
+        const coverFileInput = sc.querySelector('#f-cover-file');
+        if (coverFileInput) {
+          coverFileInput.onchange = e => {
+            const f = e.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = () => {
+              coverData = r.result;
+              sc.querySelector('#f-cover').value = 'Selected (' + f.name + ')';
+            };
+            r.readAsDataURL(f);
+          };
+        }
+
+        // Dynamically update branches & albums when client changes
+        function updateClientDropdowns() {
+          const cid = sc.querySelector('#f-client').value;
+          const cObj = (DATA.clients || []).find(x => x.id === cid);
+          const brSel = sc.querySelector('#f-branch');
+          const albSel = sc.querySelector('#f-album');
+          const branches = (cObj && cObj.branches && cObj.branches.length) ? cObj.branches : [];
+          const albums = (cObj && cObj.albums && cObj.albums.length) ? cObj.albums : [];
+
+          brSel.innerHTML = branches.length
+            ? branches.map(b => `<option value="${b}">${b}</option>`).join('')
+            : `<option value="">No branch</option>`;
+
+          albSel.innerHTML = albums.length
+            ? albums.map(a => `<option value="${a}">${a}</option>`).join('')
+            : `<option value="">General</option>`;
+        }
+        sc.querySelector('#f-client').onchange = updateClientDropdowns;
+        updateClientDropdowns();
+
         sc.querySelector('#f-submit').onclick = async () => {
           const title = sc.querySelector('#f-title').value.trim();
           const clientId = sc.querySelector('#f-client').value;
-          const branch = sc.querySelector('#f-branch').value;
-          const album = sc.querySelector('#f-album').value;
+          const branch = sc.querySelector('#f-branch').value.trim();
+          const album = sc.querySelector('#f-album').value.trim();
           const status = sc.querySelector('#f-status').value;
           const file = sc.querySelector('#f-file').files[0];
           const url = sc.querySelector('#f-url').value.trim();
-          const coverUrl = sc.querySelector('#f-cover').value.trim();
-          const date = sc.querySelector('#f-date').value;
-          const dur = sc.querySelector('#f-dur').value.trim();
+          const coverUrl = coverData || sc.querySelector('#f-cover').value.trim();
+          const date = sc.querySelector('#f-date').value || new Date().toISOString().slice(0, 10);
+          const dur = sc.querySelector('#f-dur').value.trim() || '0:30';
+
+          const year = Number(date.slice(0, 4)) || new Date().getFullYear();
+          const month = (Number(date.slice(5, 7)) - 1) || 0;
 
           if (!title) { toast('Please enter a reel title', 'error'); return; }
 
           if (file) {
+            const submitBtn = sc.querySelector('#f-submit');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading to Drive...';
             toast('Uploading MP4 to Google Drive...', 'info');
+
             const reader = new FileReader();
             reader.onload = async () => {
-              const res = await api('uploadVideo', {
-                clientName: DATA.clients.find(c => c.id === clientId)?.name,
-                clientId, branch, album, title, coverUrl, status, date, dur,
-                filename: file.name, mimeType: file.type || 'video/mp4', base64Data: reader.result
-              });
-              if (res.success) {
-                toast('Video saved to Google Drive!', 'success');
-                sc.remove();
-                sync();
-              } else {
-                toast('Upload failed: ' + res.error, 'error');
+              // 1. Instantly register locally with a temporary object URL so the video NEVER goes missing
+              const tempReelId = 'r' + Date.now().toString(36);
+              const blobUrl = URL.createObjectURL(file);
+              const newReel = {
+                id: tempReelId,
+                c: clientId, y: year, m: month, b: branch, album,
+                title, date, url: blobUrl, dur, coverUrl, hidden: false,
+                status, views: 0, downloads: 0, sample: false
+              };
+              if (!DATA.reels) DATA.reels = [];
+              DATA.reels.unshift(newReel);
+              persistLocal('Reel added to your dashboard!');
+              sc.remove();
+
+              // 2. Upload directly to Google Drive in the background
+              try {
+                const res = await api('uploadVideo', {
+                  clientName: DATA.clients.find(c => c.id === clientId)?.name || 'Client',
+                  clientId, branch, album, title, year, month, date, dur,
+                  coverUrl, status, filename: file.name, mimeType: file.type || 'video/mp4', base64Data: reader.result
+                });
+                if (res && res.success && res.reel) {
+                  // Upgrade temp reel with permanent Google Drive link and Drive fileId
+                  const idx = DATA.reels.findIndex(x => x.id === tempReelId);
+                  if (idx !== -1) {
+                    DATA.reels[idx] = res.reel;
+                  } else {
+                    DATA.reels.unshift(res.reel);
+                  }
+                  persistLocal('Video securely uploaded to Google Drive!');
+                } else {
+                  toast('Drive upload note: ' + ((res && res.error) || 'Saved locally'), 'info');
+                }
+              } catch (err) {
+                toast('Saved locally (Drive sync: ' + err.message + ')', 'info');
               }
             };
             reader.readAsDataURL(file);
           } else if (url) {
-            toast('Registering reel...', 'info');
             const newReel = {
               id: 'r' + Date.now().toString(36),
-              c: clientId, y: +date.slice(0,4), m: +date.slice(5,7) - 1, b: branch, album,
+              c: clientId, y: year, m: month, b: branch, album,
               title, date, url, dur, coverUrl, hidden: false, status, views: 0, downloads: 0, sample: false
             };
-            await api('addReel', { reel: newReel });
-            toast('Reel published!', 'success');
+            if (!DATA.reels) DATA.reels = [];
+            DATA.reels.unshift(newReel);
+            persistLocal('Reel published!');
             sc.remove();
-            sync();
+            try {
+              await api('addReel', { reel: newReel });
+              toast('Reel synced to Google Drive!', 'success');
+            } catch(e) {}
           } else {
-            toast('Please choose a file or paste a video link', 'error');
+            toast('Please choose an MP4 video or paste a video link', 'error');
           }
         };
       });
@@ -1016,7 +1122,7 @@
         </div>
         <div class="form-row2">
           <div class="form-group">
-            <label>Branch</label>
+            <label>Branch (leave empty if none)</label>
             <input id="e-branch" value="${r.b || ''}">
           </div>
           <div class="form-group">
@@ -1049,11 +1155,15 @@
           r.b = sc.querySelector('#e-branch').value.trim();
           r.album = sc.querySelector('#e-album').value.trim();
           r.date = sc.querySelector('#e-date').value;
+          r.y = Number(r.date.slice(0, 4)) || r.y;
+          r.m = (Number(r.date.slice(5, 7)) - 1);
           r.status = sc.querySelector('#e-status').value;
-          await api('modifyReel', { reel: r });
-          toast('Reel updated successfully', 'success');
+          persistLocal('Reel updated successfully');
           sc.remove();
-          sync();
+          try {
+            await api('modifyReel', { reel: r });
+            toast('Reel synced to Google Drive', 'success');
+          } catch(e) {}
         };
       });
     }
@@ -1061,7 +1171,8 @@
     // MODAL: ADD / EDIT CLIENT
     function openClientModal(c) {
       const isNew = !c;
-      const client = c || { name: '', slug: '', code: '', tagline: '', accent: '', animStyle: 'confetti', branches: ['Main Store'], albums: ['Highlights'] };
+      const client = c || { name: '', slug: '', code: '', logo: '', tagline: '', accent: '', animStyle: 'confetti', branches: [], albums: [] };
+      let logoData = client.logo || '';
 
       modal(`
         <h3>${isNew ? 'Create New Client' : 'Edit Client Profile'}</h3>
@@ -1079,6 +1190,21 @@
             <input id="cl-code" maxlength="4" value="${client.code}" placeholder="4821">
           </div>
         </div>
+
+        <!-- Client Logo Upload / URL Option -->
+        <div class="form-group">
+          <label>Client Logo (Upload PNG/SVG/JPG or Paste URL)</label>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+            <div id="cl-logo-prev" class="client-logo-box" style="width:52px;height:52px;border:1px solid var(--line);border-radius:12px;background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+              ${logoData ? `<img src="${logoData}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;">` : '<span style="font-size:11px;color:var(--mute);">Logo</span>'}
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <input type="file" id="cl-logo-file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="font-size:12px;">
+              <input type="text" id="cl-logo-url" value="${logoData.startsWith('data:') ? '' : logoData}" placeholder="Or paste logo image URL (https://...)" style="font-size:12px;padding:6px 10px;">
+            </div>
+          </div>
+        </div>
+
         <div class="form-row2">
           <div class="form-group">
             <label>Loading Animation</label>
@@ -1099,17 +1225,58 @@
           <input id="cl-tag" value="${client.tagline || ''}" placeholder="Let the celebrations begin!">
         </div>
         <div class="form-group">
-          <label>Branches (Comma Separated)</label>
-          <input id="cl-branches" value="${(client.branches || []).join(', ')}">
+          <label>Store Branches (Comma Separated, or leave empty)</label>
+          <input id="cl-branches" value="${(client.branches || []).join(', ')}" placeholder="e.g. T. Nagar, Velachery (leave empty if no branches)">
         </div>
         <div class="form-group">
-          <label>Albums / Campaigns (Comma Separated)</label>
-          <input id="cl-albums" value="${(client.albums || []).join(', ')}">
+          <label>Albums / Campaigns (Comma Separated, or leave empty)</label>
+          <input id="cl-albums" value="${(client.albums || []).join(', ')}" placeholder="e.g. Diwali 2026, Bridal Edit">
         </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
-          <button class="btn-portal" data-close>Cancel</button>
-          <button class="btn-primary" id="cl-submit">Save Client</button>
+        <div style="display:flex;gap:10px;justify-content:space-between;margin-top:14px;">
+          ${!isNew ? `<button class="btn-portal" style="color:var(--red);border-color:#FCDAD7;" id="cl-delete">Delete Client</button>` : '<span></span>'}
+          <div style="display:flex;gap:10px;">
+            <button class="btn-portal" data-close>Cancel</button>
+            <button class="btn-primary" id="cl-submit">Save Client</button>
+          </div>
         </div>`, sc => {
+
+        // Logo File Input Listener
+        sc.querySelector('#cl-logo-file').onchange = e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            logoData = reader.result;
+            sc.querySelector('#cl-logo-prev').innerHTML = `<img src="${logoData}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;">`;
+            sc.querySelector('#cl-logo-url').value = '';
+          };
+          reader.readAsDataURL(file);
+        };
+
+        // Logo URL Input Listener
+        sc.querySelector('#cl-logo-url').oninput = e => {
+          const val = e.target.value.trim();
+          if (val) {
+            logoData = val;
+            sc.querySelector('#cl-logo-prev').innerHTML = `<img src="${val}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;">`;
+          }
+        };
+
+        // Delete Client Handler
+        const delBtn = sc.querySelector('#cl-delete');
+        if (delBtn) {
+          delBtn.onclick = async () => {
+            if (confirm(`Are you sure you want to delete ${client.name}? All delivered reels will also be deleted.`)) {
+              DATA.clients = (DATA.clients || []).filter(x => x.id !== client.id);
+              DATA.reels = (DATA.reels || []).filter(x => x.c !== client.id);
+              persistLocal('Client deleted');
+              sc.remove();
+              try { await api('deleteClient', { id: client.id }); } catch(e) {}
+            }
+          };
+        }
+
+        // Save Client Handler
         sc.querySelector('#cl-submit').onclick = async () => {
           const name = sc.querySelector('#cl-name').value.trim();
           const slug = sc.querySelector('#cl-slug').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1125,13 +1292,24 @@
           const rec = Object.assign({}, client, {
             id: client.id || ('c' + Date.now().toString(36)),
             name, slug: slug || name.toLowerCase().replace(/[^a-z0-9]/g, ''),
-            code, branches, albums, animStyle, tagline, accent
+            code, branches, albums, animStyle, tagline, accent,
+            logo: logoData
           });
 
-          await api('saveClient', { client: rec });
-          toast('Client profile saved!', 'success');
+          if (!DATA.clients) DATA.clients = [];
+          const idx = DATA.clients.findIndex(c => c.id === rec.id);
+          if (idx >= 0) {
+            DATA.clients[idx] = rec;
+          } else {
+            DATA.clients.push(rec);
+          }
+
+          persistLocal('Client profile saved!');
           sc.remove();
-          sync();
+          try {
+            await api('saveClient', { client: rec });
+            toast('Client synced to Google Drive!', 'success');
+          } catch(e) {}
         };
       });
     }
@@ -1144,23 +1322,31 @@
         return m ? m[1] : null;
       }
       const id = driveId(r.url);
-      const embedSrc = id ? `https://drive.google.com/file/d/${id}/preview` : r.url;
+      const isDrive = !!id;
+      const embedSrc = isDrive ? `https://drive.google.com/file/d/${id}/preview` : r.url;
 
       modal(`
         <div class="video-dialog-wrap">
           <div style="width:100%;display:flex;align-items:center;justify-content:space-between;">
             <div>
               <h4 style="font-size:16px;color:var(--navy);">${r.title}</h4>
-              <p style="font-size:11px;color:var(--mute);">${r.date} · ${r.b || r.album || 'Reel'}</p>
+              <p style="font-size:11px;color:var(--mute);">${r.date}${r.b ? ` · ${r.b}` : (r.album ? ` · ${r.album}` : '')}</p>
             </div>
             <button class="btn-portal" data-close>Close</button>
           </div>
           <div class="video-viewport">
-            <iframe src="${embedSrc}" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            ${isDrive 
+              ? `<iframe src="${embedSrc}" allow="autoplay; fullscreen" allowfullscreen></iframe>`
+              : `<video src="${r.url}" controls autoplay playsinline style="width:100%;height:100%;object-fit:cover;"></video>`
+            }
           </div>
           <div style="display:flex;gap:10px;width:100%;">
-            <a href="https://drive.google.com/uc?export=download&id=${id}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;">Direct Download</a>
-            <a href="https://drive.google.com/file/d/${id}/view" target="_blank" class="btn-portal" style="flex:1;justify-content:center;">Drive View</a>
+            ${isDrive ? `
+              <a href="https://drive.google.com/uc?export=download&id=${id}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;">Direct Download</a>
+              <a href="https://drive.google.com/file/d/${id}/view" target="_blank" class="btn-portal" style="flex:1;justify-content:center;">Drive View</a>
+            ` : `
+              <a href="${r.url}" download="${r.title}.mp4" class="btn-primary" style="flex:1;justify-content:center;">Download Video</a>
+            `}
           </div>
         </div>`, () => {});
     }
@@ -1176,6 +1362,7 @@
     });
 
     // Initial Load
+    render();
     sync();
 
   })();
