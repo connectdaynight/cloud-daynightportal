@@ -1,69 +1,58 @@
 /**
  * ============================================================================
- * DAY NIGHT MEDIA - CLIENT PORTAL GOOGLE APPS SCRIPT BACKEND
+ * DAY NIGHT MEDIA - PRODUCTION ENGINE BACKEND (GOOGLE APPS SCRIPT)
  * ============================================================================
- * 
- * This script runs as a Google Apps Script Web App providing:
- * 1. Real-time REST API for Cloudflare Pages (doGet & doPost)
- * 2. Automated Google Drive Folder & Video Storage management
- * 3. Client & Reel metadata storage in Google Drive (portal-data.json)
- * 4. Zero CORS issues (handles text/plain JSON payloads & redirects)
- * 
- * SETUP INSTRUCTIONS:
- * 1. Open Google Drive -> New -> More -> Google Apps Script
- * 2. Paste this entire file into Code.gs
- * 3. Click "Deploy" -> "New deployment"
- * 4. Select type: "Web app"
- * 5. Configuration:
- *    - Description: "Day Night Portal Backend"
- *    - Execute as: "Me" (your Google account)
- *    - Who has access: "Anyone" (allows Cloudflare Pages to call it)
- * 6. Click "Deploy", authorize permissions, and copy the Web App URL!
- * 7. Paste that URL into the Admin Panel of your Day Night Client Portal.
+ * Handles Google Drive Folders, Files (Upload/Delete/Move/Rename/Hide/Modify),
+ * Client URLs, Custom Animations, and Real-Time DB Synchronization.
  * ============================================================================
  */
 
-// Configuration Constants
 const MASTER_FOLDER_NAME = "Day Night Media Portal";
 const DATA_FILE_NAME = "portal-data.json";
-const ADMIN_PASSKEY = "DN@2026"; // Change to your preferred admin secret
+const ADMIN_PASSKEY = "DN@2026";
 
-/**
- * Handle GET requests
- * Endpoints:
- * - ?action=ping                   -> Connection health check
- * - ?action=getData                -> Get entire portal data
- * - ?action=getClientData&code=... -> Get data for specific 4-digit client PIN
- */
 function doGet(e) {
   try {
     const params = e ? e.parameter : {};
     const action = params.action || "ping";
 
+    // 1. Ping Health Check
     if (action === "ping") {
       const folder = getOrCreateMasterFolder();
       return jsonResponse({
         success: true,
         status: "connected",
-        message: "Day Night Media Google Drive Engine is online",
+        message: "Day Night Media Engine Online",
         folderName: folder.getName(),
         folderId: folder.getId(),
         timestamp: new Date().toISOString()
       });
     }
 
+    // 2. Fetch specific client by slug or 4-digit code
     if (action === "getClientData") {
       const code = String(params.code || "").trim();
-      if (!code) {
-        return jsonResponse({ success: false, error: "Missing client code" }, 400);
-      }
+      const slug = String(params.slug || params.client || "").trim().toLowerCase();
       const data = loadData();
-      const client = (data.clients || []).find(c => c.code === code);
+
+      const client = (data.clients || []).find(c => {
+        if (slug && c.slug && c.slug.toLowerCase() === slug) return true;
+        if (code && c.code === code) return true;
+        return false;
+      });
+
       if (!client) {
-        return jsonResponse({ success: false, error: "Invalid client code" }, 404);
+        return jsonResponse({ success: false, error: "Client not found" }, 404);
       }
-      // Return settings, this client only, and their specific reels
-      const clientReels = (data.reels || []).filter(r => r.c === client.id);
+
+      // Filter reels for this client (filter out hidden reels unless admin token provided)
+      const isAdmin = String(params.passkey || "") === ADMIN_PASSKEY;
+      const clientReels = (data.reels || []).filter(r => {
+        if (r.c !== client.id) return false;
+        if (!isAdmin && r.hidden === true) return false;
+        return true;
+      });
+
       return jsonResponse({
         success: true,
         settings: data.settings,
@@ -72,6 +61,7 @@ function doGet(e) {
       });
     }
 
+    // 3. Full Database Export
     if (action === "getData") {
       const data = loadData();
       return jsonResponse({ success: true, data: data });
@@ -83,18 +73,6 @@ function doGet(e) {
   }
 }
 
-/**
- * Handle POST requests
- * Endpoints:
- * - ping
- * - uploadVideo   (uploads MP4 chunk to Google Drive and registers reel)
- * - addReel       (registers Google Drive link reel)
- * - deleteReel    (removes reel record)
- * - saveClient    (creates/updates client)
- * - deleteClient  (removes client)
- * - saveSettings  (updates agency details)
- * - syncData      (overwrites complete dataset)
- */
 function doPost(e) {
   try {
     let payload = {};
@@ -110,45 +88,39 @@ function doPost(e) {
 
     const action = payload.action || "ping";
 
-    // 1. Connection Ping
+    // 1. Ping
     if (action === "ping") {
-      const folder = getOrCreateMasterFolder();
       return jsonResponse({
         success: true,
         status: "connected",
-        message: "Google Drive & Apps Script connected successfully",
         timestamp: new Date().toISOString()
       });
     }
 
-    // 2. Upload Video directly to Google Drive
+    // 2. Upload Video to Google Drive & Create Reel
     if (action === "uploadVideo") {
       const clientName = payload.clientName || "General";
-      const branch = payload.branch || "General";
+      const branch = payload.branch || "Main";
+      const album = payload.album || "Default";
       const title = payload.title || "Untitled Reel";
       const clientId = payload.clientId;
       const year = Number(payload.year) || new Date().getFullYear();
       const month = Number(payload.month) || new Date().getMonth();
       const date = payload.date || new Date().toISOString().slice(0, 10);
       const dur = payload.dur || "0:30";
+      const coverUrl = payload.coverUrl || "";
       const base64Data = payload.base64Data;
       const mimeType = payload.mimeType || "video/mp4";
       const filename = payload.filename || (title.replace(/[^a-z0-9]/gi, "_") + ".mp4");
 
       if (!base64Data) {
-        return jsonResponse({ success: false, error: "No video file data provided" }, 400);
+        return jsonResponse({ success: false, error: "No video file provided" }, 400);
       }
 
-      // Find or create subfolder: Day Night Media Portal / Reels / {clientName} / {branch}
       const clientFolder = getClientFolder(clientName, branch);
-      
-      // Clean base64 header if present (data:video/mp4;base64,...)
       const cleanBase64 = base64Data.includes(",") ? base64Data.split(",")[1] : base64Data;
-      const decodedBytes = Utilities.base64Decode(cleanBase64);
-      const blob = Utilities.newBlob(decodedBytes, mimeType, filename);
-      
+      const blob = Utilities.newBlob(Utilities.base64Decode(cleanBase64), mimeType, filename);
       const file = clientFolder.createFile(blob);
-      // Make video viewable to anyone with link
       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
       const fileId = file.getId();
@@ -156,7 +128,6 @@ function doPost(e) {
       const previewUrl = "https://drive.google.com/file/d/" + fileId + "/preview";
       const downloadUrl = "https://drive.google.com/uc?export=download&id=" + fileId;
 
-      // Register new reel in database
       const data = loadData();
       const newReel = {
         id: "r" + Date.now().toString(36),
@@ -164,11 +135,17 @@ function doPost(e) {
         y: year,
         m: month,
         b: branch,
+        album: album,
         title: title,
         date: date,
         url: viewUrl,
         fileId: fileId,
         dur: dur,
+        coverUrl: coverUrl,
+        hidden: false,
+        status: payload.status || "approved", // 'draft' | 'review' | 'approved'
+        views: 0,
+        downloads: 0,
         sample: false
       };
 
@@ -187,7 +164,7 @@ function doPost(e) {
       });
     }
 
-    // 3. Add Reel (via link)
+    // 3. Add Reel (via Link)
     if (action === "addReel") {
       const reel = payload.reel;
       if (!reel || !reel.title || !reel.url) {
@@ -196,21 +173,137 @@ function doPost(e) {
       const data = loadData();
       if (!data.reels) data.reels = [];
       if (!reel.id) reel.id = "r" + Date.now().toString(36);
+      if (typeof reel.hidden === "undefined") reel.hidden = false;
+      if (!reel.views) reel.views = 0;
+      if (!reel.downloads) reel.downloads = 0;
       data.reels.push(reel);
       saveData(data);
       return jsonResponse({ success: true, reel: reel, message: "Reel saved" });
     }
 
-    // 4. Delete Reel
+    // 4. Modify / Edit Reel (Rename, Date, Branch, Album, Cover, Duration, Status)
+    if (action === "modifyReel") {
+      const reelUpdate = payload.reel;
+      if (!reelUpdate || !reelUpdate.id) {
+        return jsonResponse({ success: false, error: "Missing reel ID" }, 400);
+      }
+      const data = loadData();
+      const idx = (data.reels || []).findIndex(r => r.id === reelUpdate.id);
+      if (idx === -1) {
+        return jsonResponse({ success: false, error: "Reel not found" }, 404);
+      }
+
+      // If fileId exists and title changed, rename file in Google Drive as well
+      if (data.reels[idx].fileId && reelUpdate.title && reelUpdate.title !== data.reels[idx].title) {
+        try {
+          const file = DriveApp.getFileById(data.reels[idx].fileId);
+          file.setName(reelUpdate.title.replace(/[^a-z0-9]/gi, "_") + ".mp4");
+        } catch (ex) {
+          // File rename failed silently
+        }
+      }
+
+      data.reels[idx] = Object.assign({}, data.reels[idx], reelUpdate);
+      saveData(data);
+      return jsonResponse({ success: true, reel: data.reels[idx], message: "Reel updated" });
+    }
+
+    // 5. Delete Reel (and Drive file if fileId exists)
     if (action === "deleteReel") {
       const reelId = payload.id;
       const data = loadData();
+      const reel = (data.reels || []).find(r => r.id === reelId);
+      if (reel && reel.fileId) {
+        try {
+          const file = DriveApp.getFileById(reel.fileId);
+          file.setTrashed(true);
+        } catch (ex) {}
+      }
       data.reels = (data.reels || []).filter(r => r.id !== reelId);
       saveData(data);
       return jsonResponse({ success: true, message: "Reel removed" });
     }
 
-    // 5. Save/Update Client
+    // 6. Toggle Hide / Unhide Reel
+    if (action === "toggleHideReel") {
+      const reelId = payload.id;
+      const data = loadData();
+      const reel = (data.reels || []).find(r => r.id === reelId);
+      if (reel) {
+        reel.hidden = !reel.hidden;
+        saveData(data);
+        return jsonResponse({ success: true, hidden: reel.hidden, message: reel.hidden ? "Reel hidden from client" : "Reel visible to client" });
+      }
+      return jsonResponse({ success: false, error: "Reel not found" }, 404);
+    }
+
+    // 7. Track Engagement (View / Download)
+    if (action === "trackEvent") {
+      const { reelId, type } = payload;
+      const data = loadData();
+      const reel = (data.reels || []).find(r => r.id === reelId);
+      if (reel) {
+        if (type === "view") reel.views = (reel.views || 0) + 1;
+        if (type === "download") reel.downloads = (reel.downloads || 0) + 1;
+        saveData(data);
+        return jsonResponse({ success: true, views: reel.views, downloads: reel.downloads });
+      }
+      return jsonResponse({ success: false, error: "Reel not found" }, 404);
+    }
+
+    // 8. Create Drive Folder / Album
+    if (action === "createFolder") {
+      const { clientName, folderName } = payload;
+      const master = getOrCreateMasterFolder();
+      const reelsFolder = getSubfolder(master, "Reels");
+      const clientFolder = getSubfolder(reelsFolder, clientName);
+      const newFolder = clientFolder.createFolder(folderName);
+
+      // Add album/folder to client record in DB
+      const data = loadData();
+      const client = (data.clients || []).find(c => c.name === clientName);
+      if (client) {
+        if (!client.albums) client.albums = [];
+        if (!client.albums.includes(folderName)) client.albums.push(folderName);
+        saveData(data);
+      }
+
+      return jsonResponse({
+        success: true,
+        folderId: newFolder.getId(),
+        folderName: folderName,
+        message: "Folder created in Google Drive"
+      });
+    }
+
+    // 9. Rename Drive Folder / Album
+    if (action === "renameFolder") {
+      const { clientName, oldName, newName } = payload;
+      const master = getOrCreateMasterFolder();
+      const reelsFolder = getSubfolder(master, "Reels");
+      const clientFolder = getSubfolder(reelsFolder, clientName);
+      const iter = clientFolder.getFoldersByName(oldName);
+      if (iter.hasNext()) {
+        const folder = iter.next();
+        folder.setName(newName);
+      }
+
+      const data = loadData();
+      const client = (data.clients || []).find(c => c.name === clientName);
+      if (client && client.albums) {
+        const idx = client.albums.indexOf(oldName);
+        if (idx !== -1) client.albums[idx] = newName;
+      }
+      // Update any reels referencing this album/branch
+      (data.reels || []).forEach(r => {
+        if (r.b === oldName) r.b = newName;
+        if (r.album === oldName) r.album = newName;
+      });
+      saveData(data);
+      return jsonResponse({ success: true, message: "Folder renamed" });
+    }
+
+    // 10. Save / Update Client
     if (action === "saveClient") {
       const client = payload.client;
       if (!client || !client.name || !client.code) {
@@ -218,9 +311,18 @@ function doPost(e) {
       }
       const data = loadData();
       if (!data.clients) data.clients = [];
+
+      // Auto-assign slug if missing
+      if (!client.slug) {
+        client.slug = client.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+      }
+      if (!client.animStyle) {
+        client.animStyle = "confetti"; // 'confetti' | 'pulse' | 'shimmer' | 'rings'
+      }
+
       const idx = data.clients.findIndex(c => c.id === client.id);
       if (idx >= 0) {
-        data.clients[idx] = client;
+        data.clients[idx] = Object.assign({}, data.clients[idx], client);
       } else {
         if (!client.id) client.id = "c" + Date.now().toString(36);
         data.clients.push(client);
@@ -229,7 +331,7 @@ function doPost(e) {
       return jsonResponse({ success: true, client: client, message: "Client saved" });
     }
 
-    // 6. Delete Client
+    // 11. Delete Client
     if (action === "deleteClient") {
       const clientId = payload.id;
       const data = loadData();
@@ -239,16 +341,15 @@ function doPost(e) {
       return jsonResponse({ success: true, message: "Client and reels deleted" });
     }
 
-    // 7. Save Settings
+    // 12. Save Settings
     if (action === "saveSettings") {
-      const settings = payload.settings;
       const data = loadData();
-      data.settings = settings;
+      data.settings = payload.settings;
       saveData(data);
-      return jsonResponse({ success: true, settings: settings, message: "Settings saved" });
+      return jsonResponse({ success: true, settings: data.settings, message: "Settings saved" });
     }
 
-    // 8. Full Sync
+    // 13. Sync Full Dataset
     if (action === "syncData") {
       if (payload.data) {
         saveData(payload.data);
@@ -262,34 +363,22 @@ function doPost(e) {
   }
 }
 
-/**
- * Helper to produce CORS-enabled JSON responses
- */
-function jsonResponse(obj, statusCode) {
+function jsonResponse(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-/**
- * Retrieve or create the master Day Night Media folder in Google Drive
- */
 function getOrCreateMasterFolder() {
   const folders = DriveApp.getFoldersByName(MASTER_FOLDER_NAME);
-  if (folders.hasNext()) {
-    return folders.next();
-  }
+  if (folders.hasNext()) return folders.next();
   return DriveApp.createFolder(MASTER_FOLDER_NAME);
 }
 
-/**
- * Get or create structured subfolder: Master / Reels / Client / Branch
- */
 function getClientFolder(clientName, branch) {
   const master = getOrCreateMasterFolder();
   let reelsFolder = getSubfolder(master, "Reels");
   let clientFolder = getSubfolder(reelsFolder, clientName);
-  let branchFolder = getSubfolder(clientFolder, branch);
-  return branchFolder;
+  return getSubfolder(clientFolder, branch);
 }
 
 function getSubfolder(parentFolder, name) {
@@ -298,23 +387,15 @@ function getSubfolder(parentFolder, name) {
   return parentFolder.createFolder(name);
 }
 
-/**
- * Load database JSON from Google Drive
- */
 function loadData() {
   const master = getOrCreateMasterFolder();
   const files = master.getFilesByName(DATA_FILE_NAME);
   if (files.hasNext()) {
-    const file = files.next();
-    const content = file.getBlob().getDataAsString();
     try {
+      const content = files.next().getBlob().getDataAsString();
       return JSON.parse(content);
-    } catch (e) {
-      // Fallback if corrupt
-    }
+    } catch (e) {}
   }
-  
-  // Default seed data if file doesn't exist yet
   const defaultData = {
     settings: {
       agency: "Day Night Media",
@@ -324,31 +405,28 @@ function loadData() {
     clients: [
       {
         id: "tcs",
+        slug: "tcs",
         name: "The Chennai Silks",
         code: "4821",
         tagline: "Let the celebrations begin!",
         accent: "celebrations",
-        branches: ["T. Nagar", "Velachery", "Chromepet", "Thiruvallur"]
+        branches: ["T. Nagar", "Velachery", "Chromepet", "Thiruvallur"],
+        albums: ["Diwali 2026", "Bridal Edit", "Festive Specials"],
+        animStyle: "confetti"
       }
     ],
     reels: []
   };
-
   saveData(defaultData);
   return defaultData;
 }
 
-/**
- * Save database JSON to Google Drive
- */
 function saveData(dataObj) {
   const master = getOrCreateMasterFolder();
   const files = master.getFilesByName(DATA_FILE_NAME);
   const content = JSON.stringify(dataObj, null, 2);
-  
   if (files.hasNext()) {
-    const file = files.next();
-    file.setContent(content);
+    files.next().setContent(content);
   } else {
     master.createFile(DATA_FILE_NAME, content, MimeType.PLAIN_TEXT);
   }
