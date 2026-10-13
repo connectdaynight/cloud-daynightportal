@@ -3347,24 +3347,6 @@
       }
     }
 
-    // --------------------------------------------------------------------------
-    // SCREENS RENDERER
-    // --------------------------------------------------------------------------
-    function render() {
-      const s = DATA.settings || {}, c = client();
-      clearTimers();
-
-      // Dynamic favicon & title: Client logo for client screens, Logo folder icon for splash/general
-      if (view.screen === 'splash' || !view.client || !c) {
-        setFavicon('/Logo/logo.png');
-        document.title = (s.agency || 'Day Night Media') + ' | DAY NIGHT';
-      } else {
-        const logo = (c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png'));
-        setFavicon(logo);
-        document.title = `${c.name || 'Client'} | DAY NIGHT`;
-      }
-
-
     // Luxury Milk-White Bottom Navigation Bar (Navbar - Reference Concept)
     function renderBottomNav() {
       if (!view.client || view.screen === 'splash' || view.screen === 'client-pin') return '';
@@ -3424,6 +3406,25 @@
         </div>
       `, sc => {}, false, 'month-picker-scrim');
     }
+
+
+    // --------------------------------------------------------------------------
+    // SCREENS RENDERER
+    // --------------------------------------------------------------------------
+    function render() {
+      const s = DATA.settings || {}, c = client();
+      clearTimers();
+
+      // Dynamic favicon & title: Client logo for client screens, Logo folder icon for splash/general
+      if (view.screen === 'splash' || !view.client || !c) {
+        setFavicon('/Logo/logo.png');
+        document.title = (s.agency || 'Day Night Media') + ' | DAY NIGHT';
+      } else {
+        const logo = (c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png'));
+        setFavicon(logo);
+        document.title = `${c.name || 'Client'} | DAY NIGHT`;
+      }
+
 
       // Screen 1: Executive Day Night Media Hub (Default Home Page)
       if (view.screen === 'splash' || !view.client || !c) {
