@@ -1569,31 +1569,89 @@
     .month.off { opacity: 0.45; }
     .month.now { border-color: var(--c); border-width: 2px; }
 
-    /* Branches & Folders Grid */
+    /* Branches & Folders Grid (Image Fills Box, Clean Text, Zero Pin Icon) */
     .branches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .branch {
       border: 1px solid var(--line);
       background: var(--card);
       border-radius: 20px;
-      padding: 18px 14px;
+      padding: 0 !important;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 12px;
+      align-items: stretch;
+      gap: 0;
       text-align: left;
       transition: transform 0.15s, box-shadow 0.15s;
       min-width: 0;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
     }
     .branch:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(29, 36, 51, 0.08); }
-    .branch .ico {
-      width: 48px; height: 48px; border-radius: 15px; background: var(--c); display: grid; place-items: center;
-      box-shadow: 0 8px 18px -6px var(--c);
+    .branch-cover-wrap {
+      width: 100%;
+      height: 148px;
+      background: var(--soft);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .branch .bn { min-width: 0; }
-    .branch .bn small { display: block; font-size: 11px; color: var(--mute); line-height: 1.3; }
-    .branch .bn b { display: block; font-weight: 600; font-size: 17px; color: var(--navy); line-height: 1.25; }
-    .branch .cnt { font-size: 12px; color: var(--mute); font-variant-numeric: tabular-nums; }
-    .branch .cnt strong { color: var(--c); }
+    .branch-cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    .branch:hover .branch-cover-img { transform: scale(1.04); }
+    .branch-cover-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--mute);
+      font-size: 11px;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--soft) 0%, color-mix(in srgb, var(--c) 14%, var(--soft)) 100%);
+    }
+    .branch-cov-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      color: var(--navy);
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      transition: all 0.15s ease;
+      z-index: 3;
+    }
+    .branch-cov-btn:hover { background: #FFFFFF; transform: scale(1.1); color: var(--gold, #B8935A); }
+    .branch-meta-wrap {
+      padding: 10px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      width: 100%;
+      background: var(--card);
+    }
+    .branch-meta-wrap .bn { min-width: 0; }
+    .branch-meta-wrap .bn small { display: block; font-size: 10px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.2; }
+    .branch-meta-wrap .bn b { display: block; font-weight: 700; font-size: 15px; color: var(--navy); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .branch-meta-wrap .cnt { font-size: 11px; color: var(--mute); font-variant-numeric: tabular-nums; margin-top: 1px; }
+    .branch-meta-wrap .cnt strong { color: var(--c); font-weight: 700; }
 
     /* Reels Poster Grid */
     .reels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
@@ -1892,6 +1950,120 @@
       gap: 12px;
       width: 100%;
     }
+
+    /* Content Type Switcher (Reels | Stories | Posters) */
+    .content-type-switcher {
+      display: flex;
+      gap: 6px;
+      margin: 12px 0 16px;
+      background: var(--soft);
+      padding: 4px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+    .ctype-btn {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--mute);
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .ctype-btn.active {
+      background: #FFFFFF;
+      color: var(--navy);
+      box-shadow: 0 4px 14px rgba(18, 41, 74, 0.08);
+      font-weight: 700;
+    }
+
+    /* Monthly Content Calendar */
+    .cal-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 20px rgba(18, 41, 74, 0.04);
+    }
+    .cal-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .cal-top h3 { font-size: 15px; font-weight: 700; color: var(--navy); margin: 0; }
+    .cal-upload-btn {
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: transform 0.15s;
+    }
+    .cal-upload-btn:hover { transform: scale(1.04); }
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .cal-weekdays span {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .cal-cell {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s ease;
+      min-width: 0;
+      padding: 2px;
+    }
+    .cal-cell.blank { border-color: transparent; background: transparent; cursor: default; pointer-events: none; }
+    .cal-cell:not(.blank):hover { border-color: var(--navy); transform: translateY(-1px); }
+    .cal-cell.active { border-color: var(--navy); background: var(--navy) !important; color: #FFFFFF !important; box-shadow: 0 4px 10px rgba(18, 41, 74, 0.2); }
+    .cal-cell.has-item { border-color: var(--gold, #B8935A); background: color-mix(in srgb, var(--gold, #B8935A) 12%, var(--card)); font-weight: 700; }
+    .cal-dot { width: 4px; height: 4px; border-radius: 99px; background: var(--gold, #B8935A); margin-top: 2px; }
+    .cal-cell.active .cal-dot { background: #FFFFFF; }
+    .cal-badge { position: absolute; top: 1px; right: 2px; font-size: 8px; font-weight: 700; color: var(--navy); }
+    .cal-cell.active .cal-badge { color: #FFFFFF; }
+
+    /* Poster and Story Modifiers */
+    .poster.is-square { aspect-ratio: 1 / 1 !important; }
+    .poster.is-story { aspect-ratio: 9 / 16 !important; }
 
     /* Floating Toast Notifications (Zero legacy alerts) */
     .toast-container {
@@ -2214,8 +2386,8 @@
       return id ? `https://drive.google.com/uc?export=download&id=${id}` : u;
     };
 
-    // Filter reels by year, month, branch, or album (strictly for the active client, real data only)
-    const reelsFor = (y, m, b, alb) => (DATA.reels || []).filter(r => {
+    // Filter contents by year, month, branch, album, and type (strictly for active client, real data only)
+    const contentsFor = (y, m, b, alb, type) => (DATA.reels || []).filter(r => {
       if (!view.client || r.c !== view.client) return false;
       if (!CONFIG.isAdmin && r.hidden === true) return false;
       if (r.sample || !r.url) return false;
@@ -2223,8 +2395,14 @@
       if (m != null && r.m !== m) return false;
       if (b != null && r.b !== b) return false;
       if (alb != null && r.album !== alb) return false;
+      if (type) {
+        if (type === 'reels' || type === 'reel') return !r.type || r.type === 'reel' || r.type === 'video';
+        if (type === 'stories' || type === 'story') return r.type === 'story';
+        if (type === 'posters' || type === 'poster') return r.type === 'poster';
+      }
       return true;
     }).sort((a,b) => a.date < b.date ? -1 : 1);
+    const reelsFor = (y, m, b, alb) => contentsFor(y, m, b, alb, 'reels');
 
     const fmtDate = d => {
       try { return new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day:'numeric', month:'short' }); }
@@ -3005,15 +3183,22 @@
           tabContent = list.length ? `
             <div class="branches">
               ${list.map(b => {
-                const n = reelsFor(null, null, b).length;
+                const n = contentsFor(null, null, b).length;
                 const cover = (c.branchCovers && c.branchCovers[b]) || '';
                 return `
-                  <button class="branch ${cover ? 'has-cover' : ''}" style="--c:${bColor(b, list)}" data-act="branch" data-b="${esc(b)}">
-                    ${cover ? `<div class="branch-cover-wrap"><img src="${esc(cover)}" alt="" class="branch-cover-img" onerror="this.parentElement.style.display='none'"></div>` : ''}
+                  <button class="branch ${cover ? 'has-cover' : 'no-cover'}" style="--c:${bColor(b, list)}" data-act="branch" data-b="${esc(b)}">
+                    <div class="branch-cover-wrap">
+                      ${cover 
+                        ? `<img src="${esc(cover)}" alt="" class="branch-cover-img" onerror="this.parentElement.querySelector('.branch-cover-placeholder').style.display='flex';this.style.display='none';"><div class="branch-cover-placeholder" style="display:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Add Cover Image</span></div>` 
+                        : `<div class="branch-cover-placeholder"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Add Cover Image</span></div>`
+                      }
+                      <span class="branch-cov-btn" data-act="cover-branch" data-b="${esc(b)}" title="Set cover image (Upload or Link)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                      </span>
+                    </div>
                     <div class="branch-meta-wrap">
-                      <span class="ico">${ic.pin}</span>
                       <span class="bn"><small>Store Branch</small><b>${esc(b)}</b></span>
-                      <span class="cnt"><strong>${n}</strong> reel${n === 1 ? '' : 's'}</span>
+                      <span class="cnt"><strong>${n}</strong> content${n === 1 ? '' : 's'}</span>
                     </div>
                   </button>`;
               }).join('')}
@@ -3023,15 +3208,22 @@
           tabContent = list.length ? `
             <div class="branches">
               ${list.map(alb => {
-                const n = reelsFor(null, null, null, alb).length;
+                const n = contentsFor(null, null, null, alb).length;
                 const cover = (c.albumCovers && c.albumCovers[alb]) || '';
                 return `
-                  <button class="branch ${cover ? 'has-cover' : ''}" style="--c:${bColor(alb, list)}" data-act="album" data-alb="${esc(alb)}">
-                    ${cover ? `<div class="branch-cover-wrap"><img src="${esc(cover)}" alt="" class="branch-cover-img" onerror="this.parentElement.style.display='none'"></div>` : ''}
+                  <button class="branch ${cover ? 'has-cover' : 'no-cover'}" style="--c:${bColor(alb, list)}" data-act="album" data-alb="${esc(alb)}">
+                    <div class="branch-cover-wrap">
+                      ${cover 
+                        ? `<img src="${esc(cover)}" alt="" class="branch-cover-img" onerror="this.parentElement.querySelector('.branch-cover-placeholder').style.display='flex';this.style.display='none';"><div class="branch-cover-placeholder" style="display:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Add Cover Image</span></div>` 
+                        : `<div class="branch-cover-placeholder"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Add Cover Image</span></div>`
+                      }
+                      <span class="branch-cov-btn" data-act="cover-album" data-alb="${esc(alb)}" title="Set cover image (Upload or Link)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                      </span>
+                    </div>
                     <div class="branch-meta-wrap">
-                      <span class="ico">${ic.folder}</span>
                       <span class="bn"><small>Collection</small><b>${esc(alb)}</b></span>
-                      <span class="cnt"><strong>${n}</strong> reel${n === 1 ? '' : 's'}</span>
+                      <span class="cnt"><strong>${n}</strong> content${n === 1 ? '' : 's'}</span>
                     </div>
                   </button>`;
               }).join('')}
@@ -3039,16 +3231,16 @@
         }
 
         app.innerHTML = `
-          ${topbar(c.name, 'Reels Library')}
+          ${topbar(c.name, 'Content Library')}
           <div class="head">
             ${c.logo ? `<img class="clogo" src="${esc(c.logo)}" alt="">` : ''}
             <div class="row-between">
-              <h2>Explore Reels</h2>
+              <h2>Explore Contents</h2>
               <div class="years">
                 ${availableYears.map(yy => `<button data-act="year" data-y="${yy}" aria-pressed="${yy === y}">${yy}</button>`).join('')}
               </div>
             </div>
-            <small>${total} delivered reel${total === 1 ? '' : 's'}</small>
+            <small>${total} delivered content${total === 1 ? '' : 's'}</small>
           </div>
 
           ${(hasBranches || hasAlbums) ? `
@@ -3062,61 +3254,475 @@
           ${CONFIG.isAdmin ? '<button class="fab-add" data-act="add" aria-label="Add reel">+</button>' : ''}`;
       }
 
-      // Screen 4: Reels Gallery
+      // Screen 4: Content Hub (Reels, Stories & Posters with Interactive Calendar)
       else if (view.screen === 'reels') {
         if (!c) { go({ screen: 'splash', client: null }); return; }
         const { year: y, month: m, branch: b, album: alb } = view;
-        const list = reelsFor(m != null ? y : null, m, b, alb);
-        const heading = alb || b || (m != null ? `${MONTHS[m]} ${y}` : 'All Reels');
+        const currentType = view.contentType || 'reels';
+        const allList = contentsFor(m != null ? y : null, m, b, alb);
+        const reelsList = contentsFor(m != null ? y : null, m, b, alb, 'reels');
+        const storiesList = contentsFor(m != null ? y : null, m, b, alb, 'stories');
+        const postersList = contentsFor(m != null ? y : null, m, b, alb, 'posters');
+        const heading = alb || b || (m != null ? `${MONTHS[m]} ${y}` : 'All Contents');
 
-        const body = list.length ? `
-          <div class="reels">
-            ${list.map((r, i) => {
-              const has = !!r.url;
-              const col = RCOL[i % RCOL.length];
-              const isHidden = r.hidden === true;
-              return `
-                <div class="reel ${isHidden ? 'is-hidden' : ''}">
-                  <div class="poster" style="--c:${col}" data-act="play-video" data-id="${r.id}" aria-label="Play ${esc(r.title)}">
-                    ${r.coverUrl ? `<img class="custom-cover" src="${esc(r.coverUrl)}" alt="">` : motif}
-                    <span class="zari"></span>
-                    <span class="no">REEL ${String(i + 1).padStart(2, '0')}</span>
-                    ${r.dur ? `<span class="dur">${esc(r.dur)}</span>` : ''}
-                    ${isHidden ? '<span class="status-tag hidden">HIDDEN</span>' : ''}
-                    <span class="play" style="color:${col}">${ic.play}</span>
-                    <span class="cap">${esc(r.title)}<small>${fmtDate(r.date)}${r.b ? ` · ${esc(r.b)}` : (r.album ? ` · ${esc(r.album)}` : '')}</small></span>
-                    <span class="border"></span>
-                  </div>
-                  ${CONFIG.isAdmin ? `
-                    <div class="stats-line">
-                      <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${r.views || 0} views</span>
-                      <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> ${r.downloads || 0} dl</span>
-                    </div>` : ''}
-                  <div class="acts">
-                    <button class="act" style="--k:var(--blue)" data-act="play-video" data-id="${r.id}"><span class="chip">${ic.view}</span>View</button>
-                    <button type="button" class="act" style="--k:var(--green)" ${has ? `data-act="direct-dl" data-id="${r.id}"` : 'aria-disabled="true"'}><span class="chip">${ic.dl}</span>Download</button>
-                    <button class="act" style="--k:var(--amber)" data-act="share" data-id="${r.id}" ${has ? '' : 'aria-disabled="true"'}><span class="chip">${ic.share}</span>Share</button>
-                  </div>
-                  ${CONFIG.isAdmin ? `
-                    <div class="admin-reel-bar">
-                      <button class="btn-edit" data-act="edit-reel" data-id="${r.id}">Edit</button>
-                      <button class="btn-hide" data-act="toggle-hide" data-id="${r.id}">${isHidden ? 'Unhide' : 'Hide'}</button>
-                      <button class="btn-del" data-act="del" data-id="${r.id}">Delete</button>
-                    </div>` : ''}
-                </div>`;
-            }).join('')}
-          </div>`
-          : `<div class="empty">${ic.film}<b>No reels in this section yet</b>Delivered reels will appear here automatically.</div>`;
+        let contentBody = '';
+        if (currentType === 'reels') {
+          // Current Reels Grid View
+          contentBody = reelsList.length ? `
+            <div class="reels">
+              ${reelsList.map((r, i) => {
+                const has = !!r.url;
+                const col = RCOL[i % RCOL.length];
+                const isHidden = r.hidden === true;
+                return `
+                  <div class="reel ${isHidden ? 'is-hidden' : ''}">
+                    <div class="poster" style="--c:${col}" data-act="play-video" data-id="${r.id}" aria-label="Play ${esc(r.title)}">
+                      ${r.coverUrl ? `<img class="custom-cover" src="${esc(r.coverUrl)}" alt="">` : motif}
+                      <span class="zari"></span>
+                      <span class="no">REEL ${String(i + 1).padStart(2, '0')}</span>
+                      ${r.dur ? `<span class="dur">${esc(r.dur)}</span>` : ''}
+                      ${isHidden ? '<span class="status-tag hidden">HIDDEN</span>' : ''}
+                      <span class="play" style="color:${col}">${ic.play}</span>
+                      <span class="cap">${esc(r.title)}<small>${fmtDate(r.date)}${r.b ? ` · ${esc(r.b)}` : (r.album ? ` · ${esc(r.album)}` : '')}</small></span>
+                      <span class="border"></span>
+                    </div>
+                    ${CONFIG.isAdmin ? `
+                      <div class="stats-line">
+                        <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${r.views || 0} views</span>
+                        <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> ${r.downloads || 0} dl</span>
+                      </div>` : ''}
+                    <div class="acts">
+                      <button class="act" style="--k:var(--blue)" data-act="play-video" data-id="${r.id}"><span class="chip">${ic.view}</span>View</button>
+                      <button type="button" class="act" style="--k:var(--green)" ${has ? `data-act="direct-dl" data-id="${r.id}"` : 'aria-disabled="true"'}><span class="chip">${ic.dl}</span>Download</button>
+                      <button class="act" style="--k:var(--amber)" data-act="share" data-id="${r.id}" ${has ? '' : 'aria-disabled="true"'}><span class="chip">${ic.share}</span>Share</button>
+                    </div>
+                    ${CONFIG.isAdmin ? `
+                      <div class="admin-reel-bar">
+                        <button class="btn-edit" data-act="edit-reel" data-id="${r.id}">Edit</button>
+                        <button class="btn-hide" data-act="toggle-hide" data-id="${r.id}">${isHidden ? 'Unhide' : 'Hide'}</button>
+                        <button class="btn-del" data-act="del" data-id="${r.id}">Delete</button>
+                      </div>` : ''}
+                  </div>`;
+              }).join('')}
+            </div>`
+            : `<div class="empty">${ic.film}<b>No reels in this section yet</b>Delivered reels will appear here automatically.</div>`;
+        } else {
+          // Stories or Posters: Render Interactive Calendar & Image Grid
+          const targetItems = currentType === 'stories' ? storiesList : postersList;
+          contentBody = renderCalendarContent(y, m, targetItems, currentType);
+        }
 
         app.innerHTML = `
           ${topbar(c.name, heading)}
           <div class="head">
-            <small>${esc(c.name)} · ${list.length} reel${list.length === 1 ? '' : 's'}</small>
+            <small>${esc(c.name)} · ${allList.length} delivered content${allList.length === 1 ? '' : 's'}</small>
             <h2>${esc(heading)}</h2>
           </div>
-          ${body}
+
+          <div class="content-type-switcher">
+            <button class="ctype-btn ${currentType === 'reels' ? 'active' : ''}" data-act="set-ctype" data-ctype="reels">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Reels (${reelsList.length})
+            </button>
+            <button class="ctype-btn ${currentType === 'stories' ? 'active' : ''}" data-act="set-ctype" data-ctype="stories">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="2" width="14" height="20" rx="3"/><circle cx="12" cy="18" r="1"/></svg>
+              Stories (${storiesList.length})
+            </button>
+            <button class="ctype-btn ${currentType === 'posters' ? 'active' : ''}" data-act="set-ctype" data-ctype="posters">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Posters (${postersList.length})
+            </button>
+          </div>
+
+          ${contentBody}
           ${CONFIG.isAdmin ? '<button class="fab-add" data-act="add" aria-label="Add reel">+</button>' : ''}`;
       }
+    }
+
+    // --------------------------------------------------------------------------
+    // CALENDAR VIEW & IMAGE MODAL FOR STORIES & POSTERS
+    // --------------------------------------------------------------------------
+    function renderCalendarContent(y, m, items, type) {
+      const targetYear = y || TODAY.getFullYear();
+      const targetMonth = (m != null) ? m : TODAY.getMonth();
+      const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+      const firstDay = new Date(targetYear, targetMonth, 1).getDay();
+      const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const typeLabel = type === 'stories' ? 'Stories' : 'Posters';
+
+      const itemsByDay = {};
+      items.forEach(it => {
+        if (it.date) {
+          const parts = it.date.split('-');
+          const d = parseInt(parts[2], 10);
+          if (d) {
+            itemsByDay[d] = itemsByDay[d] || [];
+            itemsByDay[d].push(it);
+          }
+        }
+      });
+
+      const cells = [];
+      for (let i = 0; i < firstDay; i++) {
+        cells.push('<div class="cal-cell blank"></div>');
+      }
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dayItems = itemsByDay[d] || [];
+        const has = dayItems.length > 0;
+        const isAct = view.selectedDay === d;
+        cells.push(`
+          <div class="cal-cell ${has ? 'has-item' : ''} ${isAct ? 'active' : ''}" data-act="select-cal-day" data-day="${d}" title="${d} ${MONTHS[targetMonth]}: ${dayItems.length} ${typeLabel}">
+            <span>${d}</span>
+            ${has ? (dayItems.length > 1 ? `<span class="cal-badge">${dayItems.length}</span>` : '<span class="cal-dot"></span>') : ''}
+          </div>
+        `);
+      }
+
+      const displayedItems = view.selectedDay ? (itemsByDay[view.selectedDay] || []) : items;
+
+      return `
+        <div class="cal-card">
+          <div class="cal-top">
+            <h3>${MONTHS[targetMonth]} ${targetYear} · ${typeLabel} Calendar</h3>
+            <button type="button" class="cal-upload-btn" data-act="upload-image-prompt" data-type="${type}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> + Upload ${type === 'stories' ? 'Story' : 'Poster'}
+            </button>
+          </div>
+          <div class="cal-weekdays">
+            ${weekdays.map(w => `<span>${w}</span>`).join('')}
+          </div>
+          <div class="cal-grid">
+            ${cells.join('')}
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;">
+          <small style="font-size:12px;color:var(--mute);font-weight:600;">
+            ${view.selectedDay ? `${MONTHS[targetMonth]} ${view.selectedDay}: ${displayedItems.length} ${typeLabel}` : `All ${typeLabel} in ${MONTHS[targetMonth]} (${displayedItems.length})`}
+          </small>
+          ${view.selectedDay ? '<button class="ghost" data-act="clear-cal-day" style="padding:3px 10px;font-size:11px;border-radius:99px;">Show All Month</button>' : ''}
+        </div>
+
+        ${displayedItems.length ? `
+          <div class="reels">
+            ${displayedItems.map((it, i) => `
+              <div class="reel">
+                <div class="poster ${type === 'posters' ? 'is-square' : 'is-story'}" style="--c:${RCOL[i % RCOL.length]}" data-act="view-image" data-id="${it.id}">
+                  <img class="custom-cover" src="${esc(it.url || it.coverUrl)}" alt="${esc(it.title)}">
+                  <span class="zari"></span>
+                  <span class="no">${type === 'stories' ? 'STORY' : 'POSTER'} · ${esc(it.date.slice(5))}</span>
+                  <span class="cap">${esc(it.title)}<small>${fmtDate(it.date)}${it.b ? ' · ' + esc(it.b) : ''}</small></span>
+                  <span class="border"></span>
+                </div>
+                <div class="acts">
+                  <button class="act" style="--k:var(--blue)" data-act="view-image" data-id="${it.id}"><span class="chip">${ic.view}</span>View</button>
+                  <button type="button" class="act" style="--k:var(--green)" data-act="direct-dl" data-id="${it.id}"><span class="chip">${ic.dl}</span>Download</button>
+                  <button class="act" style="--k:var(--amber)" data-act="share" data-id="${it.id}"><span class="chip">${ic.share}</span>Share</button>
+                </div>
+                ${CONFIG.isAdmin ? `
+                  <div class="admin-reel-bar">
+                    <button class="btn-edit" data-act="edit-reel" data-id="${it.id}">Edit</button>
+                    <button class="btn-del" data-act="del" data-id="${it.id}">Delete</button>
+                  </div>` : ''}
+              </div>
+            `).join('')}
+          </div>` : `
+          <div class="empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin:0 auto 10px;display:block;opacity:0.45;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <b>No ${typeLabel} for ${view.selectedDay ? `${MONTHS[targetMonth]} ${view.selectedDay}` : 'this month'}</b>
+            <span>Tap '+ Upload ${type === 'stories' ? 'Story' : 'Poster'}' to add festive image content.</span>
+          </div>`
+        }
+      `;
+    }
+
+    function openImageModal(it) {
+      if (!it) return;
+      sheet(`
+        <div style="display:flex;flex-direction:column;gap:12px;width:100%;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+            <div>
+              <span style="font-size:10px;font-weight:700;color:var(--c);text-transform:uppercase;letter-spacing:0.06em;">${it.type === 'story' ? 'Instagram / WhatsApp Story (9:16)' : 'Festive Poster / Campaign'}</span>
+              <h4 style="margin:3px 0 0;font-size:16px;color:var(--navy);font-weight:700;">${esc(it.title)}</h4>
+              <p style="margin:2px 0 0;font-size:11px;color:var(--mute);">${fmtDate(it.date)}${it.b ? ' · ' + esc(it.b) : ''}</p>
+            </div>
+            <button class="ghost" data-close style="padding:6px 14px;border-radius:999px;font-size:12px;flex-shrink:0;">Close</button>
+          </div>
+          <div style="width:100%;max-height:65dvh;border-radius:18px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 35px rgba(18,41,74,0.12);">
+            <img src="${esc(it.url || it.coverUrl)}" alt="${esc(it.title)}" style="max-width:100%;max-height:65dvh;object-fit:contain;display:block;">
+          </div>
+          <div class="acts" style="width:100%;margin-top:2px;">
+            <button type="button" class="act" style="--k:var(--green);cursor:pointer;" id="img-dl-btn">
+              <span class="chip">${ic.dl}</span><span>Download</span>
+            </button>
+            <button type="button" class="act" style="--k:var(--amber);cursor:pointer;" id="img-share-btn">
+              <span class="chip">${ic.share}</span><span>Share</span>
+            </button>
+            <button type="button" class="act" style="--k:var(--blue);cursor:pointer;" id="img-copy-btn">
+              <span class="chip">${ic.copy}</span><span>Copy Link</span>
+            </button>
+          </div>
+        </div>
+      `, sc => {
+        sc.querySelector('#img-dl-btn')?.addEventListener('click', () => triggerDirectDownload(it));
+        sc.querySelector('#img-share-btn')?.addEventListener('click', () => openShare(it));
+        sc.querySelector('#img-copy-btn')?.addEventListener('click', () => {
+          navigator.clipboard.writeText(it.url || it.coverUrl).then(() => toast('Image link copied to clipboard!', 'success'));
+        });
+      }, true, 'image-modal-scrim');
+    }
+
+    function openCoverModal(client, type, name) {
+      const coverProp = type === 'branch' ? 'branchCovers' : 'albumCovers';
+      client[coverProp] = client[coverProp] || {};
+      let currentCover = client[coverProp][name] || '';
+
+      sheet(`
+        <div style="display:flex;flex-direction:column;gap:12px;width:100%;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <h3 style="margin:0;font-size:16px;color:var(--navy);font-weight:700;">Set Cover Page · ${esc(name)}</h3>
+            <button class="ghost" data-close style="padding:4px 10px;font-size:12px;border-radius:999px;">Close</button>
+          </div>
+          <p style="font-size:12px;color:var(--mute);margin:0;">${type === 'branch' ? 'Store Branch' : 'Collection'} cover image for <b>${esc(client.name)}</b></p>
+
+          <div style="width:100%;height:150px;border-radius:14px;background:var(--soft);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;" id="cov-prev-box">
+            ${currentCover ? `<img src="${esc(currentCover)}" style="width:100%;height:100%;object-fit:cover;" id="cov-img-tag">` : '<span style="font-size:12px;color:var(--mute);">No cover image set yet</span>'}
+          </div>
+
+          <div class="field">
+            <label style="font-size:11px;font-weight:700;color:var(--ink);">Option 1: Upload Cover Image (PNG, JPG, WebP)</label>
+            <input type="file" id="cov-file-input" accept="image/png,image/jpeg,image/webp" style="font-size:12px;width:100%;">
+            <small style="font-size:11px;color:var(--mute);display:block;margin-top:2px;">Auto-optimized for instant loading.</small>
+          </div>
+
+          <div class="field">
+            <label style="font-size:11px;font-weight:700;color:var(--ink);">Option 2: Image URL or Google Drive Link</label>
+            <input type="text" id="cov-url-input" value="${currentCover.startsWith('data:') ? '' : currentCover}" placeholder="https://... or Google Drive image link">
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+            ${currentCover ? '<button type="button" class="ghost" id="cov-del-btn" style="color:var(--red);border-color:#FCDAD7;">Remove Cover</button>' : '<span></span>'}
+            <div style="display:flex;gap:8px;">
+              <button type="button" class="ghost" data-close>Cancel</button>
+              <button type="button" class="go" id="cov-save-btn">Save Cover</button>
+            </div>
+          </div>
+        </div>
+      `, sc => {
+        const prevBox = sc.querySelector('#cov-prev-box');
+        const fileInput = sc.querySelector('#cov-file-input');
+        const urlInput = sc.querySelector('#cov-url-input');
+        const saveBtn = sc.querySelector('#cov-save-btn');
+        const delBtn = sc.querySelector('#cov-del-btn');
+
+        function updatePreview(url) {
+          currentCover = url;
+          if (url) {
+            prevBox.innerHTML = `<img src="${esc(url)}" style="width:100%;height:100%;object-fit:cover;" id="cov-img-tag">`;
+          } else {
+            prevBox.innerHTML = '<span style="font-size:12px;color:var(--mute);">No cover image set yet</span>';
+          }
+        }
+
+        fileInput.onchange = e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+              const maxDim = 1200;
+              let w = img.width, h = img.height;
+              if (w > maxDim || h > maxDim) {
+                if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                else { w = Math.round((w * maxDim) / h); h = maxDim; }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w; canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+              updatePreview(dataUrl);
+              urlInput.value = '';
+            };
+            img.src = reader.result;
+          };
+          reader.readAsDataURL(file);
+        };
+
+        urlInput.oninput = () => {
+          let val = urlInput.value.trim();
+          if (val) {
+            const dId = driveId(val);
+            if (dId) val = `https://drive.google.com/thumbnail?id=${dId}&sz=w1200`;
+            updatePreview(val);
+          }
+        };
+
+        if (delBtn) {
+          delBtn.onclick = () => {
+            delete client[coverProp][name];
+            persist(`Cover removed for ${name}`);
+            sc.remove();
+          };
+        }
+
+        saveBtn.onclick = () => {
+          if (currentCover) {
+            client[coverProp][name] = currentCover;
+            persist(`Cover saved for ${name}`);
+            toast(`Cover page updated for ${name}!`, 'success');
+          }
+          sc.remove();
+        };
+      }, true);
+    }
+
+    function openClientImageUploadModal(initialType = 'story') {
+      const c = client();
+      if (!c) return;
+      const m = view.month != null ? view.month : TODAY.getMonth();
+      const y = view.year || TODAY.getFullYear();
+      const defDay = String(view.selectedDay || 15).padStart(2, '0');
+      const defDate = `${y}-${String(m + 1).padStart(2, '0')}-${defDay}`;
+
+      sheet(`
+        <div style="display:flex;flex-direction:column;gap:12px;width:100%;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <h3 style="margin:0;font-size:16px;color:var(--navy);font-weight:700;">Upload Festive Content</h3>
+            <button class="ghost" data-close style="padding:4px 10px;font-size:12px;border-radius:999px;">Close</button>
+          </div>
+          <p style="font-size:12px;color:var(--mute);margin:0;">Publish 9:16 Stories or Festive Posters for <b>${esc(c.name)}</b></p>
+
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="ctype-btn ${initialType === 'story' ? 'active' : ''}" id="m-type-story" style="border:1px solid var(--line);">Story (9:16)</button>
+            <button type="button" class="ctype-btn ${initialType === 'poster' ? 'active' : ''}" id="m-type-poster" style="border:1px solid var(--line);">Poster (Square/Feed)</button>
+          </div>
+
+          <div class="field">
+            <label style="font-size:11px;font-weight:700;color:var(--ink);">Title / Caption</label>
+            <input type="text" id="m-img-title" placeholder="e.g. Diwali Dhamaka Special Offer">
+          </div>
+
+          <div class="field">
+            <label style="font-size:11px;font-weight:700;color:var(--ink);">Date</label>
+            <input type="date" id="m-img-date" value="${defDate}">
+          </div>
+
+          ${(c.branches && c.branches.length) ? `
+          <div class="field">
+            <label style="font-size:11px;font-weight:700;color:var(--ink);">Branch (Optional)</label>
+            <select id="m-img-branch">
+              <option value="">All Branches</option>
+              ${c.branches.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('')}
+            </select>
+          </div>` : ''}
+
+          <div style="width:100%;height:140px;border-radius:14px;background:var(--soft);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;" id="m-img-prev-box">
+            <span style="font-size:12px;color:var(--mute);">Preview will appear here</span>
+          </div>
+
+          <div class="field">
+            <label style="font-size:11px;font-weight:700;color:var(--ink);">Option 1: Upload Image (PNG, JPG, WebP)</label>
+            <input type="file" id="m-img-file" accept="image/png,image/jpeg,image/webp">
+          </div>
+
+          <div class="field">
+            <label style="font-size:11px;font-weight:700;color:var(--ink);">Option 2: Image URL or Google Drive Link</label>
+            <input type="text" id="m-img-url" placeholder="https://... or Google Drive image link">
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+            <button type="button" class="ghost" data-close>Cancel</button>
+            <button type="button" class="go" id="m-img-save-btn">Publish to Library</button>
+          </div>
+        </div>
+      `, sc => {
+        let curType = initialType;
+        let imgUrl = '';
+        const prevBox = sc.querySelector('#m-img-prev-box');
+        const fileInp = sc.querySelector('#m-img-file');
+        const urlInp = sc.querySelector('#m-img-url');
+        const btnStory = sc.querySelector('#m-type-story');
+        const btnPoster = sc.querySelector('#m-type-poster');
+
+        btnStory.onclick = () => { curType = 'story'; btnStory.classList.add('active'); btnPoster.classList.remove('active'); };
+        btnPoster.onclick = () => { curType = 'poster'; btnPoster.classList.add('active'); btnStory.classList.remove('active'); };
+
+        function updatePrev(url) {
+          imgUrl = url;
+          if (url) prevBox.innerHTML = `<img src="${esc(url)}" style="width:100%;height:100%;object-fit:contain;">`;
+          else prevBox.innerHTML = '<span style="font-size:12px;color:var(--mute);">Preview will appear here</span>';
+        }
+
+        fileInp.onchange = e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+              const maxDim = 1200;
+              let w = img.width, h = img.height;
+              if (w > maxDim || h > maxDim) {
+                if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                else { w = Math.round((w * maxDim) / h); h = maxDim; }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w; canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+              updatePrev(dataUrl);
+              urlInp.value = '';
+            };
+            img.src = reader.result;
+          };
+          reader.readAsDataURL(file);
+        };
+
+        urlInp.oninput = () => {
+          let val = urlInp.value.trim();
+          if (val) {
+            const dId = driveId(val);
+            if (dId) val = `https://drive.google.com/thumbnail?id=${dId}&sz=w1200`;
+            updatePrev(val);
+          }
+        };
+
+        sc.querySelector('#m-img-save-btn').onclick = () => {
+          const title = sc.querySelector('#m-img-title').value.trim() || (curType === 'story' ? 'Festive Story' : 'Festive Poster');
+          const dt = sc.querySelector('#m-img-date').value || defDate;
+          const br = sc.querySelector('#m-img-branch')?.value || '';
+          if (!imgUrl) {
+            toast('Please select an image or enter a URL', 'amber');
+            return;
+          }
+          const dtYear = parseInt(dt.slice(0, 4), 10);
+          const dtMonth = parseInt(dt.slice(5, 7), 10) - 1;
+          const newItem = {
+            id: 'img_' + Date.now().toString(36),
+            c: c.id,
+            type: curType,
+            title,
+            date: dt,
+            y: dtYear,
+            m: dtMonth,
+            b: br,
+            url: imgUrl,
+            coverUrl: imgUrl,
+            dur: curType === 'story' ? '9:16' : '1:1',
+            views: 0,
+            downloads: 0,
+            hidden: false
+          };
+          DATA.reels = DATA.reels || [];
+          DATA.reels.unshift(newItem);
+          persist(`${curType === 'story' ? 'Story' : 'Poster'} published!`);
+          toast(`${curType === 'story' ? 'Story' : 'Poster'} added to calendar!`, 'success');
+          sc.remove();
+        };
+      }, true);
     }
 
     // --------------------------------------------------------------------------
@@ -3494,23 +4100,37 @@
     // --------------------------------------------------------------------------
     function triggerDirectDownload(r) {
       if (!r || !r.url) {
-        toast('Sample reel layout. Download available when real file is uploaded.', 'amber');
+        toast('Content layout. Download available when file is ready.', 'amber');
         return;
       }
+      const isImg = r.type === 'story' || r.type === 'poster' || r.url.startsWith('data:image/') || /\.(jpe?g|png|webp|gif)$/i.test(r.url);
       const id = driveId(r.url);
-      const cleanTitle = (r.title || 'video').replace(/[/\\?%*:|"<>]/g, '_').trim() || 'video';
-      const filename = cleanTitle.toLowerCase().endsWith('.mp4') ? cleanTitle : `${cleanTitle}.mp4`;
+      const cleanTitle = (r.title || (isImg ? 'image' : 'video')).replace(/[/\\?%*:|"<>]/g, '_').trim() || (isImg ? 'image' : 'video');
+      const ext = isImg ? '.jpg' : '.mp4';
+      const filename = cleanTitle.toLowerCase().endsWith(ext) ? cleanTitle : `${cleanTitle}${ext}`;
 
       if (CONFIG.gasUrl) {
         gasApi('trackEvent', { reelId: r.id, type: 'download' }).catch(() => {});
         r.downloads = (r.downloads || 0) + 1;
       }
 
-      toast('Downloading video...', 'info');
+      toast(isImg ? 'Downloading image...' : 'Downloading video...', 'info');
+
+      // Direct DataURL download support
+      if (r.url.startsWith('data:image/')) {
+        const a = document.createElement('a');
+        a.href = r.url;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => a.remove(), 1000);
+        return;
+      }
 
       const dlEndpoint = id
         ? `/api/download?id=${encodeURIComponent(id)}&name=${encodeURIComponent(filename)}`
-        : `/api/download?url=${encodeURIComponent(r.url)}&name=${encodeURIComponent(filename)}`;
+        : (isImg ? r.url : `/api/download?url=${encodeURIComponent(r.url)}&name=${encodeURIComponent(filename)}`);
 
       const a = document.createElement('a');
       a.href = dlEndpoint;
@@ -5124,9 +5744,29 @@
       else if (a === 'months') go({ screen: 'months' });
       else if (a === 'tab') { view.tabMode = el.dataset.tab; render(); }
       else if (a === 'year') go({ year: +el.dataset.y });
-      else if (a === 'month') go({ screen: 'reels', month: +el.dataset.m, branch: null, album: null });
-      else if (a === 'branch') go({ screen: 'reels', branch: el.dataset.b, month: null, album: null });
-      else if (a === 'album') go({ screen: 'reels', album: el.dataset.alb, month: null, branch: null });
+      else if (a === 'month') go({ screen: 'reels', month: +el.dataset.m, branch: null, album: null, contentType: 'reels', selectedDay: null });
+      else if (a === 'branch') go({ screen: 'reels', branch: el.dataset.b, month: null, album: null, contentType: 'reels', selectedDay: null });
+      else if (a === 'album') go({ screen: 'reels', album: el.dataset.alb, month: null, branch: null, contentType: 'reels', selectedDay: null });
+      else if (a === 'set-ctype') { view.contentType = el.dataset.ctype; view.selectedDay = null; render(); }
+      else if (a === 'select-cal-day') { const d = +el.dataset.day; view.selectedDay = (view.selectedDay === d ? null : d); render(); }
+      else if (a === 'clear-cal-day') { view.selectedDay = null; render(); }
+      else if (a === 'upload-image-prompt') { openClientImageUploadModal(el.dataset.type === 'stories' ? 'story' : 'poster'); }
+      else if (a === 'view-image') {
+        const it = (DATA.reels || []).find(x => x.id === el.dataset.id);
+        if (it) openImageModal(it);
+      }
+      else if (a === 'cover-branch') {
+        e.stopPropagation();
+        const b = el.dataset.b;
+        const c = client();
+        if (c) openCoverModal(c, 'branch', b);
+      }
+      else if (a === 'cover-album') {
+        e.stopPropagation();
+        const alb = el.dataset.alb;
+        const c = client();
+        if (c) openCoverModal(c, 'album', alb);
+      }
       else if (a === 'play-video') {
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) openVideoModal(r);

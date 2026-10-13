@@ -822,6 +822,7 @@
     <aside class="admin-sidebar">
       <button class="nav-item active" data-tab="dashboard"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span> Overview</button>
       <button class="nav-item" data-tab="reels"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg></span> Reels &amp; Videos</button>
+      <button class="nav-item" data-tab="images"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span> Stories &amp; Posters</button>
       <button class="nav-item" data-tab="clients"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/></svg></span> Clients &amp; URLs</button>
       <button class="nav-item" data-tab="folders"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span> Drive Folders</button>
       <button class="nav-item" data-tab="engine"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></span> Google Drive Engine</button>
@@ -883,6 +884,7 @@
     let activeTab = 'dashboard';
     let searchQuery = '';
     let selectedClientFilter = '';
+    let imageTypeFilter = '';
     const workspace = document.getElementById('workspace');
     const toastTray = document.getElementById('toasts');
 
@@ -1394,6 +1396,7 @@
       }
       if (activeTab === 'dashboard') renderDashboard();
       else if (activeTab === 'reels') renderReels();
+      else if (activeTab === 'images') renderImagesTab();
       else if (activeTab === 'clients') renderClients();
       else if (activeTab === 'folders') renderFolders();
       else if (activeTab === 'engine') renderEngine();
@@ -1559,6 +1562,301 @@
             saveAndBroadcast('Reel removed from dashboard');
             try { await api('deleteReel', { id: r.id }); } catch(e) {}
           }, 'Delete Reel', true);
+        };
+      });
+    }
+
+
+    // --------------------------------------------------------------------------
+    // TAB 2B: STORIES & POSTERS MANAGER
+    // --------------------------------------------------------------------------
+    function renderImagesTab() {
+      const clients = DATA.clients || [];
+      const allImages = (DATA.reels || []).filter(r => r.type === 'story' || r.type === 'poster');
+      const storiesCount = (DATA.reels || []).filter(r => r.type === 'story').length;
+      const postersCount = (DATA.reels || []).filter(r => r.type === 'poster').length;
+
+      const filtered = allImages.filter(r => {
+        if (selectedClientFilter && r.c !== selectedClientFilter) return false;
+        if (imageTypeFilter && r.type !== imageTypeFilter) return false;
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        const clientName = ((DATA.clients || []).find(c => c.id === r.c)?.name || '').toLowerCase();
+        return (r.title || '').toLowerCase().includes(q) ||
+               (r.b || '').toLowerCase().includes(q) ||
+               (r.album || '').toLowerCase().includes(q) ||
+               clientName.includes(q);
+      });
+
+      workspace.innerHTML = `
+        <div class="action-bar">
+          <div>
+            <h2>Stories &amp; Posters Content</h2>
+            <p style="font-size:12px;color:var(--mute)">Upload, schedule, and deliver high-resolution 9:16 Stories and Festive Posters.</p>
+          </div>
+          <div class="action-group">
+            <select class="search-input" id="filter-img-type" style="width:auto;cursor:pointer;">
+              <option value="" ${!imageTypeFilter ? 'selected' : ''}>All Types (${allImages.length})</option>
+              <option value="story" ${imageTypeFilter === 'story' ? 'selected' : ''}>Stories 9:16 (${storiesCount})</option>
+              <option value="poster" ${imageTypeFilter === 'poster' ? 'selected' : ''}>Posters (${postersCount})</option>
+            </select>
+            <select class="search-input" id="filter-img-client" style="width:auto;cursor:pointer;">
+              <option value="">All Clients</option>
+              ${clients.map(c => `
+                <option value="${c.id}" ${selectedClientFilter === c.id ? 'selected' : ''}>${c.name}</option>
+              `).join('')}
+            </select>
+            <input type="text" class="search-input" id="search-img" placeholder="Search stories, posters..." value="${searchQuery}">
+            <button class="btn-primary" id="btn-add-img" style="background:linear-gradient(135deg, #6C5CE7, #2F7DF6);border-color:#6C5CE7;display:inline-flex;align-items:center;gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> + Upload Story / Poster
+            </button>
+          </div>
+        </div>
+
+        <div class="reels-grid">
+          ${filtered.length ? filtered.map(it => renderImageAdminCard(it)).join('') : '<p style="grid-column:1/-1;text-align:center;padding:40px;color:var(--mute);">No stories or posters found. Click "+ Upload Story / Poster" to create one.</p>'}
+        </div>`;
+
+      document.getElementById('btn-add-img').onclick = () => openAdminImageModal();
+      document.getElementById('filter-img-type').onchange = e => {
+        imageTypeFilter = e.target.value;
+        renderImagesTab();
+      };
+      document.getElementById('filter-img-client').onchange = e => {
+        selectedClientFilter = e.target.value;
+        renderImagesTab();
+      };
+      document.getElementById('search-img').oninput = e => {
+        searchQuery = e.target.value;
+        renderImagesTab();
+      };
+      bindImageAdminActions();
+    }
+
+    function renderImageAdminCard(it) {
+      const clientObj = (DATA.clients || []).find(c => c.id === it.c) || { name: 'Client' };
+      const sub = it.b ? it.b : (it.album ? it.album : '');
+      const isStory = it.type === 'story';
+      return `
+        <div class="reel-box">
+          <div class="reel-thumb-wrap" data-img-prev="${it.id}" style="aspect-ratio:${isStory ? '9/16' : '1/1'};cursor:pointer;">
+            <img src="${it.url || it.coverUrl}" alt="" style="width:100%;height:100%;object-fit:cover;">
+            <span class="dur" style="background:${isStory ? '#6C5CE7' : '#1FAF64'}">${isStory ? 'STORY 9:16' : 'POSTER'}</span>
+            <div class="zari"></div>
+          </div>
+          <div class="reel-details">
+            <h4>${it.title}</h4>
+            <p>${clientObj.name}${sub ? ` · ${sub}` : ''}</p>
+          </div>
+          <div class="reel-meta-row">
+            <span>${it.date || ''}</span>
+            <span class="badge-status ${it.status || 'approved'}">${it.type ? it.type.toUpperCase() : 'IMAGE'}</span>
+          </div>
+          <div class="reel-box-actions">
+            <button class="action-edit" data-img-prev="${it.id}">Preview</button>
+            <button class="action-edit" data-edit="${it.id}">Edit</button>
+            <button class="action-delete" data-del="${it.id}">Delete</button>
+          </div>
+        </div>`;
+    }
+
+    function bindImageAdminActions() {
+      document.querySelectorAll('[data-img-prev]').forEach(b => {
+        b.onclick = () => {
+          const it = DATA.reels.find(x => x.id === b.dataset.imgPrev);
+          if (it) {
+            modal(`
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h3 style="margin:0;font-size:16px;">${esc(it.title)}</h3>
+                <button data-close class="btn-portal" style="padding:4px 10px;font-size:16px;">&times;</button>
+              </div>
+              <div style="width:100%;max-height:65vh;background:#000;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                <img src="${esc(it.url || it.coverUrl)}" style="max-width:100%;max-height:65vh;object-fit:contain;">
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+                <span style="font-size:12px;color:var(--mute);">${it.date} ${it.b ? ' · ' + esc(it.b) : ''}</span>
+                <button type="button" class="btn-primary" data-close>Close</button>
+              </div>
+            `);
+          }
+        };
+      });
+      document.querySelectorAll('[data-edit]').forEach(b => {
+        b.onclick = () => {
+          const r = DATA.reels.find(x => x.id === b.dataset.edit);
+          if (r) openEditModal(r);
+        };
+      });
+      document.querySelectorAll('[data-del]').forEach(b => {
+        b.onclick = () => {
+          const r = DATA.reels.find(x => x.id === b.dataset.del);
+          if (r) {
+            confirmModal('Delete this item?', `"${r.title}" will be deleted.`, () => {
+              DATA.reels = DATA.reels.filter(x => x.id !== r.id);
+              saveAndBroadcast('Item deleted');
+              render();
+            });
+          }
+        };
+      });
+    }
+
+    function openAdminImageModal() {
+      const clients = DATA.clients || [];
+      modal(`
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <h3 style="margin:0;font-size:16px;">Upload Story or Poster</h3>
+          <button data-close class="btn-portal" style="padding:4px 10px;font-size:16px;">&times;</button>
+        </div>
+        <p style="font-size:12px;color:var(--mute);margin:0 0 14px;">Publish high-resolution Stories and Festive Posters to client portals.</p>
+
+        <div class="form-group">
+          <label>Target Client Brand</label>
+          <select id="u-img-client">
+            ${clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="form-row2">
+          <div class="form-group">
+            <label>Content Type</label>
+            <select id="u-img-type">
+              <option value="story">Story (9:16 Vertical)</option>
+              <option value="poster" selected>Poster (Square / Feed)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Publication Date</label>
+            <input type="date" id="u-img-date" value="${new Date().toISOString().slice(0, 10)}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Title / Campaign Caption</label>
+          <input type="text" id="u-img-title" placeholder="e.g. Diwali Flash Sale Announcement">
+        </div>
+
+        <div class="form-row2">
+          <div class="form-group">
+            <label>Branch (Optional)</label>
+            <input type="text" id="u-img-branch" placeholder="e.g. T. Nagar">
+          </div>
+          <div class="form-group">
+            <label>Album / Campaign (Optional)</label>
+            <input type="text" id="u-img-album" placeholder="e.g. Festive Collection">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Live Preview</label>
+          <div id="u-img-prev-box" style="width:100%;height:140px;border-radius:12px;background:#000;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <span style="font-size:12px;color:#8E9BAE;">Select file or paste link to preview</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Upload Image File (Device or Camera)</label>
+          <input type="file" id="u-img-file" accept="image/*">
+        </div>
+
+        <div class="form-group">
+          <label>Or Image Link (Google Drive / Direct URL)</label>
+          <input type="url" id="u-img-url" placeholder="https://drive.google.com/file/d/... or https://...">
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+          <button type="button" class="btn-portal" data-close>Cancel</button>
+          <button type="button" class="btn-primary" id="u-img-submit-btn" style="background:linear-gradient(135deg, #6C5CE7, #2F7DF6);border-color:#6C5CE7;">Publish Content</button>
+        </div>
+      `, sc => {
+        let currentImgUrl = '';
+        const prevBox = sc.querySelector('#u-img-prev-box');
+        const fileInput = sc.querySelector('#u-img-file');
+        const urlInput = sc.querySelector('#u-img-url');
+        const submitBtn = sc.querySelector('#u-img-submit-btn');
+
+        function updatePrev(url) {
+          currentImgUrl = url;
+          if (url) prevBox.innerHTML = `<img src="${esc(url)}" style="width:100%;height:100%;object-fit:contain;">`;
+          else prevBox.innerHTML = '<span style="font-size:12px;color:#8E9BAE;">Select file or paste link to preview</span>';
+        }
+
+        fileInput.onchange = e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+              const maxDim = 1200;
+              let w = img.width, h = img.height;
+              if (w > maxDim || h > maxDim) {
+                if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                else { w = Math.round((w * maxDim) / h); h = maxDim; }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w; canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+              updatePrev(dataUrl);
+              urlInput.value = '';
+            };
+            img.src = reader.result;
+          };
+          reader.readAsDataURL(file);
+        };
+
+        urlInput.oninput = () => {
+          let val = urlInput.value.trim();
+          if (val) {
+            const dId = driveId(val);
+            if (dId) val = `https://drive.google.com/thumbnail?id=${dId}&sz=w1200`;
+            updatePrev(val);
+          }
+        };
+
+        submitBtn.onclick = () => {
+          const clientId = sc.querySelector('#u-img-client').value;
+          const type = sc.querySelector('#u-img-type').value;
+          const title = sc.querySelector('#u-img-title').value.trim() || (type === 'story' ? 'Festive Story' : 'Festive Poster');
+          const date = sc.querySelector('#u-img-date').value || new Date().toISOString().slice(0, 10);
+          const branch = sc.querySelector('#u-img-branch').value.trim();
+          const album = sc.querySelector('#u-img-album').value.trim();
+
+          if (!currentImgUrl) {
+            toast('Please upload an image file or provide a link', 'amber');
+            return;
+          }
+
+          const y = parseInt(date.slice(0, 4), 10);
+          const m = parseInt(date.slice(5, 7), 10) - 1;
+
+          const newItem = {
+            id: 'img_' + Date.now().toString(36),
+            c: clientId,
+            type: type,
+            title: title,
+            date: date,
+            y: y,
+            m: m,
+            b: branch,
+            album: album,
+            url: currentImgUrl,
+            coverUrl: currentImgUrl,
+            dur: type === 'story' ? '9:16' : '1:1',
+            status: 'approved',
+            views: 0,
+            downloads: 0,
+            hidden: false
+          };
+
+          DATA.reels = DATA.reels || [];
+          DATA.reels.unshift(newItem);
+          saveAndBroadcast(`${type === 'story' ? 'Story' : 'Poster'} published for client!`);
+          toast(`${type === 'story' ? 'Story' : 'Poster'} published successfully!`, 'success');
+          sc.remove();
+          render();
         };
       });
     }
