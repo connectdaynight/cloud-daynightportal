@@ -783,12 +783,13 @@
         flex: 1 1 auto !important;
         width: 100% !important;
         max-width: 100% !important;
-        height: calc(100dvh - 145px) !important;
-        max-height: calc(100dvh - 145px) !important;
-        border-radius: 18px !important;
-        margin: 0 auto !important;
-        background: #000 !important;
-        box-shadow: 0 12px 36px rgba(18, 41, 74, 0.12) !important;
+        aspect-ratio: 9/16 !important;
+        height: auto !important;
+        max-height: calc(100dvh - 150px) !important;
+        border-radius: 20px !important;
+        margin: auto !important;
+        background: #000000 !important;
+        box-shadow: 0 16px 45px rgba(18, 41, 74, 0.16) !important;
       }
       .scrim.video-modal-scrim .sheet .acts {
         flex: none !important;
@@ -821,70 +822,71 @@
       }
     }
 
-    /* Video Player Box with 3D Flip Card Perspective */
+    /* Mobile Recent Apps Style Carousel Container (Zero Black Empty Space) */
     .video-frame-box {
       position: relative;
       width: 100%;
       aspect-ratio: 9/16;
       max-height: calc(88dvh - 130px);
-      border-radius: 20px;
+      border-radius: 22px;
       overflow: hidden;
-      background: #000;
-      box-shadow: 0 14px 36px rgba(18, 41, 74, 0.12);
+      background: #000000;
+      box-shadow: 0 16px 45px rgba(18, 41, 74, 0.14);
       display: flex;
       align-items: center;
       justify-content: center;
-      perspective: 1400px;
-      -webkit-perspective: 1400px;
+      margin: 0 auto;
       user-select: none;
       -webkit-user-select: none;
       touch-action: pan-y;
     }
 
-    /* 3D Flip Card Inner Container */
+    /* Mobile Recent Apps Card Inner Container */
     .video-card-inner {
       width: 100%;
       height: 100%;
       position: relative;
-      transform-style: preserve-3d;
-      -webkit-transform-style: preserve-3d;
-      transition: transform 0.42s cubic-bezier(0.2, 0.85, 0.25, 1), opacity 0.42s ease, filter 0.42s ease;
+      border-radius: 22px;
+      overflow: hidden;
+      transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease, filter 0.32s ease;
       will-change: transform, opacity;
+      transform: translateX(0) scale(1);
+      opacity: 1;
     }
     .video-card-inner video {
       width: 100%;
       height: 100%;
-      object-fit: contain;
-      background: #000;
-      border-radius: 20px;
+      object-fit: cover;
       display: block;
+      border-radius: 22px;
+      background: #000000;
     }
 
-    /* 3D Cinematic Flip States */
-    .video-card-inner.flip-out-left {
-      transform: rotateY(-70deg) translateZ(-60px) scale(0.86);
+    /* Mobile Recent Apps Carousel Transitions */
+    .video-card-inner.app-slide-out-left {
+      transform: translateX(-105%) scale(0.86);
       opacity: 0;
-      filter: blur(4px);
+      filter: brightness(0.85);
     }
-    .video-card-inner.flip-out-right {
-      transform: rotateY(70deg) translateZ(-60px) scale(0.86);
+    .video-card-inner.app-slide-out-right {
+      transform: translateX(105%) scale(0.86);
       opacity: 0;
-      filter: blur(4px);
+      filter: brightness(0.85);
     }
-    .video-card-inner.flip-in-right-prep {
-      transform: rotateY(70deg) translateZ(-60px) scale(0.86);
+    .video-card-inner.app-slide-in-right-prep {
+      transform: translateX(105%) scale(0.86);
       opacity: 0;
-      filter: blur(4px);
+      filter: brightness(0.85);
       transition: none !important;
     }
-    .video-card-inner.flip-in-left-prep {
-      transform: rotateY(-70deg) translateZ(-60px) scale(0.86);
+    .video-card-inner.app-slide-in-left-prep {
+      transform: translateX(-105%) scale(0.86);
       opacity: 0;
-      filter: blur(4px);
+      filter: brightness(0.85);
       transition: none !important;
     }
-    .video-card-inner.flip-active {
-      transform: rotateY(0deg) translateZ(0) scale(1);
+    .video-card-inner.app-slide-active {
+      transform: translateX(0) scale(1);
       opacity: 1;
       filter: none;
     }
@@ -2262,6 +2264,50 @@
         if (e.target.closest('[data-close]')) sc.remove();
       });
       document.body.appendChild(sc);
+
+      // Swiping down bottom sheets (like share modal) = closing it
+      const sheetEl = sc.querySelector('.sheet');
+      if (sheetEl && !center) {
+        let touchStartY = 0, currentDeltaY = 0, isDragging = false;
+
+        sheetEl.addEventListener('touchstart', e => {
+          if (e.touches.length === 1 && sheetEl.scrollTop <= 0) {
+            touchStartY = e.touches[0].clientY;
+            currentDeltaY = 0;
+            isDragging = true;
+          }
+        }, { passive: true });
+
+        sheetEl.addEventListener('touchmove', e => {
+          if (!isDragging) return;
+          const diff = e.touches[0].clientY - touchStartY;
+          if (diff > 0) {
+            currentDeltaY = diff;
+            sheetEl.style.transition = 'none';
+            sheetEl.style.transform = `translateY(${diff}px)`;
+          } else {
+            sheetEl.style.transform = '';
+          }
+        }, { passive: true });
+
+        const finishDrag = () => {
+          if (!isDragging) return;
+          isDragging = false;
+          if (currentDeltaY > 70) {
+            sheetEl.style.transition = 'transform 0.22s ease-out, opacity 0.22s ease-out';
+            sheetEl.style.transform = 'translateY(100%)';
+            sheetEl.style.opacity = '0';
+            setTimeout(() => sc.remove(), 220);
+          } else {
+            sheetEl.style.transition = 'transform 0.24s cubic-bezier(0.18, 0.89, 0.32, 1.28)';
+            sheetEl.style.transform = '';
+          }
+        };
+
+        sheetEl.addEventListener('touchend', finishDrag, { passive: true });
+        sheetEl.addEventListener('touchcancel', finishDrag, { passive: true });
+      }
+
       onMount && onMount(sc);
       return sc;
     }
@@ -3543,6 +3589,14 @@
                     <div class="v-spec-item"><span>Branch</span><b id="v-spec-branch">${esc(currentReel.b || currentReel.album || 'T. Nagar')}</b></div>
                   </div>
                 </div>
+
+                <!-- 7. Close Button on Last of Gear Modal -->
+                <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
+                  <button type="button" id="v-gear-close-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--soft);border:1px solid var(--line);color:var(--navy);padding:8px 0;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.18s ease;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Close Settings
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -3558,7 +3612,7 @@
             </button>
 
             <!-- 3D Flip Card Container -->
-            <div class="video-card-inner flip-active" id="v-card-inner">
+            <div class="video-card-inner app-slide-active" id="v-card-inner">
               <video id="v-native-player" src="${esc(getStream(currentReel))}" controls autoplay playsinline preload="auto" poster="${esc(currentReel.coverUrl || '')}"></video>
 
               <!-- Authentic Social Platform Overlay (Instagram / FB / Shorts) -->
@@ -3831,6 +3885,14 @@
           });
         }
 
+        const gearCloseBtn = modalSc.querySelector('#v-gear-close-btn');
+        if (gearCloseBtn && gearMenu) {
+          gearCloseBtn.addEventListener('click', () => {
+            gearMenu.style.display = 'none';
+            gearBtn?.classList.remove('active');
+          });
+        }
+
         if (gearBtn && gearMenu) {
           gearBtn.addEventListener('click', e => {
             e.stopPropagation();
@@ -3970,6 +4032,7 @@
       const shareMsg = `${c.name} | DAY NIGHT · ${r.title}\n${videoLink}`;
 
       sheet(`
+        <div class="grab" id="share-grab" style="width:38px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 10px;cursor:grab;"></div>
         <h4>Share Video</h4>
         <p>${esc(r.title)} · Direct 1080p MP4 Video</p>
         <div class="linkbox" id="share-link">${esc(videoLink)}</div>
