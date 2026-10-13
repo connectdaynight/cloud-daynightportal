@@ -782,7 +782,7 @@
       .scrim.video-modal-scrim .video-frame-box {
         flex: 1 1 auto !important;
         width: 100% !important;
-        max-width: 100% !important;
+        max-width: min(100%, calc((100dvh - 150px) * 9 / 16)) !important;
         aspect-ratio: 9/16 !important;
         height: auto !important;
         max-height: calc(100dvh - 150px) !important;
@@ -826,9 +826,9 @@
     .video-frame-box {
       position: relative;
       width: 100%;
+      max-width: min(100%, calc((88dvh - 130px) * 9 / 16));
       aspect-ratio: 9/16;
-      max-height: calc(88dvh - 130px);
-      border-radius: 22px;
+      border-radius: 20px;
       overflow: hidden;
       background: #000000;
       box-shadow: 0 16px 45px rgba(18, 41, 74, 0.14);
@@ -841,12 +841,13 @@
       touch-action: pan-y;
     }
 
-    /* Mobile Recent Apps Card Inner Container */
+    /* Mobile Recent Apps Card Inner Container (Pinned Edge-to-Edge) */
     .video-card-inner {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
-      position: relative;
-      border-radius: 22px;
+      border-radius: 20px;
       overflow: hidden;
       transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease, filter 0.32s ease;
       will-change: transform, opacity;
@@ -854,53 +855,55 @@
       opacity: 1;
     }
     .video-card-inner video {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: cover !important;
       display: block;
-      border-radius: 22px;
+      border-radius: 20px;
       background: #000000;
     }
 
     /* Mobile Recent Apps Carousel Transitions */
     .video-card-inner.app-slide-out-left {
-      transform: translateX(-105%) scale(0.86);
+      transform: translateX(-105%) scale(0.88);
       opacity: 0;
       filter: brightness(0.85);
     }
     .video-card-inner.app-slide-out-right {
-      transform: translateX(105%) scale(0.86);
+      transform: translateX(105%) scale(0.88);
       opacity: 0;
       filter: brightness(0.85);
     }
     .video-card-inner.app-slide-in-right-prep {
-      transform: translateX(105%) scale(0.86);
-      opacity: 0;
-      filter: brightness(0.85);
+      transform: translateX(105%) scale(0.88) !important;
+      opacity: 0 !important;
+      filter: brightness(0.85) !important;
       transition: none !important;
     }
     .video-card-inner.app-slide-in-left-prep {
-      transform: translateX(-105%) scale(0.86);
-      opacity: 0;
-      filter: brightness(0.85);
+      transform: translateX(-105%) scale(0.88) !important;
+      opacity: 0 !important;
+      filter: brightness(0.85) !important;
       transition: none !important;
     }
     .video-card-inner.app-slide-active {
-      transform: translateX(0) scale(1);
-      opacity: 1;
-      filter: none;
+      transform: translateX(0) scale(1) !important;
+      opacity: 1 !important;
+      filter: none !important;
     }
 
-    /* Floating Flip Navigation Arrows */
+    /* Floating Navigation Arrows - Rock Solid (Zero Vertical Jumping) */
     .v-flip-btn {
       position: absolute;
       top: 50%;
-      transform: translateY(-50%);
+      transform: translateY(-50%) !important;
       z-index: 28;
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.88);
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid var(--line);
@@ -909,13 +912,18 @@
       place-items: center;
       cursor: pointer;
       box-shadow: 0 4px 16px rgba(18, 41, 74, 0.16);
-      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
     .v-flip-btn:hover {
       background: #FFFFFF;
-      transform: translateY(-50%) scale(1.1);
       box-shadow: 0 6px 20px rgba(18, 41, 74, 0.24);
       border-color: var(--navy);
+    }
+    .v-flip-btn:active {
+      background: var(--cream);
+      box-shadow: 0 2px 8px rgba(18, 41, 74, 0.12);
     }
     .v-flip-btn:disabled, .v-flip-btn[aria-disabled="true"] {
       opacity: 0.25;
@@ -1880,12 +1888,15 @@
     /* In-App 9:16 Video Player - Mobile Recent Apps Style (No Black Empty Space) */
     .video-modal-wrap { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
     .video-frame-box {
-      width: 100%; aspect-ratio: 9/16; border-radius: 22px; overflow: hidden;
+      width: 100%; max-width: min(100%, calc((88dvh - 130px) * 9 / 16)); aspect-ratio: 9/16; border-radius: 20px; overflow: hidden;
       background: #000000; box-shadow: 0 16px 45px rgba(18, 41, 74, 0.16); position: relative; margin: 0 auto;
     }
+    .video-card-inner {
+      position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 20px; overflow: hidden;
+    }
     .video-frame-box video, .video-card-inner video {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover !important;
-      background: #000000; border-radius: 22px; border: 0; display: block;
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover !important;
+      background: #000000; border-radius: 20px; border: 0; display: block;
     }
     .video-frame-box iframe {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -3794,7 +3805,11 @@
           curIdx = newIdx;
           currentReel = activeList[curIdx];
 
-          // 1. Current card slides out like recent apps
+          // 1. Clear any inline drag transforms and slide out current card
+          cardInner.style.transform = '';
+          cardInner.style.transition = '';
+          cardInner.style.filter = '';
+          cardInner.style.opacity = '';
           cardInner.className = 'video-card-inner ' + (direction === 'left' ? 'app-slide-out-left' : 'app-slide-out-right');
 
           setTimeout(() => {
@@ -3819,12 +3834,24 @@
             flipNext.disabled = curIdx >= activeList.length - 1;
 
             // 3. Prep incoming card on opposite side
+            cardInner.style.transform = '';
+            cardInner.style.transition = '';
+            cardInner.style.filter = '';
+            cardInner.style.opacity = '';
             cardInner.className = 'video-card-inner ' + (direction === 'left' ? 'app-slide-in-right-prep' : 'app-slide-in-left-prep');
             void cardInner.offsetWidth; // Force reflow
 
             // 4. Slide into active place with smooth recent-apps curve
             cardInner.className = 'video-card-inner app-slide-active';
-            setTimeout(() => { isSliding = false; }, 360);
+
+            setTimeout(() => {
+              cardInner.style.transform = '';
+              cardInner.style.transition = '';
+              cardInner.style.filter = '';
+              cardInner.style.opacity = '';
+              cardInner.className = 'video-card-inner app-slide-active';
+              isSliding = false;
+            }, 360);
           }, 180);
         }
 
@@ -3862,6 +3889,7 @@
           isDraggingCard = false;
           cardInner.style.transition = '';
           cardInner.style.filter = '';
+          cardInner.style.transform = ''; // CRITICAL: Always clear inline transform!
 
           if (currentDiffX < -50 && curIdx < activeList.length - 1) {
             navigateToReel(curIdx + 1, 'left');
@@ -3870,6 +3898,9 @@
           } else {
             cardInner.className = 'video-card-inner app-slide-active';
             cardInner.style.transform = '';
+            cardInner.style.transition = '';
+            cardInner.style.filter = '';
+            cardInner.style.opacity = '';
           }
           currentDiffX = 0;
         };
