@@ -1853,10 +1853,50 @@
     }
     .logo-prev .box img { max-width: 100%; max-height: 100%; }
 
+    /* Stacked Share Modal Scrim (Floats above Video Player without closing it) */
+    .scrim.share-modal-scrim {
+      z-index: 10050 !important;
+      background: rgba(18, 41, 74, 0.45) !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+    }
+    .scrim.share-modal-scrim .sheet {
+      z-index: 10051 !important;
+      max-width: 440px !important;
+      border-radius: 24px 24px 0 0 !important;
+      box-shadow: 0 -12px 40px rgba(18, 41, 74, 0.28) !important;
+    }
+
+    /* Branch & Album Cover Banners */
+    .branch.has-cover {
+      padding: 0 !important;
+      overflow: hidden;
+    }
+    .branch-cover-wrap {
+      width: 100%;
+      height: 110px;
+      background: var(--navy);
+      overflow: hidden;
+      position: relative;
+    }
+    .branch-cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .branch-meta-wrap {
+      padding: 14px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
     /* Floating Toast Notifications (Zero legacy alerts) */
     .toast-container {
       position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
-      z-index: 100; display: flex; flex-direction: column; gap: 8px; pointer-events: none; width: 90%; max-width: 380px;
+      z-index: 999999 !important; display: flex; flex-direction: column; gap: 8px; pointer-events: none; width: 90%; max-width: 380px;
     }
     .toast {
       padding: 12px 18px; border-radius: 999px; font-size: 13px; font-weight: 500; color: #fff;
@@ -2235,11 +2275,38 @@
       localStorage.removeItem('dn_auth_' + cid);
     }
 
-    function go(p) {
+    let isClosingModalViaHistory = false;
+
+    function go(p, isBack = false) {
       Object.assign(view, p);
+      if (!isBack) {
+        try { window.history.pushState({ view: { ...view } }, ''); } catch(e) {}
+      }
       render();
       window.scrollTo(0, 0);
     }
+
+    // Initialize initial state in history
+    try { window.history.replaceState({ view: { ...view } }, ''); } catch(e) {}
+
+    // Back Button Navigation Handling (Prevents closing website on back swipe/press)
+    window.addEventListener('popstate', e => {
+      const scrims = document.querySelectorAll('.scrim');
+      if (scrims.length > 0) {
+        const topScrim = scrims[scrims.length - 1];
+        isClosingModalViaHistory = true;
+        topScrim.remove();
+        isClosingModalViaHistory = false;
+        return;
+      }
+      if (e.state && e.state.view) {
+        Object.assign(view, e.state.view);
+        render();
+        window.scrollTo(0, 0);
+      } else if (BACK[view.screen]) {
+        go(BACK[view.screen], true);
+      }
+    });
 
     const BACK = {
       'dn-intro': { screen: 'splash', client: null },
@@ -2267,7 +2334,9 @@
 
     // Custom Modal Bottom / Center Sheet (Protected against accidental backdrop close)
     function sheet(html, onMount, center, customClass) {
-      document.querySelector('.scrim')?.remove();
+      if (customClass !== 'share-modal-scrim') {
+        document.querySelector('.scrim:not(.video-modal-scrim)')?.remove();
+      }
       const sc = document.createElement('div');
       sc.className = 'scrim' + (center ? ' center' : '') + (customClass ? ' ' + customClass : '');
       sc.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${center ? '' : '<div class="grab"></div>'}${html}</div>`;
@@ -2275,6 +2344,16 @@
         if (e.target.closest('[data-close]')) sc.remove();
       });
       document.body.appendChild(sc);
+
+      // Track modal in browser history for back button support
+      try { window.history.pushState({ modalOpen: true, t: Date.now() }, ''); } catch(e) {}
+      const origRemove = sc.remove.bind(sc);
+      sc.remove = function() {
+        origRemove();
+        if (!isClosingModalViaHistory && window.history.state && window.history.state.modalOpen) {
+          try { window.history.back(); } catch(e) {}
+        }
+      };
 
       // Swiping down bottom sheets (like share modal) = closing it
       const sheetEl = sc.querySelector('.sheet');
@@ -2920,11 +2999,15 @@
             <div class="branches">
               ${list.map(b => {
                 const n = reelsFor(null, null, b).length;
+                const cover = (c.branchCovers && c.branchCovers[b]) || '';
                 return `
-                  <button class="branch" style="--c:${bColor(b, list)}" data-act="branch" data-b="${esc(b)}">
-                    <span class="ico">${ic.pin}</span>
-                    <span class="bn"><small>Store Branch</small><b>${esc(b)}</b></span>
-                    <span class="cnt"><strong>${n}</strong> reel${n === 1 ? '' : 's'}</span>
+                  <button class="branch ${cover ? 'has-cover' : ''}" style="--c:${bColor(b, list)}" data-act="branch" data-b="${esc(b)}">
+                    ${cover ? `<div class="branch-cover-wrap"><img src="${esc(cover)}" alt="" class="branch-cover-img" onerror="this.parentElement.style.display='none'"></div>` : ''}
+                    <div class="branch-meta-wrap">
+                      <span class="ico">${ic.pin}</span>
+                      <span class="bn"><small>Store Branch</small><b>${esc(b)}</b></span>
+                      <span class="cnt"><strong>${n}</strong> reel${n === 1 ? '' : 's'}</span>
+                    </div>
                   </button>`;
               }).join('')}
             </div>` : '<div class="empty">No store branches configured</div>';
@@ -2934,11 +3017,15 @@
             <div class="branches">
               ${list.map(alb => {
                 const n = reelsFor(null, null, null, alb).length;
+                const cover = (c.albumCovers && c.albumCovers[alb]) || '';
                 return `
-                  <button class="branch" style="--c:${bColor(alb, list)}" data-act="album" data-alb="${esc(alb)}">
-                    <span class="ico">${ic.folder}</span>
-                    <span class="bn"><small>Collection</small><b>${esc(alb)}</b></span>
-                    <span class="cnt"><strong>${n}</strong> reel${n === 1 ? '' : 's'}</span>
+                  <button class="branch ${cover ? 'has-cover' : ''}" style="--c:${bColor(alb, list)}" data-act="album" data-alb="${esc(alb)}">
+                    ${cover ? `<div class="branch-cover-wrap"><img src="${esc(cover)}" alt="" class="branch-cover-img" onerror="this.parentElement.style.display='none'"></div>` : ''}
+                    <div class="branch-meta-wrap">
+                      <span class="ico">${ic.folder}</span>
+                      <span class="bn"><small>Collection</small><b>${esc(alb)}</b></span>
+                      <span class="cnt"><strong>${n}</strong> reel${n === 1 ? '' : 's'}</span>
+                    </div>
                   </button>`;
               }).join('')}
             </div>` : '<div class="empty">No collections configured</div>';
@@ -4023,52 +4110,20 @@
     }
 
     // --------------------------------------------------------------------------
-    // DIRECT VIDEO SHARING SYSTEM (SHARES ACTUAL MP4 VIDEO, NEVER GOOGLE DRIVE)
+    // DIRECT VIDEO SHARING SYSTEM (INSTANT OPEN, ZERO DELAY, STACKED OVER MODAL)
     // --------------------------------------------------------------------------
-    async function shareVideo(r) {
+    function shareVideo(r) {
       if (!r || !r.url) {
         toast('Sample reel layout. Video sharing available when real file is uploaded.', 'amber');
         return;
       }
 
-      const c = client() || { name: 'Day Night' };
       const id = driveId(r.url);
-      const cleanTitle = (r.title || 'video').replace(/[/\?%*:|"<>]/g, '_').trim() || 'video';
+      const cleanTitle = (r.title || 'video').replace(/[/\\?%*:|"<>]/g, '_').trim() || 'video';
       const filename = cleanTitle.toLowerCase().endsWith('.mp4') ? cleanTitle : `${cleanTitle}.mp4`;
       const directVideoUrl = id ? `${window.location.origin}/api/video?id=${encodeURIComponent(id)}` : r.url;
 
-      // 1. Native Video File Sharing (iOS Safari, Android Chrome, mobile devices)
-      if (typeof navigator !== 'undefined' && navigator.share) {
-        toast('Preparing video to share...', 'info');
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 9000);
-          const res = await fetch(directVideoUrl, { signal: controller.signal });
-          clearTimeout(timeoutId);
-
-          if (res.ok) {
-            const blob = await res.blob();
-            const videoFile = new File([blob], filename, { type: 'video/mp4' });
-
-            if (navigator.canShare && navigator.canShare({ files: [videoFile] })) {
-              await navigator.share({
-                title: r.title,
-                text: `${c.name} · ${r.title}`,
-                files: [videoFile]
-              });
-              toast('Video shared successfully!', 'success');
-              return;
-            }
-          }
-        } catch (err) {
-          if (err && err.name === 'AbortError') {
-            return;
-          }
-          console.warn('Native video file share fallback:', err);
-        }
-      }
-
-      // 2. Direct Video Share Sheet (NO Google Drive links!)
+      // Open Direct Video Share Sheet INSTANTLY (Zero Network Delay)
       openDirectShareSheet(r, directVideoUrl, filename);
     }
 
@@ -4078,8 +4133,8 @@
       const videoLink = directVideoUrl || (id ? `${window.location.origin}/api/video?id=${encodeURIComponent(id)}` : r.url);
       const shareMsg = `${c.name} | DAY NIGHT · ${r.title}\n${videoLink}`;
 
+      // Notice: NO duplicate grab line here! sheet() already provides the grab handle bar!
       sheet(`
-        <div class="grab" id="share-grab" style="width:38px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 10px;cursor:grab;"></div>
         <h4>Share Video</h4>
         <p>${esc(r.title)} · Direct 1080p MP4 Video</p>
         <div class="linkbox" id="share-link">${esc(videoLink)}</div>
@@ -4099,7 +4154,26 @@
         </div>
         <button class="ghost" data-close>Close</button>`, sc => {
 
-        sc.querySelector('#share-dl-btn').addEventListener('click', () => {
+        sc.querySelector('#share-dl-btn').addEventListener('click', async () => {
+          if (typeof navigator !== 'undefined' && navigator.share) {
+            toast('Preparing video file to share...', 'info');
+            try {
+              const res = await fetch(videoLink);
+              if (res.ok) {
+                const blob = await res.blob();
+                const videoFile = new File([blob], filename, { type: 'video/mp4' });
+                if (navigator.canShare && navigator.canShare({ files: [videoFile] })) {
+                  await navigator.share({
+                    title: r.title,
+                    text: `${c.name} · ${r.title}`,
+                    files: [videoFile]
+                  });
+                  toast('Video shared successfully!', 'success');
+                  return;
+                }
+              }
+            } catch(e) {}
+          }
           triggerDirectDownload(r);
         });
 
@@ -4110,7 +4184,7 @@
             toast('Please copy manually from the link box', 'info');
           }
         });
-      });
+      }, false, 'share-modal-scrim');
     }
 
     // Direct alias so any existing calls invoke direct video sharing
