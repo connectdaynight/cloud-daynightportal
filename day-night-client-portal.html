@@ -1569,6 +1569,170 @@
     .month.off { opacity: 0.45; }
     .month.now { border-color: var(--c); border-width: 2px; }
 
+    /* Favorites & Profile Styling (Luxury Milk-White Theme) */
+    .fav-toggle-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      cursor: pointer;
+      z-index: 4;
+      transition: all 0.18s ease;
+    }
+    .fav-toggle-btn:hover {
+      transform: scale(1.15);
+      background: rgba(0, 0, 0, 0.6);
+    }
+    .fav-toggle-btn.is-fav {
+      background: #FFFFFF;
+      border-color: var(--rose, #E8457A);
+      box-shadow: 0 4px 12px rgba(232, 69, 122, 0.35);
+    }
+    .fav-toggle-btn.is-fav svg {
+      fill: var(--rose, #E8457A);
+      stroke: var(--rose, #E8457A);
+    }
+
+    /* Profile Card & Layout */
+    .profile-card {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .profile-hero {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 24px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 6px 24px rgba(18, 41, 74, 0.05);
+    }
+    .profile-avatar-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--soft);
+      border: 2px solid var(--line);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(18, 41, 74, 0.08);
+    }
+    .profile-avatar { width: 100%; height: 100%; object-fit: contain; }
+    .profile-avatar-ph { font-size: 26px; font-weight: 700; color: var(--navy); }
+    .profile-name { font-size: 20px; font-weight: 700; color: var(--navy); margin: 0 0 4px; line-height: 1.2; }
+    .profile-slogan { font-size: 12px; color: var(--mute); margin: 0 0 12px; }
+    .profile-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    .profile-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .pstat-item {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 6px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .pstat-item b { font-size: 17px; font-weight: 700; color: var(--navy); line-height: 1.2; }
+    .pstat-item small { font-size: 10px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: 0.03em; }
+
+    .profile-section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    .profile-section h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 0 0 12px;
+    }
+    .pbranch-list { display: flex; flex-direction: column; gap: 8px; }
+    .pbranch-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--soft);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--navy);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pbranch-item:hover { background: #FFFFFF; box-shadow: 0 3px 10px rgba(18, 41, 74, 0.06); }
+    .pbranch-item small { color: var(--gold, #B8935A); font-weight: 600; font-size: 11px; }
+
+    .paction-box { display: flex; flex-direction: column; gap: 12px; }
+    .btn-lock {
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      color: var(--red);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn-lock:hover { background: #FEE2E2; border-color: #FCDAD7; }
+
+    .profile-footer {
+      text-align: center;
+      padding: 10px 0 20px;
+    }
+    .dn-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      text-align: left;
+    }
+    .dn-badge b { display: block; font-size: 12px; color: var(--navy); line-height: 1.2; }
+    .dn-badge small { display: block; font-size: 10px; color: var(--mute); }
     /* Client Hero Banner & Top Header Card (Reference Concept) */
     .client-hero-banner {
       width: calc(100% + 40px);
@@ -2859,7 +3023,9 @@
       months: { screen: 'genesis' },
       branches: { screen: 'months', month: null },
       albums: { screen: 'months', month: null },
-      reels: { screen: 'months', branch: null, album: null }
+      reels: { screen: 'months', branch: null, album: null },
+      favorites: { screen: 'genesis' },
+      profile: { screen: 'genesis' }
     };
 
     // Zero Legacy Alert Toast System
@@ -3347,14 +3513,40 @@
       }
     }
 
-    // Luxury Milk-White Bottom Navigation Bar (Navbar - Reference Concept)
+    // Favorites persistence helpers
+    function isFavorited(id) {
+      if (!view.client || !id) return false;
+      try {
+        const favs = JSON.parse(localStorage.getItem('dn_favs_' + view.client) || '[]');
+        return favs.includes(id);
+      } catch(e) { return false; }
+    }
+
+    function toggleFavorite(id) {
+      if (!view.client || !id) return;
+      const key = 'dn_favs_' + view.client;
+      let favs = [];
+      try { favs = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+      const pos = favs.indexOf(id);
+      if (pos > -1) {
+        favs.splice(pos, 1);
+        toast('Removed from Favorites', 'info');
+      } else {
+        favs.push(id);
+        toast('Saved to Favorites', 'success');
+      }
+      localStorage.setItem(key, JSON.stringify(favs));
+      render();
+    }
+
+    // Luxury Milk-White Bottom Navigation Bar (Navbar - Synchronized Across Portal)
     function renderBottomNav() {
       if (!view.client || view.screen === 'splash' || view.screen === 'client-pin') return '';
       const isHome = view.screen === 'genesis';
-      const isReels = view.screen === 'reels' && (view.contentType === 'all' || view.contentType === 'reels' || !view.contentType);
-      const isBranches = (view.screen === 'months' && view.tabMode === 'branches') || !!view.branch;
-      const isCalendar = (view.screen === 'months' && view.tabMode === 'months') || view.contentType === 'stories' || view.contentType === 'posters';
-      const isAlbums = (view.screen === 'months' && view.tabMode === 'albums') || !!view.album;
+      const isReels = view.screen === 'reels';
+      const isBranches = view.screen === 'months' || view.screen === 'branches' || view.screen === 'albums';
+      const isFavs = view.screen === 'favorites';
+      const isProfile = view.screen === 'profile';
 
       return `
         <nav class="client-bottom-nav" aria-label="Client Navigation">
@@ -3370,13 +3562,13 @@
             <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>
             <span class="bnav-label">Branches</span>
           </button>
-          <button class="bnav-btn ${isCalendar ? 'active' : ''}" data-act="bnav-calendar">
-            <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-            <span class="bnav-label">Calendar</span>
+          <button class="bnav-btn ${isFavs ? 'active' : ''}" data-act="bnav-favorites">
+            <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="${isFavs ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
+            <span class="bnav-label">Favorites</span>
           </button>
-          <button class="bnav-btn ${isAlbums ? 'active' : ''}" data-act="bnav-albums">
-            <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span>
-            <span class="bnav-label">Collections</span>
+          <button class="bnav-btn ${isProfile ? 'active' : ''}" data-act="bnav-profile">
+            <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+            <span class="bnav-label">Profile</span>
           </button>
         </nav>`;
     }
@@ -3720,6 +3912,9 @@
                     <div class="poster ${r.type === 'poster' ? 'is-square' : ''}" style="--c:${col}" data-act="${isVideo ? 'play-video' : 'view-image'}" data-id="${r.id}" aria-label="Play ${esc(r.title)}">
                       ${r.coverUrl ? `<img class="custom-cover" src="${esc(r.coverUrl)}" alt="">` : motif}
                       <span class="zari"></span>
+                      <button type="button" class="fav-toggle-btn ${isFavorited(r.id) ? 'is-fav' : ''}" data-act="toggle-fav" data-id="${r.id}" aria-label="Favorite">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="${isFavorited(r.id) ? '#E8457A' : 'none'}" stroke="${isFavorited(r.id) ? '#E8457A' : '#FFFFFF'}" stroke-width="2.2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                      </button>
                       ${r.dur ? `<span class="dur">${esc(r.dur)}</span>` : ''}
                       <span class="play" style="color:${col}">${isVideo ? ic.play : ic.view}</span>
                       <span class="views-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${r.views ? r.views + ' views' : 'Delivered'}</span>
@@ -3828,6 +4023,199 @@
               newInp.focus();
               newInp.selectionStart = newInp.selectionEnd = newInp.value.length;
             }
+          };
+        }
+      }
+
+      // Screen 5: Saved Favorites Page
+      else if (view.screen === 'favorites') {
+        if (!c) { go({ screen: 'splash', client: null }); return; }
+        const favIds = [];
+        try { favIds.push(...JSON.parse(localStorage.getItem('dn_favs_' + c.id) || '[]')); } catch(e) {}
+        const allFavs = (DATA.reels || []).filter(r => r.c === c.id && favIds.includes(r.id));
+        const currentType = view.contentType || 'all';
+        const gridCols = view.gridCols || 2;
+
+        let displayList = currentType === 'all' ? allFavs : allFavs.filter(r => {
+          if (currentType === 'reels') return !r.type || r.type === 'reel' || r.type === 'video';
+          if (currentType === 'stories') return r.type === 'story';
+          if (currentType === 'posters') return r.type === 'poster';
+          return true;
+        });
+
+        if (view.searchQuery) {
+          const q = view.searchQuery.toLowerCase();
+          displayList = displayList.filter(r => (r.title || '').toLowerCase().includes(q) || (r.b || '').toLowerCase().includes(q) || (r.album || '').toLowerCase().includes(q));
+        }
+
+        app.innerHTML = `
+          ${topbar(c.name, 'Saved Favorites')}
+          <div class="gallery-title-row" style="margin-top:10px;">
+            <h2 class="gallery-heading">Saved Favorites</h2>
+            <p class="gallery-sub">Your curated library of favorited video reels, stories, and festive campaign creative.</p>
+          </div>
+
+          <div class="gallery-tools-bar">
+            <div class="gallery-search-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" class="gallery-search-inp" id="gallery-search-inp" placeholder="Search favorites..." value="${esc(view.searchQuery || '')}">
+              ${view.searchQuery ? `<button class="clear-search-btn" data-act="clear-search">&times;</button>` : ''}
+            </div>
+            <div class="density-switcher">
+              <button class="density-btn ${gridCols === 2 ? 'active' : ''}" data-act="set-grid" data-cols="2" title="2 per row">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+                <span>2 per row</span>
+              </button>
+              <button class="density-btn ${gridCols === 3 ? 'active' : ''}" data-act="set-grid" data-cols="3" title="3 per row">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="5" height="18" rx="1"/><rect x="9.5" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="5" height="18" rx="1"/></svg>
+                <span>3 per row</span>
+              </button>
+            </div>
+          </div>
+
+          ${displayList.length ? `
+            <div class="reels ${gridCols === 3 ? 'grid-3col' : (gridCols === 1 ? 'grid-1col' : 'grid-2col')}">
+              ${displayList.map((r, i) => {
+                const isVideo = !r.type || r.type === 'reel' || r.type === 'video';
+                const has = !!r.url;
+                const col = RCOL[i % RCOL.length];
+                return `
+                  <div class="reel">
+                    <div class="poster ${r.type === 'poster' ? 'is-square' : ''}" style="--c:${col}" data-act="${isVideo ? 'play-video' : 'view-image'}" data-id="${r.id}">
+                      ${r.coverUrl ? `<img class="custom-cover" src="${esc(r.coverUrl)}" alt="">` : motif}
+                      <span class="zari"></span>
+                      <button type="button" class="fav-toggle-btn is-fav" data-act="toggle-fav" data-id="${r.id}" aria-label="Favorite">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#E8457A" stroke="#E8457A" stroke-width="2.2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                      </button>
+                      ${r.dur ? `<span class="dur">${esc(r.dur)}</span>` : ''}
+                      <span class="play" style="color:${col}">${isVideo ? ic.play : ic.view}</span>
+                      <span class="cap">${esc(r.title)}<small>${fmtDate(r.date)}${r.b ? ` · ${esc(r.b)}` : ''}</small></span>
+                      <span class="border"></span>
+                    </div>
+                    <div class="acts">
+                      <button class="act" style="--k:var(--blue)" data-act="${isVideo ? 'play-video' : 'view-image'}" data-id="${r.id}"><span class="chip">${ic.view}</span>View</button>
+                      <button type="button" class="act" style="--k:var(--green)" ${has ? `data-act="direct-dl" data-id="${r.id}"` : 'aria-disabled="true"'}><span class="chip">${ic.dl}</span>Download</button>
+                      <button class="act" style="--k:var(--amber)" data-act="share" data-id="${r.id}" ${has ? '' : 'aria-disabled="true"'}><span class="chip">${ic.share}</span>Share</button>
+                    </div>
+                  </div>`;
+              }).join('')}
+            </div>`
+            : `<div class="empty">
+                <div style="width:64px;height:64px;border-radius:50%;background:rgba(232,69,122,0.1);color:#E8457A;display:grid;place-items:center;margin:0 auto 12px;">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                </div>
+                <b>No favorites saved yet</b>
+                <span>Tap the heart icon on any reel or poster to save your favorite creative here.</span>
+                <button class="btn go-btn" data-act="bnav-reels" style="margin-top:16px;max-width:240px;">Explore Reels Gallery</button>
+              </div>`
+          }
+          ${renderBottomNav()}`;
+
+        const searchInp = document.getElementById('gallery-search-inp');
+        if (searchInp) {
+          searchInp.oninput = e => {
+            view.searchQuery = e.target.value.trim();
+            render();
+            const newInp = document.getElementById('gallery-search-inp');
+            if (newInp) {
+              newInp.focus();
+              newInp.selectionStart = newInp.selectionEnd = newInp.value.length;
+            }
+          };
+        }
+      }
+
+      // Screen 6: Client Profile & Brand Security Page
+      else if (view.screen === 'profile') {
+        if (!c) { go({ screen: 'splash', client: null }); return; }
+        const clientReels = (DATA.reels || []).filter(r => r.c === c.id);
+        const storiesCount = clientReels.filter(r => r.type === 'story').length;
+        const postersCount = clientReels.filter(r => r.type === 'poster').length;
+        const reelsCount = clientReels.filter(r => !r.type || r.type === 'reel' || r.type === 'video').length;
+        const branches = c.branches || [];
+
+        app.innerHTML = `
+          ${topbar(c.name, 'Client Profile')}
+          
+          <div class="profile-card">
+            <div class="profile-hero">
+              <div class="profile-avatar-wrap">
+                ${c.logo ? `<img src="${esc(c.logo)}" class="profile-avatar" alt="">` : `<div class="profile-avatar-ph">${esc(c.name.slice(0, 2).toUpperCase())}</div>`}
+              </div>
+              <h2 class="profile-name">${esc(c.name)}</h2>
+              <p class="profile-slogan">${esc(c.tagline || c.slogan || 'Tradition · Elegance · Excellence')}</p>
+              <span class="profile-pill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Authorized Client Delivery Portal</span>
+            </div>
+
+            <div class="profile-stats-grid">
+              <div class="pstat-item">
+                <b>${reelsCount}</b>
+                <small>Reels</small>
+              </div>
+              <div class="pstat-item">
+                <b>${storiesCount}</b>
+                <small>Stories</small>
+              </div>
+              <div class="pstat-item">
+                <b>${postersCount}</b>
+                <small>Posters</small>
+              </div>
+              <div class="pstat-item">
+                <b>${branches.length}</b>
+                <small>Branches</small>
+              </div>
+            </div>
+
+            <div class="profile-section">
+              <h4>Store Branch Locations</h4>
+              <div class="pbranch-list">
+                ${branches.map(b => `
+                  <div class="pbranch-item" data-act="go-branch" data-b="${esc(b)}">
+                    <span>${esc(b)} Branch</span>
+                    <small>${contentsFor(null, null, b).length} contents &rarr;</small>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="profile-section">
+              <h4>Security &amp; Session Privacy</h4>
+              <div class="paction-box">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div>
+                    <b style="font-size:13px;color:var(--navy);">Private Client PIN</b>
+                    <p style="font-size:11px;color:var(--mute);margin:2px 0 0;">PIN Code: <span id="pin-display">••••</span></p>
+                  </div>
+                  <button type="button" class="ghost" id="btn-toggle-pin" style="padding:4px 12px;font-size:11px;border-radius:99px;">Show PIN</button>
+                </div>
+                <button type="button" class="btn-lock" data-act="lock-portal">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  Lock Portal Session
+                </button>
+              </div>
+            </div>
+
+            <div class="profile-footer">
+              <div class="dn-badge">
+                ${dnLogo('mini')}
+                <div>
+                  <b>Day Night Media</b>
+                  <small>Executive Production Engine</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          ${renderBottomNav()}`;
+
+        const togglePinBtn = document.getElementById('btn-toggle-pin');
+        const pinDisplay = document.getElementById('pin-display');
+        if (togglePinBtn && pinDisplay) {
+          let visible = false;
+          togglePinBtn.onclick = () => {
+            visible = !visible;
+            pinDisplay.textContent = visible ? (c.code || '4821') : '••••';
+            togglePinBtn.textContent = visible ? 'Hide PIN' : 'Show PIN';
           };
         }
       }
@@ -6235,6 +6623,15 @@
         go({ screen: 'client-pin', client: cid });
       }
       else if (a === 'gear-click') verifyAdminAccess();
+      else if (a === 'bnav-favorites') go({ screen: 'favorites', client: view.client, contentType: 'all', searchQuery: '' });
+      else if (a === 'bnav-profile') go({ screen: 'profile', client: view.client });
+      else if (a === 'toggle-fav') {
+        e.stopPropagation();
+        toggleFavorite(el.dataset.id);
+      }
+      else if (a === 'go-branch') {
+        go({ screen: 'reels', branch: el.dataset.b, month: null, album: null, contentType: 'all', searchQuery: '' });
+      }
       else if (a === 'bnav-home') go({ screen: 'genesis', client: view.client });
       else if (a === 'bnav-reels') go({ screen: 'reels', client: view.client, month: (view.month != null ? view.month : 9), year: view.year || 2026, branch: null, album: null, contentType: 'all', selectedDay: null });
       else if (a === 'bnav-branches') go({ screen: 'months', client: view.client, tabMode: 'branches' });
