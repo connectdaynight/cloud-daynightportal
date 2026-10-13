@@ -1877,15 +1877,15 @@
     }
     .tab-btn.active { background: var(--card); color: var(--navy); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 
-    /* In-App 9:16 Video Player */
+    /* In-App 9:16 Video Player - Mobile Recent Apps Style (No Black Empty Space) */
     .video-modal-wrap { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
     .video-frame-box {
-      width: 100%; max-width: min(340px, calc((74dvh - 130px) * 9 / 16)); aspect-ratio: 9/16; border-radius: 18px; overflow: hidden;
-      background: #000; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.25); position: relative; margin: 0 auto;
+      width: 100%; aspect-ratio: 9/16; border-radius: 22px; overflow: hidden;
+      background: #000000; box-shadow: 0 16px 45px rgba(18, 41, 74, 0.16); position: relative; margin: 0 auto;
     }
-    .video-frame-box video {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;
-      background: #000; border-radius: 18px; border: 0; display: block;
+    .video-frame-box video, .video-card-inner video {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover !important;
+      background: #000000; border-radius: 22px; border: 0; display: block;
     }
     .video-frame-box iframe {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -3785,17 +3785,17 @@
           };
         });
 
-        // 3D Cinematic Flipcard Navigation between Videos
-        let isFlipping = false;
+        // Mobile Recent Apps Carousel Navigation between Videos
+        let isSliding = false;
 
         function navigateToReel(newIdx, direction) {
-          if (isFlipping || newIdx < 0 || newIdx >= activeList.length) return;
-          isFlipping = true;
+          if (isSliding || newIdx < 0 || newIdx >= activeList.length) return;
+          isSliding = true;
           curIdx = newIdx;
           currentReel = activeList[curIdx];
 
-          // 1. Flip out current card
-          cardInner.className = 'video-card-inner ' + (direction === 'left' ? 'flip-out-left' : 'flip-out-right');
+          // 1. Current card slides out like recent apps
+          cardInner.className = 'video-card-inner ' + (direction === 'left' ? 'app-slide-out-left' : 'app-slide-out-right');
 
           setTimeout(() => {
             // 2. Update media and text at halfway mark
@@ -3811,9 +3811,6 @@
             if (specBranch) specBranch.textContent = currentReel.b || currentReel.album || 'T. Nagar';
             if (socCaption) socCaption.textContent = `${currentReel.title} #reels #festive`;
 
-            // Update URLs
-            // Direct video streaming without Google Drive
-
             // Update Status UI
             updateStatusUi(currentReel.status || 'review');
 
@@ -3822,44 +3819,63 @@
             flipNext.disabled = curIdx >= activeList.length - 1;
 
             // 3. Prep incoming card on opposite side
-            cardInner.className = 'video-card-inner ' + (direction === 'left' ? 'flip-in-right-prep' : 'flip-in-left-prep');
+            cardInner.className = 'video-card-inner ' + (direction === 'left' ? 'app-slide-in-right-prep' : 'app-slide-in-left-prep');
             void cardInner.offsetWidth; // Force reflow
 
-            // 4. Spring flip card into active place
-            cardInner.className = 'video-card-inner flip-active';
-            setTimeout(() => { isFlipping = false; }, 420);
-          }, 210);
+            // 4. Slide into active place with smooth recent-apps curve
+            cardInner.className = 'video-card-inner app-slide-active';
+            setTimeout(() => { isSliding = false; }, 360);
+          }, 180);
         }
 
         flipPrev.onclick = () => navigateToReel(curIdx - 1, 'right');
         flipNext.onclick = () => navigateToReel(curIdx + 1, 'left');
 
-        // Touch Swipe Gesture Support
-        let touchStartX = 0, touchStartY = 0;
+        // Mobile Recent Apps Drag & Swipe Gesture Support
+        let touchStartX = 0, touchStartY = 0, currentDiffX = 0, isDraggingCard = false;
         const playerContainer = modalSc.querySelector('#v-player-container');
 
         playerContainer.addEventListener('touchstart', e => {
-          if (e.touches.length === 1) {
+          if (e.touches.length === 1 && !isSliding) {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
+            currentDiffX = 0;
+            isDraggingCard = true;
           }
         }, { passive: true });
 
-        playerContainer.addEventListener('touchend', e => {
-          if (e.changedTouches.length === 1) {
-            const deltaX = e.changedTouches[0].clientX - touchStartX;
-            const deltaY = e.changedTouches[0].clientY - touchStartY;
-            if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
-              if (deltaX < 0) {
-                // Swiped Left -> Next Reel
-                if (curIdx < activeList.length - 1) navigateToReel(curIdx + 1, 'left');
-              } else {
-                // Swiped Right -> Prev Reel
-                if (curIdx > 0) navigateToReel(curIdx - 1, 'right');
-              }
-            }
+        playerContainer.addEventListener('touchmove', e => {
+          if (!isDraggingCard || isSliding) return;
+          const diffX = e.touches[0].clientX - touchStartX;
+          const diffY = e.touches[0].clientY - touchStartY;
+          if (Math.abs(diffX) > Math.abs(diffY)) {
+            currentDiffX = diffX;
+            const dampScale = 1 - Math.min(0.08, Math.abs(diffX) * 0.0003);
+            cardInner.style.transition = 'none';
+            cardInner.style.transform = `translateX(${diffX * 0.75}px) scale(${dampScale})`;
+            cardInner.style.filter = `brightness(${1 - Math.min(0.15, Math.abs(diffX) * 0.0005)})`;
           }
         }, { passive: true });
+
+        const finishCardSwipe = () => {
+          if (!isDraggingCard || isSliding) return;
+          isDraggingCard = false;
+          cardInner.style.transition = '';
+          cardInner.style.filter = '';
+
+          if (currentDiffX < -50 && curIdx < activeList.length - 1) {
+            navigateToReel(curIdx + 1, 'left');
+          } else if (currentDiffX > 50 && curIdx > 0) {
+            navigateToReel(curIdx - 1, 'right');
+          } else {
+            cardInner.className = 'video-card-inner app-slide-active';
+            cardInner.style.transform = '';
+          }
+          currentDiffX = 0;
+        };
+
+        playerContainer.addEventListener('touchend', finishCardSwipe, { passive: true });
+        playerContainer.addEventListener('touchcancel', finishCardSwipe, { passive: true });
 
         // Keyboard Arrow Key Navigation
         function handleKeyNav(e) {
