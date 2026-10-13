@@ -886,6 +886,8 @@
     const workspace = document.getElementById('workspace');
     const toastTray = document.getElementById('toasts');
 
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
     function toast(msg, type = 'info') {
       const el = document.createElement('div');
       el.className = 'toast-box ' + type;
