@@ -251,6 +251,20 @@ function doPost(e) {
       return jsonResponse({ success: false, error: "Reel not found" }, 404);
     }
 
+    // 6B. Update Reel Approval Status
+    if (action === "updateReelStatus") {
+      const reelId = payload.id || payload.reelId;
+      const status = payload.status || "approved";
+      const data = loadData();
+      const reel = (data.reels || []).find(r => r.id === reelId);
+      if (reel) {
+        reel.status = status;
+        saveData(data);
+        return jsonResponse({ success: true, status: reel.status, message: "Status updated to " + status });
+      }
+      return jsonResponse({ success: false, error: "Reel not found" }, 404);
+    }
+
     // 7. Track Engagement (View / Download)
     if (action === "trackEvent") {
       const { reelId, type } = payload;
