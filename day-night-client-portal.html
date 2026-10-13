@@ -1569,6 +1569,362 @@
     .month.off { opacity: 0.45; }
     .month.now { border-color: var(--c); border-width: 2px; }
 
+    /* Client Hero Banner & Top Header Card (Reference Concept) */
+    .client-hero-banner {
+      width: calc(100% + 40px);
+      margin: -20px -20px 0 -20px;
+      height: 180px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #12294A 0%, #1c3860 100%);
+      display: flex;
+      align-items: flex-end;
+    }
+    .hero-banner-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.88;
+    }
+    .hero-banner-overlay {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      padding: 16px 20px 20px;
+      background: linear-gradient(to top, rgba(18, 41, 74, 0.95) 0%, rgba(18, 41, 74, 0.5) 60%, transparent 100%);
+      color: #FFFFFF;
+    }
+    .hero-brand-name {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+    .hero-brand-slogan {
+      display: block;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 500;
+      margin-top: 3px;
+      letter-spacing: 0.02em;
+    }
+
+    /* Floating Client Header Card */
+    .client-header-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: -14px 0 16px;
+      position: relative;
+      z-index: 4;
+      box-shadow: 0 6px 20px rgba(18, 41, 74, 0.06);
+    }
+    .ch-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .ch-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: contain;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      flex: none;
+    }
+    .ch-info { min-width: 0; }
+    .ch-info h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+    .ch-info p {
+      font-size: 11px;
+      color: var(--mute);
+      margin: 2px 0 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .month-selector-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      flex: none;
+      transition: all 0.15s ease;
+    }
+    .month-selector-btn:hover { background: #FFFFFF; border-color: var(--navy); transform: translateY(-1px); }
+
+    /* Gallery Heading & Search Tools */
+    .gallery-title-row {
+      margin-bottom: 12px;
+    }
+    .gallery-heading {
+      font-family: var(--serif, 'Cormorant Garamond', Georgia, serif);
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--navy);
+      margin: 0 0 2px;
+      line-height: 1.15;
+    }
+    .gallery-sub {
+      font-size: 12px;
+      color: var(--mute);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .gallery-tools-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .gallery-search-box {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .gallery-search-box svg {
+      position: absolute;
+      left: 12px;
+      color: var(--mute);
+      pointer-events: none;
+    }
+    .gallery-search-inp {
+      width: 100%;
+      padding: 9px 32px 9px 36px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--navy);
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .gallery-search-inp:focus {
+      border-color: var(--navy);
+      box-shadow: 0 0 0 3px rgba(18, 41, 74, 0.08);
+    }
+    .clear-search-btn {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--mute);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+    }
+
+    /* Density Switcher (2 per row / 3 per row) */
+    .density-switcher {
+      display: inline-flex;
+      background: var(--soft);
+      padding: 3px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      flex: none;
+      gap: 2px;
+    }
+    .density-btn {
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--mute);
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .density-btn.active {
+      background: #FFFFFF;
+      color: var(--navy);
+      box-shadow: 0 2px 6px rgba(18, 41, 74, 0.08);
+      font-weight: 700;
+    }
+
+    /* Grid Density Variations */
+    .reels.grid-1col { grid-template-columns: 1fr !important; }
+    .reels.grid-2col { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .reels.grid-3col { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+    .reels.grid-3col .acts { display: flex; flex-direction: column; gap: 3px; }
+    .reels.grid-3col .act { padding: 4px 2px; font-size: 9px; flex-direction: row; justify-content: center; gap: 3px; }
+    .reels.grid-3col .act .chip { width: 18px; height: 18px; }
+    .reels.grid-3col .act .chip svg { width: 10px; height: 10px; }
+    .reels.grid-3col .poster .cap { font-size: 10.5px; bottom: 8px; left: 6px; right: 6px; }
+    .reels.grid-3col .poster .cap small { font-size: 8.5px; }
+    .reels.grid-3col .poster .views-badge { display: none; }
+
+    /* Views Badge on Thumbnail (Reference Concept) */
+    .poster .views-badge {
+      position: absolute;
+      bottom: 40px;
+      left: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 9.5px;
+      font-weight: 600;
+      color: #FFFFFF;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      padding: 2px 7px;
+      border-radius: 999px;
+      z-index: 2;
+    }
+
+    /* Bottom Navigation Bar (Navbar - Reference Concept) */
+    .client-bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 253, 248, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+      z-index: 50;
+      box-shadow: 0 -4px 20px rgba(18, 41, 74, 0.05);
+    }
+    .bnav-btn {
+      flex: 1;
+      max-width: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: none;
+      background: none;
+      color: var(--mute);
+      cursor: pointer;
+      padding: 4px 0;
+      border-radius: 12px;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .bnav-icon {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      color: currentColor;
+      transition: transform 0.15s ease;
+    }
+    .bnav-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: currentColor;
+      letter-spacing: 0.02em;
+    }
+    .bnav-btn.active {
+      color: var(--navy);
+    }
+    .bnav-btn.active .bnav-icon {
+      color: var(--gold, #B8935A);
+      transform: translateY(-2px);
+    }
+    .bnav-btn.active .bnav-label {
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    /* Ensure app scroll area has clearance above bottom navbar */
+    #app {
+      padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* Month Dropdown Popover */
+    .month-picker-scrim {
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 41, 74, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+    .month-picker-box {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 20px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 16px 40px rgba(18, 41, 74, 0.15);
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mp-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .mp-title h3 { font-size: 16px; font-weight: 700; color: var(--navy); margin: 0; }
+    .mp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .mp-btn {
+      padding: 10px 6px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .mp-btn small { font-size: 9.5px; color: var(--mute); font-weight: 500; }
+    .mp-btn:hover { border-color: var(--navy); background: #FFFFFF; }
+    .mp-btn.active { background: var(--navy); color: #FFFFFF; border-color: var(--navy); }
+    .mp-btn.active small { color: rgba(255, 255, 255, 0.85); }
+    
     /* Branches & Folders Grid (Image Fills Box, Clean Text, Zero Pin Icon) */
     .branches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .branch {
@@ -2321,7 +2677,8 @@
     const CONFIG = {
       gasUrl: localStorage.getItem('dn_gas_url') || DEFAULT_GAS_URL,
       adminPasskey: localStorage.getItem('dn_admin_passkey') || 'DN@2026',
-      isAdmin: sessionStorage.getItem('dn_admin_auth') === (localStorage.getItem('dn_admin_passkey') || 'DN@2026') || localStorage.getItem('dn_is_admin') === 'true' || location.search.includes('admin=1')
+      // Admin features are strictly hidden from client portal unless URL explicitly has ?admin=1
+      isAdmin: location.search.includes('admin=1')
     };
 
     let connectionState = {
@@ -2336,7 +2693,11 @@
       month: null,
       branch: null,
       album: null,
-      tabMode: 'months' // 'months' | 'branches' | 'albums'
+      tabMode: 'months', // 'months' | 'branches' | 'albums'
+      contentType: 'all', // 'all' | 'reels' | 'stories' | 'posters'
+      searchQuery: '',
+      gridCols: 2, // 2 | 3 | 1
+      monthPickerOpen: false
     };
 
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -3003,6 +3364,67 @@
         document.title = `${c.name || 'Client'} | DAY NIGHT`;
       }
 
+
+    // Luxury Milk-White Bottom Navigation Bar (Navbar - Reference Concept)
+    function renderBottomNav() {
+      if (!view.client || view.screen === 'splash' || view.screen === 'client-pin') return '';
+      const isHome = view.screen === 'genesis';
+      const isReels = view.screen === 'reels' && (view.contentType === 'all' || view.contentType === 'reels' || !view.contentType);
+      const isBranches = (view.screen === 'months' && view.tabMode === 'branches') || !!view.branch;
+      const isCalendar = (view.screen === 'months' && view.tabMode === 'months') || view.contentType === 'stories' || view.contentType === 'posters';
+      const isAlbums = (view.screen === 'months' && view.tabMode === 'albums') || !!view.album;
+
+      return `
+        <nav class="client-bottom-nav" aria-label="Client Navigation">
+          <button class="bnav-btn ${isHome ? 'active' : ''}" data-act="bnav-home">
+            <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+            <span class="bnav-label">Home</span>
+          </button>
+          <button class="bnav-btn ${isReels ? 'active' : ''}" data-act="bnav-reels">
+            <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg></span>
+            <span class="bnav-label">Reels</span>
+          </button>
+          <button class="bnav-btn ${isBranches ? 'active' : ''}" data-act="bnav-branches">
+            <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>
+            <span class="bnav-label">Branches</span>
+          </button>
+          <button class="bnav-btn ${isCalendar ? 'active' : ''}" data-act="bnav-calendar">
+            <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            <span class="bnav-label">Calendar</span>
+          </button>
+          <button class="bnav-btn ${isAlbums ? 'active' : ''}" data-act="bnav-albums">
+            <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span>
+            <span class="bnav-label">Collections</span>
+          </button>
+        </nav>`;
+    }
+
+    // Month Picker Modal (Reference Concept)
+    function openMonthPicker() {
+      const currentM = view.month != null ? view.month : TODAY.getMonth();
+      const currentY = view.year || TODAY.getFullYear();
+      sheet(`
+        <div style="padding:10px 4px 6px;">
+          <div class="mp-title">
+            <h3>Select Delivery Month</h3>
+            <button class="ghost" data-close style="padding:4px 12px;border-radius:999px;font-size:12px;">Close</button>
+          </div>
+          <p style="font-size:12px;color:var(--mute);margin:0 0 14px;">Browse delivered video reels, festive stories, and posters by month.</p>
+          <div class="mp-grid">
+            ${MONTHS.map((mn, idx) => {
+              const count = contentsFor(currentY, idx).length;
+              const isSel = currentM === idx;
+              return `
+                <button class="mp-btn ${isSel ? 'active' : ''}" data-act="select-dropdown-month" data-m="${idx}">
+                  <span>${mn.slice(0, 3)}</span>
+                  <small>${count ? `${count} content${count === 1 ? '' : 's'}` : '0 items'}</small>
+                </button>`;
+            }).join('')}
+          </div>
+        </div>
+      `, sc => {}, false, 'month-picker-scrim');
+    }
+
       // Screen 1: Executive Day Night Media Hub (Default Home Page)
       if (view.screen === 'splash' || !view.client || !c) {
         const clientList = (DATA.clients || []).filter(cl => !DATA.deletedClientIds || !DATA.deletedClientIds.includes(cl.id));
@@ -3145,8 +3567,9 @@
               ${clientLogo(c)}
               <span class="tagline" aria-label="${esc(c.tagline)}">${tagSpans(c)}<i class="caret"></i></span>
             </div>
-            <button class="btn go-btn" data-act="months">Ready to explore your reels ${ic.arrow}</button>
-          </section>`;
+            <button class="btn go-btn" data-act="bnav-reels">Ready to explore your reels ${ic.arrow}</button>
+          </section>
+          ${renderBottomNav()}`;
         playTagline();
       }
 
@@ -3189,12 +3612,13 @@
                   <button class="branch ${cover ? 'has-cover' : 'no-cover'}" style="--c:${bColor(b, list)}" data-act="branch" data-b="${esc(b)}">
                     <div class="branch-cover-wrap">
                       ${cover 
-                        ? `<img src="${esc(cover)}" alt="" class="branch-cover-img" onerror="this.parentElement.querySelector('.branch-cover-placeholder').style.display='flex';this.style.display='none';"><div class="branch-cover-placeholder" style="display:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Add Cover Image</span></div>` 
-                        : `<div class="branch-cover-placeholder"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Add Cover Image</span></div>`
+                        ? `<img src="${esc(cover)}" alt="" class="branch-cover-img">` 
+                        : `<div class="branch-cover-placeholder"><span style="font-size:18px;font-weight:700;letter-spacing:0.04em;color:var(--navy);">${esc(b.slice(0, 2).toUpperCase())}</span><span style="font-size:11px;color:var(--mute);">${esc(b)} Branch</span></div>`
                       }
-                      <span class="branch-cov-btn" data-act="cover-branch" data-b="${esc(b)}" title="Set cover image (Upload or Link)">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                      </span>
+                      ${CONFIG.isAdmin ? `
+                        <span class="branch-cov-btn" data-act="cover-branch" data-b="${esc(b)}" title="Set cover image (Upload or Link)">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        </span>` : ''}
                     </div>
                     <div class="branch-meta-wrap">
                       <span class="bn"><small>Store Branch</small><b>${esc(b)}</b></span>
@@ -3214,12 +3638,13 @@
                   <button class="branch ${cover ? 'has-cover' : 'no-cover'}" style="--c:${bColor(alb, list)}" data-act="album" data-alb="${esc(alb)}">
                     <div class="branch-cover-wrap">
                       ${cover 
-                        ? `<img src="${esc(cover)}" alt="" class="branch-cover-img" onerror="this.parentElement.querySelector('.branch-cover-placeholder').style.display='flex';this.style.display='none';"><div class="branch-cover-placeholder" style="display:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Add Cover Image</span></div>` 
-                        : `<div class="branch-cover-placeholder"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Add Cover Image</span></div>`
+                        ? `<img src="${esc(cover)}" alt="" class="branch-cover-img">` 
+                        : `<div class="branch-cover-placeholder"><span style="font-size:18px;font-weight:700;letter-spacing:0.04em;color:var(--navy);">${esc(alb.slice(0, 2).toUpperCase())}</span><span style="font-size:11px;color:var(--mute);">${esc(alb)}</span></div>`
                       }
-                      <span class="branch-cov-btn" data-act="cover-album" data-alb="${esc(alb)}" title="Set cover image (Upload or Link)">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                      </span>
+                      ${CONFIG.isAdmin ? `
+                        <span class="branch-cov-btn" data-act="cover-album" data-alb="${esc(alb)}" title="Set cover image (Upload or Link)">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        </span>` : ''}
                     </div>
                     <div class="branch-meta-wrap">
                       <span class="bn"><small>Collection</small><b>${esc(alb)}</b></span>
@@ -3251,48 +3676,57 @@
           </div>` : ''}
 
           ${tabContent}
-          ${CONFIG.isAdmin ? '<button class="fab-add" data-act="add" aria-label="Add reel">+</button>' : ''}`;
+          ${CONFIG.isAdmin ? '<button class="fab-add" data-act="add" aria-label="Add reel">+</button>' : ''}
+          ${renderBottomNav()}`;
       }
 
-      // Screen 4: Content Hub (Reels, Stories & Posters with Interactive Calendar)
+      // Screen 4: Reels Gallery & Content Hub (Reference Concept UI)
       else if (view.screen === 'reels') {
         if (!c) { go({ screen: 'splash', client: null }); return; }
         const { year: y, month: m, branch: b, album: alb } = view;
-        const currentType = view.contentType || 'reels';
+        const currentType = view.contentType || 'all';
         const allList = contentsFor(m != null ? y : null, m, b, alb);
         const reelsList = contentsFor(m != null ? y : null, m, b, alb, 'reels');
         const storiesList = contentsFor(m != null ? y : null, m, b, alb, 'stories');
         const postersList = contentsFor(m != null ? y : null, m, b, alb, 'posters');
-        const heading = alb || b || (m != null ? `${MONTHS[m]} ${y}` : 'All Contents');
+        const gridCols = view.gridCols || 2;
+
+        // Banner Image
+        const heroBanner = c.bannerUrl || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80';
 
         let contentBody = '';
-        if (currentType === 'reels') {
-          // Current Reels Grid View
-          contentBody = reelsList.length ? `
-            <div class="reels">
-              ${reelsList.map((r, i) => {
+        if (currentType === 'stories' || currentType === 'posters') {
+          // Stories or Posters: Render Interactive Calendar & Image Grid
+          const targetItems = currentType === 'stories' ? storiesList : postersList;
+          contentBody = renderCalendarContent(y, m, targetItems, currentType);
+        } else {
+          // Reels / All Gallery View with Live Real-time Search
+          let displayList = currentType === 'reels' ? reelsList : allList;
+          if (view.searchQuery) {
+            const q = view.searchQuery.toLowerCase();
+            displayList = displayList.filter(r => (r.title || '').toLowerCase().includes(q) || (r.b || '').toLowerCase().includes(q) || (r.album || '').toLowerCase().includes(q));
+          }
+
+          contentBody = displayList.length ? `
+            <div class="reels ${gridCols === 3 ? 'grid-3col' : (gridCols === 1 ? 'grid-1col' : 'grid-2col')}">
+              ${displayList.map((r, i) => {
+                const isVideo = !r.type || r.type === 'reel' || r.type === 'video';
                 const has = !!r.url;
                 const col = RCOL[i % RCOL.length];
                 const isHidden = r.hidden === true;
                 return `
                   <div class="reel ${isHidden ? 'is-hidden' : ''}">
-                    <div class="poster" style="--c:${col}" data-act="play-video" data-id="${r.id}" aria-label="Play ${esc(r.title)}">
+                    <div class="poster ${r.type === 'poster' ? 'is-square' : ''}" style="--c:${col}" data-act="${isVideo ? 'play-video' : 'view-image'}" data-id="${r.id}" aria-label="Play ${esc(r.title)}">
                       ${r.coverUrl ? `<img class="custom-cover" src="${esc(r.coverUrl)}" alt="">` : motif}
                       <span class="zari"></span>
-                      <span class="no">REEL ${String(i + 1).padStart(2, '0')}</span>
                       ${r.dur ? `<span class="dur">${esc(r.dur)}</span>` : ''}
-                      ${isHidden ? '<span class="status-tag hidden">HIDDEN</span>' : ''}
-                      <span class="play" style="color:${col}">${ic.play}</span>
+                      <span class="play" style="color:${col}">${isVideo ? ic.play : ic.view}</span>
+                      <span class="views-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${r.views ? r.views + ' views' : 'Delivered'}</span>
                       <span class="cap">${esc(r.title)}<small>${fmtDate(r.date)}${r.b ? ` · ${esc(r.b)}` : (r.album ? ` · ${esc(r.album)}` : '')}</small></span>
                       <span class="border"></span>
                     </div>
-                    ${CONFIG.isAdmin ? `
-                      <div class="stats-line">
-                        <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${r.views || 0} views</span>
-                        <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> ${r.downloads || 0} dl</span>
-                      </div>` : ''}
                     <div class="acts">
-                      <button class="act" style="--k:var(--blue)" data-act="play-video" data-id="${r.id}"><span class="chip">${ic.view}</span>View</button>
+                      <button class="act" style="--k:var(--blue)" data-act="${isVideo ? 'play-video' : 'view-image'}" data-id="${r.id}"><span class="chip">${ic.view}</span>View</button>
                       <button type="button" class="act" style="--k:var(--green)" ${has ? `data-act="direct-dl" data-id="${r.id}"` : 'aria-disabled="true"'}><span class="chip">${ic.dl}</span>Download</button>
                       <button class="act" style="--k:var(--amber)" data-act="share" data-id="${r.id}" ${has ? '' : 'aria-disabled="true"'}><span class="chip">${ic.share}</span>Share</button>
                     </div>
@@ -3305,37 +3739,96 @@
                   </div>`;
               }).join('')}
             </div>`
-            : `<div class="empty">${ic.film}<b>No reels in this section yet</b>Delivered reels will appear here automatically.</div>`;
-        } else {
-          // Stories or Posters: Render Interactive Calendar & Image Grid
-          const targetItems = currentType === 'stories' ? storiesList : postersList;
-          contentBody = renderCalendarContent(y, m, targetItems, currentType);
+            : `<div class="empty">${ic.film}<b>${view.searchQuery ? 'No contents matching "' + esc(view.searchQuery) + '"' : 'No reels in this section yet'}</b>${view.searchQuery ? 'Try another search term.' : 'Delivered reels will appear here automatically.'}</div>`;
         }
 
         app.innerHTML = `
-          ${topbar(c.name, heading)}
-          <div class="head">
-            <small>${esc(c.name)} · ${allList.length} delivered content${allList.length === 1 ? '' : 's'}</small>
-            <h2>${esc(heading)}</h2>
+          ${topbar(c.name, 'Reels Gallery')}
+          
+          <!-- Top Brand Hero Banner (Reference Concept) -->
+          <div class="client-hero-banner">
+            <img src="${esc(heroBanner)}" class="hero-banner-img" alt="">
+            <div class="hero-banner-overlay">
+              <span class="hero-brand-name">${esc(c.name)}</span>
+              <span class="hero-brand-slogan">${esc(c.slogan || c.tagline || 'Sarees for every special moment')}</span>
+            </div>
           </div>
 
+          <!-- Floating Client Card & Month Selector (Reference Concept) -->
+          <div class="client-header-card">
+            <div class="ch-left">
+              ${c.logo ? `<img class="ch-logo" src="${esc(c.logo)}" alt="">` : ''}
+              <div class="ch-info">
+                <h3>${esc(c.name)}</h3>
+                <p>${esc(b ? `${b} Branch` : (alb ? alb : 'All Branches & Collections'))}</p>
+              </div>
+            </div>
+            <button class="month-selector-btn" data-act="open-month-dropdown">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>${m != null ? `${MONTHS[m]} ${y}` : `${y || 2026}`}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+
+          <!-- Gallery Title Row -->
+          <div class="gallery-title-row">
+            <h2 class="gallery-heading">Reels Gallery</h2>
+            <p class="gallery-sub">Explore our latest collections, offers, behind the scenes and more.</p>
+          </div>
+
+          <!-- Search & Density Tools Bar (Reference Concept) -->
+          <div class="gallery-tools-bar">
+            <div class="gallery-search-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" class="gallery-search-inp" id="gallery-search-inp" placeholder="Search videos, collections..." value="${esc(view.searchQuery || '')}">
+              ${view.searchQuery ? `<button class="clear-search-btn" data-act="clear-search">&times;</button>` : ''}
+            </div>
+            <div class="density-switcher">
+              <button class="density-btn ${gridCols === 2 ? 'active' : ''}" data-act="set-grid" data-cols="2" title="2 per row">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+                <span>2 per row</span>
+              </button>
+              <button class="density-btn ${gridCols === 3 ? 'active' : ''}" data-act="set-grid" data-cols="3" title="3 per row">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="5" height="18" rx="1"/><rect x="9.5" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="5" height="18" rx="1"/></svg>
+                <span>3 per row</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Content Category Tabs -->
           <div class="content-type-switcher">
+            <button class="ctype-btn ${currentType === 'all' ? 'active' : ''}" data-act="set-ctype" data-ctype="all">
+              All (${allList.length})
+            </button>
             <button class="ctype-btn ${currentType === 'reels' ? 'active' : ''}" data-act="set-ctype" data-ctype="reels">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               Reels (${reelsList.length})
             </button>
             <button class="ctype-btn ${currentType === 'stories' ? 'active' : ''}" data-act="set-ctype" data-ctype="stories">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="2" width="14" height="20" rx="3"/><circle cx="12" cy="18" r="1"/></svg>
               Stories (${storiesList.length})
             </button>
             <button class="ctype-btn ${currentType === 'posters' ? 'active' : ''}" data-act="set-ctype" data-ctype="posters">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               Posters (${postersList.length})
             </button>
           </div>
 
           ${contentBody}
-          ${CONFIG.isAdmin ? '<button class="fab-add" data-act="add" aria-label="Add reel">+</button>' : ''}`;
+          ${CONFIG.isAdmin ? '<button class="fab-add" data-act="add" aria-label="Add reel">+</button>' : ''}
+          ${renderBottomNav()}`;
+
+        // Wire real-time search input
+        const searchInp = document.getElementById('gallery-search-inp');
+        if (searchInp) {
+          searchInp.oninput = e => {
+            view.searchQuery = e.target.value.trim();
+            render();
+            // Restore focus
+            const newInp = document.getElementById('gallery-search-inp');
+            if (newInp) {
+              newInp.focus();
+              newInp.selectionStart = newInp.selectionEnd = newInp.value.length;
+            }
+          };
+        }
       }
     }
 
@@ -3384,9 +3877,10 @@
         <div class="cal-card">
           <div class="cal-top">
             <h3>${MONTHS[targetMonth]} ${targetYear} · ${typeLabel} Calendar</h3>
-            <button type="button" class="cal-upload-btn" data-act="upload-image-prompt" data-type="${type}">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> + Upload ${type === 'stories' ? 'Story' : 'Poster'}
-            </button>
+            ${CONFIG.isAdmin ? `
+              <button type="button" class="cal-upload-btn" data-act="upload-image-prompt" data-type="${type}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> + Upload ${type === 'stories' ? 'Story' : 'Poster'}
+              </button>` : ''}
           </div>
           <div class="cal-weekdays">
             ${weekdays.map(w => `<span>${w}</span>`).join('')}
@@ -3430,7 +3924,7 @@
           <div class="empty">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin:0 auto 10px;display:block;opacity:0.45;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <b>No ${typeLabel} for ${view.selectedDay ? `${MONTHS[targetMonth]} ${view.selectedDay}` : 'this month'}</b>
-            <span>Tap '+ Upload ${type === 'stories' ? 'Story' : 'Poster'}' to add festive image content.</span>
+            <span>${CONFIG.isAdmin ? 'Tap + Upload to add festive image content.' : 'Festive campaign stories and posters will appear here.'}</span>
           </div>`
         }
       `;
@@ -5740,6 +6234,26 @@
         go({ screen: 'client-pin', client: cid });
       }
       else if (a === 'gear-click') verifyAdminAccess();
+      else if (a === 'bnav-home') go({ screen: 'genesis', client: view.client });
+      else if (a === 'bnav-reels') go({ screen: 'reels', client: view.client, month: (view.month != null ? view.month : 9), year: view.year || 2026, branch: null, album: null, contentType: 'all', selectedDay: null });
+      else if (a === 'bnav-branches') go({ screen: 'months', client: view.client, tabMode: 'branches' });
+      else if (a === 'bnav-calendar') go({ screen: 'reels', client: view.client, month: (view.month != null ? view.month : 9), year: view.year || 2026, branch: null, album: null, contentType: 'stories', selectedDay: null });
+      else if (a === 'bnav-albums') go({ screen: 'months', client: view.client, tabMode: 'albums' });
+      else if (a === 'open-month-dropdown') openMonthPicker();
+      else if (a === 'select-dropdown-month') {
+        view.month = +el.dataset.m;
+        const scrim = document.querySelector('.month-picker-scrim');
+        if (scrim) scrim.remove();
+        go({ screen: 'reels', month: view.month });
+      }
+      else if (a === 'set-grid') {
+        view.gridCols = +el.dataset.cols;
+        render();
+      }
+      else if (a === 'clear-search') {
+        view.searchQuery = '';
+        render();
+      }
       else if (a === 'back') go(BACK[view.screen]);
       else if (a === 'months') go({ screen: 'months' });
       else if (a === 'tab') { view.tabMode = el.dataset.tab; render(); }

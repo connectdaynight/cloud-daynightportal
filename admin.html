@@ -1893,6 +1893,24 @@
                   <button data-copy="${clientUrl}">Copy Link</button>
                 </div>
 
+                <!-- Dedicated Cover & Hero Banner Section -->
+                <div style="background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                      <b style="font-size:12px;color:var(--navy);font-weight:700;">Covers &amp; Hero Banner</b>
+                    </div>
+                    <button class="btn-portal" data-cover-banner="${c.id}" style="padding:4px 10px;font-size:11px;font-weight:600;color:var(--blue);border-color:var(--line);background:#fff;display:inline-flex;align-items:center;gap:4px;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Set Hero Banner
+                    </button>
+                  </div>
+                  ${c.bannerUrl ? `
+                    <div style="width:100%;height:68px;border-radius:10px;overflow:hidden;border:1px solid var(--line);position:relative;">
+                      <img src="${esc(c.bannerUrl)}" style="width:100%;height:100%;object-fit:cover;" alt="Hero Banner">
+                      <span style="position:absolute;bottom:4px;left:6px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;">PORTAL HERO BANNER</span>
+                    </div>` : '<div style="font-size:11px;color:var(--mute);background:#fff;padding:8px 10px;border-radius:8px;border:1px dashed var(--line);text-align:center;">No custom Hero Banner set yet. Click &quot;Set Hero Banner&quot; to upload one.</div>'}
+                </div>
+
                 <div>
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                     <small style="font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;">Store Branches (${branches.length})</small>
@@ -1960,6 +1978,12 @@
       });
 
       // Cover Page Handlers
+      document.querySelectorAll('[data-cover-banner]').forEach(b => {
+        b.onclick = () => {
+          const client = DATA.clients.find(x => x.id === b.dataset.coverBanner);
+          if (client) openCoverModal(client, 'banner', 'Hero Banner');
+        };
+      });
       document.querySelectorAll('[data-cover-branch]').forEach(b => {
         b.onclick = () => {
           const client = DATA.clients.find(x => x.id === b.dataset.coverBranch);
@@ -3094,16 +3118,22 @@ function openEditModal(r) {
 
     // MODAL: SET COVER PAGE FOR BRANCH OR ALBUM
     function openCoverModal(client, type, name) {
-      const coverProp = type === 'branch' ? 'branchCovers' : 'albumCovers';
-      client[coverProp] = client[coverProp] || {};
-      let currentCover = client[coverProp][name] || '';
+      const isBanner = type === 'banner';
+      const coverProp = type === 'branch' ? 'branchCovers' : (type === 'album' ? 'albumCovers' : 'bannerUrl');
+      if (!isBanner) client[coverProp] = client[coverProp] || {};
+      let currentCover = isBanner ? (client.bannerUrl || '') : (client[coverProp][name] || '');
+
+      const titleLabel = isBanner ? 'Client Portal Hero Banner' : (type === 'branch' ? `Store Branch Cover · ${name}` : `Collection Cover · ${name}`);
+      const subtitleDesc = isBanner 
+        ? `Top Hero Banner image displayed on ${esc(client.name)} Client Portal.` 
+        : `${type === 'branch' ? 'Store Branch' : 'Album / Collection'} cover photo for ${esc(client.name)}.`;
 
       modal(`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <h3 style="margin:0;font-size:16px;">Set Cover Page · ${esc(name)}</h3>
+          <h3 style="margin:0;font-size:16px;">${esc(titleLabel)}</h3>
           <button data-close class="btn-portal" style="padding:4px 10px;font-size:16px;line-height:1;border-radius:8px;">&times;</button>
         </div>
-        <p style="font-size:12px;color:var(--mute);margin:0 0 14px;">${type === 'branch' ? 'Store Branch' : 'Album / Collection'} cover for <b>${esc(client.name)}</b></p>
+        <p style="font-size:12px;color:var(--mute);margin:0 0 14px;">${subtitleDesc}</p>
 
         <!-- Live Cover Preview Box -->
         <div class="form-group">
@@ -3190,9 +3220,12 @@ function openEditModal(r) {
 
         if (delBtn) {
           delBtn.onclick = async () => {
-            delete client[coverProp][name];
-            saveAndBroadcast(`Cover removed for ${name}`);
+            if (isBanner) client.bannerUrl = '';
+            else delete client[coverProp][name];
+
+            saveAndBroadcast(`Cover removed for ${name || 'Hero Banner'}`);
             try { await api('saveClient', { client }); } catch(e) {}
+            toast('Cover image removed', 'info');
             sc.remove();
             renderClients();
           };
@@ -3200,10 +3233,12 @@ function openEditModal(r) {
 
         saveBtn.onclick = async () => {
           if (currentCover) {
-            client[coverProp][name] = currentCover;
-            saveAndBroadcast(`Cover saved for ${name}!`);
+            if (isBanner) client.bannerUrl = currentCover;
+            else client[coverProp][name] = currentCover;
+
+            saveAndBroadcast(`Cover saved for ${name || 'Hero Banner'}!`);
             try { await api('saveClient', { client }); } catch(e) {}
-            toast(`Cover page updated for ${name}!`, 'success');
+            toast(`Cover updated successfully!`, 'success');
           }
           sc.remove();
           renderClients();
