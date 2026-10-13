@@ -3981,7 +3981,7 @@
               ? 'Delivered campaign posters and creatives will appear here.'
               : 'Delivered reels will appear here automatically.'));
 
-        contentBody = displayList.length ? `
+        const contentBody = displayList.length ? `
           <div class="reels ${gridCols === 3 ? 'grid-3col' : (gridCols === 1 ? 'grid-1col' : 'grid-2col')}">
             ${displayList.map((r, i) => {
               const isVideo = (!r.type || r.type === 'reel' || r.type === 'video') ||
