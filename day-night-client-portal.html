@@ -2276,6 +2276,7 @@
     }
 
     let isClosingModalViaHistory = false;
+    let isProgrammaticHistoryBack = false;
 
     function go(p, isBack = false) {
       Object.assign(view, p);
@@ -2291,6 +2292,10 @@
 
     // Back Button Navigation Handling (Prevents closing website on back swipe/press)
     window.addEventListener('popstate', e => {
+      if (isProgrammaticHistoryBack) {
+        isProgrammaticHistoryBack = false;
+        return;
+      }
       const scrims = document.querySelectorAll('.scrim');
       if (scrims.length > 0) {
         const topScrim = scrims[scrims.length - 1];
@@ -2341,7 +2346,7 @@
       sc.className = 'scrim' + (center ? ' center' : '') + (customClass ? ' ' + customClass : '');
       sc.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${center ? '' : '<div class="grab"></div>'}${html}</div>`;
       sc.addEventListener('click', e => {
-        if (e.target.closest('[data-close]')) sc.remove();
+        if (e.target.closest('[data-close]') || (customClass === 'share-modal-scrim' && e.target === sc)) sc.remove();
       });
       document.body.appendChild(sc);
 
@@ -2351,7 +2356,9 @@
       sc.remove = function() {
         origRemove();
         if (!isClosingModalViaHistory && window.history.state && window.history.state.modalOpen) {
+          isProgrammaticHistoryBack = true;
           try { window.history.back(); } catch(e) {}
+          setTimeout(() => { isProgrammaticHistoryBack = false; }, 150);
         }
       };
 
@@ -5159,7 +5166,10 @@
     let adminKeySeq = '';
     window.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        document.querySelector('.scrim')?.remove();
+        const scrims = document.querySelectorAll('.scrim');
+        if (scrims.length > 0) {
+          scrims[scrims.length - 1].remove();
+        }
         return;
       }
       const tag = (e.target && e.target.tagName) || '';
