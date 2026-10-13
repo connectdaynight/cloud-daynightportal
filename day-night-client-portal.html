@@ -695,7 +695,7 @@
       border: 1px solid var(--line) !important;
       display: flex !important;
       flex-direction: column !important;
-      gap: 12px !important;
+      gap: 10px !important;
       animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
     .scrim.video-modal-scrim .sheet h4 {
@@ -821,7 +821,7 @@
       }
     }
 
-    /* Video Player Box */
+    /* Video Player Box with 3D Flip Card Perspective */
     .video-frame-box {
       position: relative;
       width: 100%;
@@ -834,8 +834,24 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      perspective: 1400px;
+      -webkit-perspective: 1400px;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: pan-y;
     }
-    .video-frame-box video {
+
+    /* 3D Flip Card Inner Container */
+    .video-card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      transition: transform 0.42s cubic-bezier(0.2, 0.85, 0.25, 1), opacity 0.42s ease, filter 0.42s ease;
+      will-change: transform, opacity;
+    }
+    .video-card-inner video {
       width: 100%;
       height: 100%;
       object-fit: contain;
@@ -844,7 +860,69 @@
       display: block;
     }
 
-    /* Gear Button Near Close Button (In Header) */
+    /* 3D Cinematic Flip States */
+    .video-card-inner.flip-out-left {
+      transform: rotateY(-70deg) translateZ(-60px) scale(0.86);
+      opacity: 0;
+      filter: blur(4px);
+    }
+    .video-card-inner.flip-out-right {
+      transform: rotateY(70deg) translateZ(-60px) scale(0.86);
+      opacity: 0;
+      filter: blur(4px);
+    }
+    .video-card-inner.flip-in-right-prep {
+      transform: rotateY(70deg) translateZ(-60px) scale(0.86);
+      opacity: 0;
+      filter: blur(4px);
+      transition: none !important;
+    }
+    .video-card-inner.flip-in-left-prep {
+      transform: rotateY(-70deg) translateZ(-60px) scale(0.86);
+      opacity: 0;
+      filter: blur(4px);
+      transition: none !important;
+    }
+    .video-card-inner.flip-active {
+      transform: rotateY(0deg) translateZ(0) scale(1);
+      opacity: 1;
+      filter: none;
+    }
+
+    /* Floating Flip Navigation Arrows */
+    .v-flip-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 28;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      color: var(--navy);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(18, 41, 74, 0.16);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .v-flip-btn:hover {
+      background: #FFFFFF;
+      transform: translateY(-50%) scale(1.1);
+      box-shadow: 0 6px 20px rgba(18, 41, 74, 0.24);
+      border-color: var(--navy);
+    }
+    .v-flip-btn:disabled, .v-flip-btn[aria-disabled="true"] {
+      opacity: 0.25;
+      pointer-events: none;
+    }
+    .v-flip-prev { left: 10px; }
+    .v-flip-next { right: 10px; }
+
+    /* Header Action & Gear Buttons */
     .video-gear-btn-header {
       background: var(--soft);
       border: 1px solid var(--line);
@@ -866,6 +944,192 @@
       transform: scale(1.05);
     }
 
+    /* Reel Counter Pill */
+    .v-reel-pill {
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      color: var(--navy);
+      padding: 2px 7px;
+      border-radius: 99px;
+      letter-spacing: 0.4px;
+    }
+
+    /* Social Icons Safe Zone Overlay */
+    .v-social-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 22;
+      pointer-events: none;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px 12px 18px 14px;
+      color: #FFFFFF;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+      animation: popIn 0.25s ease-out;
+    }
+    .v-social-overlay.active {
+      display: flex;
+    }
+
+    /* Top Social Bar */
+    .v-soc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+    .v-soc-top-brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+    .v-soc-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Center Badge */
+    .v-soc-center-pill {
+      align-self: center;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #FFFFFF;
+      opacity: 0.85;
+      letter-spacing: 0.3px;
+    }
+
+    /* Bottom Safe Zone */
+    .v-soc-bottom {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+    }
+    .v-soc-meta {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-bottom: 2px;
+    }
+    .v-soc-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .v-soc-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1.5px solid #FFFFFF;
+      overflow: hidden;
+      background: #FFFFFF;
+      flex: none;
+    }
+    .v-soc-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .v-soc-handle {
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .v-soc-follow-btn {
+      padding: 3px 10px;
+      font-size: 10.5px;
+      font-weight: 700;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+      line-height: 1;
+    }
+    .v-soc-caption {
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+      color: rgba(255, 255, 255, 0.95);
+    }
+    .v-soc-audio {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    /* Right Action Stack */
+    .v-soc-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex: none;
+      padding-bottom: 2px;
+    }
+    .v-soc-act-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .v-soc-act-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    }
+    .v-soc-act-num {
+      font-size: 10px;
+      font-weight: 700;
+      color: #FFFFFF;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+      letter-spacing: 0.2px;
+    }
+    .v-soc-disc {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #FFFFFF;
+      background: #111;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+      animation: spin 3.5s linear infinite;
+    }
+
     /* Theme-Styled Settings Dropdown Menu */
     .video-gear-menu {
       display: none;
@@ -880,7 +1144,7 @@
       border-radius: 20px;
       padding: 14px 16px;
       color: var(--navy);
-      width: 270px;
+      width: 275px;
       max-height: calc(100vh - 120px);
       overflow-y: auto;
       box-shadow: 0 18px 48px rgba(18, 41, 74, 0.2);
@@ -3121,18 +3385,51 @@
         r.views = (r.views || 0) + 1;
       }
 
-      const id = driveId(r.url);
-      const streamSrc = id ? `/api/video?id=${id}` : r.url;
+      // Get Active Playlist of Reels
+      const c = client();
+      let activeList = [];
+      if (view.screen === 'reels') {
+        const { year: y, month: m, branch: b, album: alb } = view;
+        activeList = reelsFor(m != null ? y : null, m, b, alb);
+      }
+      if (!activeList || !activeList.length) {
+        activeList = (DATA.reels || []).filter(x => !c || x.c === c.id);
+      }
+      if (!activeList || !activeList.length) activeList = [r];
+
+      let curIdx = activeList.findIndex(x => x.id === r.id);
+      if (curIdx === -1) curIdx = 0;
+
+      let currentReel = activeList[curIdx] || r;
+      let socialPlatform = 'instagram'; // 'instagram', 'facebook', 'youtube'
+      let socialVisible = false;
+
+      function getStream(reel) {
+        const id = driveId(reel.url);
+        return id ? `/api/video?id=${id}` : reel.url;
+      }
 
       const sc = sheet(`
         <div class="video-modal-wrap">
           <div class="row-between" style="width:100%;align-items:center;">
             <div style="flex:1;min-width:0;padding-right:10px;">
-              <h4 style="margin:0;font-size:16px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</h4>
-              <p style="margin:2px 0 0;font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${fmtDate(r.date)}${r.b ? ` · ${esc(r.b)}` : (r.album ? ` · ${esc(r.album)}` : '')}</p>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <h4 id="v-title" style="margin:0;font-size:16px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(currentReel.title)}</h4>
+                <span class="v-reel-pill" id="v-counter">${curIdx + 1} / ${activeList.length}</span>
+              </div>
+              <p id="v-subtitle" style="margin:2px 0 0;font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${fmtDate(currentReel.date)}${currentReel.b ? ` · ${esc(currentReel.b)}` : (currentReel.album ? ` · ${esc(currentReel.album)}` : '')}</p>
             </div>
             
             <div style="display:flex;align-items:center;gap:8px;position:relative;flex:none;">
+              <!-- Quick Social Preview Toggle -->
+              <button type="button" class="video-gear-btn-header" id="v-social-quick-btn" title="Toggle Social Icons Overlay (Instagram / FB / Shorts)" aria-label="Social Overlay">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+              </button>
+
               <!-- Gear Button Near Close Button -->
               <button type="button" class="video-gear-btn-header" id="v-gear-btn" title="Player Settings" aria-label="Settings">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -3151,23 +3448,48 @@
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                     Client Approval
                   </div>
-                  <div id="v-status-indicator" class="v-status-badge ${r.status === 'approved' ? 'approved' : 'review'}">
+                  <div id="v-status-indicator" class="v-status-badge ${currentReel.status === 'approved' ? 'approved' : 'review'}">
                     <span class="v-status-dot"></span>
-                    <span id="v-status-text">${r.status === 'approved' ? 'Approved by Client' : 'In Review / Pending'}</span>
+                    <span id="v-status-text">${currentReel.status === 'approved' ? 'Approved by Client' : 'In Review / Pending'}</span>
                   </div>
                   <div class="v-approval-actions">
-                    <button type="button" class="v-act-btn approve-btn ${r.status === 'approved' ? 'active' : ''}" id="v-btn-approve">
+                    <button type="button" class="v-act-btn approve-btn ${currentReel.status === 'approved' ? 'active' : ''}" id="v-btn-approve">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="20 6 9 17 4 12"/></svg>
                       Approve
                     </button>
-                    <button type="button" class="v-act-btn reject-btn ${r.status !== 'approved' ? 'active' : ''}" id="v-btn-reject">
+                    <button type="button" class="v-act-btn reject-btn ${currentReel.status !== 'approved' ? 'active' : ''}" id="v-btn-reject">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       Needs Edit
                     </button>
                   </div>
                 </div>
 
-                <!-- 2. Stream Quality -->
+                <!-- 2. Social Icons Overlay (Instagram / FB / YouTube Shorts) -->
+                <div class="v-menu-sec">
+                  <div class="v-menu-label">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/></svg>
+                    Social Icons (Safe Zone)
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <span style="font-size:11px;font-weight:600;color:var(--navy);">Interface Overlay</span>
+                    <button type="button" id="v-social-menu-toggle" style="background:var(--soft);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--mute);cursor:pointer;transition:all 0.2s;">
+                      Off
+                    </button>
+                  </div>
+                  <div id="v-social-tabs" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:6px;">
+                    <button type="button" class="v-social-tab active" data-platform="instagram" style="padding:6px 2px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--navy);background:var(--navy);color:#FFFFFF;display:flex;align-items:center;justify-content:center;gap:3px;transition:all 0.15s;">
+                      Instagram
+                    </button>
+                    <button type="button" class="v-social-tab" data-platform="facebook" style="padding:6px 2px;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--soft);color:var(--navy);display:flex;align-items:center;justify-content:center;gap:3px;transition:all 0.15s;">
+                      Facebook
+                    </button>
+                    <button type="button" class="v-social-tab" data-platform="youtube" style="padding:6px 2px;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--soft);color:var(--navy);display:flex;align-items:center;justify-content:center;gap:3px;transition:all 0.15s;">
+                      Shorts
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 3. Stream Quality -->
                 <div class="v-menu-sec">
                   <div class="v-menu-label">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -3182,7 +3504,7 @@
                   </div>
                 </div>
 
-                <!-- 3. Playback Speed -->
+                <!-- 4. Playback Speed -->
                 <div class="v-menu-sec">
                   <div class="v-menu-label">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -3197,7 +3519,7 @@
                   </div>
                 </div>
 
-                <!-- 4. Repeat Loop -->
+                <!-- 5. Repeat Loop -->
                 <div class="v-menu-sec">
                   <div class="v-menu-label">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
@@ -3209,7 +3531,7 @@
                   </button>
                 </div>
 
-                <!-- 5. Technical Specs -->
+                <!-- 6. Technical Specs -->
                 <div class="v-menu-sec" style="margin-bottom:0;border-bottom:none;padding-bottom:0;">
                   <div class="v-menu-label">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
@@ -3218,15 +3540,58 @@
                   <div class="v-specs-list">
                     <div class="v-spec-item"><span>Format</span><b>MP4 Vertical 9:16</b></div>
                     <div class="v-spec-item"><span>Resolution</span><b>1080 × 1920 Full HD</b></div>
-                    <div class="v-spec-item"><span>Branch</span><b>${esc(r.b || r.album || 'T. Nagar')}</b></div>
+                    <div class="v-spec-item"><span>Branch</span><b id="v-spec-branch">${esc(currentReel.b || currentReel.album || 'T. Nagar')}</b></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- Video Frame Box with 3D Card Inner, Nav Buttons & Social Safe Zone Overlay -->
           <div class="video-frame-box" id="v-player-container">
-            <video id="v-native-player" src="${esc(streamSrc)}" controls autoplay playsinline preload="auto" poster="${esc(r.coverUrl || '')}"></video>
+            <!-- Floating Navigation Buttons (Prev / Next) -->
+            <button type="button" class="v-flip-btn v-flip-prev" id="v-flip-prev" title="Previous Video" aria-label="Previous Video" ${curIdx === 0 ? 'disabled' : ''}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button type="button" class="v-flip-btn v-flip-next" id="v-flip-next" title="Next Video" aria-label="Next Video" ${curIdx >= activeList.length - 1 ? 'disabled' : ''}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+
+            <!-- 3D Flip Card Container -->
+            <div class="video-card-inner flip-active" id="v-card-inner">
+              <video id="v-native-player" src="${esc(getStream(currentReel))}" controls autoplay playsinline preload="auto" poster="${esc(currentReel.coverUrl || '')}"></video>
+
+              <!-- Authentic Social Platform Overlay (Instagram / FB / Shorts) -->
+              <div class="v-social-overlay" id="v-social-overlay">
+                <!-- Top Header -->
+                <div class="v-soc-top" id="v-soc-top"></div>
+
+                <!-- Center Platform Pill -->
+                <div class="v-soc-center-pill" id="v-soc-center-pill"></div>
+
+                <!-- Bottom Safe Zone & Action Stack -->
+                <div class="v-soc-bottom">
+                  <div class="v-soc-meta" id="v-soc-meta">
+                    <div class="v-soc-profile">
+                      <div class="v-soc-avatar">
+                        <img src="${c && c.logo ? esc(c.logo) : '/Logo/logo.png'}" alt="" onerror="this.src='/Logo/logo.png'">
+                      </div>
+                      <span class="v-soc-handle" id="v-soc-handle">${c ? '@' + esc((c.slug || c.id || 'brand').toLowerCase()) : '@creator'}</span>
+                      <button type="button" class="v-soc-follow-btn" id="v-soc-follow-btn">Follow</button>
+                    </div>
+                    <div class="v-soc-caption" id="v-soc-caption">
+                      ${esc(currentReel.title)} #reels #festive
+                    </div>
+                    <div class="v-soc-audio" id="v-soc-audio">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                      <span id="v-soc-audio-text">Original Audio · ${c ? esc(c.name) : 'Day Night'}</span>
+                    </div>
+                  </div>
+
+                  <div class="v-soc-actions" id="v-soc-actions"></div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="acts" style="width:100%;margin-top:2px;">
@@ -3236,16 +3601,23 @@
             <button type="button" class="act" style="--k:var(--amber);cursor:pointer;" id="v-share">
               <span class="chip">${ic.share}</span><span>Share Reel</span>
             </button>
-            ${id ? `
-            <a class="act" style="--k:var(--blue);cursor:pointer;" href="${esc(viewUrl(r.url))}" target="_blank" rel="noopener">
+            <a class="act" style="--k:var(--blue);cursor:pointer;" id="v-btn-drive" href="${esc(viewUrl(currentReel.url))}" target="_blank" rel="noopener">
               <span class="chip">${ic.view}</span><span>Google Drive ↗</span>
-            </a>` : ''}
+            </a>
           </div>
         </div>`, modalSc => {
-        modalSc.querySelector('#v-share').addEventListener('click', () => openShare(r));
-        modalSc.querySelector('#v-btn-download').addEventListener('click', () => triggerDirectDownload(r));
-
         const vid = modalSc.querySelector('#v-native-player');
+        const cardInner = modalSc.querySelector('#v-card-inner');
+        const flipPrev = modalSc.querySelector('#v-flip-prev');
+        const flipNext = modalSc.querySelector('#v-flip-next');
+        const titleEl = modalSc.querySelector('#v-title');
+        const subtitleEl = modalSc.querySelector('#v-subtitle');
+        const counterEl = modalSc.querySelector('#v-counter');
+        const specBranch = modalSc.querySelector('#v-spec-branch');
+        const btnDl = modalSc.querySelector('#v-btn-download');
+        const btnShare = modalSc.querySelector('#v-share');
+        const btnDrive = modalSc.querySelector('#v-btn-drive');
+
         const gearBtn = modalSc.querySelector('#v-gear-btn');
         const gearMenu = modalSc.querySelector('#v-gear-menu');
         const loopBtn = modalSc.querySelector('#v-loop-btn');
@@ -3255,6 +3627,198 @@
         const btnReject = modalSc.querySelector('#v-btn-reject');
         const statusBadge = modalSc.querySelector('#v-status-indicator');
         const statusText = modalSc.querySelector('#v-status-text');
+
+        const socialOverlay = modalSc.querySelector('#v-social-overlay');
+        const socialQuickBtn = modalSc.querySelector('#v-social-quick-btn');
+        const socialMenuToggle = modalSc.querySelector('#v-social-menu-toggle');
+        const socialTabs = modalSc.querySelectorAll('.v-social-tab');
+        const socTop = modalSc.querySelector('#v-soc-top');
+        const socCenterPill = modalSc.querySelector('#v-soc-center-pill');
+        const socActions = modalSc.querySelector('#v-soc-actions');
+        const socCaption = modalSc.querySelector('#v-soc-caption');
+        const socFollowBtn = modalSc.querySelector('#v-soc-follow-btn');
+
+        // Render Platform Safe Zone Overlay
+        function renderSocialOverlay() {
+          if (!socialVisible) {
+            socialOverlay.classList.remove('active');
+            socialQuickBtn.classList.remove('active');
+            socialMenuToggle.textContent = 'Off';
+            socialMenuToggle.style.color = 'var(--mute)';
+            socialMenuToggle.style.background = 'var(--soft)';
+            return;
+          }
+
+          socialOverlay.classList.add('active');
+          socialQuickBtn.classList.add('active');
+          socialMenuToggle.textContent = 'On';
+          socialMenuToggle.style.color = 'var(--green)';
+          socialMenuToggle.style.background = 'rgba(31, 175, 100, 0.12)';
+
+          if (socialPlatform === 'instagram') {
+            socTop.innerHTML = `
+              <div class="v-soc-top-brand">Reels <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+              <div class="v-soc-top-actions"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>`;
+            socCenterPill.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="5"/></svg> Instagram Reels Preview`;
+            socFollowBtn.textContent = 'Follow';
+            socFollowBtn.style.background = 'rgba(255,255,255,0.18)';
+            socFollowBtn.style.border = '1px solid rgba(255,255,255,0.7)';
+            socActions.innerHTML = `
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><span class="v-soc-act-num">18.4K</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div><span class="v-soc-act-num">328</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div><span class="v-soc-act-num">1.2K</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="#FFFFFF"><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="12" r="2"/></svg></div></div>
+              <div class="v-soc-disc"><svg width="12" height="12" viewBox="0 0 24 24" fill="#FFFFFF"><circle cx="12" cy="12" r="4"/></svg></div>`;
+          } else if (socialPlatform === 'facebook') {
+            socTop.innerHTML = `
+              <div class="v-soc-top-brand" style="color:#1877F2;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg> Reels</div>
+              <div class="v-soc-top-actions"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>`;
+            socCenterPill.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="#1877F2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg> Facebook Reels Preview`;
+            socFollowBtn.textContent = 'Follow';
+            socFollowBtn.style.background = '#1877F2';
+            socFollowBtn.style.border = 'none';
+            socActions.innerHTML = `
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div><span class="v-soc-act-num">9.8K</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><span class="v-soc-act-num">410</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><span class="v-soc-act-num">2.1K</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="#FFFFFF"><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="12" r="2"/></svg></div></div>`;
+          } else if (socialPlatform === 'youtube') {
+            socTop.innerHTML = `
+              <div class="v-soc-top-brand" style="color:#FF0000;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#FF0000"><polygon points="10 8 16 12 10 16 10 8"/></svg> Shorts</div>
+              <div class="v-soc-top-actions"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>`;
+            socCenterPill.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="#FF0000"><polygon points="10 8 16 12 10 16 10 8"/></svg> YouTube Shorts Preview`;
+            socFollowBtn.textContent = 'Subscribe';
+            socFollowBtn.style.background = '#FF0000';
+            socFollowBtn.style.color = '#FFFFFF';
+            socFollowBtn.style.borderRadius = '99px';
+            socFollowBtn.style.border = 'none';
+            socActions.innerHTML = `
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div><span class="v-soc-act-num">32K</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg></div><span class="v-soc-act-num">Dislike</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg></div><span class="v-soc-act-num">652</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg></div><span class="v-soc-act-num">Share</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg></div><span class="v-soc-act-num">Remix</span></div>
+              <div class="v-soc-disc"><svg width="12" height="12" viewBox="0 0 24 24" fill="#FFFFFF"><circle cx="12" cy="12" r="4"/></svg></div>`;
+          }
+        }
+
+        // Toggle Social Preview Event
+        function toggleSocialPreview() {
+          socialVisible = !socialVisible;
+          renderSocialOverlay();
+        }
+
+        socialQuickBtn.onclick = toggleSocialPreview;
+        socialMenuToggle.onclick = toggleSocialPreview;
+
+        socialTabs.forEach(tab => {
+          tab.onclick = () => {
+            socialTabs.forEach(t => {
+              t.classList.remove('active');
+              t.style.background = 'var(--soft)';
+              t.style.borderColor = 'var(--line)';
+              t.style.color = 'var(--navy)';
+              t.style.fontWeight = '600';
+            });
+            tab.classList.add('active');
+            tab.style.background = 'var(--navy)';
+            tab.style.borderColor = 'var(--navy)';
+            tab.style.color = '#FFFFFF';
+            tab.style.fontWeight = '700';
+            socialPlatform = tab.dataset.platform;
+            if (!socialVisible) socialVisible = true;
+            renderSocialOverlay();
+          };
+        });
+
+        // 3D Cinematic Flipcard Navigation between Videos
+        let isFlipping = false;
+
+        function navigateToReel(newIdx, direction) {
+          if (isFlipping || newIdx < 0 || newIdx >= activeList.length) return;
+          isFlipping = true;
+          curIdx = newIdx;
+          currentReel = activeList[curIdx];
+
+          // 1. Flip out current card
+          cardInner.className = 'video-card-inner ' + (direction === 'left' ? 'flip-out-left' : 'flip-out-right');
+
+          setTimeout(() => {
+            // 2. Update media and text at halfway mark
+            vid.pause();
+            vid.src = getStream(currentReel);
+            vid.poster = currentReel.coverUrl || '';
+            vid.load();
+            vid.play().catch(() => {});
+
+            titleEl.textContent = currentReel.title;
+            subtitleEl.textContent = `${fmtDate(currentReel.date)}${currentReel.b ? ' · ' + currentReel.b : (currentReel.album ? ' · ' + currentReel.album : '')}`;
+            counterEl.textContent = `${curIdx + 1} / ${activeList.length}`;
+            if (specBranch) specBranch.textContent = currentReel.b || currentReel.album || 'T. Nagar';
+            if (socCaption) socCaption.textContent = `${currentReel.title} #reels #festive`;
+
+            // Update URLs
+            btnDrive.href = viewUrl(currentReel.url);
+
+            // Update Status UI
+            updateStatusUi(currentReel.status || 'review');
+
+            // Update Nav Button States
+            flipPrev.disabled = curIdx === 0;
+            flipNext.disabled = curIdx >= activeList.length - 1;
+
+            // 3. Prep incoming card on opposite side
+            cardInner.className = 'video-card-inner ' + (direction === 'left' ? 'flip-in-right-prep' : 'flip-in-left-prep');
+            void cardInner.offsetWidth; // Force reflow
+
+            // 4. Spring flip card into active place
+            cardInner.className = 'video-card-inner flip-active';
+            setTimeout(() => { isFlipping = false; }, 420);
+          }, 210);
+        }
+
+        flipPrev.onclick = () => navigateToReel(curIdx - 1, 'right');
+        flipNext.onclick = () => navigateToReel(curIdx + 1, 'left');
+
+        // Touch Swipe Gesture Support
+        let touchStartX = 0, touchStartY = 0;
+        const playerContainer = modalSc.querySelector('#v-player-container');
+
+        playerContainer.addEventListener('touchstart', e => {
+          if (e.touches.length === 1) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+          }
+        }, { passive: true });
+
+        playerContainer.addEventListener('touchend', e => {
+          if (e.changedTouches.length === 1) {
+            const deltaX = e.changedTouches[0].clientX - touchStartX;
+            const deltaY = e.changedTouches[0].clientY - touchStartY;
+            if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+              if (deltaX < 0) {
+                // Swiped Left -> Next Reel
+                if (curIdx < activeList.length - 1) navigateToReel(curIdx + 1, 'left');
+              } else {
+                // Swiped Right -> Prev Reel
+                if (curIdx > 0) navigateToReel(curIdx - 1, 'right');
+              }
+            }
+          }
+        }, { passive: true });
+
+        // Keyboard Arrow Key Navigation
+        function handleKeyNav(e) {
+          if (e.key === 'ArrowRight' && curIdx < activeList.length - 1) {
+            navigateToReel(curIdx + 1, 'left');
+          } else if (e.key === 'ArrowLeft' && curIdx > 0) {
+            navigateToReel(curIdx - 1, 'right');
+          }
+        }
+        window.addEventListener('keydown', handleKeyNav);
+
+        btnShare.addEventListener('click', () => openShare(currentReel));
+        btnDl.addEventListener('click', () => triggerDirectDownload(currentReel));
 
         if (gearBtn && gearMenu) {
           gearBtn.addEventListener('click', e => {
@@ -3273,7 +3837,7 @@
         }
 
         function updateStatusUi(newStatus) {
-          r.status = newStatus;
+          currentReel.status = newStatus;
           if (statusBadge && statusText) {
             if (newStatus === 'approved') {
               statusBadge.className = 'v-status-badge approved';
@@ -3295,7 +3859,7 @@
             toast('Reel marked as Approved', 'success');
             if (CONFIG.gasUrl) {
               try {
-                await gasApi('updateReelStatus', { id: r.id, reelId: r.id, status: 'approved' });
+                await gasApi('updateReelStatus', { id: currentReel.id, reelId: currentReel.id, status: 'approved' });
               } catch (err) {
                 console.warn('Status sync notice:', err);
               }
@@ -3309,7 +3873,7 @@
             toast('Reel marked for review / edits', 'amber');
             if (CONFIG.gasUrl) {
               try {
-                await gasApi('updateReelStatus', { id: r.id, reelId: r.id, status: 'review' });
+                await gasApi('updateReelStatus', { id: currentReel.id, reelId: currentReel.id, status: 'review' });
               } catch (err) {
                 console.warn('Status sync notice:', err);
               }
