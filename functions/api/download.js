@@ -1,0 +1,99 @@
+/**
+ * Cloudflare Pages Function: /api/download?id={fileId}&name={filename}&url={directUrl}
+ * Directly streams the MP4 video file with Content-Disposition: attachment
+ * Forces native browser download on the current tab without opening Google Drive or new tabs.
+ */
+export async function onRequestGet(context) {
+  const { request } = context;
+  const url = new URL(request.url);
+  const fileId = url.searchParams.get('id');
+  const customName = url.searchParams.get('name') || 'video.mp4';
+  const directUrl = url.searchParams.get('url');
+
+  const cleanFilename = customName.replace(/[^a-zA-Z0-9_\-\.\s]/g, '').trim() || 'video.mp4';
+
+  if (!fileId && !directUrl) {
+    return new Response("Missing video file ID or URL parameter", { status: 400 });
+  }
+
+  try {
+    let videoStream = null;
+    const fetchHeaders = {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    };
+    const rangeHeader = request.headers.get("Range");
+    if (rangeHeader) {
+      fetchHeaders["Range"] = rangeHeader;
+    }
+
+    if (fileId) {
+      const initialUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download`;
+      const res1 = await fetch(initialUrl, {
+        headers: fetchHeaders,
+        redirect: "manual"
+      });
+
+      const contentType1 = res1.headers.get("content-type") || "";
+      const cookie1 = res1.headers.get("set-cookie") || "";
+
+      if (res1.status === 302 || res1.status === 303) {
+        const redirectUrl = res1.headers.get("location");
+        if (redirectUrl) {
+          const headers2 = { ...fetchHeaders };
+          if (cookie1) headers2["Cookie"] = cookie1;
+          videoStream = await fetch(redirectUrl, { headers: headers2 });
+        }
+      } else if (contentType1.includes("video") || contentType1.includes("application/octet-stream")) {
+        videoStream = res1;
+      } else {
+        const text = await res1.text();
+        const formMatch = text.match(/<form[^>]*action="([^"]+)"[^>]*>([\s\S]*?)<\/form>/i);
+        if (formMatch) {
+          const action = formMatch[1];
+          const inputs = [...formMatch[2].matchAll(/name="([^"]+)"\s+value="([^"]*)"/g)];
+          const params = new URLSearchParams();
+          inputs.forEach(x => params.append(x[1], x[2]));
+          if (!params.has("confirm")) params.append("confirm", "t");
+          const submitUrl = action + "?" + params.toString();
+
+          const headers2 = { ...fetchHeaders };
+          if (cookie1) headers2["Cookie"] = cookie1;
+          videoStream = await fetch(submitUrl, { headers: headers2 });
+        }
+      }
+    } else if (directUrl) {
+      videoStream = await fetch(directUrl, { headers: fetchHeaders });
+    }
+
+    if (!videoStream || !videoStream.ok) {
+      return new Response(`Unable to download file (status ${videoStream ? videoStream.status : 'error'})`, {
+        status: videoStream ? videoStream.status : 502,
+        headers: { "Content-Type": "text/plain" }
+      });
+    }
+
+    const responseHeaders = new Headers();
+    responseHeaders.set("Content-Type", "video/mp4");
+    responseHeaders.set("Content-Disposition", `attachment; filename="${cleanFilename}"`);
+    responseHeaders.set("Accept-Ranges", "bytes");
+    responseHeaders.set("Access-Control-Allow-Origin", "*");
+    if (videoStream.headers.has("Content-Length")) {
+      responseHeaders.set("Content-Length", videoStream.headers.get("Content-Length"));
+    }
+    if (videoStream.headers.has("Content-Range")) {
+      responseHeaders.set("Content-Range", videoStream.headers.get("Content-Range"));
+    }
+    responseHeaders.set("Cache-Control", "no-cache");
+
+    return new Response(videoStream.body, {
+      status: videoStream.status,
+      statusText: videoStream.statusText,
+      headers: responseHeaders
+    });
+  } catch (err) {
+    return new Response("Direct download error: " + err.message, {
+      status: 500,
+      headers: { "Content-Type": "text/plain" }
+    });
+  }
+}

@@ -128,6 +128,20 @@ function doPost(e) {
       const previewUrl = "https://drive.google.com/file/d/" + fileId + "/preview";
       const downloadUrl = "https://drive.google.com/uc?export=download&id=" + fileId;
 
+      // Specifically store video thumbnail file in Google Drive if base64 DataURL provided
+      let finalCoverUrl = coverUrl;
+      if (coverUrl && coverUrl.startsWith("data:image/")) {
+        try {
+          const thumbClean = coverUrl.includes(",") ? coverUrl.split(",")[1] : coverUrl;
+          const thumbBlob = Utilities.newBlob(Utilities.base64Decode(thumbClean), "image/jpeg", filename.replace(/\.[^.]+$/, "") + "_thumb.jpg");
+          const thumbFile = clientFolder.createFile(thumbBlob);
+          thumbFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          finalCoverUrl = "https://drive.google.com/uc?export=view&id=" + thumbFile.getId();
+        } catch(ex) {
+          finalCoverUrl = coverUrl;
+        }
+      }
+
       const data = loadData();
       const newReel = {
         id: "r" + Date.now().toString(36),
@@ -141,7 +155,7 @@ function doPost(e) {
         url: viewUrl,
         fileId: fileId,
         dur: dur,
-        coverUrl: coverUrl,
+        coverUrl: finalCoverUrl,
         hidden: false,
         status: payload.status || "approved", // 'draft' | 'review' | 'approved'
         views: 0,
@@ -249,6 +263,66 @@ function doPost(e) {
         return jsonResponse({ success: true, views: reel.views, downloads: reel.downloads });
       }
       return jsonResponse({ success: false, error: "Reel not found" }, 404);
+    }
+
+    // 7B. Scan Drive Folder for Videos and return list with thumbnail URLs and publish status
+    if (action === "scanDriveVideos") {
+      const clientName = payload.clientName || "The Chennai Silks";
+      const branch = payload.branch || "";
+      const clientFolder = getClientFolder(clientName, branch);
+      const files = clientFolder.getFiles();
+      const videoList = [];
+      const data = loadData();
+
+      function processFile(file, folderName) {
+        const mime = file.getMimeType();
+        const name = file.getName();
+        if (mime.startsWith("video/") || name.match(/\.(mp4|mov|webm|m4v|avi|mkv)$/i)) {
+          try {
+            file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          } catch(e) {}
+          const fileId = file.getId();
+          const viewUrl = "https://drive.google.com/file/d/" + fileId + "/view";
+          const thumbUrl = "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w1000";
+          const matchedReel = (data.reels || []).find(r => r.fileId === fileId || (r.url && r.url.includes(fileId)));
+
+          videoList.push({
+            fileId: fileId,
+            name: name,
+            title: name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
+            folder: folderName || "",
+            sizeBytes: file.getSize(),
+            sizeMB: (file.getSize() / (1024 * 1024)).toFixed(1),
+            dateCreated: file.getDateCreated().toISOString().slice(0, 10),
+            viewUrl: viewUrl,
+            thumbUrl: thumbUrl,
+            isPublished: !!matchedReel,
+            reelId: matchedReel ? matchedReel.id : null,
+            hidden: matchedReel ? (matchedReel.hidden === true) : false
+          });
+        }
+      }
+
+      while (files.hasNext()) {
+        processFile(files.next(), clientFolder.getName());
+      }
+
+      // Also scan subfolders (branches/albums)
+      const subfolders = clientFolder.getFolders();
+      while (subfolders.hasNext()) {
+        const sub = subfolders.next();
+        const subFiles = sub.getFiles();
+        while (subFiles.hasNext()) {
+          processFile(subFiles.next(), sub.getName());
+        }
+      }
+
+      return jsonResponse({
+        success: true,
+        videos: videoList,
+        folderName: clientFolder.getName(),
+        folderId: clientFolder.getId()
+      });
     }
 
     // 8. Create Drive Folder / Album

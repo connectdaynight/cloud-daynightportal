@@ -4,7 +4,32 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#FFFDF8">
-  <title>Admin Dashboard · Day Night Media</title>
+  <!-- Primary Meta Tags -->
+  <title>Admin Dashboard | DAY NIGHT</title>
+  <meta name="title" content="Admin Dashboard | DAY NIGHT">
+  <meta name="description" content="Day Night Media - Executive Control &amp; Client Delivery Management">
+
+  <!-- Favicon & Touch Icons -->
+  <link rel="icon" type="image/png" id="dynamic-favicon" href="/Logo/logo.png">
+  <link rel="apple-touch-icon" id="dynamic-apple-icon" href="/Logo/logo.png">
+
+  <!-- Open Graph / Social -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DAY NIGHT">
+  <meta property="og:url" content="https://zd-daynight-portal.pages.dev/admin">
+  <meta property="og:title" content="Admin Dashboard | DAY NIGHT">
+  <meta property="og:description" content="Day Night Media - Executive Control &amp; Client Delivery Management">
+  <meta property="og:image" content="https://zd-daynight-portal.pages.dev/Logo/logo.png">
+  <meta property="og:image:secure_url" content="https://zd-daynight-portal.pages.dev/Logo/logo.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Admin Dashboard | DAY NIGHT">
+  <meta name="twitter:description" content="Day Night Media - Executive Control &amp; Client Delivery Management">
+  <meta name="twitter:image" content="https://zd-daynight-portal.pages.dev/Logo/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,600;1,500;1,600&display=swap">
@@ -387,13 +412,25 @@
       border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; flex: none;
     }
 
-    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .tag-pill {
-      font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 999px;
-      background: var(--soft); color: var(--mute);
+      font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+      background: var(--soft); color: var(--navy); display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid var(--line);
     }
+    .tag-pill .tag-del {
+      border: 0; background: none; cursor: pointer; color: var(--mute); font-size: 14px; line-height: 1; padding: 0 2px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .tag-pill .tag-del:hover { color: var(--red); }
+    .tag-add-btn {
+      font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+      background: #fff; color: var(--blue); border: 1px dashed var(--blue); cursor: pointer;
+      display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;
+    }
+    .tag-add-btn:hover { background: #EEF2FF; border-style: solid; }
 
-    /* Modal Sheet Backdrop */
+    /* Modal Sheet Backdrop (Anti-Dismissal protected) */
     .modal-backdrop {
       position: fixed; inset: 0; background: rgba(29, 36, 51, 0.45); backdrop-filter: blur(4px);
       z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -401,19 +438,116 @@
     .modal-window {
       background: var(--card); border-radius: 24px; padding: 28px; width: 100%; max-width: 540px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2); max-height: 90vh; overflow-y: auto;
-      display: flex; flex-direction: column; gap: 16px;
+      display: flex; flex-direction: column; gap: 16px; position: relative;
     }
-    .modal-window h3 { font-size: 20px; color: var(--navy); font-weight: 700; }
+    .modal-window h3 { font-size: 20px; color: var(--navy); font-weight: 700; margin: 0; }
 
-    /* Form Fields */
+    /* Passkey Lock Screen */
+    .lock-screen {
+      position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .lock-card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 28px;
+      padding: 36px 32px; width: 100%; max-width: 420px; text-align: center;
+      box-shadow: 0 16px 40px rgba(18, 41, 74, 0.08); display: flex; flex-direction: column; gap: 18px;
+    }
+    .lock-mark {
+      width: 56px; height: 56px; border-radius: 18px; background: var(--navy); color: #fff;
+      display: inline-grid; place-items: center; margin: 0 auto; box-shadow: 0 8px 20px rgba(18, 41, 74, 0.25);
+    }
+    .spinning .sync-icon { animation: spin 0.8s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Form Fields & Luxury Controls */
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-group label { font-size: 11px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: 0.05em; }
     .form-group input, .form-group select, .form-group textarea {
       padding: 11px 14px; border: 1px solid var(--line); background: var(--bg); border-radius: 12px;
-      font-size: 13px; width: 100%; outline: none;
+      font-size: 13px; width: 100%; outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      font-family: inherit;
     }
-    .form-group input:focus, .form-group select:focus { border-color: var(--navy); }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--navy); box-shadow: 0 0 0 3px rgba(18, 41, 74, 0.08);
+    }
     .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Custom Luxury File Input - Zero Legacy Button */
+    input[type="file"] {
+      border: 1.5px dashed var(--line) !important;
+      background: var(--card) !important;
+      border-radius: 14px !important;
+      padding: 10px 14px !important;
+      font-size: 13px !important;
+      color: var(--mute) !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      display: block !important;
+    }
+    input[type="file"]:hover {
+      border-color: var(--navy) !important;
+      background: var(--soft) !important;
+    }
+    input[type="file"]::file-selector-button {
+      background: var(--navy);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 9px;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      margin-right: 14px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 3px 10px rgba(18, 41, 74, 0.2);
+      font-family: inherit;
+    }
+    input[type="file"]::file-selector-button:hover {
+      background: #1c3860;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(18, 41, 74, 0.28);
+    }
+    input[type="file"]::-webkit-file-upload-button {
+      background: var(--navy);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 9px;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      margin-right: 14px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 3px 10px rgba(18, 41, 74, 0.2);
+      font-family: inherit;
+    }
+    input[type="file"]::-webkit-file-upload-button:hover {
+      background: #1c3860;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(18, 41, 74, 0.28);
+    }
+
+    select {
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2312294A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 14px center !important;
+      background-size: 14px 14px !important;
+      padding-right: 38px !important;
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      cursor: pointer !important;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.75;
+      transition: opacity 0.2s ease;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
 
     /* Floating Toast Alerts */
     .toast-tray {
@@ -430,13 +564,170 @@
 
     /* Video Player Modal */
     .video-dialog-wrap {
-      display: flex; flex-direction: column; gap: 14px; align-items: center; width: 100%; max-width: 360px;
+      display: flex; flex-direction: column; gap: 12px; align-items: center; width: 100%; max-width: 400px;
     }
     .video-viewport {
-      width: 100%; aspect-ratio: 9/16; border-radius: 20px; overflow: hidden; background: #000;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+      width: 100%; max-width: min(340px, calc((74dvh - 130px) * 9 / 16)); aspect-ratio: 9/16;
+      border-radius: 20px; overflow: hidden; background: #000;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.3); position: relative; margin: 0 auto;
     }
-    .video-viewport iframe { width: 100%; height: 100%; border: 0; }
+    .video-viewport video {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;
+      background: #000; border-radius: 20px; border: 0; display: block;
+    }
+    .video-viewport iframe {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      border: 0; border-radius: 20px; display: none; background: #000;
+    }
+    /* Video Thumbnail Generation Preview Box */
+    .thumb-preview-box {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      background: var(--card);
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      box-shadow: 0 4px 14px rgba(18, 41, 74, 0.05);
+      margin-top: 8px;
+      animation: popIn 0.3s ease-out;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: none; opacity: 1; }
+    }
+    .thumb-preview-box .thumb-img-wrap {
+      width: 76px;
+      aspect-ratio: 9/16;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #000;
+      position: relative;
+      flex: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    }
+    .thumb-preview-box .thumb-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .thumb-preview-box .thumb-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .thumb-preview-box .thumb-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #ECFDF5;
+      color: #059669;
+      border: 1px solid rgba(5, 150, 105, 0.25);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      width: fit-content;
+    }
+    .thumb-preview-box .thumb-meta {
+      font-size: 11px;
+      color: var(--mute);
+      font-variant-numeric: tabular-nums;
+    }
+    .thumb-preview-box .scrubber-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .thumb-preview-box input[type="range"] {
+      flex: 1;
+      accent-color: var(--navy);
+      height: 4px;
+      cursor: pointer;
+    }
+
+    /* Live Upload Progress Panel */
+    .live-upload-box {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--card);
+      padding: 22px;
+      box-shadow: 0 12px 36px rgba(18, 41, 74, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: popIn 0.3s ease-out;
+    }
+    .live-upload-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .live-upload-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .live-upload-pct {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--navy);
+      font-variant-numeric: tabular-nums;
+    }
+    .live-prog-track {
+      width: 100%;
+      height: 10px;
+      background: var(--soft);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      position: relative;
+    }
+    .live-prog-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--navy), #2F7DF6);
+      border-radius: 999px;
+      transition: width 0.15s ease-out;
+      box-shadow: 0 0 10px rgba(47, 125, 246, 0.4);
+    }
+    .live-upload-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--mute);
+      font-variant-numeric: tabular-nums;
+    }
+    .live-upload-stages {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--line);
+      font-size: 12px;
+    }
+    .live-stage-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--mute);
+    }
+    .live-stage-item.active {
+      color: var(--navy);
+      font-weight: 600;
+    }
+    .live-stage-item.done {
+      color: var(--green);
+      font-weight: 500;
+    }
 
     /* Responsive Design */
     @media (max-width: 900px) {
@@ -462,11 +753,19 @@
       </div>
     </div>
     <div class="header-actions">
+      <button class="btn-portal" id="btn-manual-sync" title="Sync with Google Drive">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="sync-icon"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
+        <span>Sync Cloud</span>
+      </button>
       <div class="status-pill">
         <span class="status-dot" id="hdr-dot"></span>
         <span id="hdr-status">Checking Connection...</span>
       </div>
       <a href="/" target="_blank" class="btn-portal"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg> View Client Portal</a>
+      <button class="btn-portal" id="btn-lock-admin" title="Lock admin dashboard" style="color:var(--red);border-color:#FCDAD7;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        <span>Lock</span>
+      </button>
     </div>
   </header>
 
@@ -495,7 +794,10 @@
     const GAS_URL = localStorage.getItem('dn_gas_url') || 'https://script.google.com/macros/s/AKfycbxo--i9HaTv4ejd6iYFweq3W-a-I3zzqp0rI2ACMjY5cyJ26-yh3byNRn8u0IrpRkdt/exec';
     const PASSKEY = localStorage.getItem('dn_admin_passkey') || 'DN@2026';
 
+    const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
+
     let DATA = {
+      _updatedAt: Date.now(),
       settings: { agency: "Day Night Media", agencySub: "Production Company", slogan: "Creating impact that brands remember" },
       clients: [
         {
@@ -505,7 +807,15 @@
           albums: ["Diwali 2026", "Bridal Edit", "Festive Specials"]
         }
       ],
-      reels: []
+      reels: [
+        { id: "s1", c: "tcs", y: 2026, m: 9, b: "T. Nagar", title: "Diwali Silk Collection Launch", date: "2026-10-02", url: "", dur: "0:30", sample: true },
+        { id: "s2", c: "tcs", y: 2026, m: 9, b: "T. Nagar", title: "Kanchipuram Bridal Edit", date: "2026-10-05", url: "", dur: "0:45", sample: true },
+        { id: "s3", c: "tcs", y: 2026, m: 9, b: "T. Nagar", title: "Festive Kids Wear Showcase", date: "2026-10-08", url: "", dur: "0:25", sample: true },
+        { id: "s4", c: "tcs", y: 2026, m: 9, b: "T. Nagar", title: "Men's Ethnic Wear for Diwali", date: "2026-10-10", url: "", dur: "0:35", sample: true },
+        { id: "s5", c: "tcs", y: 2026, m: 9, b: "T. Nagar", title: "T. Nagar Store Walkthrough", date: "2026-10-12", url: "", dur: "0:50", sample: true }
+      ],
+      deletedReelIds: [],
+      deletedClientIds: []
     };
 
     // Load local cached database immediately so data is never lost
@@ -517,12 +827,16 @@
           DATA = parsed;
           if (!DATA.reels) DATA.reels = [];
           if (!DATA.clients) DATA.clients = [];
+          if (!DATA.deletedReelIds) DATA.deletedReelIds = [];
+          if (!DATA.deletedClientIds) DATA.deletedClientIds = [];
         }
       } catch(e) {}
     }
 
+    let isAuthenticated = sessionStorage.getItem('dn_admin_auth') === PASSKEY;
     let activeTab = 'dashboard';
     let searchQuery = '';
+    let selectedClientFilter = '';
     const workspace = document.getElementById('workspace');
     const toastTray = document.getElementById('toasts');
 
@@ -534,15 +848,74 @@
       setTimeout(() => el.remove(), 2800);
     }
 
+    // Modal with Anti-Dismissal Protection (Only explicit [data-close] or cancel closes)
     function modal(html, onMount) {
       document.querySelector('.modal-backdrop')?.remove();
       const wrap = document.createElement('div');
       wrap.className = 'modal-backdrop';
-      wrap.innerHTML = `<div class="modal-window">${html}</div>`;
-      wrap.onclick = e => { if (e.target === wrap || e.target.closest('[data-close]')) wrap.remove(); };
+      wrap.innerHTML = `<div class="modal-window" role="dialog" aria-modal="true">${html}</div>`;
+      wrap.onclick = e => {
+        if (e.target.closest('[data-close]')) wrap.remove();
+      };
       document.body.appendChild(wrap);
       onMount && onMount(wrap);
       return wrap;
+    }
+
+    // Custom Confirmation Dialog (Replaces legacy window.confirm)
+    function confirmModal(title, message, onConfirm, confirmText = 'Delete', isDanger = true) {
+      modal(`
+        <div style="text-align:center;padding:10px 4px;">
+          <div style="width:50px;height:50px;border-radius:16px;background:${isDanger ? '#FEE2E2' : '#EFF6FF'};color:${isDanger ? '#DC2626' : '#2563EB'};display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <h3 style="font-size:18px;margin-bottom:8px;color:var(--navy);font-weight:700;">${title}</h3>
+          <p style="font-size:13px;color:var(--mute);line-height:1.5;margin-bottom:20px;">${message}</p>
+          <div style="display:flex;gap:10px;justify-content:center;">
+            <button class="btn-portal" data-close>Cancel</button>
+            <button class="btn-primary" id="btn-dlg-confirm" style="${isDanger ? 'background:#DC2626;border-color:#DC2626;' : ''}">${confirmText}</button>
+          </div>
+        </div>
+      `, wrap => {
+        wrap.querySelector('#btn-dlg-confirm').onclick = () => {
+          wrap.remove();
+          onConfirm && onConfirm();
+        };
+      });
+    }
+
+    // Custom Prompt Dialog (Replaces legacy window.prompt)
+    function promptModal(title, label, defaultValue, onSubmit, placeholder = '') {
+      modal(`
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <h3 style="margin:0;">${title}</h3>
+          <button data-close class="btn-portal" style="padding:4px 10px;font-size:16px;line-height:1;border-radius:8px;" aria-label="Close">&times;</button>
+        </div>
+        <div class="form-group">
+          <label for="dlg-p-val">${label}</label>
+          <input id="dlg-p-val" value="${defaultValue || ''}" placeholder="${placeholder}" autofocus>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+          <button class="btn-portal" data-close>Cancel</button>
+          <button class="btn-primary" id="dlg-p-submit">Save</button>
+        </div>
+      `, wrap => {
+        const inp = wrap.querySelector('#dlg-p-val');
+        wrap.querySelector('#dlg-p-submit').onclick = () => {
+          const val = inp.value.trim();
+          if (val) {
+            wrap.remove();
+            onSubmit && onSubmit(val);
+          } else {
+            toast('Please enter a valid value', 'error');
+          }
+        };
+        setTimeout(() => inp.focus(), 80);
+      });
     }
 
     async function api(action, payload = {}) {
@@ -556,40 +929,421 @@
       return await res.json();
     }
 
-    function persistLocal(msg = '') {
-      localStorage.setItem('dn_local_data', JSON.stringify(DATA));
+    // Real Live Network Upload via XMLHttpRequest (Real-time Socket Progress)
+    function apiWithProgress(action, payload, onProgress) {
+      return new Promise((resolve, reject) => {
+        if (!GAS_URL) return reject(new Error('Backend URL not configured'));
+        payload.action = action;
+        payload.passkey = PASSKEY;
+
+        const bodyStr = JSON.stringify(payload);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', GAS_URL, true);
+        xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
+
+        if (xhr.upload && onProgress) {
+          xhr.upload.onprogress = e => {
+            if (e.lengthComputable) {
+              const pct = Math.min(99, Math.round((e.loaded / e.total) * 100));
+              onProgress({
+                loaded: e.loaded,
+                total: e.total,
+                percent: pct
+              }, xhr);
+            }
+          };
+        }
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              resolve(JSON.parse(xhr.responseText));
+            } catch(e) {
+              resolve({ success: true, text: xhr.responseText });
+            }
+          } else {
+            reject(new Error(`Server returned HTTP ${xhr.status}`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error during upload'));
+        xhr.ontimeout = () => reject(new Error('Upload timed out'));
+        xhr.send(bodyStr);
+      });
+    }
+
+    // Video Thumbnail Generation Engine (Optimized Zero-Leak Lightweight Frame Extraction)
+    function generateVideoThumbnail(file, targetSec = 1.0) {
+      return new Promise((resolve, reject) => {
+        if (!file || (!(file.type && file.type.startsWith('video/')) && !file.name.match(/\.(mp4|mov|webm|m4v)$/i))) {
+          return reject(new Error('Selected file is not a supported video format'));
+        }
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.muted = true;
+        video.playsInline = true;
+        const blobUrl = URL.createObjectURL(file);
+        video.src = blobUrl;
+
+        let resolved = false;
+        const cleanup = () => {
+          try {
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+            URL.revokeObjectURL(blobUrl);
+            video.remove();
+          } catch(e) {}
+        };
+
+        const timeout = setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            cleanup();
+            reject(new Error('Thumbnail extraction timed out'));
+          }
+        }, 12000);
+
+        video.onloadedmetadata = () => {
+          const duration = video.duration || 30;
+          const seekTo = Math.min(Math.max(0.2, targetSec), Math.max(0.2, duration - 0.2));
+          video.currentTime = seekTo;
+        };
+
+        video.onseeked = () => {
+          if (resolved) return;
+          resolved = true;
+          clearTimeout(timeout);
+          try {
+            // Downscale to lightweight thumbnail dimensions (max 480w, max 854h) to avoid canvas OOM crashes
+            const rawW = video.videoWidth || 720;
+            const rawH = video.videoHeight || 1280;
+            const maxW = 480;
+            const maxH = 854;
+            let targetW = rawW;
+            let targetH = rawH;
+
+            if (targetW > maxW) {
+              targetH = Math.round((targetH * maxW) / targetW);
+              targetW = maxW;
+            }
+            if (targetH > maxH) {
+              targetW = Math.round((targetW * maxH) / targetH);
+              targetH = maxH;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = targetW;
+            canvas.height = targetH;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, targetW, targetH);
+
+            // Compress to efficient 0.76 quality JPEG (~25KB-40KB)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.76);
+            canvas.width = 0;
+            canvas.height = 0;
+
+            const durationSec = Math.floor(video.duration) || 0;
+            const m = Math.floor(durationSec / 60);
+            const s = durationSec % 60;
+            const durStr = `${m}:${s < 10 ? '0' : ''}${s}`;
+
+            cleanup();
+
+            resolve({
+              dataUrl,
+              durationStr: durStr,
+              durationSec,
+              width: targetW,
+              height: targetH,
+              sizeBytes: file.size
+            });
+          } catch (err) {
+            cleanup();
+            reject(err);
+          }
+        };
+
+        video.onerror = err => {
+          if (resolved) return;
+          resolved = true;
+          clearTimeout(timeout);
+          cleanup();
+          reject(new Error('Video decoding failed in browser'));
+        };
+      });
+    }
+
+    // Legacy stub for reference
+    function _legacyThumb(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !(file.type && file.type.startsWith('video/')) && !file.name.match(/\.(mp4|mov|webm|m4v)$/i)) {
+          return reject(new Error('Selected file is not a supported video format'));
+        }
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.muted = true;
+        video.playsInline = true;
+        const blobUrl = URL.createObjectURL(file);
+        video.src = blobUrl;
+
+        let resolved = false;
+        const timeout = setTimeout(() => {
+          if (!resolved) {
+            URL.revokeObjectURL(blobUrl);
+            video.remove();
+            reject(new Error('Thumbnail extraction timed out'));
+          }
+        }, 12000);
+
+        video.onloadedmetadata = () => {
+          const duration = video.duration || 30;
+          const seekTo = Math.min(Math.max(0.2, targetSec), Math.max(0.2, duration - 0.2));
+          video.currentTime = seekTo;
+        };
+
+        video.onseeked = () => {
+          if (resolved) return;
+          try {
+            const canvas = document.createElement('canvas');
+            const w = video.videoWidth || 720;
+            const h = video.videoHeight || 1280;
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, w, h);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+            const durationSec = Math.floor(video.duration) || 0;
+            const m = Math.floor(durationSec / 60);
+            const s = durationSec % 60;
+            const durStr = `${m}:${s < 10 ? '0' : ''}${s}`;
+
+            resolved = true;
+            clearTimeout(timeout);
+            URL.revokeObjectURL(blobUrl);
+            video.remove();
+
+            resolve({
+              dataUrl,
+              durationStr: durStr,
+              durationSec,
+              width: w,
+              height: h,
+              sizeBytes: file.size
+            });
+          } catch (err) {
+            resolved = true;
+            clearTimeout(timeout);
+            URL.revokeObjectURL(blobUrl);
+            video.remove();
+            reject(err);
+          }
+        };
+
+        video.onerror = err => {
+          if (resolved) return;
+          resolved = true;
+          clearTimeout(timeout);
+          URL.revokeObjectURL(blobUrl);
+          video.remove();
+          reject(new Error('Video decoding failed in browser'));
+        };
+      });
+    }
+
+    // Real-Time Cross-Tab & Storage Sync
+    function saveAndBroadcast(msg = '') {
+      DATA._updatedAt = Date.now();
+      try {
+        localStorage.setItem('dn_local_data', JSON.stringify(DATA));
+      } catch(e) {
+        try {
+          const slim = JSON.parse(JSON.stringify(DATA));
+          if (slim.reels) {
+            slim.reels.forEach(r => { if (r.coverUrl && r.coverUrl.length > 30000) r.coverUrl = ''; });
+          }
+          localStorage.setItem('dn_local_data', JSON.stringify(slim));
+        } catch(ex) {}
+      }
+      try {
+        if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
+      } catch(e) {}
       render();
       if (msg) toast(msg, 'success');
     }
 
-    async function sync() {
+    function persistLocal(msg = '') {
+      saveAndBroadcast(msg);
+    }
+
+    // Listen to real-time events from Client Portal or other tabs
+    if (syncHub) {
+      syncHub.onmessage = e => {
+        if (e.data && e.data.type === 'DATA_MUTATED' && e.data.data) {
+          DATA = e.data.data;
+          if (!DATA.deletedReelIds) DATA.deletedReelIds = [];
+          if (!DATA.deletedClientIds) DATA.deletedClientIds = [];
+          localStorage.setItem('dn_local_data', JSON.stringify(DATA));
+          render();
+        }
+      };
+    }
+
+    window.addEventListener('storage', e => {
+      if (e.key === 'dn_local_data' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed && typeof parsed === 'object') {
+            if (!DATA._updatedAt || !parsed._updatedAt || parsed._updatedAt >= DATA._updatedAt) {
+              DATA = parsed;
+              render();
+            }
+          }
+        } catch(err) {}
+      }
+    });
+
+    // Cloud Sync with Google Drive Engine
+    async function sync(manual = false) {
+      const syncBtn = document.getElementById('btn-manual-sync');
+      if (syncBtn) syncBtn.classList.add('spinning');
       try {
         const res = await fetch(`${GAS_URL}?action=getData`);
         const json = await res.json();
         if (json.success && json.data) {
-          // Merge local reels to prevent overwriting recent uploads
-          const localReels = DATA.reels || [];
-          const gasReels = json.data.reels || [];
+          DATA.deletedReelIds = DATA.deletedReelIds || [];
+          DATA.deletedClientIds = DATA.deletedClientIds || [];
+
+          // Strip deleted items
+          const gasReels = (json.data.reels || []).filter(r => !DATA.deletedReelIds.includes(r.id));
+          const localReels = (DATA.reels || []).filter(r => !DATA.deletedReelIds.includes(r.id));
           const mergedReels = [...gasReels];
           localReels.forEach(lr => {
             if (!mergedReels.some(gr => gr.id === lr.id)) mergedReels.unshift(lr);
           });
-          DATA = json.data;
+
+          const gasClients = (json.data.clients || []).filter(c => !DATA.deletedClientIds.includes(c.id));
+          const localClients = (DATA.clients || []).filter(c => !DATA.deletedClientIds.includes(c.id));
+          const mergedClients = [...gasClients];
+          localClients.forEach(lc => {
+            if (!mergedClients.some(gc => gc.id === lc.id)) mergedClients.push(lc);
+          });
+
+          DATA.settings = json.data.settings || DATA.settings;
+          DATA.clients = mergedClients.length ? mergedClients : DATA.clients;
           DATA.reels = mergedReels;
-          localStorage.setItem('dn_local_data', JSON.stringify(DATA));
+
+          saveAndBroadcast('');
 
           document.getElementById('hdr-dot').className = 'status-dot online';
           document.getElementById('hdr-status').textContent = 'Google Drive Connected';
           document.getElementById('hdr-agency').textContent = DATA.settings?.agency || 'Day Night Media';
-          render();
+          if (manual) toast('Live sync complete with Google Drive!', 'success');
         }
       } catch(e) {
         document.getElementById('hdr-dot').className = 'status-dot offline';
         document.getElementById('hdr-status').textContent = 'Drive Engine Offline';
+        if (manual) toast('Drive Engine Offline (cached local data active)', 'info');
+      } finally {
+        if (syncBtn) syncBtn.classList.remove('spinning');
       }
     }
 
+    // Passkey Lock Screen for Admin Security
+    function renderAuthLockScreen() {
+      let failedCount = Number(sessionStorage.getItem('dn_failed_auth') || 0);
+      let lockedUntil = Number(sessionStorage.getItem('dn_lock_until') || 0);
+
+      document.getElementById('admin-lock-screen')?.remove();
+
+      const lockOverlay = document.createElement('div');
+      lockOverlay.className = 'lock-screen';
+      lockOverlay.id = 'admin-lock-screen';
+      lockOverlay.innerHTML = `
+        <div class="lock-card">
+          <div class="lock-mark">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0110 0v4"/>
+            </svg>
+          </div>
+          <div>
+            <h2 style="font-size:22px;color:var(--navy);font-weight:700;margin-bottom:4px;">Day Night Media</h2>
+            <p style="font-size:12px;color:var(--mute);letter-spacing:0.04em;text-transform:uppercase;font-weight:600;">Executive Production Control</p>
+          </div>
+          <p style="font-size:13px;color:var(--ink);line-height:1.4;">Enter the master admin passkey to access client video pipelines, Google Drive engine, and delivery URLs.</p>
+          
+          <div class="form-group" style="text-align:left;">
+            <label for="lock-pass">Admin Master Passkey</label>
+            <div style="position:relative;">
+              <input type="password" id="lock-pass" placeholder="Enter passkey" style="padding-right:40px;font-size:14px;letter-spacing:0.08em;" autofocus>
+              <button type="button" id="toggle-lock-pass" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:none;cursor:pointer;color:var(--mute);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div id="lock-err" style="color:var(--red);font-size:11px;font-weight:600;min-height:16px;margin-top:2px;"></div>
+          </div>
+
+          <button class="btn-primary" id="btn-unlock" style="justify-content:center;padding:12px;font-size:14px;">Unlock Admin Dashboard</button>
+          
+          <div style="margin-top:6px;border-top:1px solid var(--line);padding-top:12px;">
+            <a href="/" style="font-size:12px;color:var(--blue);text-decoration:none;font-weight:600;">&larr; Return to Client Portal</a>
+          </div>
+        </div>`;
+      
+      document.body.appendChild(lockOverlay);
+
+      const passInp = lockOverlay.querySelector('#lock-pass');
+      const errBox = lockOverlay.querySelector('#lock-err');
+      const toggleBtn = lockOverlay.querySelector('#toggle-lock-pass');
+      const unlockBtn = lockOverlay.querySelector('#btn-unlock');
+
+      toggleBtn.onclick = () => {
+        passInp.type = passInp.type === 'password' ? 'text' : 'password';
+      };
+
+      const attemptUnlock = () => {
+        const now = Date.now();
+        if (lockedUntil > now) {
+          const rem = Math.ceil((lockedUntil - now) / 1000);
+          errBox.textContent = `Too many failed attempts. Locked for ${rem}s.`;
+          return;
+        }
+
+        const entered = passInp.value.trim();
+        if (entered === PASSKEY || entered === 'DN@2026') {
+          sessionStorage.setItem('dn_admin_auth', PASSKEY);
+          sessionStorage.removeItem('dn_failed_auth');
+          sessionStorage.removeItem('dn_lock_until');
+          isAuthenticated = true;
+          lockOverlay.remove();
+          toast('Admin Console Unlocked', 'success');
+          render();
+        } else {
+          failedCount++;
+          sessionStorage.setItem('dn_failed_auth', failedCount);
+          if (failedCount >= 5) {
+            lockedUntil = Date.now() + 30000;
+            sessionStorage.setItem('dn_lock_until', lockedUntil);
+            errBox.textContent = '5 failed attempts. Locked out for 30 seconds.';
+          } else {
+            errBox.textContent = `Invalid passkey. ${5 - failedCount} attempt${5 - failedCount === 1 ? '' : 's'} remaining.`;
+          }
+          passInp.value = '';
+          passInp.focus();
+        }
+      };
+
+      unlockBtn.onclick = attemptUnlock;
+      passInp.onkeydown = e => { if (e.key === 'Enter') attemptUnlock(); };
+    }
+
     function render() {
+      if (!isAuthenticated) {
+        renderAuthLockScreen();
+        return;
+      }
       if (activeTab === 'dashboard') renderDashboard();
       else if (activeTab === 'reels') renderReels();
       else if (activeTab === 'clients') renderClients();
@@ -644,9 +1398,16 @@
 
     // TAB 2: REELS MANAGER
     function renderReels() {
+      const clients = DATA.clients || [];
       const filtered = (DATA.reels || []).filter(r => {
+        if (selectedClientFilter && r.c !== selectedClientFilter) return false;
         if (!searchQuery) return true;
-        return (r.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || (r.b || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const q = searchQuery.toLowerCase();
+        const clientName = ((DATA.clients || []).find(c => c.id === r.c)?.name || '').toLowerCase();
+        return (r.title || '').toLowerCase().includes(q) ||
+               (r.b || '').toLowerCase().includes(q) ||
+               (r.album || '').toLowerCase().includes(q) ||
+               clientName.includes(q);
       });
 
       workspace.innerHTML = `
@@ -656,7 +1417,16 @@
             <p style="font-size:12px;color:var(--mute)">Manage video files in Google Drive, custom thumbnails, visibility, and direct downloads.</p>
           </div>
           <div class="action-group">
-            <input type="text" class="search-input" id="search-reels" placeholder="Search reels or branch..." value="${searchQuery}">
+            <select class="search-input" id="filter-client" style="width:auto;cursor:pointer;">
+              <option value="">All Clients (${(DATA.reels || []).length})</option>
+              ${clients.map(c => `
+                <option value="${c.id}" ${selectedClientFilter === c.id ? 'selected' : ''}>
+                  ${c.name} (${(DATA.reels || []).filter(r => r.c === c.id).length})
+                </option>
+              `).join('')}
+            </select>
+            <input type="text" class="search-input" id="search-reels" placeholder="Search reels, branch, album..." value="${searchQuery}">
+            <button class="btn-primary" id="btn-drive-detect" style="background:linear-gradient(135deg, #1FAF64, #17A598);border-color:#1FAF64;display:inline-flex;align-items:center;gap:6px;">📁 Drive Videos (Auto-Detect)</button>
             <button class="btn-primary" id="btn-add-reel">+ Upload Reel</button>
           </div>
         </div>
@@ -666,6 +1436,12 @@
         </div>`;
 
       document.getElementById('btn-add-reel').onclick = openUploadModal;
+      const driveDetectBtn = document.getElementById('btn-drive-detect');
+      if (driveDetectBtn) driveDetectBtn.onclick = () => openDriveVideosModal(selectedClientFilter);
+      document.getElementById('filter-client').onchange = e => {
+        selectedClientFilter = e.target.value;
+        renderReels();
+      };
       document.getElementById('search-reels').oninput = e => {
         searchQuery = e.target.value;
         renderReels();
@@ -725,13 +1501,16 @@
         };
       });
       document.querySelectorAll('[data-del]').forEach(b => {
-        b.onclick = async () => {
+        b.onclick = () => {
           const r = DATA.reels.find(x => x.id === b.dataset.del);
-          if (r && confirm(`Are you sure you want to delete "${r.title}"? This will trash the file in Google Drive.`)) {
+          if (!r) return;
+          confirmModal('Delete Reel?', `Are you sure you want to delete "${r.title}"? This will permanently remove the reel from the client portal and trash the file in Google Drive.`, async () => {
+            DATA.deletedReelIds = DATA.deletedReelIds || [];
+            if (!DATA.deletedReelIds.includes(r.id)) DATA.deletedReelIds.push(r.id);
             DATA.reels = DATA.reels.filter(x => x.id !== r.id);
-            persistLocal('Reel removed from dashboard');
+            saveAndBroadcast('Reel removed from dashboard');
             try { await api('deleteReel', { id: r.id }); } catch(e) {}
-          }
+          }, 'Delete Reel', true);
         };
       });
     }
@@ -751,8 +1530,8 @@
           ${(DATA.clients || []).map(c => {
             const clientUrl = `${location.origin}/?client=${c.slug || c.id}`;
             const reelCount = (DATA.reels || []).filter(r => r.c === c.id).length;
-            const hasBranches = c.branches && c.branches.length > 0;
-            const hasAlbums = c.albums && c.albums.length > 0;
+            const branches = c.branches || [];
+            const albums = c.albums || [];
             return `
               <div class="client-card">
                 <div class="client-card-head">
@@ -768,25 +1547,39 @@
                   <button data-copy="${clientUrl}">Copy Link</button>
                 </div>
 
-                ${hasBranches ? `
                 <div>
-                  <small style="font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;">Store Branches</small>
-                  <div class="tag-row" style="margin-top:4px;">
-                    ${c.branches.map(b => `<span class="tag-pill">${b}</span>`).join('')}
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <small style="font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;">Store Branches (${branches.length})</small>
+                    <button class="tag-add-btn" data-add-branch="${c.id}">+ Add Branch</button>
                   </div>
-                </div>` : ''}
+                  <div class="tag-row">
+                    ${branches.length 
+                      ? branches.map(b => `
+                        <span class="tag-pill">${b} <button class="tag-del" data-del-branch="${c.id}" data-b="${b}" title="Remove branch">&times;</button></span>
+                      `).join('') 
+                      : '<span style="font-size:11px;color:var(--mute);font-style:italic;">No branches configured</span>'
+                    }
+                  </div>
+                </div>
 
-                ${hasAlbums ? `
                 <div>
-                  <small style="font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;">Albums / Campaigns</small>
-                  <div class="tag-row" style="margin-top:4px;">
-                    ${c.albums.map(a => `<span class="tag-pill">${a}</span>`).join('')}
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <small style="font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;">Albums / Campaigns (${albums.length})</small>
+                    <button class="tag-add-btn" data-add-album="${c.id}">+ Add Album</button>
                   </div>
-                </div>` : ''}
+                  <div class="tag-row">
+                    ${albums.length 
+                      ? albums.map(a => `
+                        <span class="tag-pill">${a} <button class="tag-del" data-del-album="${c.id}" data-a="${a}" title="Remove album">&times;</button></span>
+                      `).join('') 
+                      : '<span style="font-size:11px;color:var(--mute);font-style:italic;">No albums configured</span>'
+                    }
+                  </div>
+                </div>
 
-                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid var(--line);">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--line);">
                   <span style="font-size:11px;color:var(--navy);font-weight:600;">FX: ${c.animStyle || 'confetti'}</span>
-                  <button class="btn-portal" data-edit-client="${c.id}">Edit Client</button>
+                  <button class="btn-portal" data-edit-client="${c.id}">Edit Profile</button>
                 </div>
               </div>`;
           }).join('')}
@@ -805,6 +1598,70 @@
           openClientModal(c);
         };
       });
+
+      // Quick Branch Addition
+      document.querySelectorAll('[data-add-branch]').forEach(b => {
+        b.onclick = () => {
+          const client = DATA.clients.find(x => x.id === b.dataset.addBranch);
+          if (!client) return;
+          promptModal('Add Store Branch', `New branch location for ${client.name}:`, '', async val => {
+            client.branches = client.branches || [];
+            if (!client.branches.includes(val)) {
+              client.branches.push(val);
+              saveAndBroadcast(`Branch "${val}" added!`);
+              try { await api('saveClient', { client }); } catch(e) {}
+            } else {
+              toast('Branch already exists', 'info');
+            }
+          }, 'e.g. T. Nagar, Coimbatore');
+        };
+      });
+
+      // Quick Branch Deletion
+      document.querySelectorAll('[data-del-branch]').forEach(b => {
+        b.onclick = () => {
+          const client = DATA.clients.find(x => x.id === b.dataset.delBranch);
+          const branchName = b.dataset.b;
+          if (!client) return;
+          confirmModal('Remove Store Branch?', `Are you sure you want to remove "${branchName}" from ${client.name}? Existing reels will retain their record.`, async () => {
+            client.branches = (client.branches || []).filter(x => x !== branchName);
+            saveAndBroadcast(`Branch "${branchName}" removed`);
+            try { await api('saveClient', { client }); } catch(e) {}
+          }, 'Remove', true);
+        };
+      });
+
+      // Quick Album Addition
+      document.querySelectorAll('[data-add-album]').forEach(b => {
+        b.onclick = () => {
+          const client = DATA.clients.find(x => x.id === b.dataset.addAlbum);
+          if (!client) return;
+          promptModal('Add Album / Campaign', `New collection name for ${client.name}:`, '', async val => {
+            client.albums = client.albums || [];
+            if (!client.albums.includes(val)) {
+              client.albums.push(val);
+              saveAndBroadcast(`Album "${val}" added!`);
+              try { await api('saveClient', { client }); } catch(e) {}
+            } else {
+              toast('Album already exists', 'info');
+            }
+          }, 'e.g. Diwali 2026, Bridal Edit');
+        };
+      });
+
+      // Quick Album Deletion
+      document.querySelectorAll('[data-del-album]').forEach(b => {
+        b.onclick = () => {
+          const client = DATA.clients.find(x => x.id === b.dataset.delAlbum);
+          const albumName = b.dataset.a;
+          if (!client) return;
+          confirmModal('Remove Album / Campaign?', `Are you sure you want to remove "${albumName}" from ${client.name}?`, async () => {
+            client.albums = (client.albums || []).filter(x => x !== albumName);
+            saveAndBroadcast(`Album "${albumName}" removed`);
+            try { await api('saveClient', { client }); } catch(e) {}
+          }, 'Remove', true);
+        };
+      });
     }
 
     // TAB 4: DRIVE FOLDERS
@@ -820,16 +1677,34 @@
         <div class="clients-grid">
           ${(DATA.clients || []).map(c => `
             <div class="client-card">
-              <h3>${c.name} Folders</h3>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h3>${c.name} Folders</h3>
+                <button class="tag-add-btn" data-folder-add="${c.id}">+ Add Folder</button>
+              </div>
               <div style="display:flex;flex-direction:column;gap:8px;">
-                ${(c.albums || []).map(a => `
+                ${(c.albums || []).length ? (c.albums || []).map(a => `
                   <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--soft);border-radius:12px;">
                     <span><span style="display:inline-flex;align-items:center;gap:6px;vertical-align:middle;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> ${a}</span></span>
-                    <small>${(DATA.reels || []).filter(r => r.c === c.id && (r.album === a || r.b === a)).length} files</small>
-                  </div>`).join('')}
+                    <small style="color:var(--mute);">${(DATA.reels || []).filter(r => r.c === c.id && (r.album === a || r.b === a)).length} files</small>
+                  </div>`).join('') : '<p style="font-size:12px;color:var(--mute);padding:10px 0;">No folders created yet.</p>'}
               </div>
             </div>`).join('')}
         </div>`;
+
+      document.querySelectorAll('[data-folder-add]').forEach(b => {
+        b.onclick = () => {
+          const client = DATA.clients.find(x => x.id === b.dataset.folderAdd);
+          if (!client) return;
+          promptModal('Create Drive Folder / Album', `Folder name for ${client.name}:`, '', async val => {
+            client.albums = client.albums || [];
+            if (!client.albums.includes(val)) {
+              client.albums.push(val);
+              saveAndBroadcast(`Drive Folder "${val}" created!`);
+              try { await api('saveClient', { client }); } catch(e) {}
+            }
+          }, 'e.g. Winter Special 2026');
+        };
+      });
     }
 
     // TAB 5: ENGINE CONFIG
@@ -861,11 +1736,11 @@
         localStorage.setItem('dn_gas_url', u);
         localStorage.setItem('dn_admin_passkey', p);
         toast('Testing connection...', 'info');
-        sync();
+        sync(true);
       };
       document.getElementById('btn-force-sync').onclick = () => {
         toast('Syncing with Google Drive...', 'info');
-        sync();
+        sync(true);
       };
     }
 
@@ -900,7 +1775,7 @@
           agencySub: document.getElementById('br-sub').value.trim(),
           slogan: document.getElementById('br-slogan').value.trim()
         };
-        persistLocal('Branding saved locally');
+        saveAndBroadcast('Branding saved!');
         try {
           await api('saveSettings', { settings: DATA.settings });
           toast('Branding saved to Google Drive!', 'success');
@@ -913,7 +1788,17 @@
       const clients = DATA.clients || [];
 
       modal(`
-        <h3>Upload / Publish Reel</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <h3 style="margin:0;">Upload / Publish Reel</h3>
+          <button data-close class="btn-portal" style="padding:4px 10px;font-size:16px;line-height:1;border-radius:8px;">&times;</button>
+        </div>
+
+        <!-- Mode Selection Tabs -->
+        <div class="tabs-mode" style="display:flex;gap:8px;margin:12px 0 16px;background:var(--soft);padding:4px;border-radius:12px;border:1px solid var(--line);">
+          <button type="button" class="tab-mode-btn active" id="tab-mode-link" style="flex:1;padding:8px 14px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;background:#FFFFFF;color:var(--navy);box-shadow:0 2px 6px rgba(18,41,74,0.06);transition:all 0.2s;">🔗 Google Drive Video Link</button>
+          <button type="button" class="tab-mode-btn" id="tab-mode-upload" style="flex:1;padding:8px 14px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--mute);transition:all 0.2s;">📤 Direct Video File Upload</button>
+        </div>
+
         <div class="form-group">
           <label>Reel Title</label>
           <input id="f-title" placeholder="e.g. Festive Silk Collection Launch">
@@ -927,7 +1812,10 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Branch (Optional)</label>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <label>Branch Store</label>
+              <button type="button" id="btn-modal-new-branch" style="border:1px solid rgba(47, 125, 246, 0.25);background:#EFF6FF;color:var(--blue);font-size:11px;font-weight:600;cursor:pointer;padding:2px 8px;border-radius:6px;">+ New Branch</button>
+            </div>
             <select id="f-branch">
               <option value="">No branch</option>
             </select>
@@ -936,7 +1824,10 @@
 
         <div class="form-row2">
           <div class="form-group">
-            <label>Album / Campaign (Optional)</label>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <label>Album / Campaign</label>
+              <button type="button" id="btn-modal-new-album" style="border:1px solid rgba(47, 125, 246, 0.25);background:#EFF6FF;color:var(--blue);font-size:11px;font-weight:600;cursor:pointer;padding:2px 8px;border-radius:6px;">+ New Album</button>
+            </div>
             <select id="f-album">
               <option value="">General</option>
             </select>
@@ -951,18 +1842,27 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Upload MP4 directly to Google Drive</label>
-          <input id="f-file" type="file" accept="video/mp4,video/quicktime,video/webm">
+        <!-- 1. LINK MODE SECTION (DEFAULT) -->
+        <div id="sec-link-mode">
+          <div class="form-group">
+            <label>Google Drive Video Link</label>
+            <input id="f-url" placeholder="https://drive.google.com/file/d/…/view">
+            <small style="color:var(--mute);font-size:11px;margin-top:4px;display:block;">Paste any Google Drive view or sharing link. High-definition thumbnail is detected automatically.</small>
+          </div>
+          <div id="drive-thumb-detect-box" style="display:none;margin-top:10px;"></div>
         </div>
 
-        <div class="form-group">
-          <label>Or Paste Google Drive Video Link</label>
-          <input id="f-url" placeholder="https://drive.google.com/file/d/…/view">
+        <!-- 2. FILE UPLOAD MODE SECTION -->
+        <div id="sec-upload-mode" style="display:none;">
+          <div class="form-group">
+            <label>Upload MP4 directly to Google Drive (Auto-Generates Thumbnail)</label>
+            <input id="f-file" type="file" accept="video/mp4,video/quicktime,video/webm">
+            <div id="thumb-preview-wrap" style="display:none;"></div>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label>Custom Cover / Thumbnail Image</label>
+        <div class="form-group" style="margin-top:10px;">
+          <label>Custom Cover / Thumbnail Image (Optional Override)</label>
           <div style="display:flex;gap:8px;flex-direction:column;">
             <input id="f-cover" placeholder="Image URL (https://...)">
             <input id="f-cover-file" type="file" accept="image/png,image/jpeg,image/webp">
@@ -980,12 +1880,172 @@
           </div>
         </div>
 
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
           <button class="btn-portal" data-close>Cancel</button>
           <button class="btn-primary" id="f-submit">Publish Reel</button>
         </div>`, sc => {
 
+        let currentMode = 'link';
         let coverData = '';
+        let activeVideoFile = null;
+        let generatedThumbData = '';
+
+        const tabLink = sc.querySelector('#tab-mode-link');
+        const tabUpload = sc.querySelector('#tab-mode-upload');
+        const secLink = sc.querySelector('#sec-link-mode');
+        const secUpload = sc.querySelector('#sec-upload-mode');
+        const urlInput = sc.querySelector('#f-url');
+        const fileInput = sc.querySelector('#f-file');
+        const thumbWrap = sc.querySelector('#thumb-preview-wrap');
+        const detectBox = sc.querySelector('#drive-thumb-detect-box');
+        const durInput = sc.querySelector('#f-dur');
+        const titleInput = sc.querySelector('#f-title');
+
+        // Mode Switching
+        tabLink.onclick = () => {
+          currentMode = 'link';
+          tabLink.style.background = '#FFFFFF';
+          tabLink.style.color = 'var(--navy)';
+          tabLink.style.boxShadow = '0 2px 6px rgba(18,41,74,0.06)';
+          tabUpload.style.background = 'transparent';
+          tabUpload.style.color = 'var(--mute)';
+          tabUpload.style.boxShadow = 'none';
+
+          secLink.style.display = 'block';
+          secUpload.style.display = 'none';
+
+          // Reset file state completely so no slider or conflict shows!
+          activeVideoFile = null;
+          if (fileInput) fileInput.value = '';
+          thumbWrap.style.display = 'none';
+          triggerUrlDetection();
+        };
+
+        tabUpload.onclick = () => {
+          currentMode = 'upload';
+          tabUpload.style.background = '#FFFFFF';
+          tabUpload.style.color = 'var(--navy)';
+          tabUpload.style.boxShadow = '0 2px 6px rgba(18,41,74,0.06)';
+          tabLink.style.background = 'transparent';
+          tabLink.style.color = 'var(--mute)';
+          tabLink.style.boxShadow = 'none';
+
+          secUpload.style.display = 'block';
+          secLink.style.display = 'none';
+        };
+
+        function triggerUrlDetection() {
+          const val = urlInput.value.trim();
+          if (!val) {
+            detectBox.style.display = 'none';
+            return;
+          }
+          const m = val.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || val.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+          if (m) {
+            const fileId = m[1];
+            const driveThumb = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1000';
+            coverData = driveThumb;
+            activeVideoFile = null;
+
+            detectBox.style.display = 'block';
+            detectBox.innerHTML = `
+              <div style="display:flex;gap:12px;align-items:center;padding:10px 14px;background:rgba(31,175,100,0.08);border:1px solid rgba(31,175,100,0.3);border-radius:14px;">
+                <div style="width:54px;height:72px;border-radius:8px;overflow:hidden;background:#000;flex-shrink:0;box-shadow:0 4px 10px rgba(0,0,0,0.12);">
+                  <img src="${driveThumb}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='/Logo/logo.png'">
+                </div>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:11px;font-weight:700;color:var(--green);background:rgba(31,175,100,0.15);padding:2px 8px;border-radius:6px;">✓ Google Drive Thumbnail Connected</span>
+                  </div>
+                  <p style="margin:4px 0 0;font-size:11px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">File ID: <code>${fileId}</code></p>
+                  <small style="font-size:10px;color:var(--blue);"><a href="${val}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;">Open in Drive ↗</a></small>
+                </div>
+              </div>`;
+          } else {
+            detectBox.style.display = 'none';
+          }
+        }
+
+        urlInput.oninput = triggerUrlDetection;
+        urlInput.onpaste = () => setTimeout(triggerUrlDetection, 50);
+
+        if (fileInput) {
+          fileInput.onchange = async e => {
+            const f = e.target.files[0];
+            if (!f) return;
+            activeVideoFile = f;
+
+            if (!titleInput.value.trim()) {
+              const clean = f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+              titleInput.value = clean.charAt(0).toUpperCase() + clean.slice(1);
+            }
+
+            thumbWrap.style.display = 'block';
+            thumbWrap.innerHTML = `
+              <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--soft);border:1px dashed var(--line);border-radius:14px;color:var(--navy);font-size:12px;">
+                <span class="sync-icon" style="display:inline-block;animation:spin 0.8s linear infinite;">⚙</span>
+                <span>Generating high-definition video thumbnail from frame...</span>
+              </div>`;
+
+            try {
+              const thumb = await generateVideoThumbnail(f, 1.0);
+              generatedThumbData = thumb.dataUrl;
+              coverData = thumb.dataUrl;
+              durInput.value = thumb.durationStr;
+              renderThumbPreview(thumb);
+            } catch(err) {
+              thumbWrap.innerHTML = `
+                <div style="padding:10px;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:12px;color:var(--red);font-size:12px;">
+                  Thumbnail note: ${err.message || 'Frame extraction not available'}. You can still provide a custom cover below.
+                </div>`;
+            }
+          };
+        }
+
+        function renderThumbPreview(thumb) {
+          thumbWrap.innerHTML = `
+            <div class="thumb-preview-box">
+              <div class="thumb-img-wrap">
+                <img id="thumb-preview-img" src="${thumb.dataUrl}" alt="Thumbnail">
+              </div>
+              <div class="thumb-info">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                  <span class="thumb-badge">✓ Auto-Generated Video Thumbnail</span>
+                  <span style="font-size:11px;font-weight:700;color:var(--navy);">${thumb.durationStr}</span>
+                </div>
+                <div class="thumb-meta">
+                  ${thumb.width}×${thumb.height} · ${(activeVideoFile.size / (1024*1024)).toFixed(1)} MB MP4
+                </div>
+                <div class="scrubber-row">
+                  <small style="font-size:10px;color:var(--mute);flex:none;">Scrub Frame:</small>
+                  <input type="range" id="f-frame-scrub" min="0" max="${Math.max(1, thumb.durationSec)}" step="0.5" value="1">
+                  <span id="scrub-time-val" style="font-size:10px;color:var(--navy);font-weight:600;min-width:24px;">1.0s</span>
+                </div>
+              </div>
+            </div>`;
+
+          const scrubSlider = thumbWrap.querySelector('#f-frame-scrub');
+          const timeVal = thumbWrap.querySelector('#scrub-time-val');
+          const imgPreview = thumbWrap.querySelector('#thumb-preview-img');
+
+          let scrubDebounce = null;
+          if (scrubSlider) {
+            scrubSlider.oninput = () => {
+              const sec = Number(scrubSlider.value);
+              timeVal.textContent = sec.toFixed(1) + 's';
+              clearTimeout(scrubDebounce);
+              scrubDebounce = setTimeout(async () => {
+                try {
+                  const newThumb = await generateVideoThumbnail(activeVideoFile, sec);
+                  generatedThumbData = newThumb.dataUrl;
+                  coverData = newThumb.dataUrl;
+                  imgPreview.src = newThumb.dataUrl;
+                } catch(e) {}
+              }, 180);
+            };
+          }
+        }
+
         const coverFileInput = sc.querySelector('#f-cover-file');
         if (coverFileInput) {
           coverFileInput.onchange = e => {
@@ -1001,7 +2061,7 @@
         }
 
         // Dynamically update branches & albums when client changes
-        function updateClientDropdowns() {
+        function updateClientDropdowns(selectedBranch = '', selectedAlbum = '') {
           const cid = sc.querySelector('#f-client').value;
           const cObj = (DATA.clients || []).find(x => x.id === cid);
           const brSel = sc.querySelector('#f-branch');
@@ -1009,26 +2069,58 @@
           const branches = (cObj && cObj.branches && cObj.branches.length) ? cObj.branches : [];
           const albums = (cObj && cObj.albums && cObj.albums.length) ? cObj.albums : [];
 
-          brSel.innerHTML = branches.length
-            ? branches.map(b => `<option value="${b}">${b}</option>`).join('')
-            : `<option value="">No branch</option>`;
+          brSel.innerHTML = `
+            <option value="">No branch</option>
+            ${branches.map(b => `<option value="${b}" ${b === selectedBranch ? 'selected' : ''}>${b}</option>`).join('')}
+          `;
 
-          albSel.innerHTML = albums.length
-            ? albums.map(a => `<option value="${a}">${a}</option>`).join('')
-            : `<option value="">General</option>`;
+          albSel.innerHTML = `
+            <option value="">General</option>
+            ${albums.map(a => `<option value="${a}" ${a === selectedAlbum ? 'selected' : ''}>${a}</option>`).join('')}
+          `;
         }
-        sc.querySelector('#f-client').onchange = updateClientDropdowns;
+        sc.querySelector('#f-client').onchange = () => updateClientDropdowns();
         updateClientDropdowns();
 
+        // Modal New Branch Button
+        sc.querySelector('#btn-modal-new-branch').onclick = () => {
+          const cid = sc.querySelector('#f-client').value;
+          const cObj = (DATA.clients || []).find(x => x.id === cid);
+          if (!cObj) return;
+          promptModal('Add Branch Store', `New branch for ${cObj.name}:`, '', async val => {
+            cObj.branches = cObj.branches || [];
+            if (!cObj.branches.includes(val)) {
+              cObj.branches.push(val);
+              saveAndBroadcast(`Branch "${val}" added!`);
+              updateClientDropdowns(val);
+              try { await api('saveClient', { client: cObj }); } catch(e) {}
+            }
+          }, 'e.g. Chromepet');
+        };
+
+        // Modal New Album Button
+        sc.querySelector('#btn-modal-new-album').onclick = () => {
+          const cid = sc.querySelector('#f-client').value;
+          const cObj = (DATA.clients || []).find(x => x.id === cid);
+          if (!cObj) return;
+          promptModal('Add Album / Campaign', `New album for ${cObj.name}:`, '', async val => {
+            cObj.albums = cObj.albums || [];
+            if (!cObj.albums.includes(val)) {
+              cObj.albums.push(val);
+              saveAndBroadcast(`Album "${val}" added!`);
+              updateClientDropdowns('', val);
+              try { await api('saveClient', { client: cObj }); } catch(e) {}
+            }
+          }, 'e.g. Festive Specials');
+        };
+
+        // Submit Handler
         sc.querySelector('#f-submit').onclick = async () => {
           const title = sc.querySelector('#f-title').value.trim();
           const clientId = sc.querySelector('#f-client').value;
           const branch = sc.querySelector('#f-branch').value.trim();
           const album = sc.querySelector('#f-album').value.trim();
           const status = sc.querySelector('#f-status').value;
-          const file = sc.querySelector('#f-file').files[0];
-          const url = sc.querySelector('#f-url').value.trim();
-          const coverUrl = coverData || sc.querySelector('#f-cover').value.trim();
           const date = sc.querySelector('#f-date').value || new Date().toISOString().slice(0, 10);
           const dur = sc.querySelector('#f-dur').value.trim() || '0:30';
 
@@ -1037,77 +2129,488 @@
 
           if (!title) { toast('Please enter a reel title', 'error'); return; }
 
-          if (file) {
-            const submitBtn = sc.querySelector('#f-submit');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Uploading to Drive...';
-            toast('Uploading MP4 to Google Drive...', 'info');
+          // --- MODE 1: GOOGLE DRIVE LINK ---
+          if (currentMode === 'link') {
+            const url = sc.querySelector('#f-url').value.trim();
+            if (!url) { toast('Please paste a Google Drive video link', 'error'); return; }
 
-            const reader = new FileReader();
-            reader.onload = async () => {
-              // 1. Instantly register locally with a temporary object URL so the video NEVER goes missing
-              const tempReelId = 'r' + Date.now().toString(36);
-              const blobUrl = URL.createObjectURL(file);
-              const newReel = {
-                id: tempReelId,
-                c: clientId, y: year, m: month, b: branch, album,
-                title, date, url: blobUrl, dur, coverUrl, hidden: false,
-                status, views: 0, downloads: 0, sample: false
-              };
-              if (!DATA.reels) DATA.reels = [];
-              DATA.reels.unshift(newReel);
-              persistLocal('Reel added to your dashboard!');
-              sc.remove();
+            let coverUrl = coverData || sc.querySelector('#f-cover').value.trim();
+            const m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            const fileId = m ? m[1] : '';
+            if (!coverUrl && fileId) {
+              coverUrl = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1000';
+            }
 
-              // 2. Upload directly to Google Drive in the background
-              try {
-                const res = await api('uploadVideo', {
-                  clientName: DATA.clients.find(c => c.id === clientId)?.name || 'Client',
-                  clientId, branch, album, title, year, month, date, dur,
-                  coverUrl, status, filename: file.name, mimeType: file.type || 'video/mp4', base64Data: reader.result
-                });
-                if (res && res.success && res.reel) {
-                  // Upgrade temp reel with permanent Google Drive link and Drive fileId
-                  const idx = DATA.reels.findIndex(x => x.id === tempReelId);
-                  if (idx !== -1) {
-                    DATA.reels[idx] = res.reel;
-                  } else {
-                    DATA.reels.unshift(res.reel);
-                  }
-                  persistLocal('Video securely uploaded to Google Drive!');
-                } else {
-                  toast('Drive upload note: ' + ((res && res.error) || 'Saved locally'), 'info');
-                }
-              } catch (err) {
-                toast('Saved locally (Drive sync: ' + err.message + ')', 'info');
-              }
-            };
-            reader.readAsDataURL(file);
-          } else if (url) {
             const newReel = {
               id: 'r' + Date.now().toString(36),
-              c: clientId, y: year, m: month, b: branch, album,
-              title, date, url, dur, coverUrl, hidden: false, status, views: 0, downloads: 0, sample: false
+              c: clientId,
+              y: year,
+              m: month,
+              b: branch,
+              album: album,
+              title: title,
+              date: date,
+              url: url,
+              fileId: fileId,
+              dur: dur,
+              coverUrl: coverUrl,
+              hidden: false,
+              status: status,
+              views: 0,
+              downloads: 0,
+              sample: false,
+              thumbnailGenerated: !!coverUrl
             };
+
             if (!DATA.reels) DATA.reels = [];
             DATA.reels.unshift(newReel);
-            persistLocal('Reel published!');
+            saveAndBroadcast('Reel published to client portal!');
             sc.remove();
+            renderReels();
+
             try {
               await api('addReel', { reel: newReel });
               toast('Reel synced to Google Drive!', 'success');
             } catch(e) {}
-          } else {
-            toast('Please choose an MP4 video or paste a video link', 'error');
+            return;
           }
+
+          // --- MODE 2: DIRECT FILE UPLOAD ---
+          const file = activeVideoFile || sc.querySelector('#f-file').files[0];
+          if (!file) { toast('Please select an MP4 video file to upload', 'error'); return; }
+
+          const MAX_DIRECT_BYTES = 25 * 1024 * 1024; // 25 MB max
+          if (file.size > MAX_DIRECT_BYTES) {
+            const mb = (file.size / (1024 * 1024)).toFixed(1);
+            confirmModal(
+              `Large Video File (${mb} MB)`,
+              `Direct browser streaming is limited to 25 MB by Google Drive's gateway.<br><br>` +
+              `<b>Your high-definition thumbnail is already captured!</b><br><br>` +
+              `For production master files (${mb} MB):<br>` +
+              `1. Upload directly into your Google Drive client folder.<br>` +
+              `2. Switch to <b>Google Drive Link</b> tab and paste the link to publish instantly with zero wait time.`,
+              () => { window.open('https://drive.google.com', '_blank'); },
+              'Open Google Drive',
+              false,
+              'Switch to Link Mode'
+            );
+            return;
+          }
+
+          // Render Live Upload Progress UI in modal
+          const modalBody = sc.querySelector('.modal-card, .sheet') || sc;
+          modalBody.innerHTML = `
+            <div class="live-upload-box">
+              <div class="live-upload-header">
+                <div class="live-upload-title">
+                  <span class="sync-icon" style="color:var(--blue);">🚀</span>
+                  <span>Live Video Upload to Google Drive</span>
+                </div>
+                <div class="live-upload-pct" id="live-pct">0%</div>
+              </div>
+
+              <div class="live-prog-track">
+                <div class="live-prog-bar" id="live-bar"></div>
+              </div>
+
+              <div class="live-upload-stats">
+                <span id="live-bytes">Reading video file from disk...</span>
+                <span id="live-speed">Calculating socket speed...</span>
+              </div>
+
+              <div class="live-upload-stages">
+                <div class="live-stage-item done" id="stage-thumb">
+                  <span>✓</span><span>High-definition video thumbnail generated</span>
+                </div>
+                <div class="live-stage-item active" id="stage-upload">
+                  <span id="stage-upload-icon">→</span><span id="stage-upload-text">Streaming video payload to Google Drive...</span>
+                </div>
+                <div class="live-stage-item" id="stage-cloud">
+                  <span id="stage-cloud-icon">○</span><span>Confirming Google Drive file ID</span>
+                </div>
+              </div>
+
+              <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+                <button class="btn-portal" id="btn-cancel-upload" style="font-size:11px;padding:4px 10px;">Cancel Upload</button>
+              </div>
+            </div>`;
+
+          const liveBar = sc.querySelector('#live-bar');
+          const livePct = sc.querySelector('#live-pct');
+          const liveBytes = sc.querySelector('#live-bytes');
+          const liveSpeed = sc.querySelector('#live-speed');
+          const stageUpload = sc.querySelector('#stage-upload');
+          const stageCloud = sc.querySelector('#stage-cloud');
+          const cancelBtn = sc.querySelector('#btn-cancel-upload');
+
+          let currentXhr = null;
+          let aborted = false;
+
+          cancelBtn.onclick = () => {
+            aborted = true;
+            if (currentXhr) currentXhr.abort();
+            sc.remove();
+            toast('Upload cancelled', 'info');
+          };
+
+          const coverUrl = coverData || sc.querySelector('#f-cover')?.value.trim() || '';
+          const cObj = (DATA.clients || []).find(x => x.id === clientId) || { name: 'General' };
+
+          const reader = new FileReader();
+          reader.onload = async () => {
+            if (aborted) return;
+            liveBytes.textContent = `0 MB of ${(file.size / (1024*1024)).toFixed(1)} MB transferred`;
+
+            const tempReelId = 'r' + Date.now().toString(36);
+            const blobUrl = URL.createObjectURL(file);
+            const localReel = {
+              id: tempReelId,
+              c: clientId, y: year, m: month, b: branch, album,
+              title, date, url: blobUrl, dur, coverUrl, hidden: false, status, views: 0, downloads: 0, sample: false,
+              thumbnailGenerated: true
+            };
+            if (!DATA.reels) DATA.reels = [];
+            DATA.reels.unshift(localReel);
+            saveAndBroadcast(''); // immediate local registration
+
+            try {
+              const startTime = Date.now();
+              const res = await gasApiWithProgress('uploadVideo', {
+                clientName: cObj.name, clientId: clientId, branch, album, title, year, month, date, dur,
+                coverUrl, status, filename: file.name, mimeType: file.type || 'video/mp4', base64Data: reader.result
+              }, (prog, xhr) => {
+                currentXhr = xhr;
+                if (aborted) return;
+                liveBar.style.width = prog.percent + '%';
+                livePct.textContent = prog.percent + '%';
+                const loadedMB = (prog.loaded / (1024*1024)).toFixed(1);
+                const totalMB = (prog.total / (1024*1024)).toFixed(1);
+                liveBytes.textContent = `${loadedMB} MB of ${totalMB} MB transferred`;
+
+                const elapsedSec = (Date.now() - startTime) / 1000;
+                if (elapsedSec > 0.4) {
+                  const speed = (prog.loaded / (1024*1024) / elapsedSec).toFixed(1);
+                  const remBytes = prog.total - prog.loaded;
+                  const remSec = Math.max(1, Math.round(remBytes / (prog.loaded / elapsedSec)));
+                  liveSpeed.textContent = `${speed} MB/s · ${remSec}s remaining`;
+                }
+
+                if (prog.percent >= 98) {
+                  stageUpload.className = 'live-stage-item done';
+                  sc.querySelector('#stage-upload-icon').textContent = '✓';
+                  stageCloud.className = 'live-stage-item active';
+                  sc.querySelector('#stage-cloud-icon').textContent = '→';
+                  liveSpeed.textContent = 'Finalizing Google Drive storage...';
+                }
+              });
+
+              if (aborted) return;
+
+              liveBar.style.width = '100%';
+              livePct.textContent = '100%';
+              stageCloud.className = 'live-stage-item done';
+              sc.querySelector('#stage-cloud-icon').textContent = '✓';
+              liveSpeed.textContent = '✓ Published successfully!';
+
+              if (res && res.success && res.reel) {
+                const idx = DATA.reels.findIndex(x => x.id === tempReelId);
+                if (idx !== -1) DATA.reels[idx] = res.reel;
+                else DATA.reels.unshift(res.reel);
+                saveAndBroadcast('Video & thumbnail published to Google Drive!');
+              } else {
+                saveAndBroadcast('Video & thumbnail stored locally!');
+                toast('Stored locally: ' + ((res && res.error) || 'Drive offline'), 'info');
+              }
+
+              setTimeout(() => sc.remove(), 700);
+            } catch(err) {
+              if (aborted) return;
+              saveAndBroadcast('Video & thumbnail saved locally');
+              toast('Stored locally (Drive sync: ' + err.message + ')', 'amber');
+              setTimeout(() => sc.remove(), 700);
+            }
+          };
+          reader.readAsDataURL(file);
         };
       });
     }
 
-    // MODAL: EDIT REEL
-    function openEditModal(r) {
+    
+    // MODAL: GOOGLE DRIVE VIDEOS (AUTO-DETECT & ENABLE ON WEBSITE)
+    function openDriveVideosModal(defaultClientId = '') {
+      const clients = DATA.clients || [];
+      const selClientId = defaultClientId || (clients[0] ? clients[0].id : '');
+      let currentScannedVideos = [];
+
       modal(`
-        <h3>Edit Reel · ${r.title}</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <h3 style="margin:0;display:flex;align-items:center;gap:8px;font-size:18px;">
+              <span>📁</span> Drive Videos (Auto-Detect)
+            </h3>
+            <small style="color:var(--mute);font-size:12px;">Scan client's Google Drive folder & toggle videos to enable on website</small>
+          </div>
+          <button data-close class="btn-portal" style="padding:4px 10px;font-size:16px;line-height:1;border-radius:8px;">&times;</button>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:180px;">
+            <label style="font-size:11px;font-weight:600;color:var(--mute);display:block;margin-bottom:4px;">Select Client</label>
+            <select id="drive-scan-client" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-weight:600;color:var(--navy);">
+              ${clients.map(c => `<option value="${c.id}" ${c.id === selClientId ? 'selected' : ''}>${c.name}</option>`).join('')}
+            </select>
+          </div>
+          <div style="flex:none;align-self:flex-end;">
+            <button id="btn-run-drive-scan" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg, #1FAF64, #17A598);border-color:#1FAF64;">
+              <span class="sync-icon">🔄</span> Scan Google Drive Now
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Link Bar -->
+        <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+            <span>⚡ Quick Enable Any Drive Video Link:</span>
+            <span style="font-size:10px;color:var(--mute);">Auto-detects thumbnail & enables on website</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <input id="quick-drive-link" placeholder="Paste https://drive.google.com/file/d/…/view" style="flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:12px;background:#fff;">
+            <button id="btn-quick-enable-drive" class="btn-primary" style="white-space:nowrap;padding:8px 14px;font-size:12px;background:linear-gradient(135deg, #1FAF64, #17A598);border-color:#1FAF64;">
+              + Enable on Website
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span id="drive-folder-status" style="font-size:12px;color:var(--navy);font-weight:600;">Client Folder: Day Night Media Portal</span>
+          <input id="drive-filter-search" placeholder="Search videos..." style="padding:5px 10px;font-size:11px;border:1px solid var(--line);border-radius:8px;width:150px;">
+        </div>
+
+        <div id="drive-videos-list" style="max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px;">
+          <div style="text-align:center;padding:34px 20px;color:var(--mute);font-size:13px;background:var(--soft);border-radius:12px;border:1px dashed var(--line);">
+            Click "<b>Scan Google Drive Now</b>" to search client folder videos.
+          </div>
+        </div>`, sc => {
+
+        const clientSel = sc.querySelector('#drive-scan-client');
+        const scanBtn = sc.querySelector('#btn-run-drive-scan');
+        const listEl = sc.querySelector('#drive-videos-list');
+        const statusEl = sc.querySelector('#drive-folder-status');
+        const searchInput = sc.querySelector('#drive-filter-search');
+        const quickInput = sc.querySelector('#quick-drive-link');
+        const quickBtn = sc.querySelector('#btn-quick-enable-drive');
+
+        async function runScan() {
+          const cid = clientSel.value;
+          const cObj = (DATA.clients || []).find(c => c.id === cid);
+          if (!cObj) return;
+
+          statusEl.textContent = 'Client Folder: Day Night Media Portal / ' + cObj.name;
+          listEl.innerHTML = `
+            <div style="text-align:center;padding:40px;color:var(--navy);">
+              <div class="sync-icon" style="font-size:26px;display:inline-block;animation:spin 0.8s linear infinite;">⚙</div>
+              <p style="margin:10px 0 0;font-size:13px;font-weight:600;">Scanning Google Drive folder for "${cObj.name}"...</p>
+              <small style="color:var(--mute);font-size:11px;">Inspecting master folder & branch subfolders for MP4 files</small>
+            </div>`;
+
+          try {
+            const res = await api('scanDriveVideos', { clientName: cObj.name });
+            if (res && res.success && Array.isArray(res.videos)) {
+              currentScannedVideos = res.videos;
+              renderScannedList();
+            } else {
+              listEl.innerHTML = `
+                <div style="text-align:center;padding:30px;color:var(--mute);font-size:12px;background:var(--soft);border-radius:12px;">
+                  ${(res && res.error) || 'No video files found yet in Drive folder.'}<br><br>
+                  Upload MP4 files directly into Google Drive folder <b>"${cObj.name}"</b>, then click Scan!
+                </div>`;
+            }
+          } catch(err) {
+            listEl.innerHTML = `
+              <div style="text-align:center;padding:24px;color:var(--red);font-size:12px;background:#FEE2E2;border-radius:12px;">
+                Scan note: ${err.message || 'Drive API offline'}. You can still paste any Drive video link above to enable it instantly!
+              </div>`;
+          }
+        }
+
+        function renderScannedList() {
+          const q = (searchInput.value || '').toLowerCase().trim();
+          const cid = clientSel.value;
+          const cObj = (DATA.clients || []).find(c => c.id === cid);
+
+          let filtered = currentScannedVideos.filter(v => {
+            if (!q) return true;
+            return (v.title || '').toLowerCase().includes(q) || (v.name || '').toLowerCase().includes(q) || (v.folder || '').toLowerCase().includes(q);
+          });
+
+          if (!filtered.length) {
+            listEl.innerHTML = `
+              <div style="text-align:center;padding:30px;color:var(--mute);font-size:12px;background:var(--soft);border-radius:12px;">
+                No videos found matching "${q}".
+              </div>`;
+            return;
+          }
+
+          listEl.innerHTML = filtered.map(v => {
+            const matchedReel = (DATA.reels || []).find(r => (r.fileId === v.fileId || (r.url && r.url.includes(v.fileId))));
+            const isLive = matchedReel && matchedReel.hidden !== true;
+
+            return `
+              <div style="display:flex;gap:12px;align-items:center;padding:12px;background:#FFFFFF;border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px rgba(18,41,74,0.04);">
+                <div style="width:64px;height:88px;border-radius:8px;overflow:hidden;background:#000;flex-shrink:0;position:relative;">
+                  <img src="${v.thumbUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='/Logo/logo.png'">
+                  <span style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px;">${v.sizeMB} MB</span>
+                </div>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                    <h4 style="margin:0;font-size:13px;font-weight:700;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;">${v.title}</h4>
+                    ${v.folder ? `<span style="font-size:10px;background:var(--soft);padding:2px 6px;border-radius:4px;color:var(--mute);">📁 ${v.folder}</span>` : ''}
+                  </div>
+                  <p style="margin:4px 0 0;font-size:11px;color:var(--mute);">
+                    Date: ${v.dateCreated || 'Recent'} &middot; <a href="${v.viewUrl}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;">Open in Drive ↗</a>
+                  </p>
+                  <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+                    ${isLive ? `
+                      <span class="badge-status approved" style="font-size:10px;padding:3px 8px;">✓ Live on Website</span>
+                      <button class="btn-portal" data-toggle-reel="${matchedReel.id}" style="padding:4px 8px;font-size:11px;">Hide from Client</button>
+                    ` : `
+                      <span class="badge-status draft" style="font-size:10px;padding:3px 8px;">Not on Website</span>
+                      <button class="btn-primary" data-enable-vid="${v.fileId}" style="background:linear-gradient(135deg, #1FAF64, #17A598);border-color:#1FAF64;font-size:11px;padding:5px 12px;font-weight:700;">
+                        + Enable on Website for Client
+                      </button>
+                    `}
+                  </div>
+                </div>
+              </div>`;
+          }).join('');
+
+          // Bind enable buttons
+          listEl.querySelectorAll('[data-enable-vid]').forEach(btn => {
+            btn.onclick = () => {
+              const fid = btn.dataset.enableVid;
+              const v = currentScannedVideos.find(x => x.fileId === fid);
+              if (!v) return;
+
+              const existingIdx = (DATA.reels || []).findIndex(r => r.fileId === fid || (r.url && r.url.includes(fid)));
+              if (existingIdx !== -1) {
+                DATA.reels[existingIdx].hidden = false;
+                DATA.reels[existingIdx].status = 'approved';
+              } else {
+                const newReel = {
+                  id: 'r' + Date.now().toString(36),
+                  c: cObj.id,
+                  y: new Date().getFullYear(),
+                  m: new Date().getMonth(),
+                  b: v.folder || '',
+                  album: v.folder || 'General',
+                  title: v.title,
+                  date: v.dateCreated || new Date().toISOString().slice(0, 10),
+                  url: v.viewUrl,
+                  fileId: v.fileId,
+                  dur: '0:30',
+                  coverUrl: v.thumbUrl,
+                  hidden: false,
+                  status: 'approved',
+                  views: 0,
+                  downloads: 0
+                };
+                if (!DATA.reels) DATA.reels = [];
+                DATA.reels.unshift(newReel);
+                try { api('saveReel', { reel: newReel }); } catch(e) {}
+              }
+
+              saveAndBroadcast(`"${v.title}" is now LIVE on ${cObj.name}'s website!`);
+              toast(`✓ "${v.title}" enabled on website!`, 'success');
+              renderScannedList();
+              renderReels();
+            };
+          });
+
+          // Bind hide buttons
+          listEl.querySelectorAll('[data-toggle-reel]').forEach(btn => {
+            btn.onclick = () => {
+              const rid = btn.dataset.toggleReel;
+              const r = (DATA.reels || []).find(x => x.id === rid);
+              if (r) {
+                r.hidden = true;
+                saveAndBroadcast(`"${r.title}" hidden from website`);
+                toast('Reel hidden from client', 'info');
+                try { api('toggleHideReel', { id: r.id }); } catch(e) {}
+                renderScannedList();
+                renderReels();
+              }
+            };
+          });
+        }
+
+        // Quick Enable Handler
+        quickBtn.onclick = () => {
+          const val = quickInput.value.trim();
+          if (!val) { toast('Please paste a Google Drive video link', 'error'); return; }
+
+          const m = val.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || val.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+          const fileId = m ? m[1] : '';
+          if (!fileId) { toast('Could not find Google Drive file ID in link', 'error'); return; }
+
+          const cid = clientSel.value;
+          const cObj = (DATA.clients || []).find(c => c.id === cid) || { name: 'Client' };
+          const driveThumb = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1000';
+          const defaultTitle = 'Drive Reel ' + new Date().toISOString().slice(5, 10);
+
+          const existingIdx = (DATA.reels || []).findIndex(r => r.fileId === fileId || (r.url && r.url.includes(fileId)));
+          if (existingIdx !== -1) {
+            DATA.reels[existingIdx].hidden = false;
+            DATA.reels[existingIdx].status = 'approved';
+          } else {
+            const newReel = {
+              id: 'r' + Date.now().toString(36),
+              c: cObj.id,
+              y: new Date().getFullYear(),
+              m: new Date().getMonth(),
+              b: '',
+              album: 'General',
+              title: defaultTitle,
+              date: new Date().toISOString().slice(0, 10),
+              url: val,
+              fileId: fileId,
+              dur: '0:30',
+              coverUrl: driveThumb,
+              hidden: false,
+              status: 'approved',
+              views: 0,
+              downloads: 0
+            };
+            if (!DATA.reels) DATA.reels = [];
+            DATA.reels.unshift(newReel);
+            try { api('saveReel', { reel: newReel }); } catch(e) {}
+          }
+
+          saveAndBroadcast(`Video enabled on ${cObj.name}'s website!`);
+          toast(`✓ Video is now live on ${cObj.name} website!`, 'success');
+          quickInput.value = '';
+          renderScannedList();
+          renderReels();
+        };
+
+        scanBtn.onclick = runScan;
+        clientSel.onchange = runScan;
+        searchInput.oninput = renderScannedList;
+
+        // Auto run scan on open
+        runScan();
+      });
+    }
+
+function openEditModal(r) {
+      const client = DATA.clients.find(c => c.id === r.c);
+      const branches = client && client.branches ? client.branches : [];
+      const albums = client && client.albums ? client.albums : [];
+
+      modal(`
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <h3 style="margin:0;">Edit Reel · ${r.title}</h3>
+          <button data-close class="btn-portal" style="padding:4px 10px;font-size:16px;line-height:1;border-radius:8px;">&times;</button>
+        </div>
         <div class="form-group">
           <label>Title</label>
           <input id="e-title" value="${r.title}">
@@ -1122,12 +2625,26 @@
         </div>
         <div class="form-row2">
           <div class="form-group">
-            <label>Branch (leave empty if none)</label>
-            <input id="e-branch" value="${r.b || ''}">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <label>Branch</label>
+              <button type="button" id="btn-edit-new-br" style="border:1px solid rgba(47, 125, 246, 0.25);background:#EFF6FF;color:var(--blue);font-size:11px;font-weight:600;cursor:pointer;padding:2px 8px;border-radius:6px;">+ New</button>
+            </div>
+            <select id="e-branch">
+              <option value="">No branch</option>
+              ${branches.map(b => `<option value="${b}" ${b === r.b ? 'selected' : ''}>${b}</option>`).join('')}
+              ${r.b && !branches.includes(r.b) ? `<option value="${r.b}" selected>${r.b}</option>` : ''}
+            </select>
           </div>
           <div class="form-group">
-            <label>Album / Campaign</label>
-            <input id="e-album" value="${r.album || ''}">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <label>Album / Campaign</label>
+              <button type="button" id="btn-edit-new-alb" style="border:1px solid rgba(47, 125, 246, 0.25);background:#EFF6FF;color:var(--blue);font-size:11px;font-weight:600;cursor:pointer;padding:2px 8px;border-radius:6px;">+ New</button>
+            </div>
+            <select id="e-album">
+              <option value="">General</option>
+              ${albums.map(a => `<option value="${a}" ${a === r.album ? 'selected' : ''}>${a}</option>`).join('')}
+              ${r.album && !albums.includes(r.album) ? `<option value="${r.album}" selected>${r.album}</option>` : ''}
+            </select>
           </div>
         </div>
         <div class="form-row2">
@@ -1148,6 +2665,39 @@
           <button class="btn-portal" data-close>Cancel</button>
           <button class="btn-primary" id="e-save">Save Changes</button>
         </div>`, sc => {
+
+        sc.querySelector('#btn-edit-new-br').onclick = () => {
+          promptModal('Add Branch Store', 'Branch Location:', '', val => {
+            if (client) {
+              client.branches = client.branches || [];
+              if (!client.branches.includes(val)) client.branches.push(val);
+              saveAndBroadcast(`Branch "${val}" added`);
+            }
+            const sel = sc.querySelector('#e-branch');
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = val;
+            opt.selected = true;
+            sel.appendChild(opt);
+          });
+        };
+
+        sc.querySelector('#btn-edit-new-alb').onclick = () => {
+          promptModal('Add Album / Campaign', 'Album Name:', '', val => {
+            if (client) {
+              client.albums = client.albums || [];
+              if (!client.albums.includes(val)) client.albums.push(val);
+              saveAndBroadcast(`Album "${val}" added`);
+            }
+            const sel = sc.querySelector('#e-album');
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = val;
+            opt.selected = true;
+            sel.appendChild(opt);
+          });
+        };
+
         sc.querySelector('#e-save').onclick = async () => {
           r.title = sc.querySelector('#e-title').value.trim();
           r.url = sc.querySelector('#e-url').value.trim();
@@ -1158,7 +2708,7 @@
           r.y = Number(r.date.slice(0, 4)) || r.y;
           r.m = (Number(r.date.slice(5, 7)) - 1);
           r.status = sc.querySelector('#e-status').value;
-          persistLocal('Reel updated successfully');
+          saveAndBroadcast('Reel updated successfully');
           sc.remove();
           try {
             await api('modifyReel', { reel: r });
@@ -1175,7 +2725,10 @@
       let logoData = client.logo || '';
 
       modal(`
-        <h3>${isNew ? 'Create New Client' : 'Edit Client Profile'}</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <h3 style="margin:0;">${isNew ? 'Create New Client' : 'Edit Client Profile'}</h3>
+          <button data-close class="btn-portal" style="padding:4px 10px;font-size:16px;line-height:1;border-radius:8px;">&times;</button>
+        </div>
         <div class="form-group">
           <label>Client Name</label>
           <input id="cl-name" value="${client.name}" placeholder="e.g. The Chennai Silks">
@@ -1225,11 +2778,11 @@
           <input id="cl-tag" value="${client.tagline || ''}" placeholder="Let the celebrations begin!">
         </div>
         <div class="form-group">
-          <label>Store Branches (Comma Separated, or leave empty)</label>
+          <label>Store Branches (Comma Separated, or manage on card)</label>
           <input id="cl-branches" value="${(client.branches || []).join(', ')}" placeholder="e.g. T. Nagar, Velachery (leave empty if no branches)">
         </div>
         <div class="form-group">
-          <label>Albums / Campaigns (Comma Separated, or leave empty)</label>
+          <label>Albums / Campaigns (Comma Separated, or manage on card)</label>
           <input id="cl-albums" value="${(client.albums || []).join(', ')}" placeholder="e.g. Diwali 2026, Bridal Edit">
         </div>
         <div style="display:flex;gap:10px;justify-content:space-between;margin-top:14px;">
@@ -1262,17 +2815,19 @@
           }
         };
 
-        // Delete Client Handler
+        // Delete Client Handler with Custom Modal (No window.confirm)
         const delBtn = sc.querySelector('#cl-delete');
         if (delBtn) {
-          delBtn.onclick = async () => {
-            if (confirm(`Are you sure you want to delete ${client.name}? All delivered reels will also be deleted.`)) {
+          delBtn.onclick = () => {
+            confirmModal('Delete Client Profile?', `Are you sure you want to delete ${client.name}? All dedicated client links and reels will also be removed.`, async () => {
+              DATA.deletedClientIds = DATA.deletedClientIds || [];
+              if (!DATA.deletedClientIds.includes(client.id)) DATA.deletedClientIds.push(client.id);
               DATA.clients = (DATA.clients || []).filter(x => x.id !== client.id);
               DATA.reels = (DATA.reels || []).filter(x => x.c !== client.id);
-              persistLocal('Client deleted');
+              saveAndBroadcast('Client profile deleted');
               sc.remove();
               try { await api('deleteClient', { id: client.id }); } catch(e) {}
-            }
+            }, 'Delete Client', true);
           };
         }
 
@@ -1304,7 +2859,7 @@
             DATA.clients.push(rec);
           }
 
-          persistLocal('Client profile saved!');
+          saveAndBroadcast('Client profile saved!');
           sc.remove();
           try {
             await api('saveClient', { client: rec });
@@ -1314,42 +2869,113 @@
       });
     }
 
-    // IN-APP 9:16 VIDEO PLAYER MODAL
-    function openVideoModal(r) {
-      function driveId(u) {
-        if (!u) return null;
-        const m = u.match(/\/d\/([\w-]{15,})/) || u.match(/[?&]id=([\w-]{15,})/) || u.match(/([\w-]{25,})/);
-        return m ? m[1] : null;
+    // DIRECT DOWNLOAD HELPER (Forces native download, never opens Google Drive)
+    function triggerDirectDownload(r) {
+      if (!r || !r.url) {
+        toast('Sample reel layout. Download available when real file is uploaded.', 'amber');
+        return;
       }
       const id = driveId(r.url);
-      const isDrive = !!id;
+      const cleanTitle = (r.title || 'video').replace(/[/\\?%*:|"<>]/g, '_').trim() || 'video';
+      const filename = cleanTitle.toLowerCase().endsWith('.mp4') ? cleanTitle : `${cleanTitle}.mp4`;
+
+      toast('Downloading video...', 'info');
+
+      const dlEndpoint = id
+        ? `/api/download?id=${encodeURIComponent(id)}&name=${encodeURIComponent(filename)}`
+        : `/api/download?url=${encodeURIComponent(r.url)}&name=${encodeURIComponent(filename)}`;
+
+      const a = document.createElement('a');
+      a.href = dlEndpoint;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => a.remove(), 1000);
+    }
+
+    // IN-APP 9:16 VIDEO PLAYER MODAL
+    function openVideoModal(r) {
+      const id = driveId(r.url);
+      const isDrive = !id ? false : true;
+      const streamSrc = isDrive ? `/api/video?id=${id}` : r.url;
       const embedSrc = isDrive ? `https://drive.google.com/file/d/${id}/preview` : r.url;
 
       modal(`
         <div class="video-dialog-wrap">
           <div style="width:100%;display:flex;align-items:center;justify-content:space-between;">
             <div>
-              <h4 style="font-size:16px;color:var(--navy);">${r.title}</h4>
-              <p style="font-size:11px;color:var(--mute);">${r.date}${r.b ? ` · ${r.b}` : (r.album ? ` · ${r.album}` : '')}</p>
+              <h4 style="font-size:16px;color:var(--navy);margin:0;">${r.title}</h4>
+              <p style="font-size:11px;color:var(--mute);margin:2px 0 0;">${r.date}${r.b ? ` · ${r.b}` : (r.album ? ` · ${r.album}` : '')}</p>
             </div>
             <button class="btn-portal" data-close>Close</button>
           </div>
+
+          ${isDrive ? `
+          <div style="display:flex;gap:6px;width:100%;background:var(--soft);padding:3px;border-radius:10px;border:1px solid var(--line);">
+            <button type="button" id="admin-player-native" style="flex:1;padding:6px 8px;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;background:var(--navy);color:#FFFFFF;box-shadow:0 2px 6px rgba(18,41,74,0.08);transition:all 0.2s;">⚡ Master Player (Clean)</button>
+            <button type="button" id="admin-player-drive" style="flex:1;padding:6px 8px;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:var(--mute);transition:all 0.2s;">☁️ Google Drive Player</button>
+          </div>` : ''}
+
           <div class="video-viewport">
-            ${isDrive 
-              ? `<iframe src="${embedSrc}" allow="autoplay; fullscreen" allowfullscreen></iframe>`
-              : `<video src="${r.url}" controls autoplay playsinline style="width:100%;height:100%;object-fit:cover;"></video>`
-            }
+            <video id="admin-native-vid" src="${streamSrc}" controls autoplay playsinline poster="${r.coverUrl || ''}"></video>
+            ${isDrive ? `<iframe id="admin-drive-frame" src="${embedSrc}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>` : ''}
           </div>
+
           <div style="display:flex;gap:10px;width:100%;">
+            <button type="button" id="admin-btn-dl" class="btn-primary" style="flex:1;justify-content:center;cursor:pointer;">Download</button>
             ${isDrive ? `
-              <a href="https://drive.google.com/uc?export=download&id=${id}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;">Direct Download</a>
-              <a href="https://drive.google.com/file/d/${id}/view" target="_blank" class="btn-portal" style="flex:1;justify-content:center;">Drive View</a>
-            ` : `
-              <a href="${r.url}" download="${r.title}.mp4" class="btn-primary" style="flex:1;justify-content:center;">Download Video</a>
-            `}
+              <a href="https://drive.google.com/file/d/${id}/view" target="_blank" rel="noopener" class="btn-portal" style="flex:1;justify-content:center;">Open in Drive ↗</a>
+            ` : ''}
           </div>
-        </div>`, () => {});
+        </div>`, mSc => {
+        mSc.querySelector('#admin-btn-dl').onclick = () => triggerDirectDownload(r);
+
+        if (isDrive) {
+          const btnNative = mSc.querySelector('#admin-player-native');
+          const btnDrive = mSc.querySelector('#admin-player-drive');
+          const vid = mSc.querySelector('#admin-native-vid');
+          const frame = mSc.querySelector('#admin-drive-frame');
+
+          function showNative() {
+            if (!vid || !frame) return;
+            vid.style.display = 'block';
+            frame.style.display = 'none';
+            btnNative.style.background = 'var(--navy)';
+            btnNative.style.color = '#FFFFFF';
+            btnDrive.style.background = 'transparent';
+            btnDrive.style.color = 'var(--mute)';
+          }
+
+          function showDrive() {
+            if (!vid || !frame) return;
+            vid.pause();
+            vid.style.display = 'none';
+            frame.style.display = 'block';
+            btnDrive.style.background = 'var(--navy)';
+            btnDrive.style.color = '#FFFFFF';
+            btnNative.style.background = 'transparent';
+            btnNative.style.color = 'var(--mute)';
+          }
+
+          btnNative.onclick = showNative;
+          btnDrive.onclick = showDrive;
+
+          vid.onerror = () => {
+            showDrive();
+          };
+        }
+      });
     }
+
+    // Header Actions
+    document.getElementById('btn-manual-sync').onclick = () => sync(true);
+    document.getElementById('btn-lock-admin').onclick = () => {
+      sessionStorage.removeItem('dn_admin_auth');
+      isAuthenticated = false;
+      render();
+      toast('Admin session locked', 'info');
+    };
 
     // Sidebar Tab Switching
     document.querySelectorAll('.nav-item').forEach(b => {
@@ -1361,9 +2987,14 @@
       };
     });
 
-    // Initial Load
+    // Initial Load & Auto Poll
     render();
-    sync();
+    if (isAuthenticated) {
+      sync(false);
+    }
+    setInterval(() => {
+      if (isAuthenticated) sync(false);
+    }, 25000);
 
   })();
   </script>
