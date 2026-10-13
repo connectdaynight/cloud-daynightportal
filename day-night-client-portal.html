@@ -3599,11 +3599,11 @@
               <span class="chip">${ic.dl}</span><span>Download</span>
             </button>
             <button type="button" class="act" style="--k:var(--amber);cursor:pointer;" id="v-share">
-              <span class="chip">${ic.share}</span><span>Share Reel</span>
+              <span class="chip">${ic.share}</span><span>Share Video</span>
             </button>
-            <a class="act" style="--k:var(--blue);cursor:pointer;" id="v-btn-drive" href="${esc(viewUrl(currentReel.url))}" target="_blank" rel="noopener">
-              <span class="chip">${ic.view}</span><span>Google Drive ↗</span>
-            </a>
+            <button type="button" class="act" style="--k:var(--blue);cursor:pointer;" id="v-copy-url">
+              <span class="chip">${ic.copy}</span><span>Copy Video URL</span>
+            </button>
           </div>
         </div>`, modalSc => {
         const vid = modalSc.querySelector('#v-native-player');
@@ -3616,7 +3616,7 @@
         const specBranch = modalSc.querySelector('#v-spec-branch');
         const btnDl = modalSc.querySelector('#v-btn-download');
         const btnShare = modalSc.querySelector('#v-share');
-        const btnDrive = modalSc.querySelector('#v-btn-drive');
+        const btnCopyUrl = modalSc.querySelector('#v-copy-url');
 
         const gearBtn = modalSc.querySelector('#v-gear-btn');
         const gearMenu = modalSc.querySelector('#v-gear-menu');
@@ -3758,7 +3758,7 @@
             if (socCaption) socCaption.textContent = `${currentReel.title} #reels #festive`;
 
             // Update URLs
-            btnDrive.href = viewUrl(currentReel.url);
+            // Direct video streaming without Google Drive
 
             // Update Status UI
             updateStatusUi(currentReel.status || 'review');
@@ -3817,8 +3817,19 @@
         }
         window.addEventListener('keydown', handleKeyNav);
 
-        btnShare.addEventListener('click', () => openShare(currentReel));
+        btnShare.addEventListener('click', () => shareVideo(currentReel));
         btnDl.addEventListener('click', () => triggerDirectDownload(currentReel));
+        if (btnCopyUrl) {
+          btnCopyUrl.addEventListener('click', () => {
+            const id = driveId(currentReel.url);
+            const directUrl = id ? `${window.location.origin}/api/video?id=${encodeURIComponent(id)}` : currentReel.url;
+            navigator.clipboard.writeText(directUrl).then(() => {
+              toast('Direct video URL copied to clipboard!', 'success');
+            }).catch(() => {
+              toast('Direct video URL ready', 'info');
+            });
+          });
+        }
 
         if (gearBtn && gearMenu) {
           gearBtn.addEventListener('click', e => {
@@ -3902,22 +3913,89 @@
       }, true, 'video-modal-scrim');
     }
 
-        function openShare(r) {
-      const c = client(), link = viewUrl(r.url);
-      const msg = `${c.name} | DAY NIGHT · ${r.title}\n${link}`;
+    // --------------------------------------------------------------------------
+    // DIRECT VIDEO SHARING SYSTEM (SHARES ACTUAL MP4 VIDEO, NEVER GOOGLE DRIVE)
+    // --------------------------------------------------------------------------
+    async function shareVideo(r) {
+      if (!r || !r.url) {
+        toast('Sample reel layout. Video sharing available when real file is uploaded.', 'amber');
+        return;
+      }
+
+      const c = client() || { name: 'Day Night' };
+      const id = driveId(r.url);
+      const cleanTitle = (r.title || 'video').replace(/[/\?%*:|"<>]/g, '_').trim() || 'video';
+      const filename = cleanTitle.toLowerCase().endsWith('.mp4') ? cleanTitle : `${cleanTitle}.mp4`;
+      const directVideoUrl = id ? `${window.location.origin}/api/video?id=${encodeURIComponent(id)}` : r.url;
+
+      // 1. Native Video File Sharing (iOS Safari, Android Chrome, mobile devices)
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        toast('Preparing video to share...', 'info');
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 9000);
+          const res = await fetch(directVideoUrl, { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (res.ok) {
+            const blob = await res.blob();
+            const videoFile = new File([blob], filename, { type: 'video/mp4' });
+
+            if (navigator.canShare && navigator.canShare({ files: [videoFile] })) {
+              await navigator.share({
+                title: r.title,
+                text: `${c.name} · ${r.title}`,
+                files: [videoFile]
+              });
+              toast('Video shared successfully!', 'success');
+              return;
+            }
+          }
+        } catch (err) {
+          if (err && err.name === 'AbortError') {
+            return;
+          }
+          console.warn('Native video file share fallback:', err);
+        }
+      }
+
+      // 2. Direct Video Share Sheet (NO Google Drive links!)
+      openDirectShareSheet(r, directVideoUrl, filename);
+    }
+
+    function openDirectShareSheet(r, directVideoUrl, filename) {
+      const c = client() || { name: 'Day Night' };
+      const id = driveId(r.url);
+      const videoLink = directVideoUrl || (id ? `${window.location.origin}/api/video?id=${encodeURIComponent(id)}` : r.url);
+      const shareMsg = `${c.name} | DAY NIGHT · ${r.title}\n${videoLink}`;
+
       sheet(`
-        <h4>Share Reel</h4>
-        <p>${esc(r.title)}</p>
-        <div class="linkbox" id="share-link">${esc(link)}</div>
+        <h4>Share Video</h4>
+        <p>${esc(r.title)} · Direct 1080p MP4 Video</p>
+        <div class="linkbox" id="share-link">${esc(videoLink)}</div>
         <div class="share-opts">
-          <button id="copy-btn" style="--k:var(--violet)"><span class="chip">${ic.copy}</span>Copy Link</button>
-          <a style="--k:#25D366" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><span class="chip">${ic.wa}</span>WhatsApp</a>
-          <a style="--k:#229ED9" href="https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(r.title)}" target="_blank" rel="noopener"><span class="chip">${ic.tg}</span>Telegram</a>
+          <button type="button" id="share-dl-btn" style="--k:var(--green)">
+            <span class="chip">${ic.dl}</span>Save / Share Video File
+          </button>
+          <button type="button" id="copy-btn" style="--k:var(--violet)">
+            <span class="chip">${ic.copy}</span>Copy Direct Video Link
+          </button>
+          <a style="--k:#25D366" href="https://wa.me/?text=${encodeURIComponent(shareMsg)}" target="_blank" rel="noopener">
+            <span class="chip">${ic.wa}</span>WhatsApp Video
+          </a>
+          <a style="--k:#229ED9" href="https://t.me/share/url?url=${encodeURIComponent(videoLink)}&text=${encodeURIComponent(c.name + ' · ' + r.title)}" target="_blank" rel="noopener">
+            <span class="chip">${ic.tg}</span>Telegram Video
+          </a>
         </div>
         <button class="ghost" data-close>Close</button>`, sc => {
+
+        sc.querySelector('#share-dl-btn').addEventListener('click', () => {
+          triggerDirectDownload(r);
+        });
+
         sc.querySelector('#copy-btn').addEventListener('click', () => {
           try {
-            navigator.clipboard.writeText(link).then(() => toast('Link copied to clipboard!', 'success'));
+            navigator.clipboard.writeText(videoLink).then(() => toast('Direct video link copied to clipboard!', 'success'));
           } catch(e) {
             toast('Please copy manually from the link box', 'info');
           }
@@ -3925,7 +4003,12 @@
       });
     }
 
-    // --------------------------------------------------------------------------
+    // Direct alias so any existing calls invoke direct video sharing
+    function openShare(r) {
+      shareVideo(r);
+    }
+
+        // --------------------------------------------------------------------------
     // ADMIN PANEL & COMPLETE GOOGLE DRIVE ENGINE
     // --------------------------------------------------------------------------
     function verifyAdminAccess() {
