@@ -776,6 +776,35 @@
       font-weight: 500;
     }
 
+    /* Portal Controls & Social Styling */
+    .ctrl-preset-btn {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      color: var(--navy);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .ctrl-preset-btn:hover, .ctrl-preset-btn.active {
+      background: var(--navy);
+      color: #FFFFFF;
+      border-color: var(--navy);
+      box-shadow: 0 4px 12px rgba(18, 41, 74, 0.15);
+    }
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
     /* Responsive Design */
     @media (max-width: 900px) {
       .admin-layout { flex-direction: column; padding: 16px; }
@@ -825,6 +854,7 @@
       <button class="nav-item" data-tab="reels"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg></span> Reels &amp; Videos</button>
       <button class="nav-item" data-tab="images"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span> Stories &amp; Posters</button>
       <button class="nav-item" data-tab="clients"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/></svg></span> Clients &amp; URLs</button>
+      <button class="nav-item" data-tab="controls"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></span> Portal Controls &amp; Social</button>
       <button class="nav-item" data-tab="folders"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span> Drive Folders</button>
       <button class="nav-item" data-tab="engine"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></span> Google Drive Engine</button>
       <button class="nav-item" data-tab="branding"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.4-.4-.8-.4-1.4 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-5.5-4.5-10-10-10z"/></svg></span> Agency Branding</button>
@@ -847,10 +877,29 @@
 
     let DATA = {
       _updatedAt: Date.now(),
-      settings: { agency: "Day Night Media", agencySub: "Production Company", slogan: "Creating impact that brands remember" },
+      settings: {
+        agency: "Day Night Media",
+        agencySub: "Production Company",
+        slogan: "Creating impact that brands remember",
+        introDuration: 6,
+        sitePaused: false,
+        sitePauseMsg: "Day Night Media Portal is temporarily undergoing scheduled updates. Please check back shortly.",
+        downloadsPaused: false,
+        sharesPaused: false,
+        showSocialLinks: true,
+        social: {
+          instagram: "",
+          youtube: "",
+          facebook: "",
+          whatsapp: "",
+          x: "",
+          linkedin: "",
+          email: ""
+        }
+      },
       clients: [
         {
-          id: "tcs", slug: "tcs", name: "The Chennai Silks", code: "4821",
+          id: "tcs", slug: "tcs", name: "The Chennai Silks", code: "4821", status: "active",
           tagline: "Let the celebrations begin!", accent: "celebrations", animStyle: "confetti",
           branches: ["T. Nagar", "Velachery", "Chromepet", "Thiruvallur"],
           albums: ["Diwali 2026", "Bridal Edit", "Festive Specials"]
@@ -870,6 +919,9 @@
           DATA = parsed;
           if (!DATA.reels) DATA.reels = [];
           if (!DATA.clients) DATA.clients = [];
+          if (!DATA.settings) DATA.settings = {};
+          if (DATA.settings.introDuration == null) DATA.settings.introDuration = 6;
+          if (!DATA.settings.social) DATA.settings.social = {};
           if (!DATA.deletedReelIds) DATA.deletedReelIds = [];
           if (!DATA.deletedClientIds) DATA.deletedClientIds = [];
           DATA.reels = DATA.reels.filter(r => !r.sample && !MOCK_IDS.includes(r.id));
@@ -1325,6 +1377,7 @@
       else if (activeTab === 'reels') renderReels();
       else if (activeTab === 'images') renderImagesTab();
       else if (activeTab === 'clients') renderClients();
+      else if (activeTab === 'controls') renderControls();
       else if (activeTab === 'folders') renderFolders();
       else if (activeTab === 'engine') renderEngine();
       else if (activeTab === 'branding') renderBranding();
@@ -1815,8 +1868,11 @@
                 <div class="client-card-head">
                   <div class="client-logo-box">${c.logo ? `<img src="${c.logo}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;">` : '<span style="font-size:11px;color:var(--mute);">No Logo</span>'}</div>
                   <div class="client-info">
-                    <h3>${c.name}</h3>
-                    <p>PIN: <b>${c.code}</b> · ${reelCount} Delivered Reels</p>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <h3>${c.name}</h3>
+                      ${c.status === 'blocked' ? '<span style="background:rgba(229,50,37,0.12);color:var(--red);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">Blocked</span>' : (c.status === 'paused' ? '<span style="background:rgba(242,153,46,0.12);color:var(--amber);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">Paused</span>' : '<span style="background:rgba(31,175,100,0.12);color:var(--green);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">Active</span>')}
+                    </div>
+                    <p>4-Digit PIN: <b style="font-size:13px;letter-spacing:1px;color:var(--navy);background:var(--soft);padding:1px 6px;border-radius:6px;border:1px solid var(--line);">${c.code || '4821'}</b> · ${reelCount} Delivered Reels${c.downloadsPaused ? ' · <span style="color:var(--amber);font-weight:600;">Downloads Paused</span>' : ''}${c.sharesPaused ? ' · <span style="color:var(--amber);font-weight:600;">Shares Paused</span>' : ''}</p>
                   </div>
                 </div>
 
@@ -1992,6 +2048,237 @@
           }, 'Remove', true);
         };
       });
+    }
+
+    // TAB: PORTAL CONTROLS & SOCIAL
+    function renderControls() {
+      const s = DATA.settings || {};
+      const introDuration = s.introDuration != null ? s.introDuration : 6;
+      const soc = s.social || {};
+
+      workspace.innerHTML = `
+        <div class="action-bar">
+          <div>
+            <h2>Portal Controls &amp; Social Links</h2>
+            <p style="font-size:12px;color:var(--mute)">Configure Day Night intro animation duration, website pause/block, download &amp; share controls, and social media links.</p>
+          </div>
+          <button class="btn-primary" id="btn-save-all-controls" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Save Portal Controls
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px;">
+
+          <!-- CARD 1: DAY NIGHT INTRO LOADING DURATION -->
+          <div class="stat-card" style="display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <div style="width:36px;height:36px;border-radius:10px;background:#EFF6FF;color:var(--blue);display:grid;place-items:center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div>
+                  <h3 style="margin:0;font-size:15px;color:var(--navy);">Day Night Intro Animation Speed</h3>
+                  <p style="margin:0;font-size:11px;color:var(--mute);">How long the signature Day Night brand opening displays</p>
+                </div>
+              </div>
+
+              <div style="margin:16px 0 10px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+                  <span style="font-size:12px;font-weight:600;color:var(--navy);">Current Duration:</span>
+                  <b id="ctrl-intro-val" style="font-size:18px;color:var(--blue);font-weight:700;">${introDuration}s</b>
+                </div>
+                <input type="range" id="ctrl-intro-slider" min="2" max="60" step="1" value="${introDuration}" style="width:100%;accent-color:var(--navy);cursor:pointer;height:6px;">
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mute);margin-top:6px;">
+                  <span>Fast (2s)</span>
+                  <span style="font-weight:600;color:var(--navy);">Recommended (5s – 7s)</span>
+                  <span>1 Minute (60s)</span>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+                <button type="button" class="ctrl-preset-btn ${introDuration === 5 ? 'active' : ''}" data-dur="5">5s</button>
+                <button type="button" class="ctrl-preset-btn ${introDuration === 6 ? 'active' : ''}" data-dur="6">6s (Default)</button>
+                <button type="button" class="ctrl-preset-btn ${introDuration === 7 ? 'active' : ''}" data-dur="7">7s</button>
+                <button type="button" class="ctrl-preset-btn ${introDuration === 15 ? 'active' : ''}" data-dur="15">15s</button>
+                <button type="button" class="ctrl-preset-btn ${introDuration === 30 ? 'active' : ''}" data-dur="30">30s</button>
+                <button type="button" class="ctrl-preset-btn ${introDuration === 60 ? 'active' : ''}" data-dur="60">60s (1 Min)</button>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--mute);margin-top:14px;line-height:1.4;">Default is 5–7 seconds as requested. You can set it up to 60 seconds (1 minute) anytime.</p>
+          </div>
+
+          <!-- CARD 2: WEBSITE PAUSE / BLOCK (MAINTENANCE) -->
+          <div class="stat-card" style="display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <div style="width:36px;height:36px;border-radius:10px;background:#FEE2E2;color:var(--red);display:grid;place-items:center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                </div>
+                <div>
+                  <h3 style="margin:0;font-size:15px;color:var(--navy);">Website Pause / Block</h3>
+                  <p style="margin:0;font-size:11px;color:var(--mute);">Emergency kill-switch or scheduled maintenance mode</p>
+                </div>
+              </div>
+
+              <div class="switch-row" style="margin-top:14px;">
+                <div>
+                  <b style="font-size:13px;color:var(--navy);display:block;">Pause / Block Entire Website</b>
+                  <small style="font-size:11px;color:var(--mute);">Shows luxury maintenance notice to visitors (Admin retains access)</small>
+                </div>
+                <input type="checkbox" id="ctrl-site-pause" ${s.sitePaused ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--red);cursor:pointer;">
+              </div>
+
+              <div class="form-group" style="margin-top:12px;">
+                <label>Custom Pause / Maintenance Message</label>
+                <textarea id="ctrl-site-msg" rows="3" style="font-size:12px;resize:vertical;width:100%;border-radius:10px;border:1px solid var(--line);padding:8px 10px;" placeholder="Day Night Media Portal is temporarily undergoing scheduled updates. Please check back shortly.">${esc(s.sitePauseMsg || 'Day Night Media Portal is temporarily undergoing scheduled updates. Please check back shortly.')}</textarea>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--mute);margin-top:10px;">When active, only visitors with the Admin Passkey can access the portal.</p>
+          </div>
+
+          <!-- CARD 3: PAUSE DOWNLOADS & PAUSE SHARES -->
+          <div class="stat-card" style="display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <div style="width:36px;height:36px;border-radius:10px;background:#FEF3C7;color:var(--amber);display:grid;place-items:center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                </div>
+                <div>
+                  <h3 style="margin:0;font-size:15px;color:var(--navy);">Global Download &amp; Share Controls</h3>
+                  <p style="margin:0;font-size:11px;color:var(--mute);">Master toggles for media downloads and link sharing</p>
+                </div>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">
+                <div class="switch-row">
+                  <div>
+                    <b style="font-size:13px;color:var(--navy);display:block;">Pause All Downloads</b>
+                    <small style="font-size:11px;color:var(--mute);">Disables video and image downloads site-wide</small>
+                  </div>
+                  <input type="checkbox" id="ctrl-pause-dl" ${s.downloadsPaused ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--amber);cursor:pointer;">
+                </div>
+
+                <div class="switch-row">
+                  <div>
+                    <b style="font-size:13px;color:var(--navy);display:block;">Pause All Shares</b>
+                    <small style="font-size:11px;color:var(--mute);">Disables sharing dialogs and media URL copying site-wide</small>
+                  </div>
+                  <input type="checkbox" id="ctrl-pause-share" ${s.sharesPaused ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--amber);cursor:pointer;">
+                </div>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--mute);margin-top:14px;">Per-client download &amp; share controls can also be set in "Clients &amp; URLs".</p>
+          </div>
+
+          <!-- CARD 4: SOCIAL MEDIA & EMAIL LINKS -->
+          <div class="stat-card" style="grid-column:1/-1;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;border-radius:10px;background:#F3E8FF;color:#7C3AED;display:grid;place-items:center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                </div>
+                <div>
+                  <h3 style="margin:0;font-size:15px;color:var(--navy);">Social Media &amp; Email Floating Bar</h3>
+                  <p style="margin:0;font-size:11px;color:var(--mute);">Paste your links below. They appear on the website with smooth luxury animations.</p>
+                </div>
+              </div>
+
+              <div style="background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:6px 14px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:12px;font-weight:700;color:var(--navy);">Media Link Showing Option:</span>
+                <input type="checkbox" id="ctrl-show-social" ${s.showSocialLinks !== false ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--green);cursor:pointer;">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px;margin-top:10px;">
+              <div class="form-group">
+                <label>Instagram URL</label>
+                <input type="text" id="soc-instagram" value="${esc(soc.instagram || '')}" placeholder="https://instagram.com/yourhandle">
+              </div>
+              <div class="form-group">
+                <label>YouTube URL</label>
+                <input type="text" id="soc-youtube" value="${esc(soc.youtube || '')}" placeholder="https://youtube.com/@yourchannel">
+              </div>
+              <div class="form-group">
+                <label>Facebook URL</label>
+                <input type="text" id="soc-facebook" value="${esc(soc.facebook || '')}" placeholder="https://facebook.com/yourpage">
+              </div>
+              <div class="form-group">
+                <label>WhatsApp URL or Phone Number</label>
+                <input type="text" id="soc-whatsapp" value="${esc(soc.whatsapp || '')}" placeholder="https://wa.me/919876543210 or 9876543210">
+              </div>
+              <div class="form-group">
+                <label>X / Twitter URL</label>
+                <input type="text" id="soc-x" value="${esc(soc.x || '')}" placeholder="https://x.com/yourhandle">
+              </div>
+              <div class="form-group">
+                <label>LinkedIn URL</label>
+                <input type="text" id="soc-linkedin" value="${esc(soc.linkedin || '')}" placeholder="https://linkedin.com/company/yourhandle">
+              </div>
+              <div class="form-group">
+                <label>Contact Email Address</label>
+                <input type="email" id="soc-email" value="${esc(soc.email || '')}" placeholder="contact@daynight.media">
+              </div>
+            </div>
+          </div>
+
+        </div>`;
+
+      // Slider listener
+      const slider = document.getElementById('ctrl-intro-slider');
+      const valDisp = document.getElementById('ctrl-intro-val');
+      if (slider && valDisp) {
+        slider.oninput = () => {
+          valDisp.textContent = `${slider.value}s`;
+          document.querySelectorAll('.ctrl-preset-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.dur === slider.value);
+          });
+        };
+      }
+
+      // Preset buttons listener
+      document.querySelectorAll('.ctrl-preset-btn').forEach(btn => {
+        btn.onclick = () => {
+          const d = btn.dataset.dur;
+          if (slider) slider.value = d;
+          if (valDisp) valDisp.textContent = `${d}s`;
+          document.querySelectorAll('.ctrl-preset-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        };
+      });
+
+      // Save handler
+      document.getElementById('btn-save-all-controls').onclick = async () => {
+        const dur = parseInt(document.getElementById('ctrl-intro-slider').value, 10) || 6;
+        const sitePaused = !!document.getElementById('ctrl-site-pause').checked;
+        const sitePauseMsg = document.getElementById('ctrl-site-msg').value.trim();
+        const dlPaused = !!document.getElementById('ctrl-pause-dl').checked;
+        const sharePaused = !!document.getElementById('ctrl-pause-share').checked;
+        const showSocial = !!document.getElementById('ctrl-show-social').checked;
+
+        DATA.settings = DATA.settings || {};
+        DATA.settings.introDuration = dur;
+        DATA.settings.sitePaused = sitePaused;
+        DATA.settings.sitePauseMsg = sitePauseMsg || 'Day Night Media Portal is temporarily undergoing scheduled updates. Please check back shortly.';
+        DATA.settings.downloadsPaused = dlPaused;
+        DATA.settings.sharesPaused = sharePaused;
+        DATA.settings.showSocialLinks = showSocial;
+
+        DATA.settings.social = {
+          instagram: document.getElementById('soc-instagram').value.trim(),
+          youtube: document.getElementById('soc-youtube').value.trim(),
+          facebook: document.getElementById('soc-facebook').value.trim(),
+          whatsapp: document.getElementById('soc-whatsapp').value.trim(),
+          x: document.getElementById('soc-x').value.trim(),
+          linkedin: document.getElementById('soc-linkedin').value.trim(),
+          email: document.getElementById('soc-email').value.trim()
+        };
+
+        saveAndBroadcast('Portal controls and social links saved!');
+        try {
+          await api('saveSettings', { settings: DATA.settings });
+          toast('Settings synced to Google Drive!', 'success');
+        } catch(e) {}
+      };
     }
 
     // TAB 4: DRIVE FOLDERS
@@ -3202,8 +3489,33 @@ function openEditModal(r) {
             <input id="cl-slug" value="${client.slug || ''}" placeholder="e.g. tcs">
           </div>
           <div class="form-group">
-            <label>4-Digit PIN</label>
-            <input id="cl-code" maxlength="4" value="${client.code}" placeholder="4821">
+            <label>Client Status</label>
+            <select id="cl-status">
+              <option value="active" ${(client.status || 'active') === 'active' ? 'selected' : ''}>Active (Normal Access)</option>
+              <option value="paused" ${client.status === 'paused' ? 'selected' : ''}>Paused (Temporarily On Hold)</option>
+              <option value="blocked" ${client.status === 'blocked' ? 'selected' : ''}>Blocked (Access Suspended)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row2">
+          <div class="form-group">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <label>4-Digit Access PIN</label>
+              <button type="button" id="btn-gen-code" style="border:none;background:none;color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;padding:0;">Generate Random PIN</button>
+            </div>
+            <input id="cl-code" maxlength="4" pattern="[0-9]{4}" value="${client.code || '4821'}" placeholder="e.g. 4821" style="font-weight:700;letter-spacing:2px;font-size:14px;">
+          </div>
+          <div class="form-group">
+            <label>Client Feature Pauses</label>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:500;">
+                <input type="checkbox" id="cl-pause-dl" ${client.downloadsPaused ? 'checked' : ''}> Pause Downloads for this Client
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:500;">
+                <input type="checkbox" id="cl-pause-share" ${client.sharesPaused ? 'checked' : ''}> Pause Shares for this Client
+              </label>
+            </div>
           </div>
         </div>
 
@@ -3256,6 +3568,16 @@ function openEditModal(r) {
           </div>
         </div>`, sc => {
 
+        // Random PIN Generator Button Listener
+        const btnGen = sc.querySelector('#btn-gen-code');
+        if (btnGen) {
+          btnGen.onclick = () => {
+            const rand = String(Math.floor(1000 + Math.random() * 9000));
+            sc.querySelector('#cl-code').value = rand;
+            toast('Generated 4-digit PIN: ' + rand, 'info');
+          };
+        }
+
         // Logo File Input Listener
         sc.querySelector('#cl-logo-file').onchange = e => {
           const file = e.target.files[0];
@@ -3299,18 +3621,23 @@ function openEditModal(r) {
           const name = sc.querySelector('#cl-name').value.trim();
           const slug = sc.querySelector('#cl-slug').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
           const code = sc.querySelector('#cl-code').value.trim();
+          const status = sc.querySelector('#cl-status').value;
+          const dlPaused = !!sc.querySelector('#cl-pause-dl').checked;
+          const sharePaused = !!sc.querySelector('#cl-pause-share').checked;
           const branches = sc.querySelector('#cl-branches').value.split(',').map(x => x.trim()).filter(Boolean);
           const albums = sc.querySelector('#cl-albums').value.split(',').map(x => x.trim()).filter(Boolean);
           const animStyle = sc.querySelector('#cl-anim').value;
           const tagline = sc.querySelector('#cl-tag').value.trim();
           const accent = sc.querySelector('#cl-accent').value.trim();
 
-          if (!name || !code) { toast('Name and 4-digit code required', 'error'); return; }
+          if (!name) { toast('Client name is required', 'error'); return; }
+          if (!code || !/^\d{4}$/.test(code)) { toast('Client must have an exact 4-digit numeric code (e.g. 4821)', 'error'); return; }
 
           const rec = Object.assign({}, client, {
             id: client.id || ('c' + Date.now().toString(36)),
             name, slug: slug || name.toLowerCase().replace(/[^a-z0-9]/g, ''),
-            code, branches, albums, animStyle, tagline, accent,
+            code, status, downloadsPaused: dlPaused, sharesPaused: sharePaused,
+            branches, albums, animStyle, tagline, accent,
             logo: logoData
           });
 
