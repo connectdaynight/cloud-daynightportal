@@ -188,13 +188,29 @@
     }
     .splash .start, .dn-intro .start {
       position: absolute;
-      bottom: calc(36px + env(safe-area-inset-bottom, 0px));
+      bottom: calc(88px + env(safe-area-inset-bottom, 0px));
       left: 50%;
-      transform: translate(-50%, 10px);
+      transform: translate(-50%, 14px);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.5s, transform 0.5s;
-      z-index: 3;
+      transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 20;
+      padding: 14px 34px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-radius: 999px;
+      box-shadow: 0 12px 30px rgba(18, 41, 74, 0.24);
+      min-width: 124px;
+      justify-content: center;
+    }
+    .splash .start svg, .dn-intro .start svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.25s ease;
+    }
+    .splash .start:hover svg, .dn-intro .start:hover svg {
+      transform: translateX(3px);
     }
     .splash.ready .start, .dn-intro.ready .start {
       opacity: 1;
@@ -202,84 +218,59 @@
       pointer-events: auto;
     }
 
-    /* Day Night Intro Progress & Skip Controls */
-    .dn-intro-prog-wrap {
-      position: absolute;
-      bottom: calc(26px + env(safe-area-inset-bottom, 0px));
-      left: 50%;
-      transform: translateX(-50%);
-      width: 220px;
-      max-width: 80%;
-      height: 4px;
-      background: rgba(18, 41, 74, 0.08);
-      border-radius: 999px;
-      overflow: hidden;
-      z-index: 5;
-    }
-    .dn-intro-prog-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #E53225, #B8935A, #2F7DF6);
-      border-radius: 999px;
-      transition: width 0.1s linear;
-    }
-    .dn-intro-skip-pill {
-      position: absolute;
-      top: calc(20px + env(safe-area-inset-top, 0px));
-      right: 20px;
-      z-index: 10;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.88);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--line);
-      padding: 6px 14px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--navy);
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(18, 41, 74, 0.06);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .dn-intro-skip-pill:hover {
-      background: #FFFFFF;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(18, 41, 74, 0.12);
-    }
-
     /* Animated Floating Social Media & Email Dock */
     .dn-social-dock {
       position: fixed;
-      bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
       left: 50%;
       transform: translateX(-50%);
       z-index: 85;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(18, 41, 74, 0.12);
-      padding: 10px 18px;
+      padding: 8px 16px;
       border-radius: 999px;
-      box-shadow: 0 14px 40px rgba(18, 41, 74, 0.18);
+      box-shadow: 0 14px 40px rgba(18, 41, 74, 0.16);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      animation: socialDockIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
       max-width: calc(100vw - 32px);
       box-sizing: border-box;
     }
-    @keyframes socialDockIn {
-      from { transform: translate(-50%, 30px); opacity: 0; }
-      to { transform: translate(-50%, 0); opacity: 1; }
+    .dn-social-dock.dock-waiting {
+      opacity: 0;
+      transform: translate(-50%, 28px) scale(0.95);
+      pointer-events: none;
+      transition: none;
+    }
+    .dn-social-dock.cinematic-in {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+      pointer-events: auto;
+      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dn-social-dock.cinematic-in .dn-social-btn {
+      animation: socIconIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(1) { animation-delay: 0.04s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(2) { animation-delay: 0.10s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(3) { animation-delay: 0.16s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(4) { animation-delay: 0.22s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(5) { animation-delay: 0.28s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(6) { animation-delay: 0.34s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(7) { animation-delay: 0.40s; }
+
+    @keyframes socIconIn {
+      0% { opacity: 0; transform: translateY(14px) scale(0.72); }
+      65% { transform: translateY(-3px) scale(1.06); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
     .dn-social-btn {
-      width: 44px;
-      height: 44px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       background: var(--soft);
       border: 1.5px solid var(--line);
@@ -293,17 +284,17 @@
       flex-shrink: 0;
     }
     .dn-social-btn svg {
-      width: 22px;
-      height: 22px;
+      width: 18px;
+      height: 18px;
       transition: transform 0.25s ease;
     }
     .dn-social-btn:hover {
-      transform: translateY(-4px) scale(1.15);
+      transform: translateY(-3px) scale(1.12);
       box-shadow: 0 8px 20px rgba(18, 41, 74, 0.18);
       background: #FFFFFF;
     }
     .dn-social-btn:hover svg {
-      transform: scale(1.12);
+      transform: scale(1.1);
     }
     .dn-social-btn.instagram:hover { color: #E1306C; border-color: rgba(225, 48, 108, 0.35); }
     .dn-social-btn.youtube:hover { color: #FF0000; border-color: rgba(255, 0, 0, 0.35); }
@@ -378,30 +369,41 @@
     }
 
     @media (max-width: 640px) {
+      .splash .start, .dn-intro .start {
+        bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+        padding: 13px 30px;
+        font-size: 14px;
+      }
       .dn-social-dock {
-        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
         left: 50%;
         transform: translateX(-50%);
-        padding: 8px 14px;
-        gap: 10px;
-        max-width: calc(100vw - 24px);
+        padding: 6px 12px;
+        gap: 8px;
+        max-width: calc(100vw - 20px);
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
       }
+      .dn-social-dock.dock-waiting {
+        transform: translate(-50%, 24px) scale(0.95);
+      }
+      .dn-social-dock.cinematic-in {
+        transform: translate(-50%, 0) scale(1);
+      }
       .dn-social-dock::-webkit-scrollbar { display: none; }
       body.has-bnav .dn-social-dock {
-        bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(72px + env(safe-area-inset-bottom, 0px));
         left: 50%;
         transform: translateX(-50%);
       }
       .dn-social-btn {
-        width: 42px;
-        height: 42px;
+        width: 34px;
+        height: 34px;
       }
       .dn-social-btn svg {
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
       }
     }
 
@@ -3758,6 +3760,20 @@
         document.body.appendChild(dock);
       }
 
+      const sp = document.querySelector('.splash') || document.querySelector('.dn-intro');
+      if (view.screen === 'splash' || view.screen === 'dn-intro' || !view.client) {
+        if (sp && sp.classList.contains('ready')) {
+          dock.classList.remove('dock-waiting');
+          dock.classList.add('cinematic-in');
+        } else {
+          dock.classList.add('dock-waiting');
+          dock.classList.remove('cinematic-in');
+        }
+      } else {
+        dock.classList.remove('dock-waiting');
+        dock.classList.remove('cinematic-in');
+      }
+
       dock.innerHTML = links.map(l => `
         <a href="${esc(l.url)}" class="dn-social-btn ${l.key}" target="_blank" rel="noopener noreferrer" aria-label="${l.label}">
           ${l.icon}
@@ -3918,16 +3934,8 @@
           // Splash screen is already active and running — do not wipe DOM or restart animation!
           return;
         }
-        const durationSec = Math.max(2, Math.min(60, Number(DATA.settings?.introDuration) || 6));
         app.innerHTML = `
           <section class="splash" data-act="start">
-
-            <button type="button" class="dn-intro-skip-pill" data-act="start" title="Skip to Access PIN">
-              <span>Skip</span>
-              <span id="dn-intro-timer">${durationSec}s</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
-
             <div class="hero">
               <div class="mark-wrap">${dnLogo('mark')}</div>
               <div class="a2">
@@ -3935,11 +3943,6 @@
                 <p class="sub">${esc(s.agencySub || 'Production Company')}</p>
               </div>
               <p class="slogan a3">${esc(s.slogan || 'Creating impact that brands remember')}</p>
-            </div>
-
-            <!-- Luxury Animated Progress Track -->
-            <div class="dn-intro-prog-wrap">
-              <div class="dn-intro-prog-bar" id="dn-prog-bar"></div>
             </div>
 
             <button class="btn start" data-act="start">${c ? `Access ${esc(c.name)} ${ic.arrow}` : `Start ${ic.arrow}`}</button>
@@ -4909,8 +4912,18 @@
     function playIntro(onComplete) {
       const sp = app.querySelector('.splash') || app.querySelector('.dn-intro');
       if (!sp) return;
-      if (reduce()) {
+
+      const revealControls = () => {
         sp.classList.add('ready');
+        const dock = document.getElementById('dn-social-dock');
+        if (dock) {
+          dock.classList.remove('dock-waiting');
+          dock.classList.add('cinematic-in');
+        }
+      };
+
+      if (reduce()) {
+        revealControls();
         if (onComplete) later(onComplete, 400);
         return;
       }
@@ -4924,47 +4937,18 @@
         completed = true;
         clearTimers();
         if (raf) cancelAnimationFrame(raf);
-        sp.classList.add('ready');
+        revealControls();
         if (onComplete) onComplete();
       };
 
-      // Click to skip intro immediately or click start button
-      const skipPill = sp.querySelector('.dn-intro-skip-pill');
-      if (skipPill) skipPill.onclick = e => { e.stopPropagation(); finish(); };
+      // Click start button
       const startBtn = sp.querySelector('.btn.start');
       if (startBtn) startBtn.onclick = e => { e.stopPropagation(); finish(); };
 
-      const progBar = sp.querySelector('#dn-prog-bar');
-      const timerEl = sp.querySelector('#dn-intro-timer');
+      // Reveal Start button and animate in social media dock at 3500ms (as scribble drawing completes)
+      later(revealControls, 3500);
 
-      let tStart = null;
-
-      const frame = ts => {
-        if (!sp.isConnected || completed) return;
-        tStart ??= ts;
-        const elapsed = ts - tStart;
-        const progress = Math.min(1, elapsed / durationMs);
-
-        // Update progress bar & remaining countdown smoothly
-        if (progBar) progBar.style.width = (progress * 100).toFixed(1) + '%';
-        if (timerEl) {
-          const remSec = Math.ceil(Math.max(0, (durationMs - elapsed) / 1000));
-          timerEl.textContent = remSec + 's';
-        }
-
-        if (elapsed < durationMs) {
-          raf = requestAnimationFrame(frame);
-        } else {
-          finish();
-        }
-      };
-
-      // Reveal .start button at 3600ms (as scribble drawing completes)
-      later(() => {
-        sp.classList.add('ready');
-      }, 3600);
-
-      raf = requestAnimationFrame(frame);
+      later(finish, durationMs);
     }
 
     function setupClientPinInput(c) {
