@@ -3449,13 +3449,18 @@
         }, 300);
       }
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 65000);
+
       try {
         const bodyStr = JSON.stringify(payload);
         const res = await fetch(CONFIG.gasUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
-          body: bodyStr
+          body: bodyStr,
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (progressTimer) clearInterval(progressTimer);
         if (onProgress) {
@@ -3463,7 +3468,11 @@
         }
         return data;
       } catch (err) {
+        clearTimeout(timeoutId);
         if (progressTimer) clearInterval(progressTimer);
+        if (err.name === 'AbortError') {
+          throw new Error('Upload timed out. Google Apps Script cannot handle large base64 files. Please deploy Code.gs in script.google.com to enable direct Google Drive streaming.');
+        }
         throw err;
       }
     }
@@ -6639,8 +6648,8 @@
 
                 if (!initRes || !initRes.success || !initRes.uploadUrl) {
                   // If the user has not deployed the updated gas/Code.gs yet (returns 'Invalid action'),
-                  // automatically fallback to standard direct upload for videos <= 48MB so upload succeeds!
-                  if (initRes && initRes.error === 'Invalid action' && file.size <= 48 * 1024 * 1024) {
+                  // automatically fallback to standard direct upload for smaller videos <= 20MB
+                  if (initRes && initRes.error === 'Invalid action' && file.size <= 20 * 1024 * 1024) {
                     liveSpeed.textContent = 'Using direct video stream...';
                     const base64Data = await new Promise((res, rej) => {
                       const reader = new FileReader();
@@ -6713,7 +6722,7 @@
                   }
 
                   if (initRes && initRes.error === 'Invalid action') {
-                    throw new Error('Google Apps Script needs to be updated with Code.gs to support files over 50MB. Please deploy a new version in script.google.com.');
+                    throw new Error('This video is ' + (file.size / (1024 * 1024)).toFixed(1) + ' MB. Direct Google Drive streaming requires deploying the updated Code.gs in script.google.com (tab 5). Please update your Apps Script deployment.');
                   }
 
                   throw new Error((initRes && initRes.error) || 'Could not initialize resumable Drive session');
