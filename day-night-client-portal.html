@@ -3100,9 +3100,15 @@
     const app = document.getElementById('app');
     const toastContainer = document.getElementById('toasts');
 
-    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxo--i9HaTv4ejd6iYFweq3W-a-I3zzqp0rI2ACMjY5cyJ26-yh3byNRn8u0IrpRkdt/exec';
+    const OLD_GAS_URL = 'https://script.google.com/macros/s/AKfycbxo--i9HaTv4ejd6iYFweq3W-a-I3zzqp0rI2ACMjY5cyJ26-yh3byNRn8u0IrpRkdt/exec';
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbyeRaUUQoYwbZGfVr6TLSmeVDNuTrJU0Xpmo9jN8ODzKnYQ40kJSe0EFjMjGFfrSr_6/exec';
+    let activeGasUrl = localStorage.getItem('dn_gas_url');
+    if (!activeGasUrl || activeGasUrl === OLD_GAS_URL) {
+      activeGasUrl = DEFAULT_GAS_URL;
+      localStorage.setItem('dn_gas_url', DEFAULT_GAS_URL);
+    }
     const CONFIG = {
-      gasUrl: localStorage.getItem('dn_gas_url') || DEFAULT_GAS_URL,
+      gasUrl: activeGasUrl,
       adminPasskey: localStorage.getItem('dn_admin_passkey') || 'DN@2026',
       // Admin features are strictly hidden from client portal unless URL explicitly has ?admin=1
       isAdmin: location.search.includes('admin=1')
