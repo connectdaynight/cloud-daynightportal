@@ -221,9 +221,9 @@
       cursor: pointer;
     }
 
-    /* Animated Floating Social Media & Email Dock */
+    /* Animated Floating Social Media & Email Dock (Intro Screen Only) */
     .dn-social-dock {
-      position: fixed;
+      position: absolute;
       bottom: calc(20px + env(safe-area-inset-bottom, 0px));
       left: 50%;
       transform: translateX(-50%);
@@ -365,7 +365,8 @@
       place-items: center;
     }
 
-    body.has-bnav .dn-social-dock {
+    body.has-bnav .dn-social-dock,
+    body:not(.is-intro-screen) .dn-social-dock {
       display: none !important;
     }
 
@@ -393,7 +394,8 @@
         transform: translate(-50%, 0) scale(1);
       }
       .dn-social-dock::-webkit-scrollbar { display: none; }
-      body.has-bnav .dn-social-dock {
+      body.has-bnav .dn-social-dock,
+      body:not(.is-intro-screen) .dn-social-dock {
         display: none !important;
       }
       .dn-social-btn {
@@ -3728,14 +3730,16 @@
     }
 
     // --------------------------------------------------------------------------
-    // ANIMATED FLOATING SOCIAL MEDIA & EMAIL DOCK
+    // ANIMATED FLOATING SOCIAL MEDIA & EMAIL DOCK (Intro Screen Only)
     // --------------------------------------------------------------------------
     function renderSocialDock() {
       const existing = document.getElementById('dn-social-dock');
       const s = DATA.settings || {};
 
-      // Only display the social media dock on the intro/splash screen
-      const isIntro = (view.screen === 'splash' || view.screen === 'dn-intro');
+      // Strictly only display social dock on the Intro / Splash screen
+      const sp = app.querySelector('.splash') || app.querySelector('.dn-intro');
+      const isIntro = !!sp && (view.screen === 'splash' || view.screen === 'dn-intro');
+
       if (!isIntro || s.showSocialLinks === false || s.sitePaused) {
         if (existing) existing.remove();
         return;
@@ -3756,21 +3760,17 @@
       if (!dock) {
         dock = document.createElement('div');
         dock.id = 'dn-social-dock';
-        dock.className = 'dn-social-dock';
-        document.body.appendChild(dock);
+        dock.className = 'dn-social-dock dock-waiting';
+        sp.appendChild(dock);
+      } else if (dock.parentElement !== sp) {
+        sp.appendChild(dock);
       }
 
-      const sp = document.querySelector('.splash') || document.querySelector('.dn-intro');
-      if (view.screen === 'splash' || view.screen === 'dn-intro' || !view.client) {
-        if (sp && sp.classList.contains('ready')) {
-          dock.classList.remove('dock-waiting');
-          dock.classList.add('cinematic-in');
-        } else {
-          dock.classList.add('dock-waiting');
-          dock.classList.remove('cinematic-in');
-        }
-      } else {
+      if (sp.classList.contains('ready')) {
         dock.classList.remove('dock-waiting');
+        dock.classList.add('cinematic-in');
+      } else {
+        dock.classList.add('dock-waiting');
         dock.classList.remove('cinematic-in');
       }
 
@@ -3784,6 +3784,7 @@
 
     // Luxury Milk-White Bottom Navigation Bar (Navbar - Synchronized Across Portal)
     function renderBottomNav() {
+      document.getElementById('dn-social-dock')?.remove();
       if (!view.client || view.screen === 'splash' || view.screen === 'client-pin') return '';
       const isHome = view.screen === 'genesis';
       const isReels = view.screen === 'reels';
@@ -4505,11 +4506,16 @@
         }
       }
 
-      // Manage bottom nav class on body for smooth dock positioning
+      // Manage bottom nav and intro screen classes on body
       if (view.client && view.screen !== 'splash' && view.screen !== 'client-pin') {
         document.body.classList.add('has-bnav');
       } else {
         document.body.classList.remove('has-bnav');
+      }
+      if (view.screen === 'splash' || view.screen === 'dn-intro') {
+        document.body.classList.add('is-intro-screen');
+      } else {
+        document.body.classList.remove('is-intro-screen');
       }
       renderSocialDock();
     }
