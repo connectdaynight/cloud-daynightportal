@@ -136,14 +136,6 @@
       min-height: 90dvh;
       cursor: pointer;
     }
-    .splash .confetti, .dn-intro .confetti {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 0;
-    }
     .hero {
       display: flex;
       flex-direction: column;
@@ -154,15 +146,14 @@
     .splash .mark, .dn-intro .mark {
       width: 76px;
       height: 76px;
-      filter: drop-shadow(0 14px 24px rgba(229, 50, 37, 0.28));
+      filter: drop-shadow(0 8px 16px rgba(229, 50, 37, 0.16));
     }
     .mark-wrap {
-      animation: pop 0.8s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+      animation: fadeIn 0.8s ease-out both;
     }
-    @keyframes pop {
-      0% { transform: scale(0); opacity: 0; }
-      70% { opacity: 1; }
-      100% { transform: none; opacity: 1; }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
     }
     .splash h1, .dn-intro h1 {
       margin: 0;
@@ -778,12 +769,7 @@
       z-index: 2;
     }
 
-    .mark-wrap { animation: pop 0.8s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
-    @keyframes pop {
-      0% { transform: scale(0); opacity: 0; }
-      70% { opacity: 1; }
-      100% { transform: none; opacity: 1; }
-    }
+    .mark-wrap { animation: fadeIn 0.8s ease-out both; }
 
     .a2 { animation: rise 0.7s 1.2s ease-out both; }
     .a3 { animation: rise 0.7s 1.6s ease-out both; }
@@ -3663,7 +3649,9 @@
           try {
             if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
           } catch(e) {}
-          render();
+          if (view.screen !== 'splash' && view.screen !== 'dn-intro') {
+            render();
+          }
         }
       } catch (e) {
         console.warn('Fallback to local cache:', e);
@@ -3926,10 +3914,13 @@
 
       // Screen 1: Day Night Signature Loading / Splash Animation (Home Screen)
       if (view.screen === 'splash' || view.screen === 'dn-intro' || !view.client || !c) {
+        if (app.querySelector('.splash')) {
+          // Splash screen is already active and running — do not wipe DOM or restart animation!
+          return;
+        }
         const durationSec = Math.max(2, Math.min(60, Number(DATA.settings?.introDuration) || 6));
         app.innerHTML = `
           <section class="splash" data-act="start">
-            <canvas class="confetti" aria-hidden="true"></canvas>
 
             <button type="button" class="dn-intro-skip-pill" data-act="start" title="Skip to Access PIN">
               <span>Skip</span>
@@ -4946,35 +4937,7 @@
       const progBar = sp.querySelector('#dn-prog-bar');
       const timerEl = sp.querySelector('#dn-intro-timer');
 
-      const cv = sp.querySelector('.confetti');
-      if (!cv) {
-        later(finish, durationMs);
-        return;
-      }
-      const ctx = cv.getContext('2d');
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      const r = sp.getBoundingClientRect();
-      cv.width = r.width * dpr;
-      cv.height = r.height * dpr;
-      ctx.scale(dpr, dpr);
-
-      const markEl = sp.querySelector('.mark');
-      const m = markEl ? markEl.getBoundingClientRect() : { left: r.left + r.width / 2, top: r.top + r.height / 2, width: 76, height: 76 };
-      const ox = m.left - r.left + m.width / 2;
-      const oy = m.top - r.top + m.height / 2;
-
-      const cols = ['#E8457A','#17A598','#F2992E','#6C5CE7','#2F7DF6','#1FAF64','#E53225','#B8935A'];
-      const ps = Array.from({ length: 130 }, () => {
-        const a = Math.random() * Math.PI * 2, v = 3 + Math.random() * 7;
-        return {
-          x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 3,
-          w: 5 + Math.random() * 6, h: 3 + Math.random() * 4, rot: Math.random() * 6,
-          vr: (Math.random() - 0.5) * 0.3, c: cols[Math.random() * cols.length | 0]
-        };
-      });
-
       let tStart = null;
-      let confettiActive = false;
 
       const frame = ts => {
         if (!sp.isConnected || completed) return;
@@ -4982,36 +4945,11 @@
         const elapsed = ts - tStart;
         const progress = Math.min(1, elapsed / durationMs);
 
-        // Update progress bar & remaining countdown
+        // Update progress bar & remaining countdown smoothly
         if (progBar) progBar.style.width = (progress * 100).toFixed(1) + '%';
         if (timerEl) {
           const remSec = Math.ceil(Math.max(0, (durationMs - elapsed) / 1000));
           timerEl.textContent = remSec + 's';
-        }
-
-        // Exact Confetti Burst Engine (Triggers at 3600ms when scribble drawing concludes)
-        if (confettiActive) {
-          ctx.clearRect(0, 0, r.width, r.height);
-          const confettiElapsed = elapsed - 3600;
-          ps.forEach(p => {
-            p.vy += 0.18; p.vx *= 0.985; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-            // Re-spawn particles gently if still animating for long durations
-            if ((p.y > r.height + 20 || p.x < -20 || p.x > r.width + 20) && elapsed < durationMs - 1200) {
-              const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 6;
-              p.x = ox + (Math.random() - 0.5) * 30;
-              p.y = oy + (Math.random() - 0.5) * 30;
-              p.vx = Math.cos(a) * v;
-              p.vy = Math.sin(a) * v - 2.5;
-            }
-            ctx.save();
-            const fadeAlpha = elapsed > (durationMs - 1000) ? Math.max(0, (durationMs - elapsed) / 1000) : Math.min(1, Math.max(0.25, 1 - (confettiElapsed % 3200) / 3800));
-            ctx.globalAlpha = fadeAlpha;
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.rot);
-            ctx.fillStyle = p.c;
-            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-            ctx.restore();
-          });
         }
 
         if (elapsed < durationMs) {
@@ -5021,15 +4959,10 @@
         }
       };
 
-      // Confetti burst starts at 3600ms (exactly as the signature scribble logo finishes drawing)
-      later(() => {
-        confettiActive = true;
-      }, 3600);
-
-      // Reveal .start button at 3800ms
+      // Reveal .start button at 3600ms (as scribble drawing completes)
       later(() => {
         sp.classList.add('ready');
-      }, 3800);
+      }, 3600);
 
       raf = requestAnimationFrame(frame);
     }
