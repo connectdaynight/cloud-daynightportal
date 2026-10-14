@@ -134,7 +134,7 @@
       overflow: hidden;
       min-height: 90vh;
       min-height: 90dvh;
-      cursor: pointer;
+      cursor: default;
     }
     .hero {
       display: flex;
@@ -194,7 +194,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 20;
+      z-index: 90;
       padding: 14px 34px;
       font-size: 15px;
       font-weight: 700;
@@ -203,11 +203,13 @@
       box-shadow: 0 12px 30px rgba(18, 41, 74, 0.24);
       min-width: 124px;
       justify-content: center;
+      cursor: pointer;
     }
     .splash .start svg, .dn-intro .start svg {
       width: 16px;
       height: 16px;
       transition: transform 0.25s ease;
+      pointer-events: none;
     }
     .splash .start:hover svg, .dn-intro .start:hover svg {
       transform: translateX(3px);
@@ -215,7 +217,8 @@
     .splash.ready .start, .dn-intro.ready .start {
       opacity: 1;
       transform: translate(-50%, 0);
-      pointer-events: auto;
+      pointer-events: auto !important;
+      cursor: pointer;
     }
 
     /* Animated Floating Social Media & Email Dock */
@@ -3935,7 +3938,7 @@
           return;
         }
         app.innerHTML = `
-          <section class="splash" data-act="start">
+          <section class="splash">
             <div class="hero">
               <div class="mark-wrap">${dnLogo('mark')}</div>
               <div class="a2">
@@ -3945,7 +3948,7 @@
               <p class="slogan a3">${esc(s.slogan || 'Creating impact that brands remember')}</p>
             </div>
 
-            <button class="btn start" data-act="start">${c ? `Access ${esc(c.name)} ${ic.arrow}` : `Start ${ic.arrow}`}</button>
+            <button type="button" class="btn start" data-act="start" id="dn-start-btn">${c ? `Access ${esc(c.name)} ${ic.arrow}` : `Start ${ic.arrow}`}</button>
           </section>`;
 
         playIntro(() => {
@@ -4941,9 +4944,18 @@
         if (onComplete) onComplete();
       };
 
-      // Click start button
-      const startBtn = sp.querySelector('.btn.start');
-      if (startBtn) startBtn.onclick = e => { e.stopPropagation(); finish(); };
+      // Click start button to open PIN modal immediately
+      const startBtn = sp.querySelector('#dn-start-btn') || sp.querySelector('.btn.start');
+      if (startBtn) {
+        startBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          clearTimers();
+          if (raf) cancelAnimationFrame(raf);
+          revealControls();
+          openCode(view.client ? client() : null);
+        };
+      }
 
       // Reveal Start button and animate in social media dock at 3500ms (as scribble drawing completes)
       later(revealControls, 3500);
