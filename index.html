@@ -865,7 +865,7 @@
 
     .scrim.center { align-items: center; padding: 16px; }
 
-    /* FULL-SCREEN VIDEO VIEWPORT (EDGE-TO-EDGE & MERGED DIRECTLY WITH VIDEO BOX) */
+    /* FULL-SCREEN VIDEO VIEWPORT (EDGE-TO-EDGE) */
     .scrim.video-modal-scrim,
     .scrim.center.video-modal-scrim {
       position: fixed !important;
@@ -882,7 +882,7 @@
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
-      justify-content: stretch !important;
+      justify-content: center !important;
       padding: 0 !important;
       margin: 0 !important;
       background: #FFFFFF !important;
@@ -918,21 +918,12 @@
       border: none !important;
       display: flex !important;
       flex-direction: column !important;
-      align-items: stretch !important;
+      align-items: center !important;
       justify-content: space-between !important;
-      gap: 8px !important;
+      gap: 6px !important;
       animation: none !important;
       overflow: hidden !important;
       box-sizing: border-box !important;
-    }
-
-    @media (max-width: 480px) {
-      .scrim.video-modal-scrim .sheet,
-      .scrim.center.video-modal-scrim .sheet,
-      .center.video-modal-scrim .sheet {
-        max-width: 100% !important;
-        padding: calc(env(safe-area-inset-top, 8px) + 6px) 10px calc(env(safe-area-inset-bottom, 8px) + 8px) 10px !important;
-      }
     }
 
     .scrim.video-modal-scrim .sheet .video-modal-wrap {
@@ -941,23 +932,37 @@
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;
-      align-items: stretch !important;
-      gap: 8px !important;
+      align-items: center !important;
+      gap: 6px !important;
       margin: 0 !important;
       overflow: hidden !important;
     }
 
+    .scrim.video-modal-scrim .v-modal-header {
+      --v-w: min(calc(100vw - 28px), calc((100dvh - 130px) * 9 / 16));
+      width: var(--v-w) !important;
+      max-width: var(--v-w) !important;
+      margin: 0 auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex: none !important;
+      box-sizing: border-box !important;
+    }
+
     .scrim.video-modal-scrim .sheet h4 {
       color: var(--navy) !important;
-      font-size: 14px !important;
+      font-size: 15px !important;
       font-weight: 700 !important;
       margin: 0 !important;
+      line-height: 1.2 !important;
     }
 
     .scrim.video-modal-scrim .sheet p {
       color: var(--mute) !important;
       font-size: 11px !important;
       margin: 2px 0 0 !important;
+      line-height: 1.2 !important;
     }
 
     .scrim.video-modal-scrim .sheet button.ghost[data-close] {
@@ -965,12 +970,16 @@
       background: var(--soft) !important;
       border: 1px solid var(--line) !important;
       border-radius: 999px !important;
-      padding: 0 12px !important;
-      height: 32px !important;
+      padding: 0 14px !important;
+      height: 34px !important;
       font-size: 12px !important;
       font-weight: 600 !important;
-      transition: all 0.2s ease !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-sizing: border-box !important;
       cursor: pointer !important;
+      transition: all 0.2s ease !important;
     }
 
     .scrim.video-modal-scrim .sheet button.ghost[data-close]:hover {
@@ -978,37 +987,43 @@
       border-color: var(--navy) !important;
     }
 
-    /* Unified Attached Video Unit (Video Frame + Action Dock Merged Edge-to-Edge) */
+    /* Single Unified Video Player Unit (Video Screen + Action Dock in ONE Box) */
     .video-modal-unit {
-      flex: 1 1 auto !important;
-      min-height: 0 !important;
-      width: 100% !important;
-      max-width: min(100%, calc((100dvh - 145px) * 9 / 16)) !important;
-      margin: auto !important;
+      --v-w: min(calc(100vw - 28px), calc((100dvh - 130px) * 9 / 16));
+      width: var(--v-w) !important;
+      max-width: var(--v-w) !important;
+      margin: auto auto !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: stretch !important;
-      justify-content: center !important;
+      justify-content: flex-start !important;
+      border-radius: 20px !important;
+      border: 1px solid var(--line) !important;
+      box-shadow: 0 14px 40px rgba(18, 41, 74, 0.12) !important;
+      background: #FFFFFF !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      flex: none !important;
     }
 
+    /* Top Video Screen Section of Unified Box */
     .video-modal-unit .video-frame-box {
-      flex: 1 1 auto !important;
-      min-height: 0 !important;
       width: 100% !important;
+      max-width: 100% !important;
       aspect-ratio: 9/16 !important;
       height: auto !important;
-      max-height: calc(100dvh - 165px) !important;
-      border-radius: 18px 18px 0 0 !important;
-      border: 1px solid var(--line) !important;
-      border-bottom: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
       margin: 0 !important;
+      padding: 0 !important;
       background: #000000 !important;
       overflow: hidden !important;
       position: relative !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
-      box-shadow: 0 10px 30px rgba(18, 41, 74, 0.08) !important;
+      flex: none !important;
     }
 
     .video-modal-unit .video-card-inner {
@@ -1016,7 +1031,7 @@
       inset: 0 !important;
       width: 100% !important;
       height: 100% !important;
-      border-radius: 18px 18px 0 0 !important;
+      border-radius: 0 !important;
       overflow: hidden !important;
     }
 
@@ -1027,34 +1042,34 @@
       height: 100% !important;
       object-fit: cover !important;
       display: block !important;
-      border-radius: 18px 18px 0 0 !important;
+      border-radius: 0 !important;
       background: #000000 !important;
     }
 
-    /* Seamlessly Attached Action Dock */
+    /* Integrated Action Dock (Directly inside the bottom of the unified box, NO separate outside box) */
     .video-modal-unit .video-modal-acts {
-      flex: none !important;
       width: 100% !important;
       max-width: 100% !important;
       margin: 0 !important;
-      border-radius: 0 0 18px 18px !important;
-      border: 1px solid var(--line) !important;
-      border-top: 1px solid rgba(18, 41, 74, 0.08) !important;
+      padding: 7px 4px 7px !important;
+      border: none !important;
+      border-top: 1px solid var(--line) !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
       background: #FFFFFF !important;
-      box-shadow: 0 12px 30px rgba(18, 41, 74, 0.08) !important;
       display: grid !important;
       grid-template-columns: repeat(3, 1fr) !important;
-      gap: 4px !important;
-      padding: 7px 6px 7px !important;
+      gap: 2px !important;
       box-sizing: border-box !important;
+      flex: none !important;
     }
 
     .video-modal-unit .video-modal-acts .act {
       border: none !important;
       background: transparent !important;
       box-shadow: none !important;
-      border-radius: 12px !important;
-      padding: 4px 2px !important;
+      border-radius: 10px !important;
+      padding: 3px 2px !important;
       margin: 0 !important;
       display: flex !important;
       flex-direction: column !important;
@@ -2964,18 +2979,17 @@
     }
     .tab-btn.active { background: var(--card); color: var(--navy); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 
-    /* In-App 9:16 Video Player - Mobile Recent Apps Style (No Black Empty Space) */
-    .video-modal-wrap { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
+    /* In-App 9:16 Video Player Styles */
+    .video-modal-wrap { display: flex; flex-direction: column; gap: 6px; align-items: center; width: 100%; }
     .video-frame-box {
-      width: 100%; max-width: min(100%, calc((88dvh - 130px) * 9 / 16)); aspect-ratio: 9/16; border-radius: 20px; overflow: hidden;
-      background: #000000; box-shadow: 0 16px 45px rgba(18, 41, 74, 0.16); position: relative; margin: 0 auto;
+      width: 100%; aspect-ratio: 9/16; position: relative; margin: 0 auto;
     }
     .video-card-inner {
-      position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 20px; overflow: hidden;
+      position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden;
     }
     .video-frame-box video, .video-card-inner video {
       position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover !important;
-      background: #000000; border-radius: 20px; border: 0; display: block;
+      background: #000000; border: 0; display: block;
     }
     .video-frame-box iframe {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -5565,7 +5579,7 @@
 
       const sc = sheet(`
         <div class="video-modal-wrap">
-          <div class="row-between" style="width:100%;align-items:center;">
+          <div class="row-between v-modal-header" style="align-items:center;">
             <div style="flex:1;min-width:0;padding-right:8px;">
               <h4 id="v-title" style="margin:0;font-size:15px;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(currentReel.title)}</h4>
               <p id="v-subtitle" style="margin:2px 0 0;font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${fmtDate(currentReel.date)}${currentReel.b ? ` · ${esc(currentReel.b)}` : (currentReel.album ? ` · ${esc(currentReel.album)}` : '')}</p>
@@ -5592,7 +5606,7 @@
                 </svg>
               </button>
               
-              <button class="ghost" data-close style="padding:6px 14px;border-radius:999px;font-size:12px;">Close</button>
+              <button class="ghost" data-close style="padding:0 14px;border-radius:999px;font-size:12px;height:34px;display:inline-flex;align-items:center;justify-content:center;">Close</button>
 
               <!-- Settings Gear Menu Dropdown Popup -->
               <div class="video-gear-menu" id="v-gear-menu">
