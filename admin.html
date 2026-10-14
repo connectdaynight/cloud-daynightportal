@@ -2481,13 +2481,6 @@
           </div>
         </div>
 
-        <div class="form-group" style="margin-top:10px;">
-          <label>Custom Cover / Thumbnail Image (Optional Override)</label>
-          <div style="display:flex;gap:8px;flex-direction:column;">
-            <input id="f-cover" placeholder="Image URL (https://...)">
-            <input id="f-cover-file" type="file" accept="image/png,image/jpeg,image/webp">
-          </div>
-        </div>
 
         <div class="form-row2">
           <div class="form-group">
@@ -2754,7 +2747,7 @@
             const url = sc.querySelector('#f-url').value.trim();
             if (!url) { toast('Please paste a Google Drive video link', 'error'); return; }
 
-            let coverUrl = coverData || sc.querySelector('#f-cover').value.trim();
+            let coverUrl = coverData || '';
             const m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
             const fileId = m ? m[1] : '';
             if (!coverUrl && fileId) {
@@ -2799,7 +2792,7 @@
           const file = activeVideoFile || sc.querySelector('#f-file').files[0];
           if (!file) { toast('Please select an MP4 video file to upload', 'error'); return; }
 
-          const coverUrl = coverData || sc.querySelector('#f-cover')?.value.trim() || '';
+          const coverUrl = coverData || generatedThumbData || '';
           const cObj = (DATA.clients || []).find(x => x.id === clientId) || { name: 'General' };
 
           // Render Live Upload Progress UI in modal
