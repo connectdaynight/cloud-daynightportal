@@ -2865,6 +2865,84 @@
               });
 
               if (!initRes || !initRes.success || !initRes.uploadUrl) {
+                // If the user has not deployed the updated gas/Code.gs yet (returns 'Invalid action'),
+                // automatically fallback to standard direct upload for videos <= 48MB so upload succeeds!
+                if (initRes && initRes.error === 'Invalid action' && file.size <= 48 * 1024 * 1024) {
+                  liveSpeed.textContent = 'Using direct video stream...';
+                  const base64Data = await new Promise((res, rej) => {
+                    const reader = new FileReader();
+                    reader.onload = () => res(reader.result);
+                    reader.onerror = () => rej(new Error('Failed to read video file'));
+                    reader.readAsDataURL(file);
+                  });
+
+                  if (aborted) return;
+                  const fallbackRes = await apiWithProgress('uploadVideo', {
+                    clientName: cObj.name,
+                    clientId,
+                    branch,
+                    album,
+                    title,
+                    year,
+                    month,
+                    date,
+                    dur,
+                    coverUrl,
+                    base64Data,
+                    filename: file.name,
+                    mimeType: file.type || 'video/mp4'
+                  }, prog => {
+                    if (aborted) return;
+                    liveBar.style.width = prog.percent + '%';
+                    livePct.textContent = prog.percent + '%';
+                    const loadedMB = (prog.loaded / (1024 * 1024)).toFixed(1);
+                    const totalMB = (prog.total / (1024 * 1024)).toFixed(1);
+                    liveBytes.textContent = `${loadedMB} MB of ${totalMB} MB transferred`;
+                  });
+
+                  if (!fallbackRes || !fallbackRes.success) {
+                    throw new Error((fallbackRes && fallbackRes.error) || 'Upload failed');
+                  }
+
+                  const publishedReel = fallbackRes.reel || {
+                    id: 'r' + Date.now().toString(36),
+                    c: clientId,
+                    type: 'reel',
+                    y: year,
+                    m: month,
+                    b: branch,
+                    album,
+                    title,
+                    date,
+                    url: fallbackRes.viewUrl || `https://drive.google.com/file/d/${fallbackRes.fileId}/view`,
+                    fileId: fallbackRes.fileId,
+                    dur,
+                    coverUrl,
+                    hidden: false,
+                    status,
+                    views: 0,
+                    downloads: 0,
+                    sample: false,
+                    thumbnailGenerated: true
+                  };
+
+                  liveBar.style.width = '100%';
+                  livePct.textContent = '100%';
+                  stageCloud.className = 'live-stage-item done';
+                  sc.querySelector('#stage-cloud-icon').innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+                  liveSpeed.textContent = 'Published successfully!';
+
+                  if (!DATA.reels) DATA.reels = [];
+                  DATA.reels.unshift(publishedReel);
+                  saveAndBroadcast('Video published to Google Drive!');
+                  setTimeout(() => sc.remove(), 600);
+                  return;
+                }
+
+                if (initRes && initRes.error === 'Invalid action') {
+                  throw new Error('Google Apps Script needs to be updated with Code.gs to support files over 50MB. Please deploy a new version in script.google.com.');
+                }
+
                 throw new Error((initRes && initRes.error) || 'Could not initialize resumable Drive session');
               }
 
