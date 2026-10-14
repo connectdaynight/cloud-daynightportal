@@ -117,7 +117,7 @@
     /* Day Night Signature Mark */
     .dn { display: block; }
     .dn .scrib { stroke-dasharray: 1; stroke-dashoffset: 0; }
-    .splash .dn .scrib, .dn-intro .dn .scrib { animation: draw 1.5s 0.7s ease-in-out both; }
+    .splash .dn .scrib, .dn-intro .dn .scrib { animation: draw 3.5s 0.5s cubic-bezier(0.4, 0, 0.2, 1) both; }
     @keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 
     /* Splash / Day Night Intro Animation (Home Screen) */
@@ -189,8 +189,8 @@
       font-size: 17px;
       color: var(--mute);
     }
-    .a2 { animation: rise 0.7s 1.2s ease-out both; }
-    .a3 { animation: rise 0.7s 1.6s ease-out both; }
+    .a2 { animation: rise 0.8s 2.2s ease-out both; }
+    .a3 { animation: rise 0.8s 2.8s ease-out both; }
     @keyframes rise {
       from { transform: translateY(14px); opacity: 0; }
       to { transform: none; opacity: 1; }
@@ -262,32 +262,36 @@
     /* Animated Floating Social Media & Email Dock */
     .dn-social-dock {
       position: fixed;
-      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-      right: 22px;
+      bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 85;
       display: flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(18, 41, 74, 0.1);
-      padding: 6px 10px;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(18, 41, 74, 0.12);
+      padding: 10px 18px;
       border-radius: 999px;
-      box-shadow: 0 10px 30px rgba(18, 41, 74, 0.12);
+      box-shadow: 0 14px 40px rgba(18, 41, 74, 0.18);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       animation: socialDockIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+      max-width: calc(100vw - 32px);
+      box-sizing: border-box;
     }
     @keyframes socialDockIn {
-      from { transform: translateY(30px); opacity: 0; }
-      to { transform: none; opacity: 1; }
+      from { transform: translate(-50%, 30px); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
     }
     .dn-social-btn {
-      width: 36px;
-      height: 36px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: var(--soft);
-      border: 1px solid var(--line);
+      border: 1.5px solid var(--line);
       color: var(--navy);
       display: grid;
       place-items: center;
@@ -295,19 +299,20 @@
       cursor: pointer;
       position: relative;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      flex-shrink: 0;
     }
     .dn-social-btn svg {
-      width: 17px;
-      height: 17px;
+      width: 22px;
+      height: 22px;
       transition: transform 0.25s ease;
     }
     .dn-social-btn:hover {
-      transform: translateY(-4px) scale(1.12);
-      box-shadow: 0 8px 20px rgba(18, 41, 74, 0.16);
+      transform: translateY(-4px) scale(1.15);
+      box-shadow: 0 8px 20px rgba(18, 41, 74, 0.18);
       background: #FFFFFF;
     }
     .dn-social-btn:hover svg {
-      transform: scale(1.1);
+      transform: scale(1.12);
     }
     .dn-social-btn.instagram:hover { color: #E1306C; border-color: rgba(225, 48, 108, 0.35); }
     .dn-social-btn.youtube:hover { color: #FF0000; border-color: rgba(255, 0, 0, 0.35); }
@@ -376,29 +381,36 @@
     }
 
     body.has-bnav .dn-social-dock {
-      bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+      bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%);
     }
 
     @media (max-width: 640px) {
       .dn-social-dock {
-        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-        right: 50%;
-        transform: translateX(50%);
-        padding: 5px 8px;
-        gap: 6px;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 8px 14px;
+        gap: 10px;
+        max-width: calc(100vw - 24px);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
       }
+      .dn-social-dock::-webkit-scrollbar { display: none; }
       body.has-bnav .dn-social-dock {
-        bottom: calc(74px + env(safe-area-inset-bottom, 0px));
-        right: 50%;
-        transform: translateX(50%);
+        bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+        left: 50%;
+        transform: translateX(-50%);
       }
       .dn-social-btn {
-        width: 32px;
-        height: 32px;
+        width: 42px;
+        height: 42px;
       }
       .dn-social-btn svg {
-        width: 15px;
-        height: 15px;
+        width: 20px;
+        height: 20px;
       }
     }
 
@@ -3945,12 +3957,8 @@
         playIntro(() => {
           const sp = app.querySelector('.splash');
           if (sp) sp.classList.add('ready');
-          if (!document.querySelector('.scrim')) {
-            if (c && isClientAuthenticated(c.id)) {
-              go({ screen: 'genesis', client: c.id });
-            } else {
-              openCode(c);
-            }
+          if (c && isClientAuthenticated(c.id)) {
+            go({ screen: 'genesis', client: c.id });
           }
         });
       }
@@ -4981,10 +4989,10 @@
           timerEl.textContent = remSec + 's';
         }
 
-        // Exact Confetti Burst Engine (Triggers at 2100ms when scribble drawing concludes)
+        // Exact Confetti Burst Engine (Triggers at 3600ms when scribble drawing concludes)
         if (confettiActive) {
           ctx.clearRect(0, 0, r.width, r.height);
-          const confettiElapsed = elapsed - 2100;
+          const confettiElapsed = elapsed - 3600;
           ps.forEach(p => {
             p.vy += 0.18; p.vx *= 0.985; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
             // Re-spawn particles gently if still animating for long durations
@@ -5013,15 +5021,15 @@
         }
       };
 
-      // Confetti burst starts at 2100ms (exactly as the signature scribble logo finishes drawing)
+      // Confetti burst starts at 3600ms (exactly as the signature scribble logo finishes drawing)
       later(() => {
         confettiActive = true;
-      }, 2100);
+      }, 3600);
 
-      // Reveal .start button at 2400ms
+      // Reveal .start button at 3800ms
       later(() => {
         sp.classList.add('ready');
-      }, 2400);
+      }, 3800);
 
       raf = requestAnimationFrame(frame);
     }
@@ -5337,7 +5345,6 @@
     // 4-DIGIT PIN AUTHENTICATION
     // --------------------------------------------------------------------------
     function openCode(preselectedClient) {
-      const clientList = (DATA.clients || []).filter(cl => !DATA.deletedClientIds || !DATA.deletedClientIds.includes(cl.id));
       const targetClient = preselectedClient || client();
       sheet(`
         <div class="code-head">
@@ -5349,25 +5356,7 @@
           ${[0,1,2,3].map(i => `<input id="pin${i}" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="Digit ${i+1}">`).join('')}
         </div>
         <div class="code-msg" id="code-msg">&nbsp;</div>
-
-        ${!targetClient && clientList.length ? `
-          <div style="margin-top:10px;border-top:1px solid var(--line);padding-top:12px;">
-            <small style="font-size:11px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:8px;text-align:center;">Or select your brand directly</small>
-            <div style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;">
-              ${clientList.map(cl => `
-                <button type="button" class="home-client-btn" data-act="go-client" data-cid="${esc(cl.id)}" style="padding:8px 10px;">
-                  <span class="home-client-logo" style="width:36px;height:24px;">${cl.logo ? `<img src="${esc(cl.logo)}" alt="${esc(cl.name)}">` : ''}</span>
-                  <span class="home-client-info" style="text-align:left;">
-                    <b style="font-size:12px;">${esc(cl.name)}</b>
-                    <small style="font-size:10px;">?client=${esc(cl.slug || cl.id)}</small>
-                  </span>
-                  <span class="home-client-arrow">${ic.arrow}</span>
-                </button>
-              `).join('')}
-            </div>
-          </div>
-        ` : ''}
-        <button class="ghost" data-close style="margin-top:8px;">Cancel</button>`, sc => {
+        <button class="ghost" data-close style="margin-top:12px;">Cancel</button>`, sc => {
         const ins = [...sc.querySelectorAll('.pins input')];
         const pins = sc.querySelector('#pins');
         const msg = sc.querySelector('#code-msg');
