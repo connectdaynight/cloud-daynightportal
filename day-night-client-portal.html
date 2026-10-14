@@ -2868,8 +2868,10 @@
     'use strict';
 
     // Application State & Configuration
+    const MOCK_IDS = ['s1','s2','s3','s4','s5','story_tcs_01','story_tcs_02','poster_tcs_01','poster_tcs_02'];
     let DATA = JSON.parse(document.getElementById('portal-data').textContent);
-    
+    DATA.reels = (DATA.reels || []).filter(r => !r.sample && !MOCK_IDS.includes(r.id));
+
     // Load local cached database immediately so newly added clients and reels are ready
     const cachedData = localStorage.getItem('dn_local_data');
     if (cachedData) {
@@ -2882,59 +2884,11 @@
           if (!DATA.deletedReelIds) DATA.deletedReelIds = [];
           if (!DATA.deletedClientIds) DATA.deletedClientIds = [];
 
-          // Clean out legacy mock sample dummy reels so only real data is ever shown
-          DATA.reels = DATA.reels.filter(r => !r.sample && !['s1','s2','s3','s4','s5'].includes(r.id));
+          // Clean out all legacy mock sample dummy reels, stories, and posters
+          DATA.reels = DATA.reels.filter(r => !r.sample && !MOCK_IDS.includes(r.id));
         }
       } catch (e) {}
     }
-
-    function ensureSampleMedia(data) {
-      if (!data || !data.reels) return;
-      const tcsItems = data.reels.filter(r => r.c === 'tcs');
-      const hasStories = tcsItems.some(r => r.type === 'story');
-      const hasPosters = tcsItems.some(r => r.type === 'poster');
-      const samples = [];
-      if (!hasStories) {
-        samples.push(
-          {
-            id: 'story_tcs_01', c: 'tcs', type: 'story', title: 'Kanchipuram Silk Story',
-            date: '2026-10-14', y: 2026, m: 9, b: 'T. Nagar', album: 'Festive Silk Collection',
-            url: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-            coverUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-            dur: '9:16', status: 'approved', views: 1420, downloads: 85, hidden: false
-          },
-          {
-            id: 'story_tcs_02', c: 'tcs', type: 'story', title: 'Bridal Moments Story',
-            date: '2026-10-15', y: 2026, m: 9, b: 'T. Nagar', album: 'Bridal Sarees',
-            url: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
-            coverUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
-            dur: '9:16', status: 'approved', views: 980, downloads: 62, hidden: false
-          }
-        );
-      }
-      if (!hasPosters) {
-        samples.push(
-          {
-            id: 'poster_tcs_01', c: 'tcs', type: 'poster', title: 'Deepavali Grand Offer',
-            date: '2026-10-16', y: 2026, m: 9, b: 'T. Nagar', album: 'Festive Silk Collection',
-            url: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
-            coverUrl: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
-            dur: '1:1', status: 'approved', views: 2150, downloads: 140, hidden: false
-          },
-          {
-            id: 'poster_tcs_02', c: 'tcs', type: 'poster', title: 'Silk Royal Collection',
-            date: '2026-10-17', y: 2026, m: 9, b: 'T. Nagar', album: 'Bridal Sarees',
-            url: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-            coverUrl: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-            dur: '1:1', status: 'approved', views: 1780, downloads: 112, hidden: false
-          }
-        );
-      }
-      samples.forEach(s => {
-        if (!data.reels.some(r => r.id === s.id)) data.reels.push(s);
-      });
-    }
-    ensureSampleMedia(DATA);
     const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
 
     const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -3418,82 +3372,7 @@
       });
     }
 
-    function _legacyThumb(file) {
-      return new Promise((resolve, reject) => {
-        if (!file || !(file.type && file.type.startsWith('video/')) && !file.name.match(/\.(mp4|mov|webm|m4v)$/i)) {
-          return reject(new Error('Selected file is not a supported video format'));
-        }
-        const video = document.createElement('video');
-        video.preload = 'metadata';
-        video.muted = true;
-        video.playsInline = true;
-        const blobUrl = URL.createObjectURL(file);
-        video.src = blobUrl;
-
-        let resolved = false;
-        const timeout = setTimeout(() => {
-          if (!resolved) {
-            URL.revokeObjectURL(blobUrl);
-            video.remove();
-            reject(new Error('Thumbnail extraction timed out'));
-          }
-        }, 12000);
-
-        video.onloadedmetadata = () => {
-          const duration = video.duration || 30;
-          const seekTo = Math.min(Math.max(0.2, targetSec), Math.max(0.2, duration - 0.2));
-          video.currentTime = seekTo;
-        };
-
-        video.onseeked = () => {
-          if (resolved) return;
-          try {
-            const canvas = document.createElement('canvas');
-            const w = video.videoWidth || 720;
-            const h = video.videoHeight || 1280;
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, w, h);
-
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-            const durationSec = Math.floor(video.duration) || 0;
-            const m = Math.floor(durationSec / 60);
-            const s = durationSec % 60;
-            const durStr = `${m}:${s < 10 ? '0' : ''}${s}`;
-
-            resolved = true;
-            clearTimeout(timeout);
-            URL.revokeObjectURL(blobUrl);
-            video.remove();
-
-            resolve({
-              dataUrl,
-              durationStr: durStr,
-              durationSec,
-              width: w,
-              height: h,
-              sizeBytes: file.size
-            });
-          } catch (err) {
-            resolved = true;
-            clearTimeout(timeout);
-            URL.revokeObjectURL(blobUrl);
-            video.remove();
-            reject(err);
-          }
-        };
-
-        video.onerror = err => {
-          if (resolved) return;
-          resolved = true;
-          clearTimeout(timeout);
-          URL.revokeObjectURL(blobUrl);
-          video.remove();
-          reject(new Error('Video decoding failed in browser'));
-        };
-      });
-    }
+    // (Removed unused _legacyThumb stub)
 
     // Real-Time Cross-Tab Event Listeners
     if (syncHub) {
@@ -3549,9 +3428,9 @@
           DATA.deletedReelIds = DATA.deletedReelIds || [];
           DATA.deletedClientIds = DATA.deletedClientIds || [];
 
-          // Strip deleted items
-          const gasReels = (json.data.reels || []).filter(r => !DATA.deletedReelIds.includes(r.id));
-          const localReels = (DATA.reels || []).filter(r => !DATA.deletedReelIds.includes(r.id));
+          // Strip deleted and mock items
+          const gasReels = (json.data.reels || []).filter(r => !r.sample && !MOCK_IDS.includes(r.id) && !DATA.deletedReelIds.includes(r.id));
+          const localReels = (DATA.reels || []).filter(r => !r.sample && !MOCK_IDS.includes(r.id) && !DATA.deletedReelIds.includes(r.id));
           const mergedReels = [...gasReels];
           localReels.forEach(lr => {
             if (!mergedReels.some(gr => gr.id === lr.id)) mergedReels.unshift(lr);
@@ -3567,7 +3446,6 @@
           DATA.settings = json.data.settings || DATA.settings;
           DATA.clients = mergedClients.length ? mergedClients : DATA.clients;
           DATA.reels = mergedReels;
-          ensureSampleMedia(DATA);
 
           DATA._updatedAt = Date.now();
           localStorage.setItem('dn_local_data', JSON.stringify(DATA));
@@ -3994,8 +3872,8 @@
         const postersList = contentsFor(m != null ? y : null, m, b, alb, 'posters');
         const gridCols = view.gridCols || 2;
 
-        // Banner Image
-        const heroBanner = c.bannerUrl || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80';
+        // Banner Image (Only use client's real configured bannerUrl; otherwise use luxury gradient)
+        const heroBanner = c.bannerUrl || '';
 
         // Unified Gallery View for Reels, Stories, and Posters (Reference Concept Card Listing)
         let displayList = currentType === 'all'
@@ -4034,7 +3912,7 @@
             ${displayList.map((r, i) => {
               const isVideo = (!r.type || r.type === 'reel' || r.type === 'video') ||
                 (r.type === 'story' && r.url && (r.url.endsWith('.mp4') || r.url.endsWith('.mov') || r.url.includes('video')));
-              const has = !r.url;
+              const has = Boolean(r.url);
               const col = RCOL[i % RCOL.length];
               const isHidden = r.hidden === true;
               return `
@@ -4080,10 +3958,10 @@
           
           <!-- Top Brand Hero Banner (Reference Concept) -->
           <div class="client-hero-banner">
-            <img src="${esc(heroBanner)}" class="hero-banner-img" alt="">
+            ${heroBanner ? `<img src="${esc(heroBanner)}" class="hero-banner-img" alt="">` : ''}
             <div class="hero-banner-overlay">
               <span class="hero-brand-name">${esc(c.name)}</span>
-              <span class="hero-brand-slogan">${esc(c.slogan || c.tagline || 'Sarees for every special moment')}</span>
+              <span class="hero-brand-slogan">${esc(c.slogan || c.tagline || 'Private Client Delivery Portal')}</span>
             </div>
           </div>
 
@@ -4360,7 +4238,7 @@
           let visible = false;
           togglePinBtn.onclick = () => {
             visible = !visible;
-            pinDisplay.textContent = visible ? (c.code || '4821') : '••••';
+            pinDisplay.textContent = visible ? (c.code || '—') : '••••';
             togglePinBtn.textContent = visible ? 'Hide PIN' : 'Show PIN';
           };
         }
@@ -4828,7 +4706,7 @@
         const code = ins.map(i => i.value).join('');
         if (code.length < 4) return;
 
-        if (code === c.code || code === '0000' || code === '9999' || (CONFIG.adminPasskey && code === CONFIG.adminPasskey)) {
+        if (code === c.code || (CONFIG.adminPasskey && code === CONFIG.adminPasskey)) {
           if (msg) {
             msg.className = 'code-msg';
             msg.style.color = 'var(--green)';
@@ -5338,9 +5216,9 @@
                     Technical Specs
                   </div>
                   <div class="v-specs-list">
-                    <div class="v-spec-item"><span>Format</span><b>MP4 Vertical 9:16</b></div>
-                    <div class="v-spec-item"><span>Resolution</span><b>1080 × 1920 Full HD</b></div>
-                    <div class="v-spec-item"><span>Branch</span><b id="v-spec-branch">${esc(currentReel.b || currentReel.album || 'T. Nagar')}</b></div>
+                    <div class="v-spec-item"><span>Format</span><b>MP4 Video</b></div>
+                    <div class="v-spec-item"><span>Resolution</span><b id="v-spec-res">Loading...</b></div>
+                    <div class="v-spec-item"><span>Branch</span><b id="v-spec-branch">${esc(currentReel.b || currentReel.album || 'General')}</b></div>
                   </div>
                 </div>
 
@@ -5472,9 +5350,9 @@
             socFollowBtn.style.background = 'rgba(255,255,255,0.18)';
             socFollowBtn.style.border = '1px solid rgba(255,255,255,0.7)';
             socActions.innerHTML = `
-              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><span class="v-soc-act-num">18.4K</span></div>
-              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div><span class="v-soc-act-num">328</span></div>
-              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div><span class="v-soc-act-num">1.2K</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><span class="v-soc-act-num">Like</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div><span class="v-soc-act-num">Comment</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div><span class="v-soc-act-num">Share</span></div>
               <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="#FFFFFF"><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="12" r="2"/></svg></div></div>
               <div class="v-soc-disc"><svg width="12" height="12" viewBox="0 0 24 24" fill="#FFFFFF"><circle cx="12" cy="12" r="4"/></svg></div>`;
           } else if (socialPlatform === 'facebook') {
@@ -5486,9 +5364,9 @@
             socFollowBtn.style.background = '#1877F2';
             socFollowBtn.style.border = 'none';
             socActions.innerHTML = `
-              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div><span class="v-soc-act-num">9.8K</span></div>
-              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><span class="v-soc-act-num">410</span></div>
-              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><span class="v-soc-act-num">2.1K</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div><span class="v-soc-act-num">Like</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><span class="v-soc-act-num">Comment</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><span class="v-soc-act-num">Share</span></div>
               <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="#FFFFFF"><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="12" r="2"/></svg></div></div>`;
           } else if (socialPlatform === 'youtube') {
             socTop.innerHTML = `
@@ -5501,9 +5379,9 @@
             socFollowBtn.style.borderRadius = '99px';
             socFollowBtn.style.border = 'none';
             socActions.innerHTML = `
-              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div><span class="v-soc-act-num">32K</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div><span class="v-soc-act-num">Like</span></div>
               <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg></div><span class="v-soc-act-num">Dislike</span></div>
-              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg></div><span class="v-soc-act-num">652</span></div>
+              <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg></div><span class="v-soc-act-num">Comment</span></div>
               <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg></div><span class="v-soc-act-num">Share</span></div>
               <div class="v-soc-act-item"><div class="v-soc-act-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg></div><span class="v-soc-act-num">Remix</span></div>
               <div class="v-soc-disc"><svg width="12" height="12" viewBox="0 0 24 24" fill="#FFFFFF"><circle cx="12" cy="12" r="4"/></svg></div>`;
@@ -5566,7 +5444,7 @@
             titleEl.textContent = currentReel.title;
             subtitleEl.textContent = `${fmtDate(currentReel.date)}${currentReel.b ? ' · ' + currentReel.b : (currentReel.album ? ' · ' + currentReel.album : '')}`;
             counterEl.textContent = `${curIdx + 1} / ${activeList.length}`;
-            if (specBranch) specBranch.textContent = currentReel.b || currentReel.album || 'T. Nagar';
+            if (specBranch) specBranch.textContent = currentReel.b || currentReel.album || 'General';
             if (socCaption) socCaption.textContent = `${currentReel.title} #reels #festive`;
 
             // Update Status UI
@@ -5651,8 +5529,22 @@
         playerContainer.addEventListener('touchend', finishCardSwipe, { passive: true });
         playerContainer.addEventListener('touchcancel', finishCardSwipe, { passive: true });
 
-        // Keyboard Arrow Key Navigation
+        // Dynamically populate real video resolution
+        if (vid) {
+          vid.addEventListener('loadedmetadata', () => {
+            const resEl = modalSc.querySelector('#v-spec-res');
+            if (resEl && vid.videoWidth && vid.videoHeight) {
+              resEl.textContent = `${vid.videoWidth} × ${vid.videoHeight}`;
+            }
+          });
+        }
+
+        // Keyboard Arrow Key Navigation (Auto-cleans up when modal closes)
         function handleKeyNav(e) {
+          if (!modalSc.isConnected) {
+            window.removeEventListener('keydown', handleKeyNav);
+            return;
+          }
           if (e.key === 'ArrowRight' && curIdx < activeList.length - 1) {
             navigateToReel(curIdx + 1, 'left');
           } else if (e.key === 'ArrowLeft' && curIdx > 0) {
@@ -5701,6 +5593,9 @@
 
         function updateStatusUi(newStatus) {
           currentReel.status = newStatus;
+          DATA._updatedAt = Date.now();
+          try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
+          try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
           if (statusBadge && statusText) {
             if (newStatus === 'approved') {
               statusBadge.className = 'v-status-badge approved';
@@ -5770,61 +5665,65 @@
     // --------------------------------------------------------------------------
     function shareVideo(r) {
       if (!r || !r.url) {
-        toast('Sample reel layout. Video sharing available when real file is uploaded.', 'amber');
+        toast('Sharing available when file is uploaded.', 'amber');
         return;
       }
 
+      const isImg = r.type === 'story' || r.type === 'poster' || r.url.startsWith('data:image/') || /\.(jpe?g|png|webp|gif)$/i.test(r.url);
       const id = driveId(r.url);
-      const cleanTitle = (r.title || 'video').replace(/[/\\?%*:|"<>]/g, '_').trim() || 'video';
-      const filename = cleanTitle.toLowerCase().endsWith('.mp4') ? cleanTitle : `${cleanTitle}.mp4`;
-      const directVideoUrl = id ? `${window.location.origin}/api/video?id=${encodeURIComponent(id)}` : r.url;
+      const cleanTitle = (r.title || (isImg ? 'image' : 'video')).replace(/[/\\?%*:|"<>]/g, '_').trim() || (isImg ? 'image' : 'video');
+      const ext = isImg ? '.jpg' : '.mp4';
+      const filename = cleanTitle.toLowerCase().endsWith(ext) ? cleanTitle : `${cleanTitle}${ext}`;
+      const directUrl = isImg
+        ? (id ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1200` : r.url)
+        : (id ? `${window.location.origin}/api/video?id=${encodeURIComponent(id)}` : r.url);
 
-      // Open Direct Video Share Sheet INSTANTLY (Zero Network Delay)
-      openDirectShareSheet(r, directVideoUrl, filename);
+      openDirectShareSheet(r, directUrl, filename, isImg);
     }
 
-    function openDirectShareSheet(r, directVideoUrl, filename) {
+    function openDirectShareSheet(r, directVideoUrl, filename, isImg = false) {
       const c = client() || { name: 'Day Night' };
       const id = driveId(r.url);
-      const videoLink = directVideoUrl || (id ? `${window.location.origin}/api/video?id=${encodeURIComponent(id)}` : r.url);
-      const shareMsg = `${c.name} | DAY NIGHT · ${r.title}\n${videoLink}`;
+      const mediaLink = directVideoUrl || (id ? `${window.location.origin}/api/video?id=${encodeURIComponent(id)}` : r.url);
+      const shareMsg = `${c.name} | DAY NIGHT · ${r.title}\n${mediaLink}`;
+      const labelType = isImg ? (r.type === 'story' ? 'Story' : 'Poster') : 'Video';
 
-      // Notice: NO duplicate grab line here! sheet() already provides the grab handle bar!
       sheet(`
-        <h4>Share Video</h4>
-        <p>${esc(r.title)} · Direct 1080p MP4 Video</p>
-        <div class="linkbox" id="share-link">${esc(videoLink)}</div>
+        <h4>Share ${labelType}</h4>
+        <p>${esc(r.title)} · High-Resolution ${labelType}</p>
+        <div class="linkbox" id="share-link">${esc(mediaLink.startsWith('data:') ? window.location.href : mediaLink)}</div>
         <div class="share-opts">
           <button type="button" id="share-dl-btn" style="--k:var(--green)">
-            <span class="chip">${ic.dl}</span>Save / Share Video File
+            <span class="chip">${ic.dl}</span>Save / Share ${labelType} File
           </button>
           <button type="button" id="copy-btn" style="--k:var(--violet)">
-            <span class="chip">${ic.copy}</span>Copy Direct Video Link
+            <span class="chip">${ic.copy}</span>Copy Direct ${labelType} Link
           </button>
           <a style="--k:#25D366" href="https://wa.me/?text=${encodeURIComponent(shareMsg)}" target="_blank" rel="noopener">
-            <span class="chip">${ic.wa}</span>WhatsApp Video
+            <span class="chip">${ic.wa}</span>WhatsApp ${labelType}
           </a>
-          <a style="--k:#229ED9" href="https://t.me/share/url?url=${encodeURIComponent(videoLink)}&text=${encodeURIComponent(c.name + ' · ' + r.title)}" target="_blank" rel="noopener">
-            <span class="chip">${ic.tg}</span>Telegram Video
+          <a style="--k:#229ED9" href="https://t.me/share/url?url=${encodeURIComponent(mediaLink)}&text=${encodeURIComponent(c.name + ' · ' + r.title)}" target="_blank" rel="noopener">
+            <span class="chip">${ic.tg}</span>Telegram ${labelType}
           </a>
         </div>
         <button class="ghost" data-close>Close</button>`, sc => {
 
         sc.querySelector('#share-dl-btn').addEventListener('click', async () => {
           if (typeof navigator !== 'undefined' && navigator.share) {
-            toast('Preparing video file to share...', 'info');
+            toast(`Preparing ${labelType.toLowerCase()} file to share...`, 'info');
             try {
-              const res = await fetch(videoLink);
+              const res = await fetch(mediaLink);
               if (res.ok) {
                 const blob = await res.blob();
-                const videoFile = new File([blob], filename, { type: 'video/mp4' });
-                if (navigator.canShare && navigator.canShare({ files: [videoFile] })) {
+                const mime = isImg ? (blob.type || 'image/jpeg') : 'video/mp4';
+                const mediaFile = new File([blob], filename, { type: mime });
+                if (navigator.canShare && navigator.canShare({ files: [mediaFile] })) {
                   await navigator.share({
                     title: r.title,
                     text: `${c.name} · ${r.title}`,
-                    files: [videoFile]
+                    files: [mediaFile]
                   });
-                  toast('Video shared successfully!', 'success');
+                  toast(`${labelType} shared successfully!`, 'success');
                   return;
                 }
               }
@@ -5868,7 +5767,7 @@
         const inp = sc.querySelector('#adm-pass');
         const doUnlock = () => {
           const pass = inp.value.trim();
-          if (pass === CONFIG.adminPasskey || pass === 'DN@2026') {
+          if (pass === CONFIG.adminPasskey) {
             CONFIG.isAdmin = true;
             sessionStorage.setItem('dn_admin_auth', CONFIG.adminPasskey);
             localStorage.setItem('dn_is_admin', 'true');
@@ -6779,9 +6678,9 @@
         go({ screen: 'reels', branch: el.dataset.b, month: null, album: null, contentType: 'all', searchQuery: '' });
       }
       else if (a === 'bnav-home') go({ screen: 'genesis', client: view.client });
-      else if (a === 'bnav-reels') go({ screen: 'reels', client: view.client, month: (view.month != null ? view.month : 9), year: view.year || 2026, branch: null, album: null, contentType: 'all', selectedDay: null });
+      else if (a === 'bnav-reels') go({ screen: 'reels', client: view.client, month: view.month, year: view.year || TODAY.getFullYear(), branch: null, album: null, contentType: 'all', selectedDay: null });
       else if (a === 'bnav-branches') go({ screen: 'months', client: view.client, tabMode: 'branches' });
-      else if (a === 'bnav-calendar') go({ screen: 'reels', client: view.client, month: (view.month != null ? view.month : 9), year: view.year || 2026, branch: null, album: null, contentType: 'stories', selectedDay: null });
+      else if (a === 'bnav-calendar') go({ screen: 'reels', client: view.client, month: (view.month != null ? view.month : TODAY.getMonth()), year: view.year || TODAY.getFullYear(), branch: null, album: null, contentType: 'stories', selectedDay: null });
       else if (a === 'bnav-albums') go({ screen: 'months', client: view.client, tabMode: 'albums' });
       else if (a === 'open-month-dropdown') openMonthPicker();
       else if (a === 'select-dropdown-month') {

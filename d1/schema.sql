@@ -11,13 +11,15 @@ CREATE TABLE IF NOT EXISTS clients (
   anim_style TEXT DEFAULT 'confetti',
   branches TEXT, -- JSON array
   albums TEXT,   -- JSON array
-  logo_data TEXT, -- Base64 or CDN URL
+  logo TEXT,     -- Base64 or CDN URL
+  banner_url TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS reels (
   id TEXT PRIMARY KEY,
   client_id TEXT NOT NULL,
+  type TEXT DEFAULT 'reel',
   year INTEGER NOT NULL,
   month INTEGER NOT NULL,
   branch TEXT,

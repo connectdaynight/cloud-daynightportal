@@ -73,7 +73,13 @@ export async function onRequestGet(context) {
     }
 
     const responseHeaders = new Headers();
-    responseHeaders.set("Content-Type", "video/mp4");
+    let contentType = videoStream.headers.get("Content-Type") || "video/mp4";
+    if (/\.jpe?g$/i.test(cleanFilename)) contentType = "image/jpeg";
+    else if (/\.png$/i.test(cleanFilename)) contentType = "image/png";
+    else if (/\.webp$/i.test(cleanFilename)) contentType = "image/webp";
+    else if (/\.mp4$/i.test(cleanFilename)) contentType = "video/mp4";
+
+    responseHeaders.set("Content-Type", contentType);
     responseHeaders.set("Content-Disposition", `attachment; filename="${cleanFilename}"`);
     responseHeaders.set("Accept-Ranges", "bytes");
     responseHeaders.set("Access-Control-Allow-Origin", "*");

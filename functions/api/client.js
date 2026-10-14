@@ -33,12 +33,31 @@ export async function onRequestGet(context) {
     client.branches = JSON.parse(client.branches || "[]");
     client.albums = JSON.parse(client.albums || "[]");
 
-    const reels = await env.DB.prepare("SELECT * FROM reels WHERE client_id = ? AND hidden = 0 ORDER BY date DESC").bind(client.id).all();
+    const reelsQuery = await env.DB.prepare("SELECT * FROM reels WHERE client_id = ? AND hidden = 0 ORDER BY date DESC").bind(client.id).all();
+    const reels = (reelsQuery.results || []).map(r => ({
+      id: r.id,
+      c: r.client_id,
+      type: r.type || 'reel',
+      y: r.year,
+      m: r.month,
+      b: r.branch || '',
+      album: r.album || '',
+      title: r.title,
+      date: r.date,
+      url: r.url,
+      fileId: r.file_id || '',
+      dur: r.dur || '0:30',
+      coverUrl: r.cover_url || '',
+      hidden: Boolean(r.hidden),
+      status: r.status || 'approved',
+      views: r.views || 0,
+      downloads: r.downloads || 0
+    }));
 
     return new Response(JSON.stringify({
       success: true,
       client,
-      reels: reels.results || []
+      reels
     }), {
       headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=60" }
     });
