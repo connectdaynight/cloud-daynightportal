@@ -1028,53 +1028,50 @@
       payload.passkey = PASSKEY;
       const res = await fetch(GAS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(payload)
       });
       return await res.json();
     }
 
-    // Real Live Network Upload via XMLHttpRequest (Real-time Socket Progress)
-    function apiWithProgress(action, payload, onProgress) {
-      return new Promise((resolve, reject) => {
-        if (!GAS_URL) return reject(new Error('Backend URL not configured'));
-        payload.action = action;
-        payload.passkey = PASSKEY;
+    // Network Upload via standard fetch with progress simulation (CORS preflight-safe)
+    async function apiWithProgress(action, payload, onProgress) {
+      if (!GAS_URL) throw new Error('Backend URL not configured');
+      payload.action = action;
+      payload.passkey = PASSKEY;
 
-        const bodyStr = JSON.stringify(payload);
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', GAS_URL, true);
-        xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
+      const totalBytes = payload.base64Data ? payload.base64Data.length : 1000000;
+      let currentPct = 10;
+      let progressTimer = null;
 
-        if (xhr.upload && onProgress) {
-          xhr.upload.onprogress = e => {
-            if (e.lengthComputable) {
-              const pct = Math.min(99, Math.round((e.loaded / e.total) * 100));
-              onProgress({
-                loaded: e.loaded,
-                total: e.total,
-                percent: pct
-              }, xhr);
-            }
-          };
-        }
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              resolve(JSON.parse(xhr.responseText));
-            } catch(e) {
-              resolve({ success: true, text: xhr.responseText });
-            }
-          } else {
-            reject(new Error(`Server returned HTTP ${xhr.status}`));
+      if (onProgress) {
+        onProgress({ loaded: Math.round(totalBytes * 0.1), total: totalBytes, percent: 10 });
+        progressTimer = setInterval(() => {
+          if (currentPct < 90) {
+            currentPct += Math.max(1, Math.round((90 - currentPct) / 6));
+            const loaded = Math.round(totalBytes * (currentPct / 100));
+            onProgress({ loaded, total: totalBytes, percent: currentPct });
           }
-        };
+        }, 300);
+      }
 
-        xhr.onerror = () => reject(new Error('Network error during upload'));
-        xhr.ontimeout = () => reject(new Error('Upload timed out'));
-        xhr.send(bodyStr);
-      });
+      try {
+        const bodyStr = JSON.stringify(payload);
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: bodyStr
+        });
+        const data = await res.json();
+        if (progressTimer) clearInterval(progressTimer);
+        if (onProgress) {
+          onProgress({ loaded: totalBytes, total: totalBytes, percent: 100 });
+        }
+        return data;
+      } catch (err) {
+        if (progressTimer) clearInterval(progressTimer);
+        throw err;
+      }
     }
 
     // Video Thumbnail Generation Engine (Optimized Zero-Leak Lightweight Frame Extraction)
