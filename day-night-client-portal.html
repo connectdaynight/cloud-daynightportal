@@ -366,9 +366,7 @@
     }
 
     body.has-bnav .dn-social-dock {
-      bottom: calc(78px + env(safe-area-inset-bottom, 0px));
-      left: 50%;
-      transform: translateX(-50%);
+      display: none !important;
     }
 
     @media (max-width: 640px) {
@@ -396,9 +394,7 @@
       }
       .dn-social-dock::-webkit-scrollbar { display: none; }
       body.has-bnav .dn-social-dock {
-        bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-        left: 50%;
-        transform: translateX(-50%);
+        display: none !important;
       }
       .dn-social-btn {
         width: 34px;
@@ -3738,8 +3734,9 @@
       const existing = document.getElementById('dn-social-dock');
       const s = DATA.settings || {};
 
-      // Hide dock if disabled by administration or if site is paused
-      if (s.showSocialLinks === false || s.sitePaused) {
+      // Only display the social media dock on the intro/splash screen
+      const isIntro = (view.screen === 'splash' || view.screen === 'dn-intro');
+      if (!isIntro || s.showSocialLinks === false || s.sitePaused) {
         if (existing) existing.remove();
         return;
       }
