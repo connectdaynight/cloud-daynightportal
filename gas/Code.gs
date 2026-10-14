@@ -97,6 +97,15 @@ function doPost(e) {
       });
     }
 
+    // 1B. Direct High-Capacity Resumable Video Upload Session Init (Supports 700MB - 5GB+)
+    if (action === "initVideoUpload") {
+      return jsonResponse(initVideoUpload(payload));
+    }
+    // 1C. Direct High-Capacity Resumable Video Upload Finalization
+    if (action === "finalizeVideoUpload") {
+      return jsonResponse(finalizeVideoUpload(payload));
+    }
+
     // 2. Upload Video to Google Drive & Create Reel
     if (action === "uploadVideo") {
       const clientName = payload.clientName || "General";
@@ -519,4 +528,133 @@ function saveData(dataObj) {
   } else {
     master.createFile(DATA_FILE_NAME, content, MimeType.PLAIN_TEXT);
   }
+}
+
+/**
+ * STEP 1 OF LARGE UPLOAD (Supports 700MB - 5GB+):
+ * Creates a Google Drive Resumable Upload Session URL with CORS unlocked for the portal origin.
+ */
+function initVideoUpload(payload) {
+  // Ensure DriveApp & UrlFetchApp OAuth scopes are authorized
+  DriveApp.getRootFolder();
+
+  var clientName = payload.clientName || 'General';
+  var subFolderName = payload.branch || payload.album || '';
+  var filename = payload.filename || ('video_' + Date.now() + '.mp4');
+  var mimeType = payload.mimeType || 'video/mp4';
+  var fileSize = payload.fileSize || 0;
+  var origin = payload.origin || '*';
+
+  // Find or create: Day Night Media Portal / Reels / {ClientName} / {Branch or Album}
+  var rootIter = DriveApp.getFoldersByName('Day Night Media Portal');
+  var rootFolder = rootIter.hasNext() ? rootIter.next() : DriveApp.createFolder('Day Night Media Portal');
+
+  var reelsIter = rootFolder.getFoldersByName('Reels');
+  var reelsFolder = reelsIter.hasNext() ? reelsIter.next() : rootFolder.createFolder('Reels');
+
+  var clientIter = reelsFolder.getFoldersByName(clientName);
+  var targetFolder = clientIter.hasNext() ? clientIter.next() : reelsFolder.createFolder(clientName);
+
+  if (subFolderName) {
+    var subIter = targetFolder.getFoldersByName(subFolderName);
+    targetFolder = subIter.hasNext() ? subIter.next() : targetFolder.createFolder(subFolderName);
+  }
+
+  var metadata = {
+    name: filename,
+    mimeType: mimeType,
+    parents: [targetFolder.getId()]
+  };
+
+  var headers = {
+    'Authorization': 'Bearer ' + ScriptApp.getOAuthToken(),
+    'X-Upload-Content-Type': mimeType,
+    'Origin': origin
+  };
+  if (fileSize > 0) {
+    headers['X-Upload-Content-Length'] = String(fileSize);
+  }
+
+  var res = UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', {
+    method: 'post',
+    contentType: 'application/json; charset=UTF-8',
+    headers: headers,
+    payload: JSON.stringify(metadata),
+    muteHttpExceptions: true
+  });
+
+  var code = res.getResponseCode();
+  var resHeaders = res.getAllHeaders();
+  var uploadUrl = resHeaders['Location'] || resHeaders['location'];
+
+  if ((code === 200 || code === 201) && uploadUrl) {
+    return {
+      success: true,
+      uploadUrl: uploadUrl,
+      folderId: targetFolder.getId()
+    };
+  } else {
+    return {
+      success: false,
+      error: 'Failed to initialize Drive resumable session (HTTP ' + code + '): ' + res.getContentText()
+    };
+  }
+}
+
+/**
+ * STEP 3 OF LARGE UPLOAD:
+ * Sets public sharing permissions on the uploaded file and saves the reel metadata.
+ */
+function finalizeVideoUpload(payload) {
+  var fileId = payload.fileId;
+  if (!fileId) return { success: false, error: 'Missing fileId' };
+
+  try {
+    var file = DriveApp.getFileById(fileId);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {
+    // Continue even if domain policy restricts link sharing
+  }
+
+  var viewUrl = 'https://drive.google.com/file/d/' + fileId + '/view';
+  var driveThumb = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1000';
+
+  var newReel = {
+    id: payload.id || ('r' + Date.now().toString(36)),
+    c: payload.clientId,
+    type: 'reel',
+    y: Number(payload.year) || new Date().getFullYear(),
+    m: Number(payload.month) || 0,
+    b: payload.branch || '',
+    album: payload.album || '',
+    title: payload.title || 'Untitled Reel',
+    date: payload.date || new Date().toISOString().slice(0, 10),
+    url: viewUrl,
+    fileId: fileId,
+    dur: payload.dur || '0:30',
+    coverUrl: payload.coverUrl || driveThumb,
+    hidden: false,
+    status: payload.status || 'approved',
+    views: 0,
+    downloads: 0,
+    sample: false,
+    thumbnailGenerated: true
+  };
+
+  var data = loadData();
+  data.reels = data.reels || [];
+  var existingIdx = data.reels.findIndex(function(r) { return r.id === newReel.id; });
+  if (existingIdx !== -1) {
+    data.reels[existingIdx] = newReel;
+  } else {
+    data.reels.unshift(newReel);
+  }
+  saveData(data);
+
+  return {
+    success: true,
+    fileId: fileId,
+    url: viewUrl,
+    reel: newReel
+  };
 }
