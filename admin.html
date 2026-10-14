@@ -2494,6 +2494,40 @@
           </div>
         </div>
 
+        <!-- 3. MANUAL CUSTOM THUMBNAIL UPLOAD (OPTIONAL) -->
+        <div class="form-group" style="margin-top:6px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px 12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <label style="margin:0;font-size:11px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Manual Thumbnail Upload (Optional)
+            </label>
+            <span id="custom-thumb-status" style="font-size:10px;color:var(--mute);font-weight:600;">JPG, PNG, WebP</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <input type="file" id="f-custom-thumb-file" accept="image/jpeg,image/png,image/webp" style="display:none;">
+            <button type="button" id="btn-pick-custom-thumb" class="btn-portal" style="font-size:11px;font-weight:600;padding:6px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;background:#FFFFFF;cursor:pointer;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              Choose Custom Thumbnail
+            </button>
+            <span id="custom-thumb-fname" style="font-size:11px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">Auto frame / Drive thumbnail</span>
+            <button type="button" id="btn-remove-custom-thumb" style="display:none;background:none;border:none;color:var(--red);font-size:11px;cursor:pointer;padding:2px 4px;font-weight:600;">Remove</button>
+          </div>
+
+          <!-- Thumbnail Visual Preview Card -->
+          <div id="custom-thumb-preview-box" style="display:none;margin-top:10px;padding:8px 10px;background:#FFFFFF;border:1px solid var(--line);border-radius:10px;align-items:center;gap:12px;">
+            <div style="width:48px;height:64px;border-radius:6px;overflow:hidden;background:#000;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.12);">
+              <img id="custom-thumb-preview-img" style="width:100%;height:100%;object-fit:cover;" src="" alt="Thumbnail">
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(31,175,100,0.12);padding:2px 6px;border-radius:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Custom Thumbnail Active</span>
+              </div>
+              <p id="custom-thumb-dims" style="margin:2px 0 0;font-size:10px;color:var(--mute);">Ready for upload</p>
+            </div>
+          </div>
+        </div>
+
 
         <div class="form-row2">
           <div class="form-group">
@@ -2672,17 +2706,67 @@
           }
         }
 
-        const coverFileInput = sc.querySelector('#f-cover-file');
-        if (coverFileInput) {
-          coverFileInput.onchange = e => {
+        const customThumbInput = sc.querySelector('#f-custom-thumb-file');
+        const btnPickCustomThumb = sc.querySelector('#btn-pick-custom-thumb');
+        const customThumbFname = sc.querySelector('#custom-thumb-fname');
+        const btnRemoveCustomThumb = sc.querySelector('#btn-remove-custom-thumb');
+        const customThumbPrevBox = sc.querySelector('#custom-thumb-preview-box');
+        const customThumbPrevImg = sc.querySelector('#custom-thumb-preview-img');
+        const customThumbDims = sc.querySelector('#custom-thumb-dims');
+        const customThumbStatus = sc.querySelector('#custom-thumb-status');
+
+        if (btnPickCustomThumb && customThumbInput) {
+          btnPickCustomThumb.onclick = () => customThumbInput.click();
+          customThumbInput.onchange = e => {
             const f = e.target.files[0];
             if (!f) return;
             const r = new FileReader();
             r.onload = () => {
-              coverData = r.result;
-              sc.querySelector('#f-cover').value = 'Selected (' + f.name + ')';
+              const img = new Image();
+              img.onload = () => {
+                const maxDim = 1200;
+                let w = img.width, h = img.height;
+                if (w > maxDim || h > maxDim) {
+                  if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                  else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+                coverData = dataUrl;
+
+                customThumbFname.textContent = f.name;
+                customThumbDims.textContent = `${w}×${h} · Custom Cover`;
+                customThumbPrevImg.src = dataUrl;
+                customThumbPrevBox.style.display = 'flex';
+                btnRemoveCustomThumb.style.display = 'inline-block';
+                customThumbStatus.textContent = 'Custom Image Selected';
+                customThumbStatus.style.color = 'var(--green)';
+
+                // If in upload mode, also update the main thumbnail preview image
+                const thumbPreviewImg = sc.querySelector('#thumb-preview-img');
+                if (thumbPreviewImg) thumbPreviewImg.src = dataUrl;
+              };
+              img.src = r.result;
             };
             r.readAsDataURL(f);
+          };
+        }
+
+        if (btnRemoveCustomThumb) {
+          btnRemoveCustomThumb.onclick = () => {
+            customThumbInput.value = '';
+            customThumbFname.textContent = 'Auto frame / Drive thumbnail';
+            customThumbPrevBox.style.display = 'none';
+            btnRemoveCustomThumb.style.display = 'none';
+            customThumbStatus.textContent = 'JPG, PNG, WebP';
+            customThumbStatus.style.color = 'var(--mute)';
+            coverData = generatedThumbData || '';
+            const thumbPreviewImg = sc.querySelector('#thumb-preview-img');
+            if (thumbPreviewImg && generatedThumbData) thumbPreviewImg.src = generatedThumbData;
+            if (currentMode === 'link') triggerUrlDetection();
           };
         }
 
@@ -3362,8 +3446,24 @@ function openEditModal(r) {
           <input id="e-url" value="${r.url}">
         </div>
         <div class="form-group">
-          <label>Cover / Thumbnail URL</label>
-          <input id="e-cover" value="${r.coverUrl || ''}">
+          <label>Cover / Thumbnail</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input id="e-cover" value="${r.coverUrl || ''}" placeholder="Image URL or upload below" style="flex:1;">
+            <input type="file" id="e-cover-file" accept="image/jpeg,image/png,image/webp" style="display:none;">
+            <button type="button" id="btn-edit-pick-thumb" class="btn-portal" style="font-size:11px;font-weight:600;padding:8px 12px;border-radius:8px;flex:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#FFFFFF;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              Upload Thumbnail
+            </button>
+          </div>
+          <div id="edit-thumb-preview-box" style="margin-top:8px;display:${r.coverUrl ? 'flex' : 'none'};align-items:center;gap:10px;padding:6px 10px;background:var(--soft);border:1px solid var(--line);border-radius:8px;">
+            <div style="width:40px;height:54px;border-radius:4px;overflow:hidden;background:#000;flex-shrink:0;">
+              <img id="edit-thumb-preview-img" src="${r.coverUrl || ''}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.parentElement.style.display='none'">
+            </div>
+            <div style="flex:1;min-width:0;font-size:11px;color:var(--navy);">
+              <b id="edit-thumb-status" style="display:block;color:var(--green);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Current Thumbnail Active</b>
+              <small id="edit-thumb-note" style="color:var(--mute);">Click "Upload Thumbnail" above to replace with custom image</small>
+            </div>
+          </div>
         </div>
         <div class="form-row2">
           <div class="form-group">
@@ -3439,6 +3539,48 @@ function openEditModal(r) {
             sel.appendChild(opt);
           });
         };
+
+        const eCoverInput = sc.querySelector('#e-cover');
+        const eCoverFileInput = sc.querySelector('#e-cover-file');
+        const btnEditPickThumb = sc.querySelector('#btn-edit-pick-thumb');
+        const editThumbBox = sc.querySelector('#edit-thumb-preview-box');
+        const editThumbImg = sc.querySelector('#edit-thumb-preview-img');
+        const editThumbStatus = sc.querySelector('#edit-thumb-status');
+        const editThumbNote = sc.querySelector('#edit-thumb-note');
+
+        if (btnEditPickThumb && eCoverFileInput) {
+          btnEditPickThumb.onclick = () => eCoverFileInput.click();
+          eCoverFileInput.onchange = e => {
+            const f = e.target.files[0];
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              const img = new Image();
+              img.onload = () => {
+                const maxDim = 1200;
+                let w = img.width, h = img.height;
+                if (w > maxDim || h > maxDim) {
+                  if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                  else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+                eCoverInput.value = dataUrl;
+                editThumbImg.src = dataUrl;
+                editThumbBox.style.display = 'flex';
+                editThumbStatus.textContent = 'Custom Thumbnail Loaded (' + f.name + ')';
+                editThumbStatus.style.color = 'var(--green)';
+                editThumbNote.textContent = `${w}×${h} · Click "Save Changes" to apply`;
+                toast('Custom thumbnail loaded! Click Save Changes to apply.', 'info');
+              };
+              img.src = reader.result;
+            };
+            reader.readAsDataURL(f);
+          };
+        }
 
         sc.querySelector('#e-save').onclick = async () => {
           r.title = sc.querySelector('#e-title').value.trim();
