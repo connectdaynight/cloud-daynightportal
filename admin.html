@@ -880,7 +880,8 @@
     let PASSKEY = localStorage.getItem('dn_admin_passkey') || 'DN@2026';
 
     const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
-    const MOCK_IDS = ['s1', 's2', 's3', 's4', 's5', 'story_tcs_01', 'story_tcs_02', 'poster_tcs_01', 'poster_tcs_02'];
+    const MOCK_IDS = ['s1', 's2', 's3', 's4', 's5', 'story_tcs_01', 'story_tcs_02', 'poster_tcs_01', 'poster_tcs_02', 'rmv7woz8l'];
+    const isMockOrTest = r => !r || Boolean(r.sample) || !r.url || MOCK_IDS.includes(r.id) || /\b(test|sample|mock|fake|dummy)\b/i.test(r.title || '');
 
     let DATA = {
       _updatedAt: Date.now(),
@@ -931,7 +932,8 @@
           if (!DATA.settings.social) DATA.settings.social = {};
           if (!DATA.deletedReelIds) DATA.deletedReelIds = [];
           if (!DATA.deletedClientIds) DATA.deletedClientIds = [];
-          DATA.reels = DATA.reels.filter(r => !r.sample && !MOCK_IDS.includes(r.id));
+          DATA.reels = DATA.reels.filter(r => !isMockOrTest(r));
+          try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
         }
       } catch(e) {}
     }
@@ -1258,8 +1260,8 @@
           DATA.deletedClientIds = DATA.deletedClientIds || [];
 
           // Strip deleted and mock items
-          const gasReels = (json.data.reels || []).filter(r => !r.sample && !MOCK_IDS.includes(r.id) && !DATA.deletedReelIds.includes(r.id));
-          const localReels = (DATA.reels || []).filter(r => !r.sample && !MOCK_IDS.includes(r.id) && !DATA.deletedReelIds.includes(r.id));
+          const gasReels = (json.data.reels || []).filter(r => !isMockOrTest(r) && !DATA.deletedReelIds.includes(r.id));
+          const localReels = (DATA.reels || []).filter(r => !isMockOrTest(r) && !DATA.deletedReelIds.includes(r.id));
           const mergedReels = [...gasReels];
           localReels.forEach(lr => {
             if (!mergedReels.some(gr => gr.id === lr.id)) mergedReels.unshift(lr);
