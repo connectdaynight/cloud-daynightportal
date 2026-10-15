@@ -893,6 +893,10 @@
       box-sizing: border-box !important;
       overflow: hidden !important;
       overflow-x: hidden !important;
+      overflow-y: hidden !important;
+      touch-action: none !important;
+      overscroll-behavior: none !important;
+      -webkit-overflow-scrolling: auto !important;
     }
 
     .scrim.video-modal-scrim .sheet,
@@ -924,7 +928,10 @@
       animation: none !important;
       overflow: hidden !important;
       overflow-x: hidden !important;
+      overflow-y: hidden !important;
       box-sizing: border-box !important;
+      touch-action: none !important;
+      overscroll-behavior: none !important;
     }
 
     .scrim.video-modal-scrim .sheet .video-modal-wrap {
@@ -943,6 +950,9 @@
       box-sizing: border-box !important;
       overflow: hidden !important;
       overflow-x: hidden !important;
+      overflow-y: hidden !important;
+      touch-action: none !important;
+      overscroll-behavior: none !important;
     }
 
     .scrim.video-modal-scrim .v-modal-header {
@@ -953,26 +963,27 @@
       align-items: center !important;
       justify-content: space-between !important;
       flex: 0 0 auto !important;
+      min-height: 60px !important;
       box-sizing: border-box !important;
       background: #FFFFFF !important;
       border: none !important;
       border-bottom: 1px solid var(--line) !important;
-      padding: calc(env(safe-area-inset-top, 6px) + 4px) 12px 8px 12px !important;
+      padding: calc(env(safe-area-inset-top, 8px) + 8px) 14px 10px 14px !important;
       z-index: 10 !important;
     }
 
     .scrim.video-modal-scrim .sheet h4 {
       color: var(--navy) !important;
-      font-size: 15px !important;
+      font-size: 16px !important;
       font-weight: 700 !important;
       margin: 0 !important;
-      line-height: 1.2 !important;
+      line-height: 1.25 !important;
     }
 
     .scrim.video-modal-scrim .sheet p {
       color: var(--mute) !important;
-      font-size: 11px !important;
-      margin: 2px 0 0 !important;
+      font-size: 12px !important;
+      margin: 3px 0 0 !important;
       line-height: 1.2 !important;
     }
 
@@ -1015,6 +1026,8 @@
       background: #000000 !important;
       overflow: hidden !important;
       box-sizing: border-box !important;
+      touch-action: pan-x !important;
+      overscroll-behavior: none !important;
     }
 
     /* Top Video Screen Section of Unified Box */
@@ -1035,6 +1048,8 @@
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
+      touch-action: pan-x !important;
+      overscroll-behavior: none !important;
     }
 
     .video-modal-unit .video-card-inner {
@@ -2294,6 +2309,18 @@
       z-index: 50;
       box-shadow: 0 -4px 20px rgba(18, 41, 74, 0.05);
       transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    /* Lock body and viewport when any modal is active to prevent vertical bounce and scrolling */
+    html.has-modal,
+    body.has-modal,
+    html:has(.video-modal-scrim),
+    body:has(.video-modal-scrim) {
+      overflow: hidden !important;
+      overscroll-behavior: none !important;
+      touch-action: none !important;
+      height: 100% !important;
+      height: 100dvh !important;
     }
 
     /* Unconditionally hide bottom navbar whenever ANY modal or scrim is active */
@@ -3914,6 +3941,7 @@
       });
       document.body.appendChild(sc);
       document.body.classList.add('has-modal');
+      document.documentElement.classList.add('has-modal');
       const bNav = document.querySelector('.client-bottom-nav');
       if (bNav) bNav.style.display = 'none';
 
@@ -3924,6 +3952,7 @@
         origRemove();
         if (!document.querySelector('.scrim')) {
           document.body.classList.remove('has-modal');
+          document.documentElement.classList.remove('has-modal');
           const nav = document.querySelector('.client-bottom-nav');
           if (nav && view.client && view.screen !== 'splash' && view.screen !== 'client-pin') {
             nav.style.display = '';
@@ -6508,6 +6537,7 @@
           if (!isDraggingCard || isSliding) return;
           const diffX = e.touches[0].clientX - touchStartX;
           const diffY = e.touches[0].clientY - touchStartY;
+          if (e.cancelable) e.preventDefault();
           if (Math.abs(diffX) > Math.abs(diffY)) {
             currentDiffX = diffX;
             const dampScale = 1 - Math.min(0.08, Math.abs(diffX) * 0.0003);
@@ -6515,7 +6545,13 @@
             cardInner.style.transform = `translateX(${diffX * 0.75}px) scale(${dampScale})`;
             cardInner.style.filter = `brightness(${1 - Math.min(0.15, Math.abs(diffX) * 0.0005)})`;
           }
-        }, { passive: true });
+        }, { passive: false });
+
+        modalSc.addEventListener('touchmove', e => {
+          if (!e.target.closest('#v-gear-menu')) {
+            if (e.cancelable) e.preventDefault();
+          }
+        }, { passive: false });
 
         const finishCardSwipe = () => {
           if (!isDraggingCard || isSliding) return;
