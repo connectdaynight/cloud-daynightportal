@@ -931,20 +931,22 @@
       width: 100% !important;
       max-width: 100% !important;
       height: 100% !important;
+      height: 100dvh !important;
+      max-height: 100dvh !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;
       align-items: center !important;
-      gap: 6px !important;
+      gap: 4px !important;
       margin: 0 auto !important;
-      padding: 0 10px !important;
+      padding: calc(env(safe-area-inset-top, 6px) + 4px) 8px calc(env(safe-area-inset-bottom, 8px) + 8px) 8px !important;
       box-sizing: border-box !important;
       overflow: hidden !important;
       overflow-x: hidden !important;
     }
 
     .scrim.video-modal-scrim .v-modal-header {
-      --v-w: min(calc(100vw - 20px), calc((100dvh - 120px) * 9 / 16), 460px);
+      --v-w: min(calc(100vw - 20px), calc((100dvh - 156px) * 9 / 16), 420px);
       width: var(--v-w) !important;
       max-width: var(--v-w) !important;
       margin: 0 auto !important;
@@ -955,7 +957,7 @@
       box-sizing: border-box !important;
       background: transparent !important;
       border: none !important;
-      padding: 4px 6px !important;
+      padding: 4px 4px !important;
     }
 
     .scrim.video-modal-scrim .sheet h4 {
@@ -995,19 +997,19 @@
       border-color: var(--navy) !important;
     }
 
-    /* Single Unified Video Player Unit (Video Screen + Action Dock in ONE Box, Centered) */
+    /* Single Unified Video Player Unit (Video Screen + Action Dock in ONE Box, Perfectly Centered & Fully in View) */
     .video-modal-unit {
-      --v-w: min(calc(100vw - 20px), calc((100dvh - 120px) * 9 / 16), 460px);
+      --v-w: min(calc(100vw - 20px), calc((100dvh - 156px) * 9 / 16), 420px);
       width: var(--v-w) !important;
       max-width: var(--v-w) !important;
-      margin: 0 auto !important;
+      margin: auto auto !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: stretch !important;
       justify-content: flex-start !important;
-      border-radius: 20px !important;
+      border-radius: 18px !important;
       border: 1px solid var(--line) !important;
-      box-shadow: 0 14px 40px rgba(18, 41, 74, 0.10) !important;
+      box-shadow: 0 10px 30px rgba(18, 41, 74, 0.08) !important;
       background: #FFFFFF !important;
       overflow: hidden !important;
       box-sizing: border-box !important;
@@ -1054,12 +1056,12 @@
       background: #000000 !important;
     }
 
-    /* Integrated Action Dock (Directly inside the bottom of the unified box, NO separate outside box) */
+    /* Integrated Action Dock (Directly inside the bottom of the unified box, 100% visible on screen) */
     .video-modal-unit .video-modal-acts {
       width: 100% !important;
       max-width: 100% !important;
       margin: 0 !important;
-      padding: 7px 4px 7px !important;
+      padding: 6px 4px 6px !important;
       border: none !important;
       border-top: 1px solid var(--line) !important;
       border-radius: 0 !important;
@@ -1120,32 +1122,6 @@
       white-space: nowrap !important;
       letter-spacing: -0.1px !important;
       line-height: 1 !important;
-    }
-
-    @media (max-width: 600px) {
-      .scrim.video-modal-scrim,
-      .scrim.video-modal-scrim .sheet {
-        background: #FFFFFF !important;
-        padding-inline: 0 !important;
-      }
-      .scrim.video-modal-scrim .sheet .video-modal-wrap {
-        padding-inline: 0 !important;
-      }
-      .scrim.video-modal-scrim .v-modal-header {
-        --v-w: 100vw;
-        width: 100% !important;
-        max-width: 100% !important;
-        padding: 6px 14px 4px !important;
-      }
-      .video-modal-unit {
-        --v-w: min(100vw, calc((100dvh - 110px) * 9 / 16));
-        width: var(--v-w) !important;
-        max-width: var(--v-w) !important;
-        margin: auto auto !important;
-        border-radius: 0 !important;
-        border-left: none !important;
-        border-right: none !important;
-      }
     }
 
     /* Mobile Recent Apps Style Carousel Container (Zero Black Empty Space) */
@@ -2315,6 +2291,19 @@
       padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
       z-index: 50;
       box-shadow: 0 -4px 20px rgba(18, 41, 74, 0.05);
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    /* Unconditionally hide bottom navbar whenever ANY modal or scrim is active */
+    body.has-modal .client-bottom-nav,
+    body:has(.scrim) .client-bottom-nav,
+    .scrim ~ .client-bottom-nav,
+    .scrim ~ .app .client-bottom-nav {
+      display: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      transform: translateY(150px) !important;
     }
     .bnav-btn {
       flex: 1;
@@ -3921,12 +3910,22 @@
         if (e.target.closest('[data-close]') || (customClass === 'share-modal-scrim' && e.target === sc)) sc.remove();
       });
       document.body.appendChild(sc);
+      document.body.classList.add('has-modal');
+      const bNav = document.querySelector('.client-bottom-nav');
+      if (bNav) bNav.style.display = 'none';
 
       // Track modal in browser history for back button support
       try { window.history.pushState({ modalOpen: true, t: Date.now() }, ''); } catch(e) {}
       const origRemove = sc.remove.bind(sc);
       sc.remove = function() {
         origRemove();
+        if (!document.querySelector('.scrim')) {
+          document.body.classList.remove('has-modal');
+          const nav = document.querySelector('.client-bottom-nav');
+          if (nav && view.client && view.screen !== 'splash' && view.screen !== 'client-pin') {
+            nav.style.display = '';
+          }
+        }
         if (!isClosingModalViaHistory && window.history.state && window.history.state.modalOpen) {
           isProgrammaticHistoryBack = true;
           try { window.history.back(); } catch(e) {}
@@ -4416,7 +4415,7 @@
     // Luxury Milk-White Bottom Navigation Bar (Navbar - Synchronized Across Portal)
     function renderBottomNav() {
       document.getElementById('dn-social-dock')?.remove();
-      if (!view.client || view.screen === 'splash' || view.screen === 'client-pin') return '';
+      if (!view.client || view.screen === 'splash' || view.screen === 'client-pin' || document.querySelector('.scrim')) return '';
       const isHome = view.screen === 'genesis';
       const isReels = view.screen === 'reels';
       const isBranches = view.screen === 'months' || view.screen === 'branches' || view.screen === 'albums';
