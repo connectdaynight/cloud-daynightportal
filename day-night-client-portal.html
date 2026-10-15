@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#FFFDF8">
   <!-- Primary Meta Tags -->
   <title>Day Night Media | DAY NIGHT</title>
@@ -864,7 +864,7 @@
 
     .scrim.center { align-items: center; padding: 16px; }
 
-    /* FULL-SCREEN VIDEO VIEWPORT (EDGE-TO-EDGE, NO BLACK BOX BEHIND IT) */
+    /* FULL-SCREEN VIDEO VIEWPORT (EDGE-TO-EDGE, NO DEAD SPACE, PERFECTLY ATTACHED DOCK) */
     .scrim.video-modal-scrim,
     .scrim.center.video-modal-scrim {
       position: fixed !important;
@@ -881,7 +881,7 @@
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
-      justify-content: center !important;
+      justify-content: flex-start !important;
       padding: 0 !important;
       margin: 0 !important;
       background: #FFFFFF !important;
@@ -911,7 +911,7 @@
       max-height: 100dvh !important;
       border-radius: 0 !important;
       margin: 0 auto !important;
-      padding: calc(env(safe-area-inset-top, 6px) + 6px) 0 calc(env(safe-area-inset-bottom, 6px) + 6px) 0 !important;
+      padding: 0 !important;
       box-shadow: none !important;
       background: #FFFFFF !important;
       color: var(--navy) !important;
@@ -919,8 +919,8 @@
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
-      justify-content: space-between !important;
-      gap: 6px !important;
+      justify-content: flex-start !important;
+      gap: 0 !important;
       animation: none !important;
       overflow: hidden !important;
       overflow-x: hidden !important;
@@ -935,29 +935,30 @@
       max-height: 100dvh !important;
       display: flex !important;
       flex-direction: column !important;
-      justify-content: space-between !important;
+      justify-content: flex-start !important;
       align-items: center !important;
-      gap: 4px !important;
+      gap: 0 !important;
       margin: 0 auto !important;
-      padding: calc(env(safe-area-inset-top, 6px) + 4px) 8px calc(env(safe-area-inset-bottom, 8px) + 8px) 8px !important;
+      padding: 0 !important;
       box-sizing: border-box !important;
       overflow: hidden !important;
       overflow-x: hidden !important;
     }
 
     .scrim.video-modal-scrim .v-modal-header {
-      --v-w: min(calc(100vw - 20px), calc((100dvh - 156px) * 9 / 16), 420px);
-      width: var(--v-w) !important;
-      max-width: var(--v-w) !important;
+      width: 100% !important;
+      max-width: 480px !important;
       margin: 0 auto !important;
       display: flex !important;
       align-items: center !important;
       justify-content: space-between !important;
-      flex: none !important;
+      flex: 0 0 auto !important;
       box-sizing: border-box !important;
-      background: transparent !important;
+      background: #FFFFFF !important;
       border: none !important;
-      padding: 4px 4px !important;
+      border-bottom: 1px solid var(--line) !important;
+      padding: calc(env(safe-area-inset-top, 6px) + 4px) 12px 8px 12px !important;
+      z-index: 10 !important;
     }
 
     .scrim.video-modal-scrim .sheet h4 {
@@ -997,31 +998,32 @@
       border-color: var(--navy) !important;
     }
 
-    /* Single Unified Video Player Unit (Video Screen + Action Dock in ONE Box, Perfectly Centered & Fully in View) */
+    /* Single Unified Video Player Unit (Video Screen + Action Dock in ONE Seamless Edge-to-Edge Flex Container) */
     .video-modal-unit {
-      --v-w: min(calc(100vw - 20px), calc((100dvh - 156px) * 9 / 16), 420px);
-      width: var(--v-w) !important;
-      max-width: var(--v-w) !important;
-      margin: auto auto !important;
+      flex: 1 1 0 !important;
+      min-height: 0 !important;
+      width: 100% !important;
+      max-width: 480px !important;
+      margin: 0 auto !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: stretch !important;
       justify-content: flex-start !important;
-      border-radius: 18px !important;
-      border: 1px solid var(--line) !important;
-      box-shadow: 0 10px 30px rgba(18, 41, 74, 0.08) !important;
-      background: #FFFFFF !important;
+      border-radius: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      background: #000000 !important;
       overflow: hidden !important;
       box-sizing: border-box !important;
-      flex: none !important;
     }
 
     /* Top Video Screen Section of Unified Box */
     .video-modal-unit .video-frame-box {
+      flex: 1 1 0 !important;
+      min-height: 0 !important;
       width: 100% !important;
-      max-width: 100% !important;
-      aspect-ratio: 9/16 !important;
-      height: auto !important;
+      height: 100% !important;
+      aspect-ratio: auto !important;
       border: none !important;
       border-radius: 0 !important;
       box-shadow: none !important;
@@ -1033,7 +1035,6 @@
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
-      flex: none !important;
     }
 
     .video-modal-unit .video-card-inner {
@@ -1056,12 +1057,13 @@
       background: #000000 !important;
     }
 
-    /* Integrated Action Dock (Directly inside the bottom of the unified box, 100% visible on screen) */
+    /* Integrated Action Dock (Directly attached to bottom, 100% visible on screen above bottom safe area) */
     .video-modal-unit .video-modal-acts {
+      flex: 0 0 auto !important;
       width: 100% !important;
       max-width: 100% !important;
       margin: 0 !important;
-      padding: 6px 4px 6px !important;
+      padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 8px)) 6px !important;
       border: none !important;
       border-top: 1px solid var(--line) !important;
       border-radius: 0 !important;
@@ -1069,9 +1071,9 @@
       background: #FFFFFF !important;
       display: grid !important;
       grid-template-columns: repeat(3, 1fr) !important;
-      gap: 2px !important;
+      gap: 4px !important;
       box-sizing: border-box !important;
-      flex: none !important;
+      z-index: 10 !important;
     }
 
     .video-modal-unit .video-modal-acts .act {
@@ -2515,7 +2517,8 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
+      background: rgba(18, 41, 74, 0.96);
     }
 
     .poster .motif {
