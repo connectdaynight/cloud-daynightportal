@@ -3189,6 +3189,423 @@
       font-weight: 500;
     }
 
+    /* ==========================================================================
+       DESKTOP & PC OPTIMIZATIONS (@media min-width: 768px, 1024px & 1400px)
+       Maintains 100% integrity of Mobile CSS while elevating Desktop layout
+       ========================================================================== */
+
+    @media (min-width: 768px) {
+      /* 1. Main Application Container */
+      .app {
+        max-width: 1040px;
+        padding-inline: 36px;
+        padding-bottom: 120px;
+      }
+
+      /* 2. Top Header */
+      .top {
+        margin-inline: -36px;
+        padding: 16px 36px;
+        gap: 16px;
+        background: rgba(255, 253, 248, 0.96);
+      }
+      .top .title h1 {
+        font-size: 17px;
+      }
+      .top .title small {
+        font-size: 12px;
+      }
+      .top .back:hover {
+        background: var(--soft);
+        border-color: var(--navy);
+      }
+
+      /* 3. Page Header & Head */
+      .head {
+        padding-block: 16px 24px;
+        gap: 6px;
+      }
+      .head h2 {
+        font-size: 32px;
+        letter-spacing: -0.02em;
+      }
+      .head .clogo {
+        height: 44px;
+        max-width: 280px;
+        margin-bottom: 8px;
+      }
+      .head small {
+        font-size: 13.5px;
+      }
+      .years button {
+        padding: 8px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .years button:hover:not([aria-pressed="true"]) {
+        color: var(--navy);
+        background: rgba(18, 41, 74, 0.05);
+      }
+
+      /* 4. View Switcher (Segmented Control) */
+      .view-switcher {
+        max-width: 440px;
+        margin: 0 auto 28px;
+        padding: 4px;
+        border-radius: 16px;
+      }
+      .view-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.18s ease;
+      }
+      .view-btn:hover:not(.active) {
+        color: var(--navy);
+        background: rgba(18, 41, 74, 0.04);
+      }
+
+      /* 5. Months Calendar Grid (Desktop 4 Columns Tablet / 6 Columns Wide) */
+      .months {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .month {
+        padding: 22px 14px 18px;
+        border-radius: 20px;
+        gap: 10px;
+        cursor: pointer;
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .month .cal {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 800;
+        padding-bottom: 8px;
+      }
+      .month .mn {
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .month .ct {
+        font-size: 11.5px;
+      }
+      .month:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 28px rgba(18, 41, 74, 0.08);
+        border-color: var(--c);
+      }
+
+      /* 6. Branches / Albums Grid */
+      .branches {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+      }
+      .branch {
+        border-radius: 20px;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+      .branch:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(18, 41, 74, 0.1);
+        border-color: var(--c);
+      }
+      .branch-cover-wrap {
+        height: 135px;
+      }
+      .branch-meta-wrap {
+        padding: 14px 16px;
+      }
+
+      /* 7. Reels / Media Grid (Desktop Multi-Column) */
+      .reels {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+      }
+      .reels.grid-1col {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+      .reels.grid-2col {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      }
+      .reels.grid-3col {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      }
+      .reels.grid-3col .acts {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 4px !important;
+      }
+      .reels.grid-3col .act {
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        flex-direction: column !important;
+      }
+      .reels.grid-3col .act .chip {
+        width: 24px !important;
+        height: 24px !important;
+      }
+      .reels.grid-3col .act .chip svg {
+        width: 14px !important;
+        height: 14px !important;
+      }
+      .reel {
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      }
+      .reel .poster {
+        transition: transform 0.22s ease, box-shadow 0.22s ease;
+      }
+      .reel:hover .poster {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 36px rgba(18, 41, 74, 0.14);
+      }
+      .reel .acts .act {
+        cursor: pointer;
+        transition: background 0.15s ease;
+      }
+      .reel .acts .act:hover {
+        background: var(--soft);
+      }
+
+      /* 8. Gallery Search & Controls Bar */
+      .gallery-tools-bar {
+        margin-bottom: 22px;
+        gap: 16px;
+      }
+      .gallery-search-box {
+        max-width: 440px;
+      }
+      .gallery-search-inp {
+        padding: 11px 36px 11px 40px;
+        font-size: 13px;
+      }
+      .gallery-title-row {
+        margin-top: 14px;
+        margin-bottom: 8px;
+      }
+      .gallery-heading {
+        font-size: 30px !important;
+        letter-spacing: -0.02em;
+      }
+      .gallery-sub {
+        font-size: 14px !important;
+      }
+      .density-btn {
+        cursor: pointer;
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      /* 9. Floating Luxury Bottom Navigation Dock */
+      .client-bottom-nav {
+        position: fixed !important;
+        bottom: 24px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: auto !important;
+        min-width: 440px !important;
+        max-width: 520px !important;
+        border-radius: 999px !important;
+        background: rgba(255, 255, 255, 0.94) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        border: 1px solid rgba(18, 41, 74, 0.12) !important;
+        box-shadow: 0 16px 40px rgba(18, 41, 74, 0.14), 0 2px 8px rgba(18, 41, 74, 0.05) !important;
+        padding: 6px 16px !important;
+        gap: 8px !important;
+        justify-content: center !important;
+      }
+      .bnav-btn {
+        flex: 1 !important;
+        max-width: 90px !important;
+        padding: 7px 12px !important;
+        border-radius: 999px !important;
+        cursor: pointer !important;
+        transition: background 0.15s ease, transform 0.15s ease, color 0.15s ease !important;
+      }
+      .bnav-btn:hover {
+        background: var(--soft) !important;
+        color: var(--navy) !important;
+        transform: translateY(-1px) !important;
+      }
+      .bnav-btn.active {
+        background: rgba(18, 41, 74, 0.06) !important;
+      }
+
+      /* 10. Splash / Agency Landing Screen */
+      .splash, .dn-intro {
+        max-width: 760px;
+        margin: 0 auto;
+        padding-block: 80px 120px;
+      }
+      .splash .mark, .dn-intro .mark {
+        width: 92px;
+        height: 92px;
+      }
+      .splash h1, .dn-intro h1 {
+        font-size: 36px;
+      }
+      .splash .clist {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+        gap: 14px !important;
+        width: 100% !important;
+      }
+      .splash .citem {
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .splash .citem:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 26px rgba(18, 41, 74, 0.08);
+      }
+
+      /* 11. Client Dedicated PIN Screen */
+      .client-pin-card {
+        max-width: 440px;
+        margin: 40px auto 0;
+        padding: 34px 28px;
+      }
+      .keypad-key {
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .keypad-key:hover {
+        background: var(--soft);
+        border-color: var(--navy);
+      }
+
+      /* 12. Client Profile Screen */
+      .profile-card {
+        max-width: 720px;
+        margin: 24px auto 0;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 16px !important;
+      }
+
+      /* 13. Centered Desktop Modals */
+      .scrim:not(.video-modal-scrim):not(.share-modal-scrim) {
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 24px !important;
+      }
+      .scrim:not(.video-modal-scrim):not(.share-modal-scrim) .sheet {
+        border-radius: 26px !important;
+        max-width: 520px !important;
+        margin: auto !important;
+        animation: pop 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      }
+
+      /* Video Modal on Desktop */
+      .scrim.video-modal-scrim {
+        background: rgba(10, 20, 36, 0.82) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+      }
+      .scrim.video-modal-scrim .sheet {
+        background: transparent !important;
+      }
+      .scrim.video-modal-scrim .v-modal-header {
+        background: #FFFFFF !important;
+        border-radius: 16px !important;
+        padding: 8px 14px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
+      }
+      .video-modal-unit {
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35) !important;
+      }
+      .v-flip-btn.v-flip-prev {
+        left: -54px !important;
+        width: 44px !important;
+        height: 44px !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        color: var(--navy) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+      }
+      .v-flip-btn.v-flip-next {
+        right: -54px !important;
+        width: 44px !important;
+        height: 44px !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        color: var(--navy) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+      }
+      .v-flip-btn:hover:not(:disabled) {
+        transform: scale(1.1) !important;
+        background: #FFFFFF !important;
+      }
+
+      /* Share Modal on Desktop */
+      .scrim.share-modal-scrim {
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 24px !important;
+      }
+      .scrim.share-modal-scrim .sheet {
+        border-radius: 26px !important;
+        max-width: 440px !important;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35) !important;
+      }
+    }
+
+    /* Wide Desktop Screens (1024px and up) */
+    @media (min-width: 1024px) {
+      .app {
+        max-width: 1240px;
+        padding-inline: 48px;
+      }
+      .top {
+        margin-inline: -48px;
+        padding: 18px 48px;
+      }
+      /* 6 Columns for Months: 2 Perfect Symmetric Rows of 6 Months */
+      .months {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 18px;
+      }
+      /* 4 Columns for Branches & Albums */
+      .branches {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 22px;
+      }
+      /* 4 Columns for Reels Gallery */
+      .reels {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 24px;
+      }
+      .reels.grid-3col {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+      }
+    }
+
+    /* Extra Wide Desktop (1400px and up) */
+    @media (min-width: 1400px) {
+      .app {
+        max-width: 1380px;
+        padding-inline: 56px;
+      }
+      .top {
+        margin-inline: -56px;
+        padding: 20px 56px;
+      }
+      .reels {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 24px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -3761,27 +4178,48 @@
     });
 
     async function checkConnection() {
-      if (!CONFIG.gasUrl) {
-        connectionState = { status: 'unconfigured', message: 'GAS URL not set (using local data)' };
-        return;
+      if (!CONFIG.gasUrl || CONFIG.gasUrl === OLD_GAS_URL) {
+        CONFIG.gasUrl = DEFAULT_GAS_URL;
+        localStorage.setItem('dn_gas_url', DEFAULT_GAS_URL);
       }
       try {
-        const res = await fetch(`${CONFIG.gasUrl}?action=ping`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(`${CONFIG.gasUrl}?action=ping`, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const json = await res.json();
         if (json.success) {
           connectionState = { status: 'online', message: 'Google Drive connected' };
           fetchLiveData();
+          return;
         } else {
-          connectionState = { status: 'offline', message: json.error || 'Connection failed' };
+          throw new Error(json.error || 'Connection verification failed');
         }
       } catch (e) {
+        // If current URL failed and is different from DEFAULT_GAS_URL, fall back to DEFAULT_GAS_URL
+        if (CONFIG.gasUrl !== DEFAULT_GAS_URL) {
+          try {
+            CONFIG.gasUrl = DEFAULT_GAS_URL;
+            localStorage.setItem('dn_gas_url', DEFAULT_GAS_URL);
+            const res = await fetch(`${DEFAULT_GAS_URL}?action=ping`);
+            const json = await res.json();
+            if (json.success) {
+              connectionState = { status: 'online', message: 'Google Drive connected' };
+              fetchLiveData();
+              return;
+            }
+          } catch(err) {}
+        }
         connectionState = { status: 'offline', message: 'Offline mode active' };
       }
     }
 
     async function fetchLiveData() {
       try {
-        const res = await fetch(`${CONFIG.gasUrl}?action=getData`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+        const res = await fetch(`${CONFIG.gasUrl}?action=getData`, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const json = await res.json();
         if (json.success && json.data) {
           DATA.deletedReelIds = DATA.deletedReelIds || [];
