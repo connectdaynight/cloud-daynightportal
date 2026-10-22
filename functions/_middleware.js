@@ -5,21 +5,12 @@
  * and browser visitors.
  */
 
-const KNOWN_CLIENTS = {
-  'tcs': {
-    name: 'The Chennai Silks',
-    slug: 'tcs',
-    image: '/Logo/tcs-logo.png',
-    desc: 'The Chennai Silks · Private Client Delivery Portal'
-  }
-};
-
 export async function onRequest(context) {
   const { request, next, env } = context;
   const url = new URL(request.url);
 
-  // Skip static assets (images, fonts, scripts, stylesheets, etc.)
-  if (/\.(png|jpe?g|gif|webp|svg|css|js|ico|woff2?|ttf|eot|mp4|webm|json|xml|txt|map)$/i.test(url.pathname)) {
+  // Skip static assets and API routes
+  if (url.pathname.startsWith('/api/') || /\.(png|jpe?g|gif|webp|svg|css|js|ico|woff2?|ttf|eot|mp4|webm|json|xml|txt|map)$/i.test(url.pathname)) {
     return next();
   }
 
@@ -36,19 +27,17 @@ export async function onRequest(context) {
   const rawParam = (url.searchParams.get('client') || url.searchParams.get('c') || '').trim();
   const slug = rawParam.toLowerCase();
 
-  // Resolve client information
+  // Resolve client information dynamically from D1
   let clientInfo = null;
 
-  if (slug && KNOWN_CLIENTS[slug]) {
-    clientInfo = KNOWN_CLIENTS[slug];
-  } else if (slug && env.DB) {
+  if (slug && env.DB) {
     try {
       const row = await env.DB.prepare("SELECT * FROM clients WHERE slug = ? OR id = ?").bind(slug, slug).first();
       if (row) {
         clientInfo = {
           name: row.name,
           slug: row.slug || row.id,
-          image: (row.id === 'tcs' || row.slug === 'tcs') ? '/Logo/tcs-logo.png' : (row.logo && !row.logo.startsWith('data:') ? row.logo : '/Logo/logo.png'),
+          image: (row.logo && !row.logo.startsWith('data:') ? row.logo : '/Logo/logo.png'),
           desc: `${row.name} · Private Client Delivery Portal`
         };
       }
@@ -57,13 +46,13 @@ export async function onRequest(context) {
     }
   }
 
-  // Fallback if parameter was provided but not matched in known clients
+  // Fallback if parameter was provided but not matched in D1
   if (!clientInfo && rawParam) {
     const formattedName = rawParam.replace(/[-_+]/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
     clientInfo = {
       name: formattedName,
       slug: slug,
-      image: (slug === 'tcs') ? '/Logo/tcs-logo.png' : '/Logo/logo.png',
+      image: '/Logo/logo.png',
       desc: `${formattedName} · Private Client Delivery Portal`
     };
   }

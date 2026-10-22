@@ -23,7 +23,7 @@ export async function onRequestGet(context) {
     }
 
     if (fileId) {
-      const initialUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download`;
+      const initialUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=t`;
       const res1 = await fetch(initialUrl, {
         headers: fetchHeaders,
         redirect: "manual"
@@ -52,6 +52,14 @@ export async function onRequestGet(context) {
           if (!params.has("confirm")) params.append("confirm", "t");
           const submitUrl = action + "?" + params.toString();
 
+          const headers2 = { ...fetchHeaders };
+          if (cookie1) headers2["Cookie"] = cookie1;
+          videoStream = await fetch(submitUrl, { headers: headers2 });
+        } else {
+          const confirmCode = (text.match(/confirm=([0-9A-Za-z_-]+)/i) || [])[1] || 't';
+          const linkMatch = text.match(/href="([^"]*(?:confirm=[^"&]+|export=download[^"]*))"/i);
+          let submitUrl = linkMatch ? linkMatch[1].replace(/&amp;/g, '&') : `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=${confirmCode}`;
+          if (submitUrl.startsWith('/')) submitUrl = `https://drive.usercontent.google.com${submitUrl}`;
           const headers2 = { ...fetchHeaders };
           if (cookie1) headers2["Cookie"] = cookie1;
           videoStream = await fetch(submitUrl, { headers: headers2 });
@@ -93,3 +101,6 @@ export async function onRequestGet(context) {
     });
   }
 }
+
+export const onRequestHead = onRequestGet;
+

@@ -8,10 +8,6 @@ export async function onRequestGet(context) {
   const url = new URL(request.url);
   const clientSlug = (url.searchParams.get('client') || url.searchParams.get('c') || url.searchParams.get('slug') || url.searchParams.get('id') || '').trim().toLowerCase();
 
-  if (clientSlug === 'tcs' || clientSlug === 'the chennai silks') {
-    return Response.redirect(`${url.origin}/Logo/tcs-logo.png`, 302);
-  }
-
   if (env.DB && clientSlug) {
     try {
       const client = await env.DB.prepare("SELECT logo FROM clients WHERE slug = ? OR id = ?").bind(clientSlug, clientSlug).first();

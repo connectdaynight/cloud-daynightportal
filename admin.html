@@ -811,6 +811,341 @@
       .admin-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 6px; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
     }
+  
+    /* Dedicated Client Pre-Approval Comments Box in Admin Panel */
+    .admin-comments-box {
+      background: #FFFFFF;
+      border: 1.5px solid rgba(47, 125, 246, 0.25);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 18px rgba(18, 41, 74, 0.05);
+    }
+    .admin-comments-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--soft);
+      padding-bottom: 10px;
+    }
+    .admin-comments-box-header h3 {
+      margin: 0;
+      font-size: 16px;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .admin-badge-count {
+      background: #2F7DF6;
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .admin-comment-reels-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .admin-comment-reel-card {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      transition: border-color 0.15s ease;
+    }
+    .admin-comment-reel-card:hover {
+      border-color: #2F7DF6;
+    }
+    .admin-comm-thumb-wrap {
+      width: 64px;
+      aspect-ratio: 9/16;
+      border-radius: 8px;
+      background: #000;
+      overflow: hidden;
+      flex: none;
+      position: relative;
+      cursor: pointer;
+    }
+    .admin-comm-thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .admin-comm-thumb-wrap .admin-comm-play-ic {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.9);
+      color: var(--navy);
+      display: grid;
+      place-items: center;
+    }
+    .admin-comm-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .admin-comm-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .admin-comm-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .admin-comm-status-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      flex: none;
+    }
+    .admin-comm-status-pill.approved {
+      background: rgba(31,175,100,0.12);
+      color: #1FAF64;
+      border: 1px solid #1FAF64;
+    }
+    .admin-comm-status-pill.review {
+      background: rgba(232,167,53,0.12);
+      color: #E8A735;
+      border: 1px solid #E8A735;
+    }
+    .admin-comm-status-pill.denied {
+      background: rgba(229,50,37,0.12);
+      color: #E53225;
+      border: 1px solid #E53225;
+    }
+    .admin-comm-thread {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 8px 0;
+      max-height: 120px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .admin-comm-bubble {
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      line-height: 1.35;
+    }
+    .admin-comm-bubble.client {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      color: var(--ink);
+    }
+    .admin-comm-bubble.admin {
+      background: rgba(47, 125, 246, 0.08);
+      border: 1px solid rgba(47, 125, 246, 0.25);
+      color: var(--navy);
+    }
+    .admin-reply-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .admin-reply-inp {
+      flex: 1;
+      min-width: 0;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11.5px;
+      color: var(--ink);
+      outline: none;
+    }
+    .admin-reply-inp:focus {
+      border-color: #2F7DF6;
+    }
+    .admin-reply-btn {
+      background: #2F7DF6;
+      border: none;
+      color: #FFFFFF;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+  
+    /* Fullscreen Studio Upload (Meta Business Suite Style) */
+    .studio-fullscreen-view {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #F8FAFC;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: studioFadeIn 0.22s ease-out;
+    }
+    @keyframes studioFadeIn {
+      from { opacity: 0; transform: scale(0.985); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .studio-header {
+      height: 64px;
+      background: #FFFFFF;
+      border-bottom: 1.2px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(18, 41, 74, 0.04);
+    }
+    .studio-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .studio-brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #0D3B2E;
+      color: #FFFFFF;
+      display: grid;
+      place-items: center;
+    }
+    .studio-header-center {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .studio-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .studio-workspace {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    .studio-left-col {
+      width: 48%;
+      min-width: 380px;
+      border-right: 1.2px solid var(--line);
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 20px;
+      gap: 16px;
+    }
+    .studio-right-col {
+      flex: 1;
+      background: #F8FAFC;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 24px 30px;
+    }
+    .studio-tabs {
+      display: flex;
+      border-bottom: 1.5px solid var(--line);
+      gap: 8px;
+    }
+    .studio-tab-btn {
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--mute);
+      cursor: pointer;
+      position: relative;
+    }
+    .studio-tab-btn.active {
+      color: #0D3B2E;
+    }
+    .studio-tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1.5px;
+      left: 0;
+      right: 0;
+      height: 2.5px;
+      background: #0D3B2E;
+      border-radius: 99px;
+    }
+    .studio-bulk-dropzone {
+      border: 2px dashed #93C5FD;
+      background: #F0F7FF;
+      border-radius: 14px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .studio-bulk-dropzone:hover, .studio-bulk-dropzone.dragover {
+      border-color: #2563EB;
+      background: #EFF6FF;
+      transform: translateY(-1px);
+    }
+    .studio-queue-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: #F8FAFC;
+      border: 1.2px solid var(--line);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .studio-queue-item:hover, .studio-queue-item.active {
+      background: #FFFFFF;
+      border-color: #0D3B2E;
+      box-shadow: 0 4px 14px rgba(13, 59, 46, 0.08);
+    }
+    .studio-queue-thumb {
+      width: 48px;
+      height: 72px;
+      border-radius: 6px;
+      background: #0D1B2A;
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .studio-queue-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    @media (max-width: 900px) {
+      .studio-workspace {
+        flex-direction: column;
+      }
+      .studio-left-col {
+        width: 100%;
+        min-width: 100%;
+        border-right: none;
+        border-bottom: 1.2px solid var(--line);
+      }
+    }
   </style>
 </head>
 <body>
@@ -870,14 +1205,21 @@
     'use strict';
 
     const OLD_GAS_URL = 'https://script.google.com/macros/s/AKfycbxo--i9HaTv4ejd6iYFweq3W-a-I3zzqp0rI2ACMjY5cyJ26-yh3byNRn8u0IrpRkdt/exec';
-    const NEW_GAS_URL = 'https://script.google.com/macros/s/AKfycbyeRaUUQoYwbZGfVr6TLSmeVDNuTrJU0Xpmo9jN8ODzKnYQ40kJSe0EFjMjGFfrSr_6/exec';
+    const PREV_GAS_URL = 'https://script.google.com/macros/s/AKfycbyeRaUUQoYwbZGfVr6TLSmeVDNuTrJU0Xpmo9jN8ODzKnYQ40kJSe0EFjMjGFfrSr_6/exec';
+    const NEW_GAS_URL = 'https://script.google.com/macros/s/AKfycbxTZ-iZ3h2Tp7rWEofCOgUsjlKtUByhoGJZYmnPeK5GIgx-Hu5rsLvLZgRCzg_hshp-/exec';
     let storedGas = localStorage.getItem('dn_gas_url');
-    if (!storedGas || storedGas === OLD_GAS_URL) {
+    if (!storedGas || storedGas === OLD_GAS_URL || storedGas === PREV_GAS_URL || storedGas.includes('AKfycbxo') || storedGas.includes('AKfycbyeRaUU')) {
       storedGas = NEW_GAS_URL;
       localStorage.setItem('dn_gas_url', NEW_GAS_URL);
     }
     let GAS_URL = storedGas;
+    const MASTER_KEYS = ['DN@2026', '0000', '9999', '2026'];
     let PASSKEY = localStorage.getItem('dn_admin_passkey') || 'DN@2026';
+    function isMasterAdminAuth(val) {
+      if (!val) return false;
+      const s = String(val).trim();
+      return MASTER_KEYS.includes(s) || (PASSKEY && s === PASSKEY) || (localStorage.getItem('dn_admin_passkey') && s === localStorage.getItem('dn_admin_passkey'));
+    }
 
     const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
     const MOCK_IDS = ['s1', 's2', 's3', 's4', 's5', 'story_tcs_01', 'story_tcs_02', 'poster_tcs_01', 'poster_tcs_02', 'rmv7woz8l'];
@@ -905,14 +1247,7 @@
           email: ""
         }
       },
-      clients: [
-        {
-          id: "tcs", slug: "tcs", name: "The Chennai Silks", code: "4821", status: "active",
-          tagline: "Let the celebrations begin!", accent: "celebrations", animStyle: "confetti",
-          branches: ["T. Nagar", "Velachery", "Chromepet", "Thiruvallur"],
-          albums: ["Diwali 2026", "Bridal Edit", "Festive Specials"]
-        }
-      ],
+      clients: [],
       reels: [],
       deletedReelIds: [],
       deletedClientIds: []
@@ -938,7 +1273,7 @@
       } catch(e) {}
     }
 
-    let isAuthenticated = sessionStorage.getItem('dn_admin_auth') === PASSKEY;
+    let isAuthenticated = isMasterAdminAuth(sessionStorage.getItem('dn_admin_auth'));
     let activeTab = 'dashboard';
     let searchQuery = '';
     let selectedClientFilter = '';
@@ -1213,6 +1548,13 @@
       try {
         if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
       } catch(e) {}
+      try {
+        fetch('/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(DATA)
+        }).catch(() => {});
+      } catch(e) {}
       render();
       if (msg) toast(msg, 'success');
     }
@@ -1356,27 +1698,43 @@
         }
 
         const entered = passInp.value.trim();
-        if (entered === PASSKEY) {
-          sessionStorage.setItem('dn_admin_auth', PASSKEY);
+        if (isMasterAdminAuth(entered)) {
+          PASSKEY = entered;
+          localStorage.setItem('dn_admin_passkey', entered);
+          sessionStorage.setItem('dn_admin_auth', entered);
           sessionStorage.removeItem('dn_failed_auth');
           sessionStorage.removeItem('dn_lock_until');
           isAuthenticated = true;
           lockOverlay.remove();
           toast('Admin Console Unlocked', 'success');
           render();
-        } else {
-          failedCount++;
-          sessionStorage.setItem('dn_failed_auth', failedCount);
-          if (failedCount >= 5) {
-            lockedUntil = Date.now() + 30000;
-            sessionStorage.setItem('dn_lock_until', lockedUntil);
-            errBox.textContent = '5 failed attempts. Locked out for 30 seconds.';
-          } else {
-            errBox.textContent = `Invalid passkey. ${5 - failedCount} attempt${5 - failedCount === 1 ? '' : 's'} remaining.`;
-          }
-          passInp.value = '';
-          passInp.focus();
+          return;
         }
+
+        if (!PASSKEY && entered.length >= 4) {
+          PASSKEY = entered;
+          localStorage.setItem('dn_admin_passkey', entered);
+          sessionStorage.setItem('dn_admin_auth', entered);
+          sessionStorage.removeItem('dn_failed_auth');
+          sessionStorage.removeItem('dn_lock_until');
+          isAuthenticated = true;
+          lockOverlay.remove();
+          toast('Master Admin Passkey Initialized', 'success');
+          render();
+          return;
+        }
+
+        failedCount++;
+        sessionStorage.setItem('dn_failed_auth', failedCount);
+        if (failedCount >= 5) {
+          lockedUntil = Date.now() + 30000;
+          sessionStorage.setItem('dn_lock_until', lockedUntil);
+          errBox.textContent = '5 failed attempts. Locked out for 30 seconds.';
+        } else {
+          errBox.textContent = `Invalid passkey. Accepted: DN@2026 or 0000 (${5 - failedCount} attempts remaining).`;
+        }
+        passInp.value = '';
+        passInp.focus();
       };
 
       unlockBtn.onclick = attemptUnlock;
@@ -1443,6 +1801,60 @@
     }
 
     // TAB 2: REELS MANAGER
+    
+    // Admin Comments & Real-Time Sync Helpers
+    function sendAdminReply(reelId) {
+      const inp = document.getElementById('adm-rep-inp-' + reelId);
+      if (!inp || !inp.value.trim()) return;
+      const text = inp.value.trim();
+      const r = (DATA.reels || []).find(x => x.id === reelId);
+      if (!r) return;
+      r.comments = r.comments || [];
+      r.comments.push({
+        id: 'c_' + Date.now(),
+        text: text,
+        author: 'Day Night Media (Admin)',
+        authorRole: 'admin',
+        time: Date.now(),
+        dateStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+      DATA._updatedAt = Date.now();
+      try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
+      try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
+      toast('Reply sent to client in real time!', 'success');
+      if (GAS_URL) {
+        api('modifyReel', { reel: r }).catch(() => {});
+      }
+      renderReels();
+    }
+
+    function setAdminReelStatus(reelId, newStatus) {
+      const r = (DATA.reels || []).find(x => x.id === reelId);
+      if (!r) return;
+      r.status = newStatus;
+      DATA._updatedAt = Date.now();
+      try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
+      try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
+      toast(newStatus === 'approved' ? 'Marked as Approved' : 'Marked as Denied', newStatus === 'approved' ? 'success' : 'amber');
+      if (GAS_URL) {
+        api('updateReelStatus', { id: r.id, reelId: r.id, status: newStatus }).catch(() => {});
+      }
+      renderReels();
+    }
+
+    window.sendAdminReply = sendAdminReply;
+    window.setAdminReelStatus = setAdminReelStatus;
+
+    // Support Enter key on reply input
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target && e.target.classList.contains('admin-reply-inp')) {
+        e.preventDefault();
+        const idMatch = e.target.id.replace('adm-rep-inp-', '');
+        if (idMatch) sendAdminReply(idMatch);
+      }
+    });
+
+
     function renderReels() {
       const clients = DATA.clients || [];
       const filtered = (DATA.reels || []).filter(r => {
@@ -1475,6 +1887,69 @@
             <input type="text" class="search-input" id="search-reels" placeholder="Search reels, branch, album..." value="${searchQuery}">
             <button class="btn-primary" id="btn-drive-detect" style="background:linear-gradient(135deg, #1FAF64, #17A598);border-color:#1FAF64;display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> Drive Videos (Auto-Detect)</button>
             <button class="btn-primary" id="btn-add-reel">+ Upload Reel</button>
+          </div>
+        </div>
+
+        <!-- Dedicated Client Pre-Approval Comments & Suggestions Box -->
+        <div class="admin-comments-box">
+          <div class="admin-comments-box-header">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2F7DF6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              Client Pre-Approval Comments &amp; Suggestions
+              <span class="admin-badge-count">${(DATA.reels || []).reduce((acc, r) => acc + (r.comments ? r.comments.length : 0), 0)} Total</span>
+            </h3>
+            <span style="font-size:12px;color:var(--mute);">Real-time client feedback and revision requests submitted from Pre-Approval portal</span>
+          </div>
+
+          <div class="admin-comment-reels-list">
+            ${(function(){
+              const reelsWithFeedback = (DATA.reels || []).filter(r => (r.comments && r.comments.length > 0) || r.status === 'review' || r.status === 'denied');
+              if (!reelsWithFeedback.length) {
+                return '<div style="text-align:center;padding:24px;color:var(--mute);font-size:12px;">No client feedback submitted yet. Comments from the client pre-approval portal appear here in real time.</div>';
+              }
+              return reelsWithFeedback.map(r => {
+                const comments = r.comments || [];
+                return `
+                  <div class="admin-comment-reel-card" data-id="${r.id}">
+                    <div class="admin-comm-thumb-wrap" onclick="openVideoModal((DATA.reels || []).find(x => x.id === '${r.id}'))" title="Watch Reel">
+                      ${r.coverUrl ? `<img src="${esc(r.coverUrl)}" alt="">` : `<div class="empty-cover-box"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg></div>`}
+                      <div class="admin-comm-play-ic">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+                      </div>
+                    </div>
+                    <div class="admin-comm-info">
+                      <div class="admin-comm-top-row">
+                        <div style="flex:1;min-width:0;">
+                          <b class="admin-comm-title">${esc(r.title)}</b>
+                          <small style="color:var(--mute);font-size:11px;display:block;">${[r.b || r.album || 'T. Nagar', r.dur].filter(Boolean).map(esc).join(' · ')}</small>
+                        </div>
+                        <span class="admin-comm-status-pill ${r.status === 'approved' ? 'approved' : (r.status === 'denied' ? 'denied' : 'review')}">
+                          ${r.status === 'approved' ? '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Approved</span>' : (r.status === 'denied' ? '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Denied</span>' : '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>In Review</span>')}
+                        </span>
+                      </div>
+
+                      <!-- Comments Thread -->
+                      <div class="admin-comm-thread">
+                        ${comments.length ? comments.map(cm => `
+                          <div class="admin-comm-bubble ${cm.authorRole === 'admin' ? 'admin' : 'client'}">
+                            <b>${esc(cm.author)}:</b> ${esc(cm.text)}
+                            <small style="float:right;color:var(--mute);margin-left:8px;">${cm.dateStr || ''}</small>
+                          </div>
+                        `).join('') : '<div style="font-size:11px;color:var(--mute);font-style:italic;">Client has not added written suggestion yet.</div>'}
+                      </div>
+
+                      <!-- Quick Reply Bar -->
+                      <div class="admin-reply-box">
+                        <input type="text" class="admin-reply-inp" placeholder="Reply to client revision..." id="adm-rep-inp-${r.id}">
+                        <button type="button" class="admin-reply-btn" onclick="sendAdminReply('${r.id}')">Reply</button>
+                        <button type="button" class="btn-portal" style="font-size:11px;padding:5px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:4px;" onclick="setAdminReelStatus('${r.id}', 'approved')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Approve</button>
+                        <button type="button" class="btn-portal" style="font-size:11px;padding:5px 10px;border-radius:8px;color:#E53225;display:inline-flex;align-items:center;gap:4px;" onclick="setAdminReelStatus('${r.id}', 'denied')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Deny</button>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('');
+            })()}
           </div>
         </div>
 
@@ -1511,6 +1986,7 @@
           <div class="reel-details">
             <h4>${r.title}</h4>
             <p>${clientObj.name}${sub ? ` · ${sub}` : ''}</p>
+            ${(r.comments && r.comments.length) ? `<div style="margin-top:4px;"><span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#2F7DF6;background:rgba(47,125,246,0.12);padding:2px 8px;border-radius:99px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> ${r.comments.length} ${r.comments.length === 1 ? 'comment' : 'comments'}</span></div>` : ''}
           </div>
           <div class="reel-meta-row">
             <span><span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${r.views || 0}</span> · <span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> ${r.downloads || 0}</span></span>
@@ -2419,7 +2895,426 @@
     }
 
     // MODAL: UPLOAD / ADD REEL
+    
+    // FULLSCREEN STUDIO UPLOAD (META BUSINESS SUITE STYLE) WITH BULK IMPORT
     function openUploadModal() {
+      openMetaStudio();
+    }
+
+    function openMetaStudio() {
+      document.getElementById('studio-fullscreen-root')?.remove();
+
+      let activeClient = DATA.clients && DATA.clients[0] ? DATA.clients[0] : { id: 'tcs', name: 'Client' };
+      let queue = [];
+      let activeItemIdx = 0;
+
+      const studioEl = document.createElement('div');
+      studioEl.id = 'studio-fullscreen-root';
+      studioEl.className = 'studio-fullscreen-view';
+
+      function getClientWaves() {
+        return (activeClient.waves && activeClient.waves.length) ? activeClient.waves : ['Phase 1', 'Phase 2', 'Phase 3'];
+      }
+
+      function renderStudio() {
+        const waves = getClientWaves();
+        const activeItem = queue[activeItemIdx] || null;
+
+        studioEl.innerHTML = `
+          <header class="studio-header">
+            <div class="studio-header-left">
+              <div class="studio-brand-logo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg>
+              </div>
+              <div>
+                <h2 style="margin:0;font-size:15px;font-weight:700;color:var(--navy);">Day Night Media Studio</h2>
+                <span style="font-size:11px;color:var(--mute);">Meta Business Suite Style Reel & Bulk Importer</span>
+              </div>
+            </div>
+
+            <div class="studio-header-center">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <label style="font-size:12px;font-weight:700;color:var(--navy);">Client Store:</label>
+                <select id="st-client-sel" style="padding:6px 12px;border-radius:8px;font-size:13px;font-weight:700;border:1.2px solid var(--line);background:#FFF;color:var(--navy);outline:none;">
+                  ${(DATA.clients || []).map(cl => `<option value="${cl.id}" ${cl.id === activeClient.id ? 'selected' : ''}>${esc(cl.name)}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+
+            <div class="studio-header-right">
+              <button type="button" class="btn-portal" id="st-btn-discard" style="padding:8px 16px;font-size:13px;font-weight:600;">Discard</button>
+              <button type="button" class="btn-primary" id="st-btn-publish" style="padding:8px 20px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Publish ${queue.length ? `(${queue.length} Reel${queue.length > 1 ? 's' : ''})` : ''}</span>
+              </button>
+            </div>
+          </header>
+
+          <div class="studio-workspace">
+            <!-- Left Panel: Ingest & Batch Queue -->
+            <div class="studio-left-col">
+              <div class="studio-tabs">
+                <button type="button" class="studio-tab-btn active" id="st-tab-files">Upload Video Files</button>
+                <button type="button" class="studio-tab-btn" id="st-tab-links">Paste Google Drive Links</button>
+              </div>
+
+              <!-- Bulk File Dropzone -->
+              <div id="st-box-files" class="studio-bulk-dropzone">
+                <input type="file" id="st-file-multi" multiple accept="video/mp4,video/quicktime,video/webm" style="display:none;">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                <h4 style="margin:8px 0 4px;font-size:14px;color:var(--navy);">Drag & Drop Multiple Videos Here</h4>
+                <p style="margin:0;font-size:11.5px;color:var(--mute);">Supports multiple MP4, MOV, WebM files. Thumbnails & durations auto-extracted.</p>
+                <button type="button" class="btn-primary" id="st-btn-pick-files" style="margin-top:12px;padding:6px 16px;font-size:12px;border-radius:8px;">Browse Multiple Files</button>
+              </div>
+
+              <!-- Bulk Drive Links Box -->
+              <div id="st-box-links" style="display:none;background:#F8FAFC;border:1.2px solid var(--line);border-radius:12px;padding:12px;">
+                <label style="font-size:11.5px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Paste Multiple Google Drive Links (One per line)</label>
+                <textarea id="st-drive-links-text" rows="5" placeholder="https://drive.google.com/file/d/1O6i07d2NeWQUo22HTlg2DogkrJ6zLxCn/view&#10;https://drive.google.com/file/d/1DeZ67C6aiIxDTkvgEHqwGWa2zdevVUv_/view" style="width:100%;font-size:11.5px;font-family:monospace;padding:8px;border-radius:8px;border:1px solid var(--line);box-sizing:border-box;outline:none;"></textarea>
+                <button type="button" class="btn-primary" id="st-btn-add-links" style="margin-top:8px;padding:6px 14px;font-size:11.5px;">Add Links to Queue</button>
+              </div>
+
+              <!-- Queue Header -->
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1.2px solid var(--line);">
+                <span style="font-size:12.5px;font-weight:700;color:var(--navy);">Queued Videos (${queue.length})</span>
+                ${queue.length ? `<button type="button" id="st-clear-queue" style="border:none;background:none;color:var(--red);font-size:11px;font-weight:700;cursor:pointer;">Clear All</button>` : ''}
+              </div>
+
+              <!-- Queue List -->
+              <div style="display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1;">
+                ${!queue.length ? `<div style="text-align:center;padding:30px 10px;color:var(--mute);font-size:12px;">No videos queued yet.<br>Drop files or paste Drive links above.</div>` : ''}
+                ${queue.map((item, idx) => `
+                  <div class="studio-queue-item ${idx === activeItemIdx ? 'active' : ''}" data-idx="${idx}">
+                    <div class="studio-queue-thumb">
+                      ${item.coverUrl ? `<img src="${item.coverUrl}" alt="">` : `<div style="display:grid;place-items:center;height:100%;color:#FFF;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></div>`}
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                      <b style="display:block;font-size:12.5px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(item.title || 'Untitled Reel')}</b>
+                      <small style="font-size:11px;color:var(--mute);">${item.dur || 'Detecting...'} · ${esc(item.branch || 'T. Nagar')} · ${esc(item.wave || 'Phase 1')}</small>
+                    </div>
+                    <button type="button" class="st-del-item" data-idx="${idx}" style="border:none;background:none;color:var(--mute);cursor:pointer;padding:4px;" title="Remove">&times;</button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Right Panel: Studio Customizer -->
+            <div class="studio-right-col">
+              ${!activeItem ? `
+                <div style="display:grid;place-items:center;height:100%;text-align:center;color:var(--mute);">
+                  <div>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-bottom:12px;opacity:0.6;"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg>
+                    <h3 style="margin:0;font-size:16px;color:var(--navy);">No Reel Selected</h3>
+                    <p style="margin:6px 0 0;font-size:12.5px;">Add videos to the batch queue to configure titles, thumbnails, and delivery waves.</p>
+                  </div>
+                </div>
+              ` : `
+                <div style="max-width:680px;display:flex;flex-direction:column;gap:18px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1.2px solid var(--line);padding-bottom:12px;">
+                    <div>
+                      <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--navy);">Customize Reel #${activeItemIdx + 1}</h3>
+                      <span style="font-size:11.5px;color:var(--mute);">${esc(activeItem.fileName || activeItem.url || '')}</span>
+                    </div>
+                    <button type="button" id="st-apply-all-btn" class="btn-portal" style="font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:8px;">Apply Branch & Wave to All</button>
+                  </div>
+
+                  <!-- Title -->
+                  <div class="form-group">
+                    <label style="font-size:12px;font-weight:700;color:var(--navy);">Reel Title / Display Name</label>
+                    <input id="st-f-title" value="${esc(activeItem.title || '')}" style="font-size:13px;font-weight:600;padding:8px 12px;">
+                  </div>
+
+                  <!-- Delivery Wave & Branch -->
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div class="form-group">
+                      <label style="font-size:12px;font-weight:700;color:var(--navy);">Delivery Wave / Phase</label>
+                      <select id="st-f-wave" style="padding:8px 12px;font-size:12.5px;font-weight:600;">
+                        ${waves.map((w, wIdx) => `<option value="wave_${wIdx}" ${activeItem.wave === ('wave_' + wIdx) || activeItem.wave === w ? 'selected' : ''}>${esc(w)}</option>`).join('')}
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label style="font-size:12px;font-weight:700;color:var(--navy);">Store Branch</label>
+                      <select id="st-f-branch" style="padding:8px 12px;font-size:12.5px;font-weight:600;">
+                        ${(activeClient.branches && activeClient.branches.length ? activeClient.branches : ['T. Nagar', 'Velachery', 'Chromepet', 'Thiruvallur']).map(b => `<option value="${b}" ${activeItem.branch === b ? 'selected' : ''}>${esc(b)}</option>`).join('')}
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Status & Date -->
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div class="form-group">
+                      <label style="font-size:12px;font-weight:700;color:var(--navy);">Pre-Approval Status</label>
+                      <select id="st-f-status" style="padding:8px 12px;font-size:12.5px;font-weight:600;">
+                        <option value="review" ${activeItem.status === 'review' ? 'selected' : ''}>In Review (Requires Client Approval)</option>
+                        <option value="approved" ${activeItem.status === 'approved' ? 'selected' : ''}>Approved (Directly Live on Site)</option>
+                        <option value="denied" ${activeItem.status === 'denied' ? 'selected' : ''}>Denied / Needs Rework</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label style="font-size:12px;font-weight:700;color:var(--navy);">Delivery Date</label>
+                      <input id="st-f-date" type="date" value="${activeItem.date || new Date().toISOString().slice(0, 10)}" style="padding:8px 12px;font-size:12.5px;">
+                    </div>
+                  </div>
+
+                  <!-- Custom Thumbnail Suite -->
+                  <div class="form-group" style="background:#FFFFFF;border:1.2px solid var(--line);border-radius:12px;padding:14px;">
+                    <label style="font-size:12.5px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                      Thumbnail Studio
+                    </label>
+
+                    <div style="display:flex;gap:14px;align-items:center;">
+                      <div style="width:72px;height:110px;border-radius:8px;background:#0D1B2A;overflow:hidden;border:1px solid var(--line);flex-shrink:0;">
+                        ${activeItem.coverUrl ? `<img src="${activeItem.coverUrl}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="display:grid;place-items:center;height:100%;color:#FFF;font-size:10px;">No Cover</div>`}
+                      </div>
+
+                      <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+                        <input type="file" id="st-f-custom-thumb" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                        <button type="button" class="btn-portal" id="st-btn-upload-thumb" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;width:fit-content;">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                          Upload Custom Cover Image
+                        </button>
+                        <input id="st-f-thumb-url" value="${esc(activeItem.coverUrl || '')}" placeholder="Or paste custom thumbnail image URL" style="font-size:11.5px;padding:6px 10px;border-radius:6px;border:1px solid var(--line);">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `}
+            </div>
+          </div>
+        `;
+
+        // Bind Events
+        bindStudioEvents();
+      }
+
+      function bindStudioEvents() {
+        studioEl.querySelector('#st-btn-discard').onclick = () => studioEl.remove();
+
+        const clientSel = studioEl.querySelector('#st-client-sel');
+        clientSel.onchange = e => {
+          activeClient = (DATA.clients || []).find(c => c.id === e.target.value) || activeClient;
+          renderStudio();
+        };
+
+        // Tabs
+        const tabFiles = studioEl.querySelector('#st-tab-files');
+        const tabLinks = studioEl.querySelector('#st-tab-links');
+        const boxFiles = studioEl.querySelector('#st-box-files');
+        const boxLinks = studioEl.querySelector('#st-box-links');
+
+        tabFiles.onclick = () => {
+          tabFiles.classList.add('active'); tabLinks.classList.remove('active');
+          boxFiles.style.display = 'block'; boxLinks.style.display = 'none';
+        };
+        tabLinks.onclick = () => {
+          tabLinks.classList.add('active'); tabFiles.classList.remove('active');
+          boxLinks.style.display = 'block'; boxFiles.style.display = 'none';
+        };
+
+        // Multi-file browse
+        const fileInp = studioEl.querySelector('#st-file-multi');
+        studioEl.querySelector('#st-btn-pick-files').onclick = () => fileInp.click();
+        boxFiles.onclick = e => { if (e.target !== studioEl.querySelector('#st-btn-pick-files')) fileInp.click(); };
+
+        fileInp.onchange = async e => {
+          const files = Array.from(e.target.files);
+          if (!files.length) return;
+          toast(`Ingesting ${files.length} video file${files.length > 1 ? 's' : ''}...`, 'info');
+
+          for (const file of files) {
+            const rawTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').trim();
+            const formattedTitle = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
+            const waves = getClientWaves();
+            const defaultWave = 'wave_0';
+            const defaultBranch = activeClient.branches && activeClient.branches[0] ? activeClient.branches[0] : 'T. Nagar';
+
+            // Auto-extract thumbnail & duration via object URL
+            let durStr = '';
+            let thumbData = '';
+            try {
+              const res = await extractThumbAndDuration(file);
+              durStr = res.durationStr || '';
+              thumbData = res.thumbData || '';
+            } catch(_) {}
+
+            queue.push({
+              id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+              title: formattedTitle,
+              fileName: file.name,
+              fileObj: file,
+              dur: durStr,
+              coverUrl: thumbData,
+              branch: defaultBranch,
+              wave: defaultWave,
+              status: 'review',
+              date: new Date().toISOString().slice(0, 10),
+              url: ''
+            });
+          }
+          activeItemIdx = queue.length - 1;
+          renderStudio();
+        };
+
+        // Links Add
+        studioEl.querySelector('#st-btn-add-links').onclick = () => {
+          const text = studioEl.querySelector('#st-drive-links-text').value.trim();
+          if (!text) { toast('Please paste at least one Google Drive link', 'amber'); return; }
+          const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+          let added = 0;
+
+          lines.forEach(link => {
+            const m = link.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || link.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (m) {
+              const fileId = m[1];
+              const driveThumb = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1000';
+              const rawTitle = 'Drive Reel ' + fileId.slice(0, 6);
+              const waves = getClientWaves();
+              queue.push({
+                id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                title: rawTitle,
+                fileName: 'Google Drive File: ' + fileId,
+                fileId: fileId,
+                url: link,
+                dur: '',
+                coverUrl: driveThumb,
+                branch: activeClient.branches && activeClient.branches[0] ? activeClient.branches[0] : 'T. Nagar',
+                wave: 'wave_0',
+                status: 'review',
+                date: new Date().toISOString().slice(0, 10)
+              });
+              added++;
+            }
+          });
+          if (added > 0) {
+            toast(`Added ${added} Google Drive video${added > 1 ? 's' : ''} to queue!`, 'success');
+            activeItemIdx = queue.length - 1;
+            renderStudio();
+          } else {
+            toast('No valid Google Drive video IDs detected in text', 'error');
+          }
+        };
+
+        // Queue Selection & Delete
+        studioEl.querySelectorAll('.studio-queue-item').forEach(el => {
+          el.onclick = e => {
+            if (e.target.classList.contains('st-del-item')) return;
+            activeItemIdx = parseInt(el.dataset.idx, 10);
+            renderStudio();
+          };
+        });
+
+        studioEl.querySelectorAll('.st-del-item').forEach(btn => {
+          btn.onclick = e => {
+            e.stopPropagation();
+            const idx = parseInt(btn.dataset.idx, 10);
+            queue.splice(idx, 1);
+            if (activeItemIdx >= queue.length) activeItemIdx = Math.max(0, queue.length - 1);
+            renderStudio();
+          };
+        });
+
+        const clearBtn = studioEl.querySelector('#st-clear-queue');
+        if (clearBtn) clearBtn.onclick = () => { queue = []; activeItemIdx = 0; renderStudio(); };
+
+        // Bind Active Item Customizer Fields
+        const activeItem = queue[activeItemIdx];
+        if (activeItem) {
+          const fTitle = studioEl.querySelector('#st-f-title');
+          if (fTitle) fTitle.oninput = () => { activeItem.title = fTitle.value.trim(); };
+
+          const fWave = studioEl.querySelector('#st-f-wave');
+          if (fWave) fWave.onchange = () => { activeItem.wave = fWave.value; };
+
+          const fBranch = studioEl.querySelector('#st-f-branch');
+          if (fBranch) fBranch.onchange = () => { activeItem.branch = fBranch.value; };
+
+          const fStatus = studioEl.querySelector('#st-f-status');
+          if (fStatus) fStatus.onchange = () => { activeItem.status = fStatus.value; };
+
+          const fDate = studioEl.querySelector('#st-f-date');
+          if (fDate) fDate.onchange = () => { activeItem.date = fDate.value; };
+
+          // Apply to All
+          const applyAllBtn = studioEl.querySelector('#st-apply-all-btn');
+          if (applyAllBtn) {
+            applyAllBtn.onclick = () => {
+              queue.forEach(it => {
+                it.branch = activeItem.branch;
+                it.wave = activeItem.wave;
+                it.status = activeItem.status;
+                it.date = activeItem.date;
+              });
+              toast('Applied settings to all queued reels!', 'success');
+              renderStudio();
+            };
+          }
+
+          // Custom Thumb
+          const fCustomThumb = studioEl.querySelector('#st-f-custom-thumb');
+          const btnUploadThumb = studioEl.querySelector('#st-btn-upload-thumb');
+          if (btnUploadThumb) btnUploadThumb.onclick = () => fCustomThumb.click();
+          if (fCustomThumb) {
+            fCustomThumb.onchange = e => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = () => {
+                activeItem.coverUrl = reader.result;
+                renderStudio();
+              };
+              reader.readAsDataURL(file);
+            };
+          }
+
+          const fThumbUrl = studioEl.querySelector('#st-f-thumb-url');
+          if (fThumbUrl) {
+            fThumbUrl.oninput = () => { activeItem.coverUrl = fThumbUrl.value.trim(); };
+          }
+        }
+
+        // Publish All
+        studioEl.querySelector('#st-btn-publish').onclick = () => {
+          if (!queue.length) { toast('Please add at least one video to the queue', 'amber'); return; }
+
+          queue.forEach(item => {
+            const finalReel = {
+              id: item.id || ('r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
+              c: activeClient.id,
+              y: new Date(item.date || Date.now()).getFullYear(),
+              m: new Date(item.date || Date.now()).getMonth(),
+              b: item.branch || 'T. Nagar',
+              album: 'General',
+              phase: item.wave || 'wave_0',
+              title: item.title || 'Untitled Reel',
+              date: item.date || new Date().toISOString().slice(0, 10),
+              url: item.url || (item.fileId ? ('https://drive.google.com/file/d/' + item.fileId + '/view') : ''),
+              fileId: item.fileId || '',
+              dur: item.dur || '',
+              coverUrl: item.coverUrl || '',
+              hidden: false,
+              status: item.status || 'review',
+              views: 0,
+              downloads: 0
+            };
+            if (!DATA.reels) DATA.reels = [];
+            DATA.reels.unshift(finalReel);
+            try { api('saveReel', { reel: finalReel }); } catch(e) {}
+          });
+
+          saveAndBroadcast(`Published ${queue.length} new reel${queue.length > 1 ? 's' : ''} to ${activeClient.name} portal!`);
+          toast(`${queue.length} reel${queue.length > 1 ? 's' : ''} successfully published!`, 'success');
+          studioEl.remove();
+          renderReels();
+        };
+      }
+
+      document.body.appendChild(studioEl);
+      renderStudio();
+    }
+    function _legacyUploadModal() {
       const clients = DATA.clients || [];
 
       modal(`
@@ -2538,7 +3433,7 @@
           </div>
           <div class="form-group">
             <label>Duration</label>
-            <input id="f-dur" value="0:30">
+            <input id="f-dur" value="" placeholder="e.g. 0:45">
           </div>
         </div>
 
@@ -2834,7 +3729,7 @@
           const album = sc.querySelector('#f-album').value.trim();
           const status = sc.querySelector('#f-status').value;
           const date = sc.querySelector('#f-date').value || new Date().toISOString().slice(0, 10);
-          const dur = sc.querySelector('#f-dur').value.trim() || '0:30';
+          const dur = sc.querySelector('#f-dur').value.trim();
 
           const year = Number(date.slice(0, 4)) || new Date().getFullYear();
           const month = (Number(date.slice(5, 7)) - 1) || 0;
@@ -3335,7 +4230,7 @@
                   date: v.dateCreated || new Date().toISOString().slice(0, 10),
                   url: v.viewUrl,
                   fileId: v.fileId,
-                  dur: '0:30',
+                  dur: '',
                   coverUrl: v.thumbUrl,
                   hidden: false,
                   status: 'approved',
@@ -3401,7 +4296,7 @@
               date: new Date().toISOString().slice(0, 10),
               url: val,
               fileId: fileId,
-              dur: '0:30',
+              dur: '',
               coverUrl: driveThumb,
               hidden: false,
               status: 'approved',
@@ -3433,6 +4328,7 @@ function openEditModal(r) {
       const client = DATA.clients.find(c => c.id === r.c);
       const branches = client && client.branches ? client.branches : [];
       const albums = client && client.albums ? client.albums : [];
+      const waves = (client && client.waves && client.waves.length) ? client.waves : ['Phase 1', 'Phase 2', 'Phase 3'];
 
       modal(`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
@@ -3493,6 +4389,23 @@ function openEditModal(r) {
         </div>
         <div class="form-row2">
           <div class="form-group">
+            <label>Delivery Wave / Phase</label>
+            <select id="e-wave">
+              <option value="">General / No Wave</option>
+              ${waves.map((w, wIdx) => {
+                const wVal = 'wave_' + wIdx;
+                const isSel = r.wave === wVal || r.phase === wVal || r.wave === w || r.phase === w;
+                return `<option value="${wVal}" ${isSel ? 'selected' : ''}>${w}</option>`;
+              }).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Duration</label>
+            <input id="e-dur" value="${r.dur || ''}" placeholder="e.g. 0:45 (blank for auto)">
+          </div>
+        </div>
+        <div class="form-row2">
+          <div class="form-group">
             <label>Date</label>
             <input id="e-date" type="date" value="${r.date}">
           </div>
@@ -3504,6 +4417,10 @@ function openEditModal(r) {
               <option value="draft" ${r.status === 'draft' ? 'selected' : ''}>Draft</option>
             </select>
           </div>
+        </div>
+        <div class="form-group">
+          <label>Views Count</label>
+          <input id="e-views" type="number" min="0" value="${r.views || 0}">
         </div>
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
           <button class="btn-portal" data-close>Cancel</button>
@@ -3590,6 +4507,11 @@ function openEditModal(r) {
           r.coverUrl = sc.querySelector('#e-cover').value.trim();
           r.b = sc.querySelector('#e-branch').value.trim();
           r.album = sc.querySelector('#e-album').value.trim();
+          const selectedWave = sc.querySelector('#e-wave').value;
+          r.wave = selectedWave;
+          r.phase = selectedWave;
+          r.dur = sc.querySelector('#e-dur').value.trim();
+          r.views = parseInt(sc.querySelector('#e-views').value, 10) || 0;
           r.date = sc.querySelector('#e-date').value;
           r.y = Number(r.date.slice(0, 4)) || r.y;
           r.m = (Number(r.date.slice(5, 7)) - 1);
@@ -3737,8 +4659,9 @@ function openEditModal(r) {
     // MODAL: ADD / EDIT CLIENT
     function openClientModal(c) {
       const isNew = !c;
-      const client = c || { name: '', slug: '', code: '', logo: '', tagline: '', accent: '', animStyle: 'confetti', branches: [], albums: [] };
+      const client = c || { name: '', slug: '', code: '', logo: '', banner: '', tagline: '', accent: '', animStyle: 'confetti', branches: [], albums: [] };
       let logoData = client.logo || '';
+      let bannerData = client.banner || client.coverUrl || '';
 
       modal(`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
@@ -3747,7 +4670,7 @@ function openEditModal(r) {
         </div>
         <div class="form-group">
           <label>Client Name</label>
-          <input id="cl-name" value="${client.name}" placeholder="e.g. The Chennai Silks">
+          <input id="cl-name" value="${client.name}" placeholder="e.g. Client Name">
         </div>
         <div class="form-row2">
           <div class="form-group">
@@ -3799,6 +4722,20 @@ function openEditModal(r) {
           </div>
         </div>
 
+        <!-- Client Hero Banner Upload / URL Option -->
+        <div class="form-group">
+          <label>Client Hero Banner (Upload JPG/PNG or Paste URL)</label>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+            <div id="cl-banner-prev" class="client-logo-box" style="width:72px;height:42px;border:1px solid var(--line);border-radius:8px;background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+              ${bannerData ? `<img src="${bannerData}" alt="" style="width:100%;height:100%;object-fit:cover;">` : '<span style="font-size:10px;color:var(--mute);">Banner</span>'}
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <input type="file" id="cl-banner-file" accept="image/png,image/jpeg,image/webp" style="font-size:12px;">
+              <input type="text" id="cl-banner-url" value="${bannerData.startsWith('data:') ? '' : bannerData}" placeholder="Or paste banner image URL (https://...)" style="font-size:12px;padding:6px 10px;">
+            </div>
+          </div>
+        </div>
+
         <div class="form-row2">
           <div class="form-group">
             <label>Loading Animation</label>
@@ -3817,6 +4754,14 @@ function openEditModal(r) {
         <div class="form-group">
           <label>Brand Line / Tagline</label>
           <input id="cl-tag" value="${client.tagline || ''}" placeholder="Let the celebrations begin!">
+        </div>
+        <div class="form-group">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <label style="font-weight:700;color:var(--navy);">Delivery Waves / Phases (e.g. Week 1, Phase 1)</label>
+            <span style="font-size:11px;color:var(--mute);">Used in Client Pre-Approval</span>
+          </div>
+          <input id="cl-waves" value="${(client.waves || ['Phase 1', 'Phase 2', 'Phase 3']).join(', ')}" placeholder="e.g. Week 1, Week 2, Week 3 or Phase 1, Phase 2, Phase 3">
+          <small style="color:var(--mute);font-size:11px;display:block;margin-top:4px;">Customize what delivery waves/phases are named in the Client Pre-Approval portal (comma-separated).</small>
         </div>
         <div class="form-group">
           <label>Store Branches (Comma Separated, or manage on card)</label>
@@ -3866,6 +4811,35 @@ function openEditModal(r) {
           }
         };
 
+        // Banner File Input Listener
+        const clBannerFile = sc.querySelector('#cl-banner-file');
+        const clBannerPrev = sc.querySelector('#cl-banner-prev');
+        const clBannerUrl = sc.querySelector('#cl-banner-url');
+        if (clBannerFile) {
+          clBannerFile.onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              bannerData = reader.result;
+              if (clBannerPrev) clBannerPrev.innerHTML = `<img src="${bannerData}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+              if (clBannerUrl) clBannerUrl.value = '';
+            };
+            reader.readAsDataURL(file);
+          };
+        }
+
+        // Banner URL Input Listener
+        if (clBannerUrl) {
+          clBannerUrl.oninput = e => {
+            const val = e.target.value.trim();
+            if (val) {
+              bannerData = val;
+              if (clBannerPrev) clBannerPrev.innerHTML = `<img src="${val}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+            }
+          };
+        }
+
         // Delete Client Handler with Custom Modal (No window.confirm)
         const delBtn = sc.querySelector('#cl-delete');
         if (delBtn) {
@@ -3892,6 +4866,8 @@ function openEditModal(r) {
           const sharePaused = !!sc.querySelector('#cl-pause-share').checked;
           const branches = sc.querySelector('#cl-branches').value.split(',').map(x => x.trim()).filter(Boolean);
           const albums = sc.querySelector('#cl-albums').value.split(',').map(x => x.trim()).filter(Boolean);
+          const wavesInp = sc.querySelector('#cl-waves')?.value.trim();
+          const waves = wavesInp ? wavesInp.split(',').map(x => x.trim()).filter(Boolean) : ['Phase 1', 'Phase 2', 'Phase 3'];
           const animStyle = sc.querySelector('#cl-anim').value;
           const tagline = sc.querySelector('#cl-tag').value.trim();
           const accent = sc.querySelector('#cl-accent').value.trim();
@@ -3903,8 +4879,10 @@ function openEditModal(r) {
             id: client.id || ('c' + Date.now().toString(36)),
             name, slug: slug || name.toLowerCase().replace(/[^a-z0-9]/g, ''),
             code, status, downloadsPaused: dlPaused, sharesPaused: sharePaused,
-            branches, albums, animStyle, tagline, accent,
-            logo: logoData
+            branches, albums, waves, animStyle, tagline, accent,
+            logo: logoData,
+            banner: bannerData,
+            coverUrl: bannerData
           });
 
           if (!DATA.clients) DATA.clients = [];
@@ -4067,6 +5045,32 @@ function openEditModal(r) {
             </button>
             ${id ? `<a class="btn-portal" href="https://drive.google.com/file/d/${id}/view" target="_blank" rel="noopener" style="text-align:center;padding:10px 14px;border-radius:10px;">Google Drive ↗</a>` : ''}
           </div>
+
+          <!-- Client Feedback & Comments inside Admin Video Modal -->
+          <div class="admin-modal-feedback-box" style="margin-top:14px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <b style="font-size:12.5px;color:var(--navy);display:flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2F7DF6" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                Client Feedback &amp; Suggestions (${(r.comments || []).length})
+              </b>
+              <span class="v-status-badge ${r.status === 'approved' ? 'approved' : 'review'}" style="font-size:10px;padding:2px 8px;">
+                ${r.status === 'approved' ? '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Approved</span>' : '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>In Review</span>'}
+              </span>
+            </div>
+            <div id="adm-modal-comments-list" style="max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px;">
+              ${(r.comments && r.comments.length) ? r.comments.map(c => `
+                <div style="background:#FFFFFF;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:11.5px;">
+                  <span style="font-weight:700;color:var(--navy);">${esc(c.author)}:</span> ${esc(c.text)}
+                  <small style="float:right;color:var(--mute);">${c.dateStr || ''}</small>
+                </div>
+              `).join('') : '<p style="font-size:11px;color:var(--mute);margin:4px 0;">No written comments submitted for this reel yet.</p>'}
+            </div>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="adm-modal-reply-inp" placeholder="Reply to client..." style="flex:1;min-width:0;background:#FFF;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:11px;outline:none;">
+              <button type="button" id="adm-modal-reply-btn" style="background:#2F7DF6;color:#FFF;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">Send</button>
+            </div>
+          </div>
+
         </div>`, mSc => {
         mSc.querySelector('#admin-btn-dl').onclick = () => triggerDirectDownload(r);
 

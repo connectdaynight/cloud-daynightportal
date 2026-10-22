@@ -43,16 +43,3 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT
 );
 
--- Seed Default Client (The Chennai Silks)
-INSERT OR REPLACE INTO clients (id, slug, name, code, tagline, accent, anim_style, branches, albums)
-VALUES (
-  'tcs',
-  'tcs',
-  'The Chennai Silks',
-  '4821',
-  'Let the celebrations begin!',
-  'celebrations',
-  'confetti',
-  '["T. Nagar", "Velachery", "Chromepet", "Thiruvallur"]',
-  '["Diwali 2026", "Bridal Edit", "Festive Specials"]'
-);

@@ -1,0 +1,8 @@
+name = "daynight-portal"
+compatibility_date = "2026-10-17"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "daynight-portal-db"
+database_id = "8e86b2d4-2a65-4145-a473-46fe37633c5a"

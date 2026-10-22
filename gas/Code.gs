@@ -9,6 +9,7 @@
 
 const MASTER_FOLDER_NAME = "Day Night Media Portal";
 const DATA_FILE_NAME = "portal-data.json";
+const MASTER_PASSKEYS = ["DN@2026", "0000", "9999", "2026"];
 const ADMIN_PASSKEY = "DN@2026";
 
 function doGet(e) {
@@ -46,7 +47,7 @@ function doGet(e) {
       }
 
       // Filter reels for this client (filter out hidden reels unless admin token provided)
-      const isAdmin = String(params.passkey || "") === ADMIN_PASSKEY;
+      const isAdmin = MASTER_PASSKEYS.includes(String(params.passkey || ""));
       const clientReels = (data.reels || []).filter(r => {
         if (r.c !== client.id) return false;
         if (!isAdmin && r.hidden === true) return false;
@@ -290,7 +291,7 @@ function doPost(e) {
 
     // 7B. Scan Drive Folder for Videos and return list with thumbnail URLs and publish status
     if (action === "scanDriveVideos") {
-      const clientName = payload.clientName || "The Chennai Silks";
+      const clientName = payload.clientName || "";
       const branch = payload.branch || "";
       const clientFolder = getClientFolder(clientName, branch);
       const files = clientFolder.getFiles();
@@ -500,19 +501,7 @@ function loadData() {
       agencySub: "Production Company",
       slogan: "Creating impact that brands remember"
     },
-    clients: [
-      {
-        id: "tcs",
-        slug: "tcs",
-        name: "The Chennai Silks",
-        code: "4821",
-        tagline: "Let the celebrations begin!",
-        accent: "celebrations",
-        branches: ["T. Nagar", "Velachery", "Chromepet", "Thiruvallur"],
-        albums: ["Diwali 2026", "Bridal Edit", "Festive Specials"],
-        animStyle: "confetti"
-      }
-    ],
+    clients: [],
     reels: []
   };
   saveData(defaultData);
