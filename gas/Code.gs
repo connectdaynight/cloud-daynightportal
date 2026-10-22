@@ -188,7 +188,7 @@ function doPost(e) {
     }
 
     // 3. Add Reel (via Link)
-    if (action === "addReel") {
+    if (action === "addReel" || action === "saveReel") {
       const reel = payload.reel;
       if (!reel || !reel.title || !reel.url) {
         return jsonResponse({ success: false, error: "Incomplete reel data" }, 400);

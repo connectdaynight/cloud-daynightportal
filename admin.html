@@ -1252,7 +1252,41 @@
       deletedClientIds: []
     };
 
-    // Load local cached database immediately and strip any legacy mock items
+    function getDeletedReelIds() {
+      try {
+        const raw = localStorage.getItem('dn_deleted_reel_ids');
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch(e) {
+        return [];
+      }
+    }
+    function setDeletedReelIds(ids) {
+      try {
+        localStorage.setItem('dn_deleted_reel_ids', JSON.stringify(ids));
+      } catch(e) {}
+    }
+    function getDeletedClientIds() {
+      try {
+        const raw = localStorage.getItem('dn_deleted_client_ids');
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch(e) {
+        return [];
+      }
+    }
+    function setDeletedClientIds(ids) {
+      try {
+        localStorage.setItem('dn_deleted_client_ids', JSON.stringify(ids));
+      } catch(e) {}
+    }
+
+    // Load local cached database immediately and strip any legacy mock items & deleted items
+    const persistentDeletedReels = getDeletedReelIds();
+    const persistentDeletedClients = getDeletedClientIds();
+    DATA.deletedReelIds = persistentDeletedReels;
+    DATA.deletedClientIds = persistentDeletedClients;
+
     const cachedData = localStorage.getItem('dn_local_data');
     if (cachedData) {
       try {
@@ -1264,9 +1298,10 @@
           if (!DATA.settings) DATA.settings = {};
           if (DATA.settings.introDuration == null) DATA.settings.introDuration = 6;
           if (!DATA.settings.social) DATA.settings.social = {};
-          if (!DATA.deletedReelIds) DATA.deletedReelIds = [];
-          if (!DATA.deletedClientIds) DATA.deletedClientIds = [];
-          DATA.reels = DATA.reels.filter(r => !isMockOrTest(r));
+          DATA.deletedReelIds = persistentDeletedReels;
+          DATA.deletedClientIds = persistentDeletedClients;
+          DATA.reels = DATA.reels.filter(r => !isMockOrTest(r) && !persistentDeletedReels.includes(r.id));
+          DATA.clients = DATA.clients.filter(c => !persistentDeletedClients.includes(c.id));
           try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
         }
       } catch(e) {}
@@ -1367,6 +1402,7 @@
     }
 
     async function api(action, payload = {}) {
+      if (action === 'saveReel') action = 'addReel';
       payload.action = action;
       payload.passkey = PASSKEY;
       const res = await fetch(GAS_URL, {
@@ -1528,7 +1564,186 @@
       });
     }
 
-    // (Removed unused _legacyThumb stub)
+    // Extract high-definition video thumbnail and duration cleanly with fallback
+    async function extractThumbAndDuration(file) {
+      try {
+        const res = await generateVideoThumbnail(file, 1.0);
+        return {
+          durationStr: res.durationStr || '0:30',
+          thumbData: res.dataUrl || ''
+        };
+      } catch (err) {
+        console.warn('Video thumb extraction fallback:', err);
+        return {
+          durationStr: '0:30',
+          thumbData: ''
+        };
+      }
+    }
+
+    // High-Capacity Google Drive Direct Streaming Engine
+    async function uploadVideoFileToDrive(file, meta, onProgress) {
+      if (!GAS_URL) throw new Error('Google Apps Script URL is not configured');
+      
+      // 1. Initialize Resumable Upload Session with Google Drive
+      let initRes = null;
+      try {
+        initRes = await api('initVideoUpload', {
+          clientName: meta.clientName || 'General',
+          branch: meta.branch || '',
+          album: meta.album || 'General',
+          filename: file.name,
+          mimeType: file.type || 'video/mp4',
+          fileSize: file.size,
+          origin: window.location.origin
+        });
+      } catch(e) {
+        console.warn('initVideoUpload request failed, checking fallback:', e);
+      }
+
+      // 2. Stream raw binary file directly to Google Drive (Resumable PUT)
+      if (initRes && initRes.success && initRes.uploadUrl) {
+        const startTime = Date.now();
+        const driveFileJson = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', initRes.uploadUrl, true);
+          xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+
+          xhr.upload.onprogress = e => {
+            if (!e.lengthComputable) return;
+            const pct = Math.min(99, Math.round((e.loaded / e.total) * 100));
+            const loadedMB = (e.loaded / (1024 * 1024)).toFixed(1);
+            const totalMB = (e.total / (1024 * 1024)).toFixed(1);
+            const elapsedSec = (Date.now() - startTime) / 1000;
+            let speedText = 'Connecting...';
+            if (elapsedSec > 0.5 && e.loaded > 0) {
+              const speed = (e.loaded / (1024 * 1024) / elapsedSec).toFixed(1);
+              const remBytes = e.total - e.loaded;
+              const remSec = Math.max(1, Math.round(remBytes / (e.loaded / elapsedSec)));
+              const remMin = remSec >= 60 ? `${Math.floor(remSec / 60)}m ${remSec % 60}s` : `${remSec}s`;
+              speedText = `${speed} MB/s · ${remMin} remaining`;
+            }
+            if (onProgress) {
+              onProgress({
+                pct,
+                loaded: e.loaded,
+                total: e.total,
+                bytesText: `${loadedMB} MB of ${totalMB} MB transferred`,
+                speedText
+              });
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                resolve(JSON.parse(xhr.responseText));
+              } catch(err) {
+                reject(new Error('Invalid response from Google Drive'));
+              }
+            } else {
+              reject(new Error(`Google Drive returned HTTP ${xhr.status}`));
+            }
+          };
+
+          xhr.onerror = () => reject(new Error('Network error during Google Drive stream'));
+          xhr.send(file);
+        });
+
+        // 3. Finalize video upload metadata in Google Apps Script
+        if (onProgress) {
+          onProgress({ pct: 99, bytesText: 'Finalizing permissions in Google Drive...', speedText: 'Saving metadata...' });
+        }
+
+        const reelId = meta.id || ('r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+        const fileId = driveFileJson.id;
+        const finalCover = meta.coverUrl || `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+
+        const finRes = await api('finalizeVideoUpload', {
+          id: reelId,
+          fileId,
+          clientId: meta.clientId,
+          clientName: meta.clientName,
+          branch: meta.branch,
+          album: meta.album,
+          phase: meta.wave || 'wave_0',
+          title: meta.title,
+          year: new Date(meta.date || Date.now()).getFullYear(),
+          month: new Date(meta.date || Date.now()).getMonth(),
+          date: meta.date || new Date().toISOString().slice(0, 10),
+          dur: meta.dur || '0:30',
+          coverUrl: finalCover,
+          status: meta.status || 'review'
+        });
+
+        if (finRes && finRes.reel) return finRes.reel;
+
+        return {
+          id: reelId,
+          c: meta.clientId,
+          type: 'reel',
+          y: new Date(meta.date || Date.now()).getFullYear(),
+          m: new Date(meta.date || Date.now()).getMonth(),
+          b: meta.branch,
+          album: meta.album,
+          phase: meta.wave || 'wave_0',
+          title: meta.title,
+          date: meta.date || new Date().toISOString().slice(0, 10),
+          url: `https://drive.google.com/file/d/${fileId}/view`,
+          fileId,
+          dur: meta.dur || '0:30',
+          coverUrl: finalCover,
+          hidden: false,
+          status: meta.status || 'review',
+          views: 0,
+          downloads: 0
+        };
+      }
+
+      // Fallback: For videos <= 25MB, upload via direct base64 if resumable is not ready
+      if (file.size <= 25 * 1024 * 1024) {
+        if (onProgress) onProgress({ pct: 15, bytesText: 'Encoding direct stream...', speedText: 'Preparing...' });
+        const base64Data = await new Promise((res, rej) => {
+          const reader = new FileReader();
+          reader.onload = () => res(reader.result);
+          reader.onerror = () => rej(new Error('Failed to read video file'));
+          reader.readAsDataURL(file);
+        });
+
+        const fallbackRes = await apiWithProgress('uploadVideo', {
+          clientName: meta.clientName,
+          clientId: meta.clientId,
+          branch: meta.branch,
+          album: meta.album,
+          title: meta.title,
+          year: new Date(meta.date || Date.now()).getFullYear(),
+          month: new Date(meta.date || Date.now()).getMonth(),
+          date: meta.date || new Date().toISOString().slice(0, 10),
+          dur: meta.dur || '0:30',
+          coverUrl: meta.coverUrl || '',
+          base64Data,
+          filename: file.name,
+          mimeType: file.type || 'video/mp4',
+          status: meta.status || 'review'
+        }, prog => {
+          if (onProgress) {
+            onProgress({
+              pct: prog.percent,
+              loaded: prog.loaded,
+              total: prog.total,
+              bytesText: `${(prog.loaded / (1024 * 1024)).toFixed(1)} MB of ${(prog.total / (1024 * 1024)).toFixed(1)} MB transferred`,
+              speedText: 'Uploading directly to Drive...'
+            });
+          }
+        });
+
+        if (fallbackRes && fallbackRes.success && fallbackRes.reel) {
+          return fallbackRes.reel;
+        }
+      }
+
+      throw new Error((initRes && initRes.error) || 'Failed to initialize Google Drive upload session. Please verify connection.');
+    }
 
     // Real-Time Cross-Tab & Storage Sync
     function saveAndBroadcast(msg = '') {
@@ -1565,10 +1780,20 @@
     // Listen to real-time events from Client Portal or other tabs
     if (syncHub) {
       syncHub.onmessage = e => {
+        if (e.data && e.data.type === 'REEL_DELETED' && e.data.id) {
+          const delIds = getDeletedReelIds();
+          if (!delIds.includes(e.data.id)) delIds.push(e.data.id);
+          setDeletedReelIds(delIds);
+          DATA.deletedReelIds = delIds;
+          DATA.reels = (DATA.reels || []).filter(x => x.id !== e.data.id);
+          render();
+          return;
+        }
         if (e.data && e.data.type === 'DATA_MUTATED' && e.data.data) {
+          const delIds = getDeletedReelIds();
           DATA = e.data.data;
-          if (!DATA.deletedReelIds) DATA.deletedReelIds = [];
-          if (!DATA.deletedClientIds) DATA.deletedClientIds = [];
+          DATA.deletedReelIds = delIds;
+          DATA.reels = (DATA.reels || []).filter(r => !delIds.includes(r.id));
           localStorage.setItem('dn_local_data', JSON.stringify(DATA));
           render();
         }
@@ -1576,10 +1801,17 @@
     }
 
     window.addEventListener('storage', e => {
-      if (e.key === 'dn_local_data' && e.newValue) {
+      if (e.key === 'dn_deleted_reel_ids') {
+        const delIds = getDeletedReelIds();
+        DATA.deletedReelIds = delIds;
+        DATA.reels = (DATA.reels || []).filter(r => !delIds.includes(r.id));
+        render();
+      } else if (e.key === 'dn_local_data' && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
           if (parsed && typeof parsed === 'object') {
+            const delIds = getDeletedReelIds();
+            parsed.reels = (parsed.reels || []).filter(r => !delIds.includes(r.id));
             if (!DATA._updatedAt || !parsed._updatedAt || parsed._updatedAt >= DATA._updatedAt) {
               DATA = parsed;
               render();
@@ -1597,19 +1829,21 @@
         const res = await fetch(`${GAS_URL}?action=getData`);
         const json = await res.json();
         if (json.success && json.data) {
-          DATA.deletedReelIds = DATA.deletedReelIds || [];
-          DATA.deletedClientIds = DATA.deletedClientIds || [];
+          const deletedReelIds = getDeletedReelIds();
+          const deletedClientIds = getDeletedClientIds();
+          DATA.deletedReelIds = deletedReelIds;
+          DATA.deletedClientIds = deletedClientIds;
 
-          // Strip deleted and mock items
-          const gasReels = (json.data.reels || []).filter(r => !isMockOrTest(r) && !DATA.deletedReelIds.includes(r.id));
-          const localReels = (DATA.reels || []).filter(r => !isMockOrTest(r) && !DATA.deletedReelIds.includes(r.id));
+          // Strip deleted and mock items; Google Drive is the source of truth
+          const gasReels = (json.data.reels || []).filter(r => !isMockOrTest(r) && !deletedReelIds.includes(r.id));
+          const pendingLocal = (DATA.reels || []).filter(lr => lr && lr._isLocalDraft && !deletedReelIds.includes(lr.id));
           const mergedReels = [...gasReels];
-          localReels.forEach(lr => {
-            if (!mergedReels.some(gr => gr.id === lr.id)) mergedReels.unshift(lr);
+          pendingLocal.forEach(plr => {
+            if (!mergedReels.some(gr => gr.id === plr.id)) mergedReels.unshift(plr);
           });
 
-          const gasClients = (json.data.clients || []).filter(c => !DATA.deletedClientIds.includes(c.id));
-          const localClients = (DATA.clients || []).filter(c => !DATA.deletedClientIds.includes(c.id));
+          const gasClients = (json.data.clients || []).filter(c => !deletedClientIds.includes(c.id));
+          const localClients = (DATA.clients || []).filter(c => !deletedClientIds.includes(c.id));
           const mergedClients = [...gasClients];
           localClients.forEach(lc => {
             if (!mergedClients.some(gc => gc.id === lc.id)) mergedClients.push(lc);
@@ -2014,11 +2248,23 @@
           const r = DATA.reels.find(x => x.id === b.dataset.del);
           if (!r) return;
           confirmModal('Delete Reel?', `Are you sure you want to delete "${r.title}"? This will permanently remove the reel from the client portal and trash the file in Google Drive.`, async () => {
-            DATA.deletedReelIds = DATA.deletedReelIds || [];
-            if (!DATA.deletedReelIds.includes(r.id)) DATA.deletedReelIds.push(r.id);
-            DATA.reels = DATA.reels.filter(x => x.id !== r.id);
+            const delIds = getDeletedReelIds();
+            if (!delIds.includes(r.id)) delIds.push(r.id);
+            setDeletedReelIds(delIds);
+            DATA.deletedReelIds = delIds;
+            DATA.reels = (DATA.reels || []).filter(x => x.id !== r.id);
+            try {
+              if (syncHub) syncHub.postMessage({ type: 'REEL_DELETED', id: r.id });
+            } catch(e) {}
             saveAndBroadcast('Reel removed from dashboard');
-            try { await api('deleteReel', { id: r.id }); } catch(e) {}
+            try {
+              const res = await api('deleteReel', { id: r.id });
+              if (res && res.success) {
+                toast(`"${r.title}" permanently deleted from Google Drive!`, 'success');
+              }
+            } catch(e) {
+              console.warn('Backend deleteReel failed:', e);
+            }
           }, 'Delete Reel', true);
         };
       });
@@ -2150,12 +2396,24 @@
           const r = DATA.reels.find(x => x.id === b.dataset.del);
           if (r) {
             confirmModal('Delete this item?', `"${r.title}" will be deleted.`, async () => {
-              DATA.deletedReelIds = DATA.deletedReelIds || [];
-              if (!DATA.deletedReelIds.includes(r.id)) DATA.deletedReelIds.push(r.id);
+              const delIds = getDeletedReelIds();
+              if (!delIds.includes(r.id)) delIds.push(r.id);
+              setDeletedReelIds(delIds);
+              DATA.deletedReelIds = delIds;
               DATA.reels = DATA.reels.filter(x => x.id !== r.id);
+              try {
+                if (syncHub) syncHub.postMessage({ type: 'REEL_DELETED', id: r.id });
+              } catch(e) {}
               saveAndBroadcast('Item deleted');
               render();
-              try { await api('deleteReel', { id: r.id }); } catch(e) {}
+              try {
+                const res = await api('deleteReel', { id: r.id });
+                if (res && res.success) {
+                  toast(`"${r.title}" removed from Google Drive!`, 'success');
+                }
+              } catch(e) {
+                console.warn('Backend deleteReel failed:', e);
+              }
             });
           }
         };
@@ -2976,7 +3234,11 @@
                     </div>
                     <div style="flex:1;min-width:0;">
                       <b style="display:block;font-size:12.5px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(item.title || 'Untitled Reel')}</b>
-                      <small style="font-size:11px;color:var(--mute);">${item.dur || 'Detecting...'} · ${esc(item.branch || 'T. Nagar')} · ${esc(item.wave || 'Phase 1')}</small>
+                      <small style="font-size:11px;color:var(--mute);">${(item.dur && item.dur !== 'Detecting...') ? item.dur : '0:30'} · ${esc(item.branch || 'T. Nagar')} · ${esc(item.wave || 'Phase 1')}</small>
+                      <div style="font-size:10.5px;color:#2563EB;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:4px;">
+                        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#2563EB;"></span>
+                        <span>Ready · Click "Publish" top-right to upload</span>
+                      </div>
                     </div>
                     <button type="button" class="st-del-item" data-idx="${idx}" style="border:none;background:none;color:var(--mute);cursor:pointer;padding:4px;" title="Remove">&times;</button>
                   </div>
@@ -3100,14 +3362,39 @@
           boxLinks.style.display = 'block'; boxFiles.style.display = 'none';
         };
 
-        // Multi-file browse
+        // Multi-file browse & drag-and-drop
         const fileInp = studioEl.querySelector('#st-file-multi');
         studioEl.querySelector('#st-btn-pick-files').onclick = () => fileInp.click();
         boxFiles.onclick = e => { if (e.target !== studioEl.querySelector('#st-btn-pick-files')) fileInp.click(); };
 
+        boxFiles.ondragover = e => {
+          e.preventDefault();
+          boxFiles.style.borderColor = '#2563EB';
+          boxFiles.style.background = '#EFF6FF';
+        };
+        boxFiles.ondragleave = () => {
+          boxFiles.style.borderColor = '';
+          boxFiles.style.background = '';
+        };
+        boxFiles.ondrop = async e => {
+          e.preventDefault();
+          boxFiles.style.borderColor = '';
+          boxFiles.style.background = '';
+          const droppedFiles = Array.from(e.dataTransfer.files).filter(f => (f.type && f.type.startsWith('video/')) || f.name.match(/\.(mp4|mov|webm|m4v)$/i));
+          if (droppedFiles.length) {
+            handleVideoFiles(droppedFiles);
+          } else {
+            toast('Please drop valid video files (.mp4, .mov, .webm)', 'amber');
+          }
+        };
+
         fileInp.onchange = async e => {
           const files = Array.from(e.target.files);
           if (!files.length) return;
+          handleVideoFiles(files);
+        };
+
+        async function handleVideoFiles(files) {
           toast(`Ingesting ${files.length} video file${files.length > 1 ? 's' : ''}...`, 'info');
 
           for (const file of files) {
@@ -3117,32 +3404,33 @@
             const defaultWave = 'wave_0';
             const defaultBranch = activeClient.branches && activeClient.branches[0] ? activeClient.branches[0] : 'T. Nagar';
 
-            // Auto-extract thumbnail & duration via object URL
-            let durStr = '';
-            let thumbData = '';
-            try {
-              const res = await extractThumbAndDuration(file);
-              durStr = res.durationStr || '';
-              thumbData = res.thumbData || '';
-            } catch(_) {}
-
-            queue.push({
+            const newItem = {
               id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
               title: formattedTitle,
               fileName: file.name,
               fileObj: file,
-              dur: durStr,
-              coverUrl: thumbData,
+              dur: '0:30',
+              coverUrl: '',
               branch: defaultBranch,
               wave: defaultWave,
               status: 'review',
               date: new Date().toISOString().slice(0, 10),
               url: ''
-            });
+            };
+            queue.push(newItem);
+
+            // Asynchronously extract thumbnail & duration without freezing queue rendering
+            extractThumbAndDuration(file).then(res => {
+              if (res) {
+                if (res.durationStr) newItem.dur = res.durationStr;
+                if (res.thumbData) newItem.coverUrl = res.thumbData;
+                renderStudio();
+              }
+            }).catch(() => {});
           }
           activeItemIdx = queue.length - 1;
           renderStudio();
-        };
+        }
 
         // Links Add
         studioEl.querySelector('#st-btn-add-links').onclick = () => {
@@ -3261,39 +3549,154 @@
           }
         }
 
-        // Publish All
-        studioEl.querySelector('#st-btn-publish').onclick = () => {
+        // Publish All - Real Google Drive Upload Engine
+        studioEl.querySelector('#st-btn-publish').onclick = async () => {
           if (!queue.length) { toast('Please add at least one video to the queue', 'amber'); return; }
 
-          queue.forEach(item => {
-            const finalReel = {
-              id: item.id || ('r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
-              c: activeClient.id,
-              y: new Date(item.date || Date.now()).getFullYear(),
-              m: new Date(item.date || Date.now()).getMonth(),
-              b: item.branch || 'T. Nagar',
-              album: 'General',
-              phase: item.wave || 'wave_0',
-              title: item.title || 'Untitled Reel',
-              date: item.date || new Date().toISOString().slice(0, 10),
-              url: item.url || (item.fileId ? ('https://drive.google.com/file/d/' + item.fileId + '/view') : ''),
-              fileId: item.fileId || '',
-              dur: item.dur || '',
-              coverUrl: item.coverUrl || '',
-              hidden: false,
-              status: item.status || 'review',
-              views: 0,
-              downloads: 0
-            };
-            if (!DATA.reels) DATA.reels = [];
-            DATA.reels.unshift(finalReel);
-            try { api('saveReel', { reel: finalReel }); } catch(e) {}
-          });
+          const publishBtn = studioEl.querySelector('#st-btn-publish');
+          const discardBtn = studioEl.querySelector('#st-btn-discard');
+          publishBtn.disabled = true;
+          discardBtn.disabled = true;
+          publishBtn.style.opacity = '0.7';
 
-          saveAndBroadcast(`Published ${queue.length} new reel${queue.length > 1 ? 's' : ''} to ${activeClient.name} portal!`);
-          toast(`${queue.length} reel${queue.length > 1 ? 's' : ''} successfully published!`, 'success');
-          studioEl.remove();
-          renderReels();
+          // Create full progress overlay
+          const progressOverlay = document.createElement('div');
+          progressOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(13,27,42,0.85);backdrop-filter:blur(8px);z-index:999999;display:grid;place-items:center;padding:20px;';
+          progressOverlay.innerHTML = `
+            <div style="background:#FFFFFF;border-radius:18px;max-width:540px;width:100%;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,0.3);text-align:center;">
+              <div style="width:54px;height:54px;border-radius:50%;background:#EFF6FF;color:#2563EB;display:grid;place-items:center;margin:0 auto 16px;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              </div>
+              <h3 id="st-prog-title" style="margin:0 0 6px;font-size:18px;font-weight:700;color:var(--navy);">Uploading Videos to Google Drive</h3>
+              <p id="st-prog-subtitle" style="margin:0 0 20px;font-size:13px;color:var(--mute);">Preparing high-speed upload stream...</p>
+              
+              <div style="background:#F1F5F9;border-radius:10px;height:10px;overflow:hidden;margin-bottom:12px;">
+                <div id="st-prog-bar" style="background:linear-gradient(90deg, #2563EB, #1D4ED8);height:100%;width:0%;transition:width 0.2s ease;"></div>
+              </div>
+              
+              <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--navy);margin-bottom:6px;">
+                <span id="st-prog-bytes">Initializing stream...</span>
+                <span id="st-prog-pct">0%</span>
+              </div>
+              <div id="st-prog-speed" style="font-size:11.5px;color:var(--mute);margin-bottom:16px;">Connected to Google Drive Engine</div>
+
+              <div id="st-prog-queue-list" style="max-height:140px;overflow-y:auto;text-align:left;font-size:12px;display:flex;flex-direction:column;gap:6px;border-top:1px solid #E2E8F0;padding-top:12px;"></div>
+            </div>
+          `;
+          document.body.appendChild(progressOverlay);
+
+          const progTitle = progressOverlay.querySelector('#st-prog-title');
+          const progSubtitle = progressOverlay.querySelector('#st-prog-subtitle');
+          const progBar = progressOverlay.querySelector('#st-prog-bar');
+          const progBytes = progressOverlay.querySelector('#st-prog-bytes');
+          const progPct = progressOverlay.querySelector('#st-prog-pct');
+          const progSpeed = progressOverlay.querySelector('#st-prog-speed');
+          const progList = progressOverlay.querySelector('#st-prog-queue-list');
+
+          progList.innerHTML = queue.map((it, idx) => `
+            <div id="st-q-row-${idx}" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:#F8FAFC;">
+              <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px;font-weight:600;color:var(--navy);">${idx + 1}. ${esc(it.title || it.fileName || 'Reel')}</span>
+              <span id="st-q-status-${idx}" style="font-size:11px;color:var(--mute);font-weight:700;">Queued</span>
+            </div>
+          `).join('');
+
+          let publishedCount = 0;
+          for (let i = 0; i < queue.length; i++) {
+            const item = queue[i];
+            const rowStatus = progressOverlay.querySelector(`#st-q-status-${i}`);
+            if (rowStatus) {
+              rowStatus.textContent = 'Uploading...';
+              rowStatus.style.color = '#2563EB';
+            }
+            progTitle.textContent = `Uploading Reel ${i + 1} of ${queue.length}`;
+            progSubtitle.textContent = item.title || item.fileName || 'Video file';
+
+            try {
+              let finalReel = null;
+
+              if (item.fileObj) {
+                // Actual video file upload to Google Drive
+                finalReel = await uploadVideoFileToDrive(item.fileObj, {
+                  clientName: activeClient.name,
+                  clientId: activeClient.id,
+                  branch: item.branch || 'T. Nagar',
+                  album: 'General',
+                  title: item.title || item.fileName.replace(/\.[^/.]+$/, ''),
+                  date: item.date || new Date().toISOString().slice(0, 10),
+                  wave: item.wave || 'wave_0',
+                  dur: item.dur || '0:30',
+                  coverUrl: item.coverUrl || '',
+                  status: item.status || 'review'
+                }, prog => {
+                  progBar.style.width = prog.pct + '%';
+                  progPct.textContent = prog.pct + '%';
+                  progBytes.textContent = prog.bytesText || `${prog.pct}%`;
+                  if (prog.speedText) progSpeed.textContent = prog.speedText;
+                });
+              } else {
+                // Link based reel
+                progBar.style.width = '100%';
+                progPct.textContent = '100%';
+                progBytes.textContent = 'Saving Google Drive video link...';
+                finalReel = {
+                  id: item.id || ('r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
+                  c: activeClient.id,
+                  y: new Date(item.date || Date.now()).getFullYear(),
+                  m: new Date(item.date || Date.now()).getMonth(),
+                  b: item.branch || 'T. Nagar',
+                  album: 'General',
+                  phase: item.wave || 'wave_0',
+                  title: item.title || 'Untitled Reel',
+                  date: item.date || new Date().toISOString().slice(0, 10),
+                  url: item.url || (item.fileId ? ('https://drive.google.com/file/d/' + item.fileId + '/view') : ''),
+                  fileId: item.fileId || '',
+                  dur: item.dur || '0:30',
+                  coverUrl: item.coverUrl || '',
+                  hidden: false,
+                  status: item.status || 'review',
+                  views: 0,
+                  downloads: 0
+                };
+                await api('addReel', { reel: finalReel });
+              }
+
+              if (finalReel) {
+                if (!DATA.reels) DATA.reels = [];
+                const exIdx = DATA.reels.findIndex(x => x.id === finalReel.id || (finalReel.fileId && x.fileId === finalReel.fileId));
+                if (exIdx !== -1) {
+                  DATA.reels[exIdx] = finalReel;
+                } else {
+                  DATA.reels.unshift(finalReel);
+                }
+                publishedCount++;
+                if (rowStatus) {
+                  rowStatus.textContent = 'Uploaded ✓';
+                  rowStatus.style.color = '#1FAF64';
+                }
+              }
+            } catch(uploadErr) {
+              console.error('Error uploading item:', uploadErr);
+              if (rowStatus) {
+                rowStatus.textContent = 'Failed ✗';
+                rowStatus.style.color = '#DC2626';
+              }
+              toast(`Failed to upload ${item.title}: ${uploadErr.message || uploadErr}`, 'error');
+            }
+          }
+
+          progTitle.textContent = 'Upload Complete!';
+          progSubtitle.textContent = `Successfully published ${publishedCount} reel${publishedCount > 1 ? 's' : ''} to Google Drive!`;
+          progBar.style.width = '100%';
+          progPct.textContent = '100%';
+
+          saveAndBroadcast(`Published ${publishedCount} new reel${publishedCount > 1 ? 's' : ''} to ${activeClient.name} portal!`);
+          toast(`${publishedCount} reel${publishedCount > 1 ? 's' : ''} successfully published to Google Drive!`, 'success');
+
+          setTimeout(() => {
+            progressOverlay.remove();
+            studioEl.remove();
+            renderReels();
+          }, 1200);
         };
       }
 
@@ -4225,7 +4628,7 @@
                 };
                 if (!DATA.reels) DATA.reels = [];
                 DATA.reels.unshift(newReel);
-                try { api('saveReel', { reel: newReel }); } catch(e) {}
+                try { api('addReel', { reel: newReel }); } catch(e) {}
               }
 
               saveAndBroadcast(`"${v.title}" is now LIVE on ${cObj.name}'s website!`);
@@ -4291,7 +4694,7 @@
             };
             if (!DATA.reels) DATA.reels = [];
             DATA.reels.unshift(newReel);
-            try { api('saveReel', { reel: newReel }); } catch(e) {}
+            try { api('addReel', { reel: newReel }); } catch(e) {}
           }
 
           saveAndBroadcast(`Video enabled on ${cObj.name}'s website!`);
