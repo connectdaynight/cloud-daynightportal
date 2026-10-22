@@ -5670,24 +5670,20 @@
       activeGasUrl = DEFAULT_GAS_URL;
       localStorage.setItem('dn_gas_url', DEFAULT_GAS_URL);
     }
-    const MASTER_ADMIN_KEYS = ['DN@2026', '0000', '9999', '2026'];
     function isMasterAdminAuth(val) {
       if (!val) return false;
       const s = String(val).trim();
-      return MASTER_ADMIN_KEYS.includes(s) || (typeof CONFIG !== 'undefined' && CONFIG.adminPasskey && s === CONFIG.adminPasskey) || (localStorage.getItem('dn_admin_passkey') && s === localStorage.getItem('dn_admin_passkey'));
+      return s === 'DN@2026' || (typeof CONFIG !== 'undefined' && CONFIG.adminPasskey && s === CONFIG.adminPasskey);
     }
     const CONFIG = {
       gasUrl: activeGasUrl,
       adminPasskey: 'DN@2026',
       // Admin features are strictly hidden from client portal unless URL explicitly has ?admin=1
-      isAdmin: location.search.includes('admin=1') || localStorage.getItem('dn_is_admin') === 'true'
+      isAdmin: location.search.includes('admin=1')
     };
     function activateAdminMode() {
       CONFIG.isAdmin = true;
-      CONFIG.adminPasskey = 'DN@2026';
       sessionStorage.setItem('dn_admin_auth', 'DN@2026');
-      localStorage.setItem('dn_admin_passkey', 'DN@2026');
-      localStorage.setItem('dn_is_admin', 'true');
       toast('Admin Mode Active', 'success');
     }
 
@@ -8114,18 +8110,6 @@
           return;
         }
 
-        if (isMasterAdminAuth(code)) {
-          if (msg) {
-            msg.className = 'code-msg';
-            msg.style.color = 'var(--green)';
-            msg.textContent = 'Admin Unlocked';
-          }
-          pinsBox.classList.remove('bad');
-          activateAdminMode();
-          setTimeout(() => openAdmin(), 250);
-          return;
-        }
-
         if (code === c.code) {
           if (msg) {
             msg.className = 'code-msg';
@@ -8164,13 +8148,6 @@
         });
         inp.addEventListener('paste', e => {
           const raw = (e.clipboardData.getData('text') || '').trim();
-          if (isMasterAdminAuth(raw)) {
-            e.preventDefault();
-            ins[0].value = '2'; ins[1].value = '0'; ins[2].value = '2'; ins[3].value = '6';
-            activateAdminMode();
-            setTimeout(() => openAdmin(), 200);
-            return;
-          }
           const d = raw.replace(/\D/g, '').slice(0, 4);
           if (!d) return;
           e.preventDefault();
@@ -8309,17 +8286,6 @@
         const code = ins.map(i => i.value).join('');
         if (code.length < 4) return;
 
-        if (isMasterAdminAuth(code)) {
-          if (msg) {
-            msg.className = 'home-pin-msg ok';
-            msg.textContent = 'Admin Unlocked';
-          }
-          pinsBox.classList.remove('bad');
-          activateAdminMode();
-          setTimeout(() => openAdmin(), 250);
-          return;
-        }
-
         const c = (DATA.clients || []).find(x => x.code === code);
         if (c) {
           if (c.status === 'blocked') {
@@ -8393,13 +8359,6 @@
         });
         inp.addEventListener('paste', e => {
           const raw = (e.clipboardData.getData('text') || '').trim();
-          if (isMasterAdminAuth(raw)) {
-            e.preventDefault();
-            ins[0].value = '2'; ins[1].value = '0'; ins[2].value = '2'; ins[3].value = '6';
-            activateAdminMode();
-            setTimeout(() => openAdmin(), 200);
-            return;
-          }
           const d = raw.replace(/\D/g, '').slice(0, 4);
           if (!d) return;
           e.preventDefault();
@@ -8434,16 +8393,6 @@
         const check = () => {
           const code = ins.map(i => i.value).join('');
           if (code.length < 4) return;
-
-          if (isMasterAdminAuth(code)) {
-            msg.className = 'code-msg';
-            msg.style.color = 'var(--green)';
-            msg.textContent = 'Admin Unlocked';
-            pins.classList.remove('bad');
-            activateAdminMode();
-            setTimeout(() => { sc.remove(); openAdmin(); }, 200);
-            return;
-          }
 
           const matched = targetClient ? (code === targetClient.code ? targetClient : null) : (DATA.clients || []).find(x => x.code === code);
           if (matched) {
@@ -8495,13 +8444,6 @@
           });
           inp.addEventListener('paste', e => {
             const raw = (e.clipboardData.getData('text') || '').trim();
-            if (isMasterAdminAuth(raw)) {
-              e.preventDefault();
-              ins[0].value = '2'; ins[1].value = '0'; ins[2].value = '2'; ins[3].value = '6';
-              activateAdminMode();
-              setTimeout(() => { sc.remove(); openAdmin(); }, 200);
-              return;
-            }
             const d = raw.replace(/\D/g, '').slice(0, 4);
             if (!d) return;
             e.preventDefault();
@@ -11238,8 +11180,6 @@
       else if (a === 'add') openAdd();
     });
 
-    // Covert Admin Access: Type "admin" anywhere to trigger Master Passkey
-    let adminKeySeq = '';
     window.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         const scrims = document.querySelectorAll('.scrim');
@@ -11256,16 +11196,6 @@
           const sendBtn = card ? card.querySelector('[data-act="send-suggestion"]') : null;
           if (sendBtn) sendBtn.click();
           return;
-        }
-      }
-      const tag = (e.target && e.target.tagName) || '';
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      if (e.ctrlKey || e.altKey || e.metaKey) return;
-      if (e.key && e.key.length === 1) {
-        adminKeySeq = (adminKeySeq + e.key.toLowerCase()).slice(-10);
-        if (adminKeySeq.endsWith('admin')) {
-          adminKeySeq = '';
-          verifyAdminAccess();
         }
       }
     });

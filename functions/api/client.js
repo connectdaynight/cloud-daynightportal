@@ -98,12 +98,11 @@ export async function onRequestPost(context) {
     const payload = await request.json();
     const action = payload.action;
 
-    // Check passkey authentication if configured
+    // Strict Master Passkey Authentication
     const passkey = request.headers.get("x-admin-passkey") || payload.passkey;
-    const MASTER_ADMIN_KEYS = ['DN@2026', '0000', '9999', '2026'];
     const storedPass = await env.DB.prepare("SELECT value FROM settings WHERE key = 'admin_passkey'").first();
-    const isMaster = passkey && MASTER_ADMIN_KEYS.includes(passkey);
-    if (storedPass && storedPass.value && passkey !== storedPass.value && !isMaster) {
+    const authorizedKey = (storedPass && storedPass.value) ? storedPass.value : 'DN@2026';
+    if (!passkey || (passkey !== authorizedKey && passkey !== 'DN@2026')) {
       return new Response(JSON.stringify({ success: false, error: "Unauthorized: Invalid passkey" }), {
         status: 401,
         headers: { "Content-Type": "application/json" }

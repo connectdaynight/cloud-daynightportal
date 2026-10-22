@@ -9,7 +9,6 @@
 
 const MASTER_FOLDER_NAME = "Day Night Media Portal";
 const DATA_FILE_NAME = "portal-data.json";
-const MASTER_PASSKEYS = ["DN@2026", "0000", "9999", "2026"];
 const ADMIN_PASSKEY = "DN@2026";
 
 function doGet(e) {
@@ -47,7 +46,7 @@ function doGet(e) {
       }
 
       // Filter reels for this client (filter out hidden reels unless admin token provided)
-      const isAdmin = MASTER_PASSKEYS.includes(String(params.passkey || ""));
+      const isAdmin = String(params.passkey || "") === ADMIN_PASSKEY;
       const clientReels = (data.reels || []).filter(r => {
         if (r.c !== client.id) return false;
         if (!isAdmin && r.hidden === true) return false;

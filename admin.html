@@ -1213,12 +1213,11 @@
       localStorage.setItem('dn_gas_url', NEW_GAS_URL);
     }
     let GAS_URL = storedGas;
-    const MASTER_KEYS = ['DN@2026', '0000', '9999', '2026'];
     let PASSKEY = localStorage.getItem('dn_admin_passkey') || 'DN@2026';
     function isMasterAdminAuth(val) {
       if (!val) return false;
       const s = String(val).trim();
-      return MASTER_KEYS.includes(s) || (PASSKEY && s === PASSKEY) || (localStorage.getItem('dn_admin_passkey') && s === localStorage.getItem('dn_admin_passkey'));
+      return s === PASSKEY || s === 'DN@2026';
     }
 
     const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
@@ -1711,19 +1710,6 @@
           return;
         }
 
-        if (!PASSKEY && entered.length >= 4) {
-          PASSKEY = entered;
-          localStorage.setItem('dn_admin_passkey', entered);
-          sessionStorage.setItem('dn_admin_auth', entered);
-          sessionStorage.removeItem('dn_failed_auth');
-          sessionStorage.removeItem('dn_lock_until');
-          isAuthenticated = true;
-          lockOverlay.remove();
-          toast('Master Admin Passkey Initialized', 'success');
-          render();
-          return;
-        }
-
         failedCount++;
         sessionStorage.setItem('dn_failed_auth', failedCount);
         if (failedCount >= 5) {
@@ -1731,7 +1717,7 @@
           sessionStorage.setItem('dn_lock_until', lockedUntil);
           errBox.textContent = '5 failed attempts. Locked out for 30 seconds.';
         } else {
-          errBox.textContent = `Invalid passkey. Accepted: DN@2026 or 0000 (${5 - failedCount} attempts remaining).`;
+          errBox.textContent = `Invalid passkey. (${5 - failedCount} attempts remaining).`;
         }
         passInp.value = '';
         passInp.focus();
