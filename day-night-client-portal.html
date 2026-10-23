@@ -5771,7 +5771,15 @@
               if (r.dur === '0:30') r.dur = emb.dur || '';
             }
           });
-          try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
+          try { try {
+            localStorage.setItem('dn_local_data', JSON.stringify(DATA));
+          } catch(ex) {
+            try {
+              const slim = JSON.parse(JSON.stringify(DATA));
+              if (slim.reels) slim.reels.forEach(r => { if (r.coverUrl && r.coverUrl.length > 5000) r.coverUrl = ''; });
+              localStorage.setItem('dn_local_data', JSON.stringify(slim));
+            } catch(_) {}
+          } } catch(e) {}
     const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
 
     const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -5852,6 +5860,13 @@
     const motif = `<svg class="motif" viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="1.4"><circle cx="50" cy="50" r="44"/><circle cx="50" cy="50" r="34" stroke-dasharray="2 4"/><circle cx="50" cy="50" r="22"/>${Array.from({length:12},(_,i)=>{const a=i*Math.PI/6;return `<path d="M50 50 Q${(50+Math.cos(a-.3)*30).toFixed(1)} ${(50+Math.sin(a-.3)*30).toFixed(1)} ${(50+Math.cos(a)*42).toFixed(1)} ${(50+Math.sin(a)*42).toFixed(1)} Q${(50+Math.cos(a+.3)*30).toFixed(1)} ${(50+Math.sin(a+.3)*30).toFixed(1)} 50 50"/>`}).join('')}</svg>`;
 
     const client = () => (DATA.clients || []).find(c => c.id === view.client) || null;
+
+    function isClientMatch(rCid, targetCid) {
+      if (!rCid || !targetCid) return false;
+      if (rCid === targetCid) return true;
+      if ((rCid === 'tcs' || rCid === 'cmvje2zfy') && (targetCid === 'tcs' || targetCid === 'cmvje2zfy')) return true;
+      return false;
+    }
 
     function driveId(u) {
       if (!u) return null;
@@ -9973,7 +9988,7 @@
         });
 
         // Profile Row Actions (Subscribe / Follow)
-        profileRow.addEventListener('click', e => {
+        modalSc.querySelector('#ig-profile-row')?.addEventListener('click', e => {
           const subBtn = e.target.closest('.ig-sub-btn');
           if (subBtn) {
             e.stopPropagation();
