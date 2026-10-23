@@ -1833,7 +1833,7 @@
     // Cloud Sync with Google Drive Engine
     async function sync(manual = false) {
       const syncBtn = document.getElementById('btn-manual-sync');
-      if (syncBtn) syncBtn.classList.add('spinning');
+      if (syncBtn && manual) { syncBtn.classList.add('spinning'); setTimeout(() => syncBtn.classList.remove('spinning'), 1200); }
       try {
         const res = await fetch(`${GAS_URL}?action=getData`);
         const json = await res.json();
@@ -1845,6 +1845,11 @@
 
           // Strip deleted and mock items; Google Drive is the source of truth
           const gasReels = (json.data.reels || []).filter(r => !isMockOrTest(r) && !deletedReelIds.includes(r.id));
+          gasReels.forEach(r => {
+            if (r.c === 'cmvje2zfy') r.c = 'tcs';
+            if (!r.b) r.b = 'T. Nagar';
+            if (r.dur === '0:30') r.dur = '';
+          });
           const pendingLocal = (DATA.reels || []).filter(lr => lr && lr._isLocalDraft && !deletedReelIds.includes(lr.id));
           const mergedReels = [...gasReels];
           pendingLocal.forEach(plr => {
@@ -1852,6 +1857,14 @@
           });
 
           const gasClients = (json.data.clients || []).filter(c => !deletedClientIds.includes(c.id));
+          gasClients.forEach(c => {
+            if (c.id === 'cmvje2zfy' || c.id === 'tcs') {
+              c.branches = (c.branches && c.branches.length) ? c.branches : ['T. Nagar', 'Velachery', 'Chromepet', 'Thiruvallur'];
+              c.waves = (c.waves && c.waves.length) ? c.waves : ['Phase 1', 'Phase 2', 'Phase 3'];
+              c.code = '1962';
+              c.slug = 'thechennaisilks';
+            }
+          });
           const localClients = (DATA.clients || []).filter(c => !deletedClientIds.includes(c.id));
           const mergedClients = [...gasClients];
           localClients.forEach(lc => {
@@ -2028,6 +2041,7 @@
             Videos Selected
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn-portal" id="btn-batch-modal-edit" style="background:#2F7DF6;color:#fff;border-color:#2F7DF6;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;box-shadow:0 2px 8px rgba(47,125,246,0.35);">✏ Batch Edit</button>
             <button type="button" class="btn-portal" id="btn-batch-approve" style="background:#1FAF64;color:#fff;border-color:#1FAF64;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">✓ Approve</button>
             <button type="button" class="btn-portal" id="btn-batch-review" style="background:#D97706;color:#fff;border-color:#D97706;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">⏱ In Review</button>
             <button type="button" class="btn-portal" id="btn-batch-deny" style="background:#DC2626;color:#fff;border-color:#DC2626;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">✕ Deny</button>
@@ -2380,6 +2394,15 @@
         const selIds = Array.from(document.querySelectorAll('.reel-batch-chk:checked')).map(c => c.dataset.id);
         return (DATA.reels || []).filter(r => selIds.includes(r.id));
       }
+
+      document.getElementById('btn-batch-modal-edit')?.addEventListener('click', () => {
+        const targets = getSelectedReels();
+        if (!targets.length) {
+          toast('Please select at least 1 video reel to edit', 'amber');
+          return;
+        }
+        openBatchEditModal(targets);
+      });
 
       document.getElementById('btn-batch-clear')?.addEventListener('click', () => {
         chks.forEach(c => c.checked = false);
@@ -2914,6 +2937,25 @@
                   </div>
                 </div>
 
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <small style="font-size:10px;font-weight:700;color:var(--mute);text-transform:uppercase;">Delivery Waves / Phases (${(c.waves || []).length})</small>
+                    <button class="tag-add-btn" data-add-wave="${c.id}">+ Add Wave</button>
+                  </div>
+                  <div class="tag-row">
+                    ${(c.waves && c.waves.length) 
+                      ? c.waves.map(w => `
+                        <span class="tag-pill" style="display:inline-flex;align-items:center;gap:6px;background:rgba(47,125,246,0.06);border-color:rgba(47,125,246,0.25);">
+                          <span style="width:7px;height:7px;border-radius:50%;background:#2F7DF6;"></span>
+                          <b style="color:var(--navy);">${esc(w)}</b>
+                          <button class="tag-del" data-del-wave="${c.id}" data-w="${esc(w)}" title="Remove wave">&times;</button>
+                        </span>
+                      `).join('') 
+                      : '<span style="font-size:11px;color:var(--mute);font-style:italic;">No waves configured</span>'
+                    }
+                  </div>
+                </div>
+
                 <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--line);">
                   <span style="font-size:11px;color:var(--navy);font-weight:600;">FX: ${c.animStyle || 'confetti'}</span>
                   <button class="btn-portal" data-edit-client="${c.id}">Edit Profile</button>
@@ -3017,6 +3059,36 @@
             saveAndBroadcast(`Album "${albumName}" removed`);
             try { await api('saveClient', { client }); } catch(e) {}
           }, 'Remove', true);
+        };
+      });
+      // Quick Wave Addition & Deletion
+      document.querySelectorAll('[data-add-wave]').forEach(b => {
+        b.onclick = () => {
+          const client = DATA.clients.find(x => x.id === b.dataset.addWave);
+          if (!client) return;
+          promptModal('Add Delivery Wave / Phase', `New delivery wave / phase name for ${client.name}:`, '', async val => {
+            client.waves = client.waves || [];
+            if (!client.waves.includes(val)) {
+              client.waves.push(val);
+              saveAndBroadcast(`Wave "${val}" added!`);
+              try { await api('saveClient', { client }); } catch(e) {}
+            } else {
+              toast('Wave already exists', 'info');
+            }
+          }, 'e.g. Week 1, Phase 1, Festive Wave');
+        };
+      });
+
+      document.querySelectorAll('[data-del-wave]').forEach(b => {
+        b.onclick = () => {
+          const client = DATA.clients.find(x => x.id === b.dataset.delWave);
+          if (!client) return;
+          const waveName = b.dataset.w;
+          confirmModal('Remove Delivery Wave?', `Are you sure you want to remove "${waveName}" from ${client.name}?`, async () => {
+            client.waves = (client.waves || []).filter(x => x !== waveName);
+            saveAndBroadcast(`Wave "${waveName}" removed`);
+            try { await api('saveClient', { client }); } catch(e) {}
+          }, 'Remove Wave', true);
         };
       });
     }
@@ -4949,6 +5021,142 @@
       });
     }
 
+function openBatchEditModal(targets) {
+      if (!targets || !targets.length) return;
+      const targetCid = targets[0].c;
+      const client = (DATA.clients || []).find(c => c.id === targetCid) || (DATA.clients || [])[0] || {};
+      const branches = (client && client.branches && client.branches.length) ? client.branches : ['T. Nagar', 'Velachery', 'Chromepet', 'Thiruvallur'];
+      const waves = (client && client.waves && client.waves.length) ? client.waves : ['Phase 1', 'Phase 2', 'Phase 3'];
+
+      modal(`
+        <div style="padding:12px 6px;max-width:540px;margin:0 auto;">
+          <div class="mp-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;border-bottom:1px solid var(--line);padding-bottom:10px;">
+            <h3 style="margin:0;font-size:17px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2F7DF6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Batch Edit Videos (${targets.length} Selected)
+            </h3>
+            <button class="ghost" data-close style="padding:4px 12px;border-radius:999px;font-size:12px;cursor:pointer;">✕ Close</button>
+          </div>
+          <p style="font-size:12px;color:var(--mute);margin:0 0 16px;">Apply common metadata updates simultaneously across all ${targets.length} selected video reels in real time.</p>
+
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="form-group">
+              <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px;display:block;">Showroom Branch</label>
+              <select id="be-branch" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;cursor:pointer;">
+                <option value="">-- Keep Unchanged --</option>
+                <option value="__none__">No Branch / General</option>
+                ${branches.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('')}
+                <option value="__custom__">+ Enter Custom Branch...</option>
+              </select>
+              <input type="text" id="be-branch-custom" placeholder="Type custom branch name..." style="display:none;width:100%;margin-top:6px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);font-size:12.5px;box-sizing:border-box;">
+            </div>
+
+            <div class="form-group">
+              <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px;display:block;">Delivery Wave / Phase</label>
+              <select id="be-wave" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;cursor:pointer;">
+                <option value="">-- Keep Unchanged --</option>
+                ${waves.map((w, idx) => `<option value="wave_${idx}">${esc(w)}</option>`).join('')}
+                <option value="__custom__">+ Enter Custom Wave / Phase...</option>
+              </select>
+              <input type="text" id="be-wave-custom" placeholder="e.g. Week 4, Festive Wave" style="display:none;width:100%;margin-top:6px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);font-size:12.5px;box-sizing:border-box;">
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-group">
+                <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px;display:block;">Delivery Month</label>
+                <select id="be-month" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;cursor:pointer;">
+                  <option value="">-- Keep Unchanged --</option>
+                  ${MONTHS.map((m, idx) => `<option value="${idx}">${m}</option>`).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px;display:block;">Approval Status</label>
+                <select id="be-status" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;cursor:pointer;">
+                  <option value="">-- Keep Unchanged --</option>
+                  <option value="approved">✓ Approved (Publish to Reels Gallery)</option>
+                  <option value="review">⏱ In Review (Pre-Approval)</option>
+                  <option value="denied">✕ Denied / Revisions Requested</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px;display:block;">Client Portal Visibility</label>
+              <select id="be-visibility" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;cursor:pointer;">
+                <option value="">-- Keep Unchanged --</option>
+                <option value="show">Visible on Client Portal</option>
+                <option value="hide">Hidden from Client Portal</option>
+              </select>
+            </div>
+
+            <button type="button" class="btn-primary" id="be-apply-btn" style="margin-top:10px;width:100%;padding:12px;font-size:13.5px;font-weight:700;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;background:#2F7DF6;border-color:#2F7DF6;color:#fff;cursor:pointer;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Apply Batch Changes to ${targets.length} Videos
+            </button>
+          </div>
+        </div>
+      `, sc => {
+        const brSel = sc.querySelector('#be-branch');
+        const brCustom = sc.querySelector('#be-branch-custom');
+        if (brSel && brCustom) {
+          brSel.onchange = () => {
+            brCustom.style.display = brSel.value === '__custom__' ? 'block' : 'none';
+            if (brSel.value === '__custom__') brCustom.focus();
+          };
+        }
+
+        const waveSel = sc.querySelector('#be-wave');
+        const waveCustom = sc.querySelector('#be-wave-custom');
+        if (waveSel && waveCustom) {
+          waveSel.onchange = () => {
+            waveCustom.style.display = waveSel.value === '__custom__' ? 'block' : 'none';
+            if (waveSel.value === '__custom__') waveCustom.focus();
+          };
+        }
+
+        sc.querySelector('#be-apply-btn').onclick = async () => {
+          let branchVal = brSel ? brSel.value : '';
+          if (branchVal === '__custom__') branchVal = brCustom.value.trim();
+          else if (branchVal === '__none__') branchVal = '';
+
+          let waveVal = waveSel ? waveSel.value : '';
+          if (waveVal === '__custom__') waveVal = waveCustom.value.trim();
+
+          const monthVal = sc.querySelector('#be-month').value;
+          const statusVal = sc.querySelector('#be-status').value;
+          const visVal = sc.querySelector('#be-visibility').value;
+
+          targets.forEach(r => {
+            if (branchVal !== '') r.b = branchVal;
+            if (waveVal !== '') { r.wave = waveVal; r.phase = waveVal; }
+            if (monthVal !== '') r.m = parseInt(monthVal, 10);
+            if (statusVal !== '') r.status = statusVal;
+            if (visVal === 'show') r.hidden = false;
+            else if (visVal === 'hide') r.hidden = true;
+          });
+
+          // If custom branch was entered, register to client
+          if (branchVal && client && client.branches && !client.branches.includes(branchVal)) {
+            client.branches.push(branchVal);
+          }
+          // If custom wave was entered, register to client
+          if (waveVal && client && client.waves && !client.waves.includes(waveVal)) {
+            client.waves.push(waveVal);
+          }
+
+          sc.remove();
+          document.querySelector('.modal-backdrop')?.remove();
+          saveAndBroadcast(`Batch updated ${targets.length} video reels!`);
+          if (typeof renderReels === 'function') renderReels();
+
+          // Background sync to GAS
+          if (GAS_URL) {
+            api('syncData', { data: DATA }).catch(e => console.warn('Background sync:', e));
+          }
+        };
+      }, true);
+    }
+
 function openEditModal(r) {
       const client = DATA.clients.find(c => c.id === r.c);
       const branches = client && client.branches ? client.branches : [];
@@ -5014,7 +5222,10 @@ function openEditModal(r) {
         </div>
         <div class="form-row2">
           <div class="form-group">
-            <label>Delivery Wave / Phase</label>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <label>Delivery Wave / Phase</label>
+              <button type="button" id="btn-edit-new-wave" style="border:1px solid rgba(47, 125, 246, 0.25);background:#EFF6FF;color:var(--blue);font-size:11px;font-weight:600;cursor:pointer;padding:2px 8px;border-radius:6px;">+ New</button>
+            </div>
             <select id="e-wave">
               <option value="">General / No Wave</option>
               ${waves.map((w, wIdx) => {
