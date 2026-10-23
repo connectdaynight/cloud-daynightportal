@@ -1229,6 +1229,7 @@
     }
 
     const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const MOCK_IDS = ['s1', 's2', 's3', 's4', 's5', 'story_tcs_01', 'story_tcs_02', 'poster_tcs_01', 'poster_tcs_02', 'rmv7woz8l'];
     const isMockOrTest = r => !r || Boolean(r.sample) || !r.url || MOCK_IDS.includes(r.id) || /\b(test|sample|mock|fake|dummy)\b/i.test(r.title || '');
 
