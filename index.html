@@ -4017,6 +4017,42 @@
     .preapp-month-btn:hover {
       border-color: #0D3B2E;
     }
+    .preapp-dropdowns-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .preapp-wave-btn {
+      color: #0D3B2E;
+    }
+    .ig-exit-clean-btn {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      background: rgba(0, 0, 0, 0.76);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #FFFFFF;
+      border: 1.2px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      padding: 7px 18px;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    .ig-exit-clean-btn:hover {
+      background: rgba(0, 0, 0, 0.92);
+      transform: translateX(-50%) scale(1.05);
+    }
 
     /* Dedicated Delivery Waves / Phases Scroll Bar */
     .preapp-waves-wrap {
@@ -4175,61 +4211,7 @@
       object-fit: cover;
       display: block;
     }
-    .preapp-actions-row {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 8px 8px 6px;
-      box-sizing: border-box;
-    }
-    .preapp-actions-row .preapp-act-btn {
-      flex: 1 1 0;
-      min-width: 0;
-      padding: 6px 2px;
-      font-size: 10px;
-      font-weight: 700;
-      border-radius: 7px;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .preapp-comment-form {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 6px 3px 10px;
-      margin: 0 10px 10px;
-      background: #F8F9FA;
-      border: 1.2px solid var(--line);
-      border-radius: 8px;
-      box-sizing: border-box;
-    }
-    .preapp-comment-form .preapp-comment-inp {
-      flex: 1;
-      min-width: 0;
-      border: none;
-      background: transparent;
-      font-size: 11px;
-      outline: none;
-      padding: 4px 0;
-      color: var(--navy);
-    }
-    .preapp-comment-form .preapp-comment-send {
-      background: #0D3B2E;
-      color: #FFF;
-      border: none;
-      border-radius: 6px;
-      width: 26px;
-      height: 26px;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
+    /* Legacy preapp block cleaned */
 
     /* Card Item */
     .preapp-card {
@@ -4372,122 +4354,102 @@
       z-index: 5;
     }
 
-    /* Card Action Bar (Approve & Denied - Balanced 50/50 Grid) */
+    /* Video Box Action Dock (Icons Only - Ultra Modern & Premium) */
     .preapp-actions-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      padding: 8px 8px 6px;
-      border-bottom: 1px solid var(--soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 10px 10px;
+      background: #FFFFFF;
+      border-top: 1px solid rgba(18, 41, 74, 0.06);
+      box-sizing: border-box;
     }
     .preapp-act-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 38px;
+      border-radius: 11px;
+      border: 1.2px solid transparent;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      background: none;
-      border: 1px solid transparent;
-      font-size: 11px;
-      font-weight: 700;
       cursor: pointer;
-      padding: 6px 4px;
-      border-radius: 8px;
-      transition: all 0.15s ease;
-      line-height: 1.1;
-      width: 100%;
-    }
-    .preapp-act-btn.approve {
-      color: #1FAF64;
-      background: rgba(31, 175, 100, 0.08);
-      border-color: rgba(31, 175, 100, 0.2);
-    }
-    .preapp-act-btn.approve.active, .preapp-act-btn.approve:hover {
-      background: #1FAF64;
-      color: #FFFFFF;
-      border-color: #1FAF64;
-    }
-    .preapp-act-btn.denied {
-      color: #E53225;
-      background: rgba(229, 50, 37, 0.08);
-      border-color: rgba(229, 50, 37, 0.2);
-    }
-    .preapp-act-btn.denied.active, .preapp-act-btn.denied:hover {
-      background: #E53225;
-      color: #FFFFFF;
-      border-color: #E53225;
-    }
-
-    /* Suggestion / Real-Time Comment Input Box */
-    .preapp-comment-form {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 6px 6px 8px;
       position: relative;
-    }
-    .preapp-comment-inp {
-      flex: 1;
-      min-width: 0;
-      background: var(--soft);
-      border: 1px solid var(--line);
-      border-radius: 99px;
-      padding: 5px 10px;
-      font-size: 11px;
-      color: var(--ink);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-sizing: border-box;
       outline: none;
-      transition: border-color 0.15s ease, background 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
     }
-    .preapp-comment-inp:focus {
-      border-color: #2F7DF6;
-      background: #FFFFFF;
+    .preapp-act-btn svg {
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: block;
+      pointer-events: none;
     }
-    .preapp-comment-send {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: none;
-      border: none;
-      color: #2F7DF6;
-      cursor: pointer;
-      display: grid;
-      place-items: center;
-      flex: none;
-      transition: transform 0.12s ease;
+    .preapp-act-btn:hover svg {
+      transform: scale(1.15);
     }
-    .preapp-comment-send:active {
-      transform: scale(0.9);
-    }
-    .preapp-latest-comment {
-      padding: 2px 8px 7px;
-      font-size: 10px;
-      color: var(--mute);
-      cursor: pointer;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .preapp-act-btn:active {
+      transform: scale(0.92);
     }
 
-    /* Fixed Static Bottom Nav (No layout shifts, static 20% width per tab, full width) */
+    /* Approve Button (Emerald Glass Glow) */
+    .preapp-act-btn.approve {
+      color: #059669;
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.22);
+    }
+    .preapp-act-btn.approve:hover {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: rgba(16, 185, 129, 0.38);
+      box-shadow: 0 3px 10px rgba(16, 185, 129, 0.18);
+    }
+    .preapp-act-btn.approve.active {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      color: #FFFFFF;
+      border-color: #059669;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.36);
+    }
+
+    /* Denied Button (Crimson Glass Glow) */
+    .preapp-act-btn.denied {
+      color: #DC2626;
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+    .preapp-act-btn.denied:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.36);
+      box-shadow: 0 3px 10px rgba(239, 68, 68, 0.18);
+    }
+    .preapp-act-btn.denied.active {
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      color: #FFFFFF;
+      border-color: #DC2626;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.32);
+    }
+
+    /* Elevated Floating Bottom Nav (Pulled up slightly from screen bottom) */
     .client-bottom-nav {
       position: fixed !important;
-      bottom: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      transform: none !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      height: 60px !important;
-      background: rgba(255, 252, 246, 0.98) !important;
-      backdrop-filter: blur(16px) !important;
-      -webkit-backdrop-filter: blur(16px) !important;
-      border-top: 1px solid var(--line) !important;
+      bottom: 12px !important;
+      left: 14px !important;
+      right: 14px !important;
+      width: auto !important;
+      max-width: 520px !important;
+      margin: 0 auto !important;
+      height: 58px !important;
+      background: rgba(255, 253, 248, 0.96) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border: 1px solid rgba(13, 59, 46, 0.12) !important;
+      border-radius: 20px !important;
       display: flex !important;
       align-items: stretch !important;
       justify-content: stretch !important;
-      padding: 0 !important;
-      margin: 0 !important;
+      padding: 0 4px !important;
       z-index: 100 !important;
-      box-shadow: 0 -4px 20px rgba(18, 41, 74, 0.06) !important;
+      box-shadow: 0 8px 30px rgba(18, 41, 74, 0.12), 0 2px 6px rgba(18, 41, 74, 0.04) !important;
       box-sizing: border-box !important;
     }
     .client-bottom-nav .bnav-btn {
@@ -4505,11 +4467,19 @@
       margin: 0 !important;
       background: none !important;
       border: none !important;
+      border-radius: 14px !important;
       color: var(--mute) !important;
       position: relative !important;
       cursor: pointer !important;
-      transition: color 0.15s ease !important;
+      transition: color 0.18s ease, transform 0.15s ease, background 0.18s ease !important;
       box-sizing: border-box !important;
+    }
+    .client-bottom-nav .bnav-btn:hover {
+      color: #0D3B2E !important;
+      background: rgba(13, 59, 46, 0.04) !important;
+    }
+    .client-bottom-nav .bnav-btn:active {
+      transform: scale(0.96) !important;
     }
     .client-bottom-nav .bnav-btn.active {
       color: #0D3B2E !important;
@@ -4517,11 +4487,11 @@
     .client-bottom-nav .bnav-btn.active::after {
       content: '' !important;
       position: absolute !important;
-      bottom: 6px !important;
+      bottom: 5px !important;
       left: 50% !important;
       transform: translateX(-50%) !important;
-      width: 22px !important;
-      height: 2.8px !important;
+      width: 20px !important;
+      height: 2.5px !important;
       border-radius: 99px !important;
       background: #0D3B2E !important;
     }
@@ -4530,6 +4500,10 @@
       font-weight: 600 !important;
       line-height: 1 !important;
       white-space: nowrap !important;
+    }
+
+    body.has-bnav .app {
+      padding-bottom: 96px !important;
     }
 
     /* List View for Pre-Approval */
@@ -4606,46 +4580,35 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-top: 8px;
-      flex-wrap: wrap;
+      margin-top: auto;
+      margin-left: auto;
+      justify-content: flex-end;
     }
-    .preapp-list-sug-form {
-      display: flex !important;
-      align-items: center !important;
-      gap: 6px !important;
-      margin-top: 6px !important;
-      background: #F8F9FA !important;
-      border: 1.2px solid var(--line) !important;
-      border-radius: 8px !important;
-      padding: 2px 6px 2px 10px !important;
-      width: 100% !important;
-      box-sizing: border-box !important;
+    .preapp-list-actions .preapp-act-btn {
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
     }
-    .preapp-list-sug-form input {
-      flex: 1 !important;
-      min-width: 0 !important;
-      border: none !important;
-      background: transparent !important;
-      font-size: 11.5px !important;
-      outline: none !important;
-      padding: 5px 0 !important;
-      color: var(--navy) !important;
+    .preapp-act-btn.dl {
+      color: #0D5C3A;
+      background: rgba(13, 92, 58, 0.08);
+      border-color: rgba(13, 92, 58, 0.22);
     }
-    .preapp-list-sug-form button {
-      background: #0D3B2E !important;
-      color: #FFF !important;
-      border: none !important;
-      border-radius: 6px !important;
-      width: 26px !important;
-      height: 26px !important;
-      display: grid !important;
-      place-items: center !important;
-      cursor: pointer !important;
-      flex-shrink: 0 !important;
-      transition: opacity 0.15s ease !important;
+    .preapp-act-btn.dl:hover {
+      background: rgba(13, 92, 58, 0.16);
+      border-color: rgba(13, 92, 58, 0.38);
+      box-shadow: 0 3px 10px rgba(13, 92, 58, 0.18);
     }
-    .preapp-list-sug-form button:hover {
-      opacity: 0.9 !important;
+    .preapp-act-btn.share {
+      color: #B8935A;
+      background: rgba(184, 147, 90, 0.1);
+      border-color: rgba(184, 147, 90, 0.25);
+    }
+    .preapp-act-btn.share:hover {
+      background: rgba(184, 147, 90, 0.18);
+      border-color: rgba(184, 147, 90, 0.4);
+      box-shadow: 0 3px 10px rgba(184, 147, 90, 0.18);
     }
 
     /* View Switcher Toggle (Grid vs List - Always Fixed & Prominent) */
@@ -5909,18 +5872,26 @@
     const contentsFor = (y, m, b, alb, type) => (DATA.reels || []).filter(r => {
       if (!view.client || r.c !== view.client) return false;
       if (!CONFIG.isAdmin && r.hidden === true) return false;
+      if (!CONFIG.isAdmin && (!r.type || r.type === 'reel' || r.type === 'video') && r.status !== 'approved') return false;
       if (isMockOrTest(r)) return false;
       if (y != null && r.y !== y) return false;
       if (m != null && r.m !== m) return false;
-      if (b != null && r.b !== b) return false;
-      if (alb != null && r.album !== alb) return false;
+      if (b != null && b !== 'all') {
+        const tb = b.toLowerCase();
+        const rb = (r.b || r.album || '').toLowerCase();
+        if (!rb.includes(tb) && !tb.includes(rb)) return false;
+      }
+      if (alb != null && alb !== 'all' && r.album !== alb) return false;
       if (type) {
         if (type === 'reels' || type === 'reel') return !r.type || r.type === 'reel' || r.type === 'video';
         if (type === 'stories' || type === 'story') return r.type === 'story';
         if (type === 'posters' || type === 'poster') return r.type === 'poster';
       }
       return true;
-    }).sort((a,b) => a.date < b.date ? -1 : 1);
+    }).sort((a,b) => {
+      if (a.order != null && b.order != null) return a.order - b.order;
+      return 0; // Preserves real-time custom video arrangement from admin
+    });
     const reelsFor = (y, m, b, alb) => contentsFor(y, m, b, alb, 'reels');
 
     const fmtDate = d => {
@@ -6016,11 +5987,12 @@
       landing: { screen: 'splash', client: null },
       'client-landing': { screen: 'splash', client: null },
       genesis: { screen: 'landing' },
-      preapproval: { screen: 'landing' },
+      preapproval: { screen: 'genesis' },
       months: { screen: 'genesis' },
-      branches: { screen: 'months', month: null },
-      albums: { screen: 'months', month: null },
-      reels: { screen: 'months', branch: null, album: null },
+      branches: { screen: 'genesis', branch: null },
+      collections: { screen: 'genesis', album: null },
+      albums: { screen: 'genesis', album: null },
+      reels: { screen: 'genesis', branch: null, album: null },
       favorites: { screen: 'genesis' },
       profile: { screen: 'genesis' }
     };
@@ -6657,13 +6629,18 @@
     function setReelApprovalStatus(reelId, newStatus) {
       const r = (DATA.reels || []).find(x => x.id === reelId);
       if (!r) return;
-      r.status = newStatus;
+      const targetStatus = r.status === newStatus ? 'review' : newStatus;
+      r.status = targetStatus;
       DATA._updatedAt = Date.now();
       try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
       try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
-      toast(newStatus === 'approved' ? 'Content marked as Approved' : 'Content marked as Denied', newStatus === 'approved' ? 'success' : 'amber');
+      if (targetStatus === 'review') {
+        toast('Content status reset to Under Review', 'info');
+      } else {
+        toast(targetStatus === 'approved' ? 'Content marked as Approved' : 'Content marked as Denied / Edits Requested', targetStatus === 'approved' ? 'success' : 'amber');
+      }
       if (CONFIG.gasUrl) {
-        gasApi('updateReelStatus', { id: r.id, reelId: r.id, status: newStatus }).catch(() => {});
+        gasApi('updateReelStatus', { id: r.id, reelId: r.id, status: targetStatus }).catch(() => {});
       }
       render();
     }
@@ -6698,7 +6675,9 @@
     // Pre-Approval Screen Renderer (Replaces Home Page Buttons & Provides Pre-Approval Screen)
     function renderPreApprovalPage(c, isHome = false) {
       const currentMonth = view.month != null ? view.month : 9; // October default (0-indexed 9)
-      const currentPhase = view.phase || 'all';
+      const currentPhase = view.preappPhase || view.phase || 'all';
+      view.phase = currentPhase;
+      view.preappPhase = currentPhase;
       const currentStatus = view.statusFilter || 'all';
       const currentViewMode = view.preappViewMode || (function() {
         try { return localStorage.getItem('dn_preapp_view_mode') || 'grid'; } catch(_) { return 'grid'; }
@@ -6706,6 +6685,33 @@
 
       // Get real reels for this client (Strictly real data only, zero fakes)
       let clientReels = (DATA.reels || []).filter(r => r.c === c.id && !isMockOrTest(r));
+
+      // Determine Active Wave Label
+      const clientWaves = (c.waves && Array.isArray(c.waves) && c.waves.length) ? c.waves : ['Phase 1', 'Phase 2', 'Phase 3'];
+      let currentWaveLabel = 'All Waves';
+      if (currentPhase && currentPhase !== 'all') {
+        if (currentPhase.startsWith('wave_')) {
+          const idx = parseInt(currentPhase.replace('wave_', ''), 10);
+          currentWaveLabel = clientWaves[idx] || currentPhase;
+        } else if (currentPhase.startsWith('phase')) {
+          const idx = (parseInt(currentPhase.replace('phase', ''), 10) || 1) - 1;
+          currentWaveLabel = clientWaves[idx] || currentPhase;
+        } else {
+          currentWaveLabel = currentPhase;
+        }
+      }
+
+      // Filter by Month
+      if (currentMonth != null) {
+        clientReels = clientReels.filter(r => {
+          if (r.m != null) return r.m === currentMonth;
+          if (r.date) {
+            const d = new Date(r.date);
+            return !isNaN(d) && d.getMonth() === currentMonth;
+          }
+          return true;
+        });
+      }
 
       // Filter by Status
       if (currentStatus === 'pending') {
@@ -6739,7 +6745,22 @@
         });
       }
 
-      const activeBranch = view.branch ? (view.branch.toUpperCase() + ' BRANCH') : ((c.branches && c.branches[0]) ? (c.branches[0].toUpperCase() + ' BRANCH') : 'ALL BRANCHES');
+      // Filter by Branch
+      if (view.branch && view.branch !== 'all') {
+        const targetB = view.branch.toLowerCase();
+        clientReels = clientReels.filter(r => {
+          const rb = (r.b || r.album || '').toLowerCase();
+          return rb.includes(targetB) || targetB.includes(rb);
+        });
+      }
+
+      // Preserve real-time custom video arrangement from admin
+      clientReels.sort((a,b) => {
+        if (a.order != null && b.order != null) return a.order - b.order;
+        return 0;
+      });
+
+      const activeBranch = (view.branch && view.branch !== 'all') ? (view.branch.toUpperCase() + ' BRANCH') : 'ALL BRANCHES';
       const bannerSrc = c.banner || c.heroBanner || c.bannerUrl || '';
       const logoSrc = c.logo || (c.id === 'tcs' ? '/Logo/tcs-logo.png' : '/Logo/logo.png');
 
@@ -6770,22 +6791,31 @@
             </div>
             <h2 class="preapp-banner-title">Content Pre-Approval</h2>
             <div class="preapp-banner-sub">for ${esc(c.name)}</div>
-            <div class="preapp-branch-pill">
-              <span>${activeBranch}</span>
-            </div>
+            <button type="button" class="preapp-branch-pill" data-act="open-branch-picker" title="Switch Branch Filter" aria-label="Switch Branch Filter" style="cursor:pointer;border:none;outline:none;">
+              <span>${esc(activeBranch)}</span>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:4px;"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
             <div class="preapp-flourish">
               <svg width="34" height="8" viewBox="0 0 34 8" fill="currentColor"><path d="M0 4 Q 8.5 0, 17 4 T 34 4" stroke="currentColor" stroke-width="1.2" fill="none"/><circle cx="17" cy="4" r="1.8"/></svg>
             </div>
           </div>
         </div>
 
-        <!-- Filter Controls Row 1: Month Picker (Left) + View Mode Switcher (Right) -->
+        <!-- Filter Controls Row 1: Month & Wave Dropdowns (Left) + View Mode Switcher (Right) -->
         <div class="preapp-controls-row1">
-          <button class="preapp-month-btn" data-act="open-month-dropdown" aria-label="Select Month">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span>${MONTHS[currentMonth]}</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
+          <div class="preapp-dropdowns-group">
+            <button class="preapp-month-btn" data-act="open-month-dropdown" aria-label="Select Month">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>${MONTHS[currentMonth]}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+
+            <button class="preapp-month-btn preapp-wave-btn" data-act="open-wave-dropdown" aria-label="Select Delivery Wave / Category">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c.6 0 1.2-.4 1.4-1 1.2-3 4-3 5.2 0 .4.9 1.4 1.5 2.4 1.5s2-.6 2.4-1.5c1.2-3 4-3 5.2 0 .2.6.8 1 1.4 1s1.2-.4 1.4-1c.6-1.5 1.8-2.5 3.2-2.5"/><path d="M2 18c.6 0 1.2-.4 1.4-1 1.2-3 4-3 5.2 0 .4.9 1.4 1.5 2.4 1.5s2-.6 2.4-1.5c1.2-3 4-3 5.2 0 .2.6.8 1 1.4 1s1.2-.4 1.4-1c.6-1.5 1.8-2.5 3.2-2.5"/></svg>
+              <span>${esc(currentWaveLabel)}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
 
           <!-- View Mode Switcher (Grid & List) - Permanently Visible on Right -->
           <div class="preapp-view-toggle">
@@ -6795,28 +6825,6 @@
             <button type="button" class="preapp-vbtn ${currentViewMode === 'list' ? 'active' : ''}" data-act="set-view-mode" data-mode="list" title="List View" aria-label="List View">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             </button>
-          </div>
-        </div>
-
-        <!-- Filter Controls Row 2: Dedicated Full-Width Delivery Waves / Phases Scroll Bar -->
-        <div class="preapp-waves-wrap">
-          <div class="preapp-phase-group" id="preapp-phase-track">
-            <button class="preapp-phase-btn ${(!currentPhase || currentPhase === 'all') ? 'active' : ''}" data-act="set-phase" data-phase="all" title="All Waves">
-              <span class="phase-dot"></span>
-              All Waves
-            </button>
-            ${(function() {
-              const clientWaves = (c.waves && Array.isArray(c.waves) && c.waves.length) ? c.waves : ['Phase 1', 'Phase 2', 'Phase 3'];
-              return clientWaves.map((waveName, wIdx) => {
-                const waveKey = 'wave_' + wIdx;
-                const isAct = currentPhase === waveKey || currentPhase === waveName || currentPhase === ('phase' + (wIdx + 1));
-                return `
-                  <button class="preapp-phase-btn ${isAct ? 'active' : ''}" data-act="set-phase" data-phase="${waveKey}" title="${esc(waveName)}">
-                    <span class="phase-dot"></span>
-                    ${esc(waveName)}
-                  </button>`;
-              }).join('');
-            })()}
           </div>
         </div>
 
@@ -6879,25 +6887,21 @@
                           </span>
                         </div>
 
-                        <!-- Action Buttons Row right after Title -->
+                        <!-- Action Buttons Row: Approve, Deny, Download, Share in Bottom-Right -->
                         <div class="preapp-list-actions">
-                          <button type="button" class="preapp-act-btn approve ${r.status === 'approved' ? 'active' : ''}" data-act="preapp-approve" data-id="${r.id}">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                            Approve
+                          <button type="button" class="preapp-act-btn approve ${r.status === 'approved' ? 'active' : ''}" data-act="preapp-approve" data-id="${r.id}" title="Approve Reel" aria-label="Approve Reel">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                           </button>
-                          <button type="button" class="preapp-act-btn denied ${r.status === 'denied' ? 'active' : ''}" data-act="preapp-denied" data-id="${r.id}">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            Denied
+                          <button type="button" class="preapp-act-btn denied ${r.status === 'denied' ? 'active' : ''}" data-act="preapp-denied" data-id="${r.id}" title="Request Edits / Deny" aria-label="Request Edits / Deny">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
+                          <button type="button" class="preapp-act-btn dl" data-act="direct-dl" data-id="${r.id}" title="Download Master MP4" aria-label="Download Master MP4">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 20h16"/></svg>
+                          </button>
+                          <button type="button" class="preapp-act-btn share" data-act="share" data-id="${r.id}" title="Share Reel" aria-label="Share Reel">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                           </button>
                         </div>
-
-                        <!-- Suggestion Box Attached Directly to Bottom of Buttons -->
-                        <form class="preapp-comment-form preapp-list-sug-form" data-id="${r.id}" onsubmit="return false;">
-                          <input type="text" class="preapp-comment-inp" placeholder="Type suggestion or revision note..." data-id="${r.id}" autocomplete="off">
-                          <button type="button" class="preapp-comment-send" data-act="send-suggestion" data-id="${r.id}" title="Send suggestion">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                          </button>
-                        </form>
                       </div>
                     </div>
 
@@ -6928,15 +6932,10 @@
                         : `<div class="preapp-thumb-placeholder">${motif}<div style="font-size:11px;font-weight:700;margin-top:6px;color:rgba(255,255,255,0.7);">${esc(r.title)}</div></div>`
                       }
 
-                      <!-- Top Left Three Dots Options -->
-                      <button type="button" class="preapp-thumb-dots" data-act="card-dots" data-id="${r.id}" title="Options" onclick="event.stopPropagation();">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>
-                      </button>
-
                       <!-- Top Right Duration & Direct Download -->
                       <div class="preapp-thumb-top-right">
                         ${r.dur ? `<span class="preapp-dur-pill">${esc(r.dur)}</span>` : ''}
-                        <button type="button" class="preapp-thumb-dl" data-act="direct-dl" data-id="${r.id}" title="Download Master MP4" onclick="event.stopPropagation();">
+                        <button type="button" class="preapp-thumb-dl" data-act="direct-dl" data-id="${r.id}" title="Download Master MP4">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 20h16"/></svg>
                         </button>
                       </div>
@@ -6953,25 +6952,15 @@
                       </div>
                     </div>
 
-                    <!-- Action Buttons Row (Approve & Denied Only) -->
+                    <!-- Action Buttons Row (Icons Only - Ultra Modern & Clean) -->
                     <div class="preapp-actions-row">
-                      <button type="button" class="preapp-act-btn approve ${r.status === 'approved' ? 'active' : ''}" data-act="preapp-approve" data-id="${r.id}">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                        Approve
+                      <button type="button" class="preapp-act-btn approve ${r.status === 'approved' ? 'active' : ''}" data-act="preapp-approve" data-id="${r.id}" title="Approve Reel" aria-label="Approve Reel">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                       </button>
-                      <button type="button" class="preapp-act-btn denied ${r.status === 'denied' ? 'active' : ''}" data-act="preapp-denied" data-id="${r.id}">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        Denied
+                      <button type="button" class="preapp-act-btn denied ${r.status === 'denied' ? 'active' : ''}" data-act="preapp-denied" data-id="${r.id}" title="Request Edits / Deny" aria-label="Request Edits / Deny">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       </button>
                     </div>
-
-                    <!-- Real-Time Comment / Suggestion Input Box -->
-                    <form class="preapp-comment-form" data-id="${r.id}" onsubmit="return false;">
-                      <input type="text" class="preapp-comment-inp" placeholder="Add suggestion..." data-id="${r.id}" autocomplete="off">
-                      <button type="button" class="preapp-comment-send" data-act="send-suggestion" data-id="${r.id}" title="Send suggestion">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                      </button>
-                    </form>
                   </div>`;
               }).join('')}
             </div>`
@@ -6992,9 +6981,9 @@
       if (!view.client || view.screen === 'splash' || view.screen === 'client-pin' || view.screen === 'landing' || view.screen === 'client-landing' || document.querySelector('.scrim')) return '';
       const isHome = view.screen === 'genesis';
       const isReels = view.screen === 'reels';
-      const isBranches = view.screen === 'branches' || (view.screen === 'months' && view.tabMode === 'branches');
+      const isBranches = view.screen === 'branches';
       const isPreApp = view.screen === 'preapproval';
-      const isCollections = view.screen === 'albums' || (view.screen === 'months' && view.tabMode === 'albums');
+      const isCollections = view.screen === 'collections' || view.screen === 'albums';
 
       return `
         <nav class="client-bottom-nav" aria-label="Client Navigation">
@@ -7020,6 +7009,77 @@
           </button>
         </nav>
       `;
+    }
+
+    function openBranchPicker(c) {
+      const branches = (c && c.branches && Array.isArray(c.branches) && c.branches.length) ? c.branches : ['T. Nagar', 'Chromepet', 'Thiruvallur'];
+      const curB = view.branch || 'all';
+      sheet(`
+        <div style="padding:10px 4px 6px;">
+          <div class="mp-title">
+            <h3>Select Store Branch</h3>
+            <button class="ghost" data-close style="padding:4px 12px;border-radius:999px;font-size:12px;">Close</button>
+          </div>
+          <p style="font-size:12px;color:var(--mute);margin:0 0 14px;">Filter video reels and promotional content by showroom location.</p>
+          <div class="branch-picker-list" style="display:flex;flex-direction:column;gap:8px;">
+            <button class="branch-picker-btn ${curB === 'all' ? 'active' : ''}" data-act="select-dropdown-branch" data-branch="all" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:${curB === 'all' ? 'var(--navy)' : 'var(--card)'};color:${curB === 'all' ? '#fff' : 'var(--ink)'};font-weight:600;font-size:14px;cursor:pointer;">
+              <span style="display:flex;align-items:center;gap:10px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                All Branches
+              </span>
+              ${curB === 'all' ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+            </button>
+            ${branches.map(br => {
+              const isAct = curB.toLowerCase() === br.toLowerCase();
+              return `
+                <button class="branch-picker-btn ${isAct ? 'active' : ''}" data-act="select-dropdown-branch" data-branch="${esc(br)}" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:${isAct ? 'var(--navy)' : 'var(--card)'};color:${isAct ? '#fff' : 'var(--ink)'};font-weight:600;font-size:14px;cursor:pointer;">
+                  <span style="display:flex;align-items:center;gap:10px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
+                    ${esc(br)} Branch
+                  </span>
+                  ${isAct ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `, sc => {}, false, 'branch-picker-scrim');
+    }
+
+    function openWavePicker(c) {
+      const clientWaves = (c && c.waves && Array.isArray(c.waves) && c.waves.length) ? c.waves : ['Phase 1', 'Phase 2', 'Phase 3'];
+      const curPhase = view.preappPhase || 'all';
+      sheet(`
+        <div style="padding:10px 4px 6px;">
+          <div class="mp-title">
+            <h3>Select Delivery Wave / Category</h3>
+            <button class="ghost" data-close style="padding:4px 12px;border-radius:999px;font-size:12px;">Close</button>
+          </div>
+          <p style="font-size:12px;color:var(--mute);margin:0 0 14px;">Filter content by production wave, phase, or release batch.</p>
+          <div class="wave-picker-list" style="display:flex;flex-direction:column;gap:8px;">
+            <button class="wave-picker-btn ${curPhase === 'all' ? 'active' : ''}" data-act="select-dropdown-wave" data-phase="all" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:${curPhase === 'all' ? 'var(--navy)' : 'var(--card)'};color:${curPhase === 'all' ? '#fff' : 'var(--ink)'};font-weight:600;font-size:14px;cursor:pointer;">
+              <span style="display:flex;align-items:center;gap:10px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:${curPhase === 'all' ? 'var(--gold)' : '#ccc'};"></span>
+                All Waves
+              </span>
+              ${curPhase === 'all' ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+            </button>
+            ${clientWaves.map((waveName, wIdx) => {
+              const waveKey = 'wave_' + wIdx;
+              const isAct = curPhase === waveKey || curPhase === waveName || curPhase === ('phase' + (wIdx + 1));
+              return `
+                <button class="wave-picker-btn ${isAct ? 'active' : ''}" data-act="select-dropdown-wave" data-phase="${waveKey}" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:${isAct ? 'var(--navy)' : 'var(--card)'};color:${isAct ? '#fff' : 'var(--ink)'};font-weight:600;font-size:14px;cursor:pointer;">
+                  <span style="display:flex;align-items:center;gap:10px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:${isAct ? 'var(--gold)' : '#ccc'};"></span>
+                    ${esc(waveName)}
+                  </span>
+                  ${isAct ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `, sc => {}, false, 'wave-picker-scrim');
     }
 
     function openMonthPicker() {
@@ -7302,7 +7362,91 @@
         attachWaveScroller();
       }
 
-      // Screen 3: Library Navigator (Months / Branches / Albums)
+      // Screen 2B: Dedicated Store Branches Screen
+      else if (view.screen === 'branches') {
+        if (!c) { go({ screen: 'splash', client: null }); return; }
+        const list = c.branches || [];
+        const total = (DATA.reels || []).filter(r => r.c === c.id && (!r.hidden || CONFIG.isAdmin)).length;
+        app.innerHTML = `
+          ${topbar(c.name, 'Store Branches')}
+          <div class="head">
+            ${c.logo ? `<img class="clogo" src="${esc(c.logo)}" alt="">` : ''}
+            <div class="row-between">
+              <h2>Store Branches</h2>
+            </div>
+            <small>${list.length} location${list.length === 1 ? '' : 's'} · ${total} delivered content${total === 1 ? '' : 's'}</small>
+          </div>
+          ${list.length ? `
+            <div class="branches">
+              ${list.map(b => {
+                const n = contentsFor(null, null, b).length;
+                const cover = (c.branchCovers && c.branchCovers[b]) || '';
+                return `
+                  <button class="branch ${cover ? 'has-cover' : 'no-cover'}" style="--c:${bColor(b, list)}" data-act="branch" data-b="${esc(b)}">
+                    <div class="branch-cover-wrap">
+                      ${cover 
+                        ? `<img src="${esc(cover)}" alt="" class="branch-cover-img">` 
+                        : `<div class="branch-cover-placeholder"><span style="font-size:18px;font-weight:700;letter-spacing:0.04em;color:var(--navy);">${esc(b.slice(0, 2).toUpperCase())}</span><span style="font-size:11px;color:var(--mute);">${esc(b)} Branch</span></div>`
+                      }
+                      ${CONFIG.isAdmin ? `
+                        <span class="branch-cov-btn" data-act="cover-branch" data-b="${esc(b)}" title="Set cover image (Upload or Link)">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        </span>` : ''}
+                    </div>
+                    <div class="branch-meta-wrap">
+                      <span class="bn"><small>Store Branch</small><b>${esc(b)}</b></span>
+                      <span class="cnt"><strong>${n}</strong> content${n === 1 ? '' : 's'}</span>
+                    </div>
+                  </button>`;
+              }).join('')}
+            </div>` : '<div class="empty">No store branches configured</div>'}
+          ${CONFIG.isAdmin ? '<button class="fab-add" data-act="add" aria-label="Add reel">+</button>' : ''}
+          ${renderBottomNav()}`;
+      }
+
+      // Screen 2C: Dedicated Collections Screen
+      else if (view.screen === 'collections' || view.screen === 'albums') {
+        if (!c) { go({ screen: 'splash', client: null }); return; }
+        const list = c.albums || [];
+        const total = (DATA.reels || []).filter(r => r.c === c.id && (!r.hidden || CONFIG.isAdmin)).length;
+        app.innerHTML = `
+          ${topbar(c.name, 'Collections')}
+          <div class="head">
+            ${c.logo ? `<img class="clogo" src="${esc(c.logo)}" alt="">` : ''}
+            <div class="row-between">
+              <h2>Festive &amp; Campaign Collections</h2>
+            </div>
+            <small>${list.length} collection${list.length === 1 ? '' : 's'} · ${total} delivered content${total === 1 ? '' : 's'}</small>
+          </div>
+          ${list.length ? `
+            <div class="branches">
+              ${list.map(alb => {
+                const n = contentsFor(null, null, null, alb).length;
+                const cover = (c.albumCovers && c.albumCovers[alb]) || '';
+                return `
+                  <button class="branch ${cover ? 'has-cover' : 'no-cover'}" style="--c:${bColor(alb, list)}" data-act="album" data-alb="${esc(alb)}">
+                    <div class="branch-cover-wrap">
+                      ${cover 
+                        ? `<img src="${esc(cover)}" alt="" class="branch-cover-img">` 
+                        : `<div class="branch-cover-placeholder"><span style="font-size:18px;font-weight:700;letter-spacing:0.04em;color:var(--navy);">${esc(alb.slice(0, 2).toUpperCase())}</span><span style="font-size:11px;color:var(--mute);">${esc(alb)}</span></div>`
+                      }
+                      ${CONFIG.isAdmin ? `
+                        <span class="branch-cov-btn" data-act="cover-album" data-alb="${esc(alb)}" title="Set cover image (Upload or Link)">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        </span>` : ''}
+                    </div>
+                    <div class="branch-meta-wrap">
+                      <span class="bn"><small>Collection</small><b>${esc(alb)}</b></span>
+                      <span class="cnt"><strong>${n}</strong> content${n === 1 ? '' : 's'}</span>
+                    </div>
+                  </button>`;
+              }).join('')}
+            </div>` : '<div class="empty">No collections configured</div>'}
+          ${CONFIG.isAdmin ? '<button class="fab-add" data-act="add" aria-label="Add reel">+</button>' : ''}
+          ${renderBottomNav()}`;
+      }
+
+      // Screen 3: Library Navigator (Months Calendar view if explicitly requested)
       else if (view.screen === 'months') {
         if (!c) { go({ screen: 'splash', client: null }); return; }
         const y = view.year;
@@ -7421,7 +7565,7 @@
         const gridCols = view.gridCols || 2;
 
         // Banner Image (Only use client's real configured bannerUrl; otherwise use luxury gradient)
-        const heroBanner = c.bannerUrl || '';
+        const heroBanner = c.banner || c.heroBanner || c.bannerUrl || '';
 
         // Unified Gallery View for Reels, Stories, and Posters (Reference Concept Card Listing)
         let displayList = currentType === 'all'
@@ -7827,15 +7971,7 @@
               </div>
             </div>
 
-            <div class="profile-footer">
-              <div class="dn-badge">
-                ${dnLogo('mini')}
-                <div>
-                  <b>Day Night Media</b>
-                  <small>Executive Production Engine</small>
-                </div>
-              </div>
-            </div>
+            
           </div>
 
           ${renderBottomNav()}`;
@@ -8865,6 +9001,11 @@
     // --------------------------------------------------------------------------
     // DIRECT DOWNLOAD HELPER (Forces native download, never opens Google Drive)
     // --------------------------------------------------------------------------
+    window.triggerDirectDownloadById = function(id) {
+      const r = (DATA.reels || []).find(x => x.id === id);
+      if (r) triggerDirectDownload(r);
+    };
+
     function triggerDirectDownload(r) {
       const c = client();
       if (DATA.settings?.downloadsPaused || (c && c.downloadsPaused)) {
@@ -8967,6 +9108,12 @@
 
           <!-- Vertical 9:16 Instagram Reels Card -->
           <div class="ig-reels-container" id="ig-container">
+            <!-- Exit Clean Master Floating Button -->
+            <button type="button" class="ig-exit-clean-btn" id="ig-exit-clean-btn" style="display:none;" title="Exit Clean Master Mode">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <span>Exit Clean Master</span>
+            </button>
+
             <!-- Top Bar -->
             <div class="ig-top-bar">
               <button type="button" class="ig-top-btn" id="ig-btn-back" title="Back" aria-label="Close">
@@ -9035,6 +9182,14 @@
                 <span class="ig-action-count">Save</span>
               </div>
 
+              <!-- Direct Download Master MP4 Action -->
+              <div class="ig-action-item" id="ig-item-dl">
+                <button type="button" class="ig-action-btn" id="ig-btn-player-dl" title="Download Master MP4" aria-label="Download Master MP4">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 20h16"/></svg>
+                </button>
+                <span class="ig-action-count">Save MP4</span>
+              </div>
+
               <!-- Three Dots Button (Opens Settings Modal) -->
               <div class="ig-action-item">
                 <button type="button" class="ig-action-btn" id="ig-btn-dots" title="Settings & Options" aria-label="Options">
@@ -9098,7 +9253,7 @@
                 <button type="button" class="ig-drawer-close" id="ig-settings-close">&times;</button>
               </div>
 
-              <!-- Platform Preview Overlay Switcher (Dropdown) -->
+              <!-- Platform Preview Overlay Switcher (Dropdown & Direct Pills) -->
               <div style="margin-bottom:14px;">
                 <small style="font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">Platform Preview Overlay</small>
                 <select id="ig-platform-select" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--soft);color:var(--navy);font-size:12.5px;font-weight:600;outline:none;cursor:pointer;">
@@ -9107,6 +9262,20 @@
                   <option value="facebook">Facebook Reels</option>
                   <option value="clean">Clean Master (No UI)</option>
                 </select>
+                <div class="ig-platform-pills" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;">
+                  <button type="button" class="ig-platform-pill active" data-p="instagram" style="padding:7px 4px;border-radius:8px;border:1px solid var(--line);background:var(--navy);color:#FFF;font-size:11px;font-weight:600;cursor:pointer;text-align:center;">
+                    Instagram
+                  </button>
+                  <button type="button" class="ig-platform-pill" data-p="youtube" style="padding:7px 4px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:11px;font-weight:600;cursor:pointer;text-align:center;">
+                    YouTube
+                  </button>
+                  <button type="button" class="ig-platform-pill" data-p="facebook" style="padding:7px 4px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:11px;font-weight:600;cursor:pointer;text-align:center;">
+                    Facebook
+                  </button>
+                  <button type="button" class="ig-platform-pill" data-p="clean" style="padding:7px 4px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:11px;font-weight:600;cursor:pointer;text-align:center;">
+                    Clean UI
+                  </button>
+                </div>
               </div>
 
               <!-- Pre-Approval Status Action -->
@@ -9251,52 +9420,110 @@
           });
         }
 
-        // Platform Switcher Handler
+        // Platform Switcher Handler with Full Visual Fidelity & Clean Master Exit
         function applyPlatformOverlay(platform) {
           socialPlatform = platform;
+          const container = modalSc.querySelector('.ig-modal-container');
+          if (container) container.setAttribute('data-platform', platform);
+
           const topTitle = modalSc.querySelector('#ig-top-title');
           const actionsStack = modalSc.querySelector('#ig-actions-stack');
           const metaOverlay = modalSc.querySelector('#ig-meta-overlay');
           const profileRow = modalSc.querySelector('#ig-profile-row');
+          const scrubber = modalSc.querySelector('#ig-scrubber');
+          const exitCleanBtn = modalSc.querySelector('#ig-exit-clean-btn');
+          const likeBtn = modalSc.querySelector('#ig-btn-like');
+          const likeIcon = modalSc.querySelector('#ig-icon-like');
+
+          // Sync select dropdown & pill buttons
+          const pSelect = modalSc.querySelector('#ig-platform-select');
+          if (pSelect && pSelect.value !== platform) pSelect.value = platform;
+          modalSc.querySelectorAll('.ig-platform-pill').forEach(btn => {
+            if (btn.dataset.p === platform) {
+              btn.classList.add('active');
+              btn.style.background = 'var(--navy)';
+              btn.style.color = '#FFF';
+            } else {
+              btn.classList.remove('active');
+              btn.style.background = 'var(--card)';
+              btn.style.color = 'var(--ink)';
+            }
+          });
 
           if (platform === 'clean') {
-            topTitle.innerHTML = '<span style="color:#FFF;font-weight:700;">Clean Master</span>';
-            actionsStack.style.display = 'none';
-            metaOverlay.style.display = 'none';
-          } else if (platform === 'youtube') {
-            topTitle.innerHTML = '<div style="display:flex;align-items:center;gap:4px;color:#FF0000;font-weight:700;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#FF0000"><polygon points="10 8 16 12 10 16 10 8"/></svg><span style="color:#FFF;">Shorts</span></div>';
-            actionsStack.style.display = 'flex';
-            metaOverlay.style.display = 'flex';
-            profileRow.innerHTML = `
-              <div class="ig-avatar-ring"><img src="${c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png')}" alt=""></div>
-              <span class="ig-handle">@${c.id || 'thechennaisilks'}</span>
-              <button type="button" style="background:#FF0000;color:#FFF;border:none;border-radius:99px;padding:3px 10px;font-size:11px;font-weight:700;margin-left:6px;cursor:pointer;">Subscribe</button>
-            `;
-          } else if (platform === 'facebook') {
-            topTitle.innerHTML = '<div style="display:flex;align-items:center;gap:4px;color:#1877F2;font-weight:700;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg><span style="color:#FFF;">Reels</span></div>';
-            actionsStack.style.display = 'flex';
-            metaOverlay.style.display = 'flex';
-            profileRow.innerHTML = `
-              <div class="ig-avatar-ring"><img src="${c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png')}" alt=""></div>
-              <span class="ig-handle">@${c.id || 'thechennaisilks'}</span>
-              <button type="button" style="background:#1877F2;color:#FFF;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;margin-left:6px;cursor:pointer;">Follow</button>
-            `;
+            if (topTitle) topTitle.innerHTML = '<span style="color:#FFF;font-weight:700;">Clean Master</span>';
+            if (actionsStack) actionsStack.style.display = 'none';
+            if (metaOverlay) metaOverlay.style.display = 'none';
+            if (scrubber) scrubber.style.display = 'none';
+            if (exitCleanBtn) exitCleanBtn.style.display = 'flex';
           } else {
-            // Instagram Default
-            topTitle.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg><span>Reels</span>';
-            actionsStack.style.display = 'flex';
-            metaOverlay.style.display = 'flex';
-            profileRow.innerHTML = `
-              <div class="ig-avatar-ring"><img src="${c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png')}" alt=""></div>
-              <span class="ig-handle">@${c.id || 'thechennaisilks'}</span>
-              <span class="ig-verified-badge" title="Verified Creator"><svg width="14" height="14" viewBox="0 0 24 24" fill="#20D5EC"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span>
-              <span class="ig-branch-tag">${esc(currentReel.b || currentReel.album || 'T. Nagar')}</span>
-            `;
+            if (actionsStack) actionsStack.style.display = 'flex';
+            if (metaOverlay) metaOverlay.style.display = 'flex';
+            if (scrubber) scrubber.style.display = 'block';
+            if (exitCleanBtn) exitCleanBtn.style.display = 'none';
+
+            if (platform === 'youtube') {
+              if (topTitle) topTitle.innerHTML = '<div style="display:flex;align-items:center;gap:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF0000"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg><span style="color:#FFF;font-size:15px;letter-spacing:-0.2px;font-weight:700;">Shorts</span></div>';
+              if (profileRow) {
+                profileRow.innerHTML = `
+                  <div class="ig-avatar-ring" style="background:transparent;border:2px solid #FFF;"><img src="${c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png')}" alt=""></div>
+                  <span class="ig-handle" style="font-weight:700;font-size:14px;">@${(c.name || 'chennaisilks').toLowerCase().replace(/\s+/g, '')}</span>
+                  <button type="button" class="ig-sub-btn" style="background:#FF0000;color:#FFF;border:none;border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;margin-left:8px;cursor:pointer;">Subscribe</button>
+                `;
+              }
+              if (likeIcon) {
+                likeIcon.outerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" id="ig-icon-like" fill="${isLiked(currentReel.id) ? '#FFFFFF' : 'none'}" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`;
+              }
+            } else if (platform === 'facebook') {
+              if (topTitle) topTitle.innerHTML = '<div style="display:flex;align-items:center;gap:6px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg><span style="color:#FFF;font-size:15px;font-weight:700;">Reels</span></div>';
+              if (profileRow) {
+                profileRow.innerHTML = `
+                  <div class="ig-avatar-ring" style="background:#1877F2;padding:2px;"><img src="${c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png')}" alt=""></div>
+                  <span class="ig-handle" style="font-weight:700;font-size:13.5px;">${esc(c.name || 'The Chennai Silks')}</span>
+                  <button type="button" class="ig-fol-btn" style="background:#1877F2;color:#FFF;border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;margin-left:8px;cursor:pointer;">Follow</button>
+                `;
+              }
+              if (likeIcon) {
+                likeIcon.outerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" id="ig-icon-like" fill="${isLiked(currentReel.id) ? '#1877F2' : 'none'}" stroke="${isLiked(currentReel.id) ? '#1877F2' : '#FFFFFF'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`;
+              }
+            } else {
+              // Instagram Default
+              if (topTitle) topTitle.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg><span>Reels</span>';
+              if (profileRow) {
+                profileRow.innerHTML = `
+                  <div class="ig-avatar-ring"><img src="${c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png')}" alt=""></div>
+                  <span class="ig-handle">@${c.id || 'thechennaisilks'}</span>
+                  <span class="ig-verified-badge" title="Verified Creator"><svg width="14" height="14" viewBox="0 0 24 24" fill="#20D5EC"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span>
+                  <span class="ig-branch-tag">${esc(currentReel.b || currentReel.album || 'T. Nagar')}</span>
+                `;
+              }
+              if (likeIcon) {
+                likeIcon.outerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" id="ig-icon-like" fill="${isLiked(currentReel.id) ? '#FF2D55' : 'none'}" stroke="${isLiked(currentReel.id) ? '#FF2D55' : '#FFFFFF'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+              }
+            }
           }
         }
 
         modalSc.querySelector('#ig-platform-select')?.addEventListener('change', e => {
           applyPlatformOverlay(e.target.value);
+        });
+
+        modalSc.querySelectorAll('.ig-platform-pill').forEach(btn => {
+          btn.addEventListener('click', () => {
+            applyPlatformOverlay(btn.dataset.p);
+          });
+        });
+
+        // Wire Exit Clean Master Button
+        modalSc.querySelector('#ig-exit-clean-btn')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          applyPlatformOverlay('instagram');
+        });
+
+        // Wire Direct Download Button in Actions Stack
+        modalSc.querySelector('#ig-btn-player-dl')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          triggerDirectDownload(currentReel);
         });
 
         // Switch to Legacy Player (Old One)
@@ -9656,17 +9883,21 @@
           isSettingsOpen = false;
         });
 
-        // Settings Modal Actions
-        modalSc.querySelector('#ig-set-approve').addEventListener('click', () => {
-          setReelApprovalStatus(currentReel.id, 'approved');
-          settingsModal.style.display = 'none';
-          isSettingsOpen = false;
+        // Settings Modal Actions (With User Confirmation)
+        modalSc.querySelector('#ig-set-approve')?.addEventListener('click', () => {
+          confirmModal('Approve Reel', `Are you sure you want to approve "${currentReel.title}"? Once approved, it will be published to the client Reels gallery.`, () => {
+            setReelApprovalStatus(currentReel.id, 'approved');
+            settingsModal.style.display = 'none';
+            isSettingsOpen = false;
+          }, 'Approve Reel', false);
         });
 
-        modalSc.querySelector('#ig-set-denied').addEventListener('click', () => {
-          setReelApprovalStatus(currentReel.id, 'denied');
-          settingsModal.style.display = 'none';
-          isSettingsOpen = false;
+        modalSc.querySelector('#ig-set-denied')?.addEventListener('click', () => {
+          confirmModal('Reject / Request Edits', `Are you sure you want to reject "${currentReel.title}" and request revisions?`, () => {
+            setReelApprovalStatus(currentReel.id, 'denied');
+            settingsModal.style.display = 'none';
+            isSettingsOpen = false;
+          }, 'Reject Reel', true);
         });
 
         modalSc.querySelectorAll('.ig-spd-btn').forEach(btn => {
@@ -9707,6 +9938,28 @@
             ? '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>'
             : '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>';
           toast(vid.muted ? 'Muted' : 'Sound On', 'info');
+        });
+
+        // Profile Row Actions (Subscribe / Follow)
+        profileRow.addEventListener('click', e => {
+          const subBtn = e.target.closest('.ig-sub-btn');
+          if (subBtn) {
+            e.stopPropagation();
+            const isSubbed = subBtn.textContent === 'Subscribed';
+            subBtn.textContent = isSubbed ? 'Subscribe' : 'Subscribed';
+            subBtn.style.background = isSubbed ? '#FF0000' : '#444';
+            toast(isSubbed ? 'Unsubscribed' : 'Subscribed to @' + (c.id || 'thechennaisilks'), 'success');
+            return;
+          }
+          const folBtn = e.target.closest('.ig-fol-btn');
+          if (folBtn) {
+            e.stopPropagation();
+            const isFollowing = folBtn.textContent === 'Following';
+            folBtn.textContent = isFollowing ? 'Follow' : 'Following';
+            folBtn.style.background = isFollowing ? '#1877F2' : '#444';
+            toast(isFollowing ? 'Unfollowed' : 'Following @' + (c.id || 'thechennaisilks'), 'success');
+            return;
+          }
         });
 
         // Close Modal
@@ -10136,19 +10389,23 @@
         });
 
         btnApprove?.addEventListener('click', () => {
-          setReelApprovalStatus(currentReel.id, 'approved');
-          statusText.textContent = 'Approved by Client';
-          statusIndicator.className = 'v-status-badge approved';
-          btnApprove.classList.add('active');
-          btnReject.classList.remove('active');
+          confirmModal('Approve Reel', `Are you sure you want to approve "${currentReel.title}"? Once approved, it will be published to the client Reels gallery.`, () => {
+            setReelApprovalStatus(currentReel.id, 'approved');
+            statusText.textContent = 'Approved by Client';
+            statusIndicator.className = 'v-status-badge approved';
+            btnApprove.classList.add('active');
+            btnReject.classList.remove('active');
+          }, 'Approve Reel', false);
         });
 
         btnReject?.addEventListener('click', () => {
-          setReelApprovalStatus(currentReel.id, 'denied');
-          statusText.textContent = 'Needs Edit / Review';
-          statusIndicator.className = 'v-status-badge review';
-          btnReject.classList.add('active');
-          btnApprove.classList.remove('active');
+          confirmModal('Reject / Request Edits', `Are you sure you want to reject "${currentReel.title}" and request revisions?`, () => {
+            setReelApprovalStatus(currentReel.id, 'denied');
+            statusText.textContent = 'Needs Edit / Review';
+            statusIndicator.className = 'v-status-badge review';
+            btnReject.classList.add('active');
+            btnApprove.classList.remove('active');
+          }, 'Reject Reel', true);
         });
 
         modalSc.querySelectorAll('.v-speed-btn').forEach(btn => {
@@ -11452,14 +11709,21 @@
         go({ screen: 'reels', branch: el.dataset.b, month: null, album: null, contentType: 'all', searchQuery: '' });
       }
       else if (a === 'bnav-preapproval') go({ screen: 'preapproval', client: view.client });
-      else if (a === 'bnav-collections') go({ screen: 'months', client: view.client, tabMode: 'albums' });
       else if (a === 'preapp-approve') {
         e.stopPropagation();
-        setReelApprovalStatus(el.dataset.id, 'approved');
+        const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
+        const title = r ? `"${r.title}"` : 'this reel';
+        confirmModal('Approve Reel', `Are you sure you want to approve ${title}? Once approved, it will be published to the client Reels gallery.`, () => {
+          setReelApprovalStatus(el.dataset.id, 'approved');
+        }, 'Approve Reel', false);
       }
       else if (a === 'preapp-denied') {
         e.stopPropagation();
-        setReelApprovalStatus(el.dataset.id, 'denied');
+        const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
+        const title = r ? `"${r.title}"` : 'this reel';
+        confirmModal('Reject / Request Edits', `Are you sure you want to reject ${title} and request revisions?`, () => {
+          setReelApprovalStatus(el.dataset.id, 'denied');
+        }, 'Reject Reel', true);
       }
       else if (a === 'preapp-sug-focus') {
         e.stopPropagation();
@@ -11508,16 +11772,42 @@
         }
       }
       else if (a === 'bnav-home') go({ screen: 'genesis', client: view.client });
-      else if (a === 'bnav-reels') go({ screen: 'reels', client: view.client, month: view.month, year: view.year || TODAY.getFullYear(), branch: null, album: null, contentType: 'all', selectedDay: null });
-      else if (a === 'bnav-branches') go({ screen: 'months', client: view.client, tabMode: 'branches' });
+      else if (a === 'bnav-reels') go({ screen: 'reels', client: view.client, month: null, year: view.year || TODAY.getFullYear(), branch: null, album: null, contentType: 'all', selectedDay: null });
+      else if (a === 'bnav-branches') go({ screen: 'branches', client: view.client, branch: null, album: null });
+      else if (a === 'bnav-collections' || a === 'bnav-albums') go({ screen: 'collections', client: view.client, branch: null, album: null });
       else if (a === 'bnav-calendar') go({ screen: 'reels', client: view.client, month: (view.month != null ? view.month : TODAY.getMonth()), year: view.year || TODAY.getFullYear(), branch: null, album: null, contentType: 'stories', selectedDay: null });
-      else if (a === 'bnav-albums') go({ screen: 'months', client: view.client, tabMode: 'albums' });
       else if (a === 'open-month-dropdown') openMonthPicker();
+      else if (a === 'open-wave-dropdown') {
+        const c = client();
+        openWavePicker(c);
+      }
+      else if (a === 'select-dropdown-wave') {
+        const p = el.dataset.phase || 'all';
+        view.preappPhase = p;
+        view.phase = p;
+        const scrim = document.querySelector('.wave-picker-scrim');
+        if (scrim) scrim.remove();
+        render();
+      }
+      else if (a === 'open-branch-picker') {
+        const c = client();
+        openBranchPicker(c);
+      }
+      else if (a === 'select-dropdown-branch') {
+        view.branch = (el.dataset.branch === 'all') ? null : el.dataset.branch;
+        const scrim = document.querySelector('.branch-picker-scrim');
+        if (scrim) scrim.remove();
+        render();
+      }
       else if (a === 'select-dropdown-month') {
         view.month = +el.dataset.m;
         const scrim = document.querySelector('.month-picker-scrim');
         if (scrim) scrim.remove();
-        go({ screen: 'reels', month: view.month });
+        if (view.screen === 'genesis' || view.screen === 'preapproval') {
+          render();
+        } else {
+          go({ screen: 'reels', month: view.month });
+        }
       }
       else if (a === 'set-grid') {
         view.gridCols = +el.dataset.cols;
@@ -11527,7 +11817,17 @@
         view.searchQuery = '';
         render();
       }
-      else if (a === 'back') go(BACK[view.screen]);
+      else if (a === 'back') {
+        if (view.screen === 'reels') {
+          if (view.branch) go({ screen: 'branches', client: view.client, branch: null });
+          else if (view.album) go({ screen: 'collections', client: view.client, album: null });
+          else go({ screen: 'genesis', client: view.client });
+        } else if (view.screen === 'branches' || view.screen === 'collections' || view.screen === 'albums') {
+          go({ screen: 'genesis', client: view.client });
+        } else {
+          go(BACK[view.screen] || { screen: 'genesis', client: view.client });
+        }
+      }
       else if (a === 'months') go({ screen: 'months' });
       else if (a === 'tab') { view.tabMode = el.dataset.tab; render(); }
       else if (a === 'year') go({ year: +el.dataset.y });
@@ -11569,6 +11869,7 @@
         if (r && r.url) openShare(r);
       }
       else if (a === 'direct-dl' || a === 'track-dl') {
+        e.stopPropagation();
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) triggerDirectDownload(r);
       }

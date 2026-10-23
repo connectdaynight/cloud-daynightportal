@@ -2012,6 +2012,24 @@
           <button class="btn-primary" id="btn-quick-upload">+ Upload New Reel</button>
         </div>
 
+        <!-- Real-Time Video Batch Actions Bar -->
+        <div id="admin-batch-bar" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(18,41,74,0.96);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,0.25);box-shadow:0 12px 36px rgba(0,0,0,0.35);border-radius:18px;padding:12px 22px;color:#fff;align-items:center;gap:12px;max-width:94vw;flex-wrap:wrap;">
+          <div style="font-weight:700;font-size:13px;white-space:nowrap;display:flex;align-items:center;gap:8px;">
+            <span id="batch-selected-count" style="background:#2F7DF6;padding:3px 10px;border-radius:99px;font-size:12px;color:#fff;font-weight:700;">0</span>
+            Videos Selected
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn-portal" id="btn-batch-approve" style="background:#1FAF64;color:#fff;border-color:#1FAF64;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">✓ Approve</button>
+            <button type="button" class="btn-portal" id="btn-batch-review" style="background:#D97706;color:#fff;border-color:#D97706;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">⏱ In Review</button>
+            <button type="button" class="btn-portal" id="btn-batch-deny" style="background:#DC2626;color:#fff;border-color:#DC2626;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">✕ Deny</button>
+            <button type="button" class="btn-portal" id="btn-batch-wave" style="background:var(--soft);color:var(--navy);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">🌊 Set Wave</button>
+            <button type="button" class="btn-portal" id="btn-batch-branch" style="background:var(--soft);color:var(--navy);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">📍 Set Branch</button>
+            <button type="button" class="btn-portal" id="btn-batch-hide" style="background:var(--soft);color:var(--navy);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">👁 Toggle Hide</button>
+            <button type="button" class="btn-portal" id="btn-batch-del" style="background:#FEE2E2;color:#DC2626;border-color:#FCA5A5;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">🗑 Delete</button>
+            <button type="button" class="btn-portal" id="btn-batch-clear" style="background:transparent;color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;">Deselect</button>
+          </div>
+        </div>
+
         <div class="reels-grid">
           ${(DATA.reels || []).filter(r => !r.type || r.type === 'reel' || r.type === 'video').slice(0, 6).map(r => renderReelCard(r)).join('')}
         </div>`;
@@ -2096,6 +2114,17 @@
             <p style="font-size:12px;color:var(--mute)">Manage video files in Google Drive, custom thumbnails, visibility, and direct downloads.</p>
           </div>
           <div class="action-group">
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;background:#fff;padding:8px 12px;border:1px solid var(--line);border-radius:10px;" title="Select all visible reels for batch editing">
+              <input type="checkbox" id="chk-select-all" style="cursor:pointer;accent-color:#2F7DF6;">
+              Select All
+            </label>
+            <select class="search-input" id="sort-reels-order" style="width:auto;cursor:pointer;" title="Arrange video display order in real time">
+              <option value="custom">Arrange: Custom Order</option>
+              <option value="date-desc">Arrange: Newest First</option>
+              <option value="date-asc">Arrange: Oldest First</option>
+              <option value="title-asc">Arrange: Title (A-Z)</option>
+              <option value="views-desc">Arrange: Most Viewed</option>
+            </select>
             <select class="search-input" id="filter-client" style="width:auto;cursor:pointer;">
               <option value="">All Clients (${(DATA.reels || []).length})</option>
               ${clients.map(c => `
@@ -2196,7 +2225,8 @@
       const clientObj = (DATA.clients || []).find(c => c.id === r.c) || { name: 'Client' };
       const sub = r.b ? r.b : (r.album ? r.album : '');
       return `
-        <div class="reel-box">
+        <div class="reel-box" style="position:relative;" data-id="${r.id}">
+          <input type="checkbox" class="reel-batch-chk" data-id="${r.id}" title="Select for Batch Editing" style="position:absolute;top:10px;left:10px;z-index:25;width:20px;height:20px;cursor:pointer;accent-color:#2F7DF6;">
           <div class="reel-thumb-wrap" data-play="${r.id}">
             ${r.coverUrl ? `<img src="${r.coverUrl}" alt="">` : ''}
             ${r.dur ? `<span class="dur">${r.dur}</span>` : ''}
@@ -2212,7 +2242,11 @@
             <span><span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${r.views || 0}</span> · <span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> ${r.downloads || 0}</span></span>
             <span class="badge-status ${isHidden ? 'hidden' : (r.status || 'approved')}">${isHidden ? 'HIDDEN' : (r.status || 'APPROVED')}</span>
           </div>
-          <div class="reel-box-actions">
+          <div class="reel-box-actions" style="display:flex;align-items:center;gap:4px;">
+            <div style="display:inline-flex;gap:3px;margin-right:auto;" title="Reorder Video in Real Time">
+              <button type="button" class="btn-portal" data-move-up="${r.id}" title="Move Up in Arrangement" style="padding:4px 8px;font-size:12px;font-weight:700;line-height:1;border-radius:6px;cursor:pointer;">↑</button>
+              <button type="button" class="btn-portal" data-move-down="${r.id}" title="Move Down in Arrangement" style="padding:4px 8px;font-size:12px;font-weight:700;line-height:1;border-radius:6px;cursor:pointer;">↓</button>
+            </div>
             <button class="action-edit" data-edit="${r.id}">Edit</button>
             <button class="action-hide" data-hide="${r.id}">${isHidden ? 'Unhide' : 'Hide'}</button>
             <button class="action-delete" data-del="${r.id}">Delete</button>
@@ -2221,6 +2255,164 @@
     }
 
     function bindReelActions() {
+      // Reordering / Video Arrangement (Real-Time Drag / Swapping)
+      document.querySelectorAll('[data-move-up]').forEach(b => {
+        b.onclick = (e) => {
+          e.stopPropagation();
+          const id = b.dataset.moveUp;
+          const idx = DATA.reels.findIndex(x => x.id === id);
+          if (idx > 0) {
+            const temp = DATA.reels[idx];
+            DATA.reels[idx] = DATA.reels[idx - 1];
+            DATA.reels[idx - 1] = temp;
+            DATA.reels.forEach((r, i) => r.order = i);
+            persistLocal('Video order moved up in real time');
+            renderReels();
+          }
+        };
+      });
+
+      document.querySelectorAll('[data-move-down]').forEach(b => {
+        b.onclick = (e) => {
+          e.stopPropagation();
+          const id = b.dataset.moveDown;
+          const idx = DATA.reels.findIndex(x => x.id === id);
+          if (idx !== -1 && idx < DATA.reels.length - 1) {
+            const temp = DATA.reels[idx];
+            DATA.reels[idx] = DATA.reels[idx + 1];
+            DATA.reels[idx + 1] = temp;
+            DATA.reels.forEach((r, i) => r.order = i);
+            persistLocal('Video order moved down in real time');
+            renderReels();
+          }
+        };
+      });
+
+      // Sort / Arrange Videos
+      const sortSelect = document.getElementById('sort-reels-order');
+      if (sortSelect) {
+        sortSelect.onchange = e => {
+          const mode = e.target.value;
+          if (mode === 'date-desc') {
+            DATA.reels.sort((a,b) => (b.date || '') < (a.date || '') ? -1 : 1);
+          } else if (mode === 'date-asc') {
+            DATA.reels.sort((a,b) => (a.date || '') < (b.date || '') ? -1 : 1);
+          } else if (mode === 'title-asc') {
+            DATA.reels.sort((a,b) => (a.title || '').localeCompare(b.title || ''));
+          } else if (mode === 'views-desc') {
+            DATA.reels.sort((a,b) => (b.views || 0) - (a.views || 0));
+          }
+          DATA.reels.forEach((r, i) => r.order = i);
+          persistLocal('Video arrangement updated in real time');
+          renderReels();
+        };
+      }
+
+      // Batch Checkboxes & Floating Action Bar
+      const chks = document.querySelectorAll('.reel-batch-chk');
+      const selectAll = document.getElementById('chk-select-all');
+      const batchBar = document.getElementById('admin-batch-bar');
+      const countSpan = document.getElementById('batch-selected-count');
+
+      function updateBatchUI() {
+        const selected = Array.from(chks).filter(c => c.checked).map(c => c.dataset.id);
+        if (countSpan) countSpan.textContent = selected.length;
+        if (batchBar) batchBar.style.display = selected.length > 0 ? 'flex' : 'none';
+        if (selectAll) selectAll.checked = chks.length > 0 && selected.length === chks.length;
+      }
+
+      chks.forEach(chk => {
+        chk.onchange = () => updateBatchUI();
+      });
+
+      if (selectAll) {
+        selectAll.onchange = e => {
+          chks.forEach(c => c.checked = e.target.checked);
+          updateBatchUI();
+        };
+      }
+
+      function getSelectedReels() {
+        const selIds = Array.from(document.querySelectorAll('.reel-batch-chk:checked')).map(c => c.dataset.id);
+        return (DATA.reels || []).filter(r => selIds.includes(r.id));
+      }
+
+      document.getElementById('btn-batch-clear')?.addEventListener('click', () => {
+        chks.forEach(c => c.checked = false);
+        if (selectAll) selectAll.checked = false;
+        updateBatchUI();
+      });
+
+      document.getElementById('btn-batch-approve')?.addEventListener('click', () => {
+        const targets = getSelectedReels();
+        if (!targets.length) return;
+        confirmModal('Batch Approve Videos?', `Approve ${targets.length} selected video reels? They will be immediately published to the client Reels gallery.`, () => {
+          targets.forEach(r => r.status = 'approved');
+          persistLocal(`Batch approved ${targets.length} reels in real time`);
+          renderReels();
+        }, 'Approve All', false);
+      });
+
+      document.getElementById('btn-batch-review')?.addEventListener('click', () => {
+        const targets = getSelectedReels();
+        if (!targets.length) return;
+        targets.forEach(r => r.status = 'review');
+        persistLocal(`Marked ${targets.length} reels as Under Review`);
+        renderReels();
+      });
+
+      document.getElementById('btn-batch-deny')?.addEventListener('click', () => {
+        const targets = getSelectedReels();
+        if (!targets.length) return;
+        confirmModal('Batch Deny Videos?', `Mark ${targets.length} selected reels as Denied / Edits Requested?`, () => {
+          targets.forEach(r => r.status = 'denied');
+          persistLocal(`Marked ${targets.length} reels as Denied`);
+          renderReels();
+        }, 'Deny All', true);
+      });
+
+      document.getElementById('btn-batch-wave')?.addEventListener('click', () => {
+        const targets = getSelectedReels();
+        if (!targets.length) return;
+        const phaseName = prompt('Enter Wave / Phase name for selected reels (e.g. Phase 1, Phase 2, Phase 3):', 'Phase 1');
+        if (phaseName && phaseName.trim()) {
+          targets.forEach(r => { r.wave = phaseName.trim(); r.phase = phaseName.trim(); });
+          persistLocal(`Updated wave for ${targets.length} reels in real time`);
+          renderReels();
+        }
+      });
+
+      document.getElementById('btn-batch-branch')?.addEventListener('click', () => {
+        const targets = getSelectedReels();
+        if (!targets.length) return;
+        const branchName = prompt('Enter showroom Branch for selected reels (e.g. T. Nagar, Chromepet, Thiruvallur):', 'T. Nagar');
+        if (branchName && branchName.trim()) {
+          targets.forEach(r => r.b = branchName.trim());
+          persistLocal(`Updated branch for ${targets.length} reels in real time`);
+          renderReels();
+        }
+      });
+
+      document.getElementById('btn-batch-hide')?.addEventListener('click', () => {
+        const targets = getSelectedReels();
+        if (!targets.length) return;
+        const anyVisible = targets.some(r => !r.hidden);
+        targets.forEach(r => r.hidden = anyVisible);
+        persistLocal(`Updated visibility for ${targets.length} reels`);
+        renderReels();
+      });
+
+      document.getElementById('btn-batch-del')?.addEventListener('click', () => {
+        const targets = getSelectedReels();
+        if (!targets.length) return;
+        confirmModal('Delete Selected Videos?', `Are you sure you want to permanently remove ${targets.length} reels from the system?`, () => {
+          const ids = targets.map(r => r.id);
+          DATA.reels = (DATA.reels || []).filter(r => !ids.includes(r.id));
+          persistLocal(`Deleted ${targets.length} reels`);
+          renderReels();
+        }, 'Delete All Selected', true);
+      });
+
       document.querySelectorAll('[data-play]').forEach(b => {
         b.onclick = () => {
           const r = DATA.reels.find(x => x.id === b.dataset.play);
@@ -5563,6 +5755,51 @@ function openEditModal(r) {
               btn.classList.add('active');
             });
           });
+        }
+
+        // Real-Time Admin Reply Sender
+        const replyInp = mSc.querySelector('#adm-modal-reply-inp');
+        const replyBtn = mSc.querySelector('#adm-modal-reply-btn');
+        const commentsList = mSc.querySelector('#adm-modal-comments-list');
+        function doModalReply() {
+          if (!replyInp || !replyInp.value.trim()) return;
+          const text = replyInp.value.trim();
+          r.comments = r.comments || [];
+          const newComm = {
+            id: 'c_' + Date.now(),
+            text: text,
+            author: 'Day Night Media (Admin)',
+            authorRole: 'admin',
+            time: Date.now(),
+            dateStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          r.comments.push(newComm);
+          DATA._updatedAt = Date.now();
+          try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
+          try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
+          toast('Reply sent to client in real time!', 'success');
+          if (GAS_URL) {
+            api('modifyReel', { reel: r }).catch(() => {});
+          }
+          if (commentsList) {
+            const pEmpty = commentsList.querySelector('p');
+            if (pEmpty) pEmpty.remove();
+            const div = document.createElement('div');
+            div.style.cssText = 'background:#FFFFFF;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:11.5px;';
+            div.innerHTML = `<span style="font-weight:700;color:var(--navy);">${esc(newComm.author)}:</span> ${esc(newComm.text)}<small style="float:right;color:var(--mute);">${newComm.dateStr || ''}</small>`;
+            commentsList.appendChild(div);
+          }
+          replyInp.value = '';
+          if (typeof renderReels === 'function') renderReels();
+        }
+        if (replyBtn) replyBtn.onclick = doModalReply;
+        if (replyInp) {
+          replyInp.onkeydown = e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              doModalReply();
+            }
+          };
         }
       });
     }
