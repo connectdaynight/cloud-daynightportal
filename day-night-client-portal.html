@@ -5723,24 +5723,30 @@
     if (!DATA.settings.social) DATA.settings.social = {};
 
     // Load local cached database immediately so newly added clients and reels are ready
+    const CURRENT_BUILD_VER = '2026-10-23-live-v4';
+    DATA._buildVer = CURRENT_BUILD_VER;
+
+    // Strictly prioritize fresh build database with all 46 real reels over outdated device caches
     const cachedData = localStorage.getItem('dn_local_data');
     if (cachedData) {
       try {
         const parsed = JSON.parse(cachedData);
-        if (parsed && typeof parsed === 'object') {
-          // Only accept cached data if it has at least as many reels as embedded data
-          const embJson = JSON.parse(document.getElementById('portal-data').textContent);
-          if (parsed && Array.isArray(parsed.reels) && parsed.reels.length >= (embJson.reels || []).length) {
-            DATA = parsed;
-          } else {
-            console.log('Discarding stale local cache with fewer reels than fresh portal database');
-          }
-          if (!DATA.reels) DATA.reels = [];
-          if (!DATA.clients) DATA.clients = [];
-          if (!DATA.settings) DATA.settings = {};
-          if (DATA.settings.introDuration == null) DATA.settings.introDuration = 6;
-          if (DATA.settings.showSocialLinks == null) DATA.settings.showSocialLinks = true;
-          if (!DATA.settings.social) DATA.settings.social = {};
+        if (parsed && typeof parsed === 'object' && parsed._buildVer === CURRENT_BUILD_VER && Array.isArray(parsed.reels) && parsed.reels.length >= 46) {
+          DATA = parsed;
+        } else {
+          console.log('Purged outdated device localStorage cache to guarantee fresh 46 real reels and live sync');
+          try { localStorage.removeItem('dn_local_data'); } catch(_) {}
+        }
+      } catch(e) {
+        try { localStorage.removeItem('dn_local_data'); } catch(_) {}
+      }
+    }
+    if (!DATA.reels) DATA.reels = [];
+    if (!DATA.clients) DATA.clients = [];
+    if (!DATA.settings) DATA.settings = {};
+    if (DATA.settings.introDuration == null) DATA.settings.introDuration = 6;
+    if (DATA.settings.showSocialLinks == null) DATA.settings.showSocialLinks = true;
+    if (!DATA.settings.social) DATA.settings.social = {};
           DATA.deletedReelIds = initialDeletedReels;
           DATA.deletedClientIds = initialDeletedClients;
 
@@ -5766,9 +5772,6 @@
             }
           });
           try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
-        }
-      } catch (e) {}
-    }
     const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
 
     const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
