@@ -1778,7 +1778,13 @@
           body: JSON.stringify(DATA)
         }).catch(() => {});
       } catch(e) {}
-      render();
+      const hasChecked = document.querySelectorAll('.reel-batch-chk:checked').length > 0;
+      const hasModal = document.querySelectorAll('.scrim, .modal-scrim, dialog[open]').length > 0;
+      if (!msg && (hasChecked || hasModal)) {
+        // Keep active batch selection and open modals intact
+      } else {
+        render();
+      }
       if (msg) toast(msg, 'success');
     }
 
@@ -6083,9 +6089,8 @@ function openEditModal(r) {
     if (isAuthenticated) {
       sync(false);
     }
-    setInterval(() => {
-      if (isAuthenticated) sync(false);
-    }, 25000);
+    // Auto poll removed to prevent re-rendering over user forms and eliminate network lag.
+    // User can manually sync anytime via the "Sync Cloud" header button.
 
   })();
   </script>

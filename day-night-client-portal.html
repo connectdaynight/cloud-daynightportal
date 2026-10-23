@@ -11722,7 +11722,7 @@
     // --------------------------------------------------------------------------
     // GLOBAL EVENT DELEGATION
     // --------------------------------------------------------------------------
-    app.addEventListener('click', e => {
+    document.addEventListener('click', e => {
       const el = e.target.closest('[data-act]');
       if (!el) return;
       const a = el.dataset.act;
