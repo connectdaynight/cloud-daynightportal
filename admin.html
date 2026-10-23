@@ -2534,6 +2534,35 @@
           }, 'Delete Reel', true);
         };
       });
+
+      // Expand / Collapse Client Comments Box
+      const toggleCommentsBtn = document.getElementById('btn-toggle-comments-box');
+      const commentsHeaderEl = document.getElementById('admin-comments-header');
+      const commentsListEl = document.getElementById('admin-comment-reels-list');
+      const commentsTxtEl = document.getElementById('txt-toggle-comments');
+      const commentsIcEl = document.getElementById('ic-toggle-comments');
+      const commentsBox = document.querySelector('.admin-comments-box');
+
+      function toggleCommentsCollapse(e) {
+        if (e) e.stopPropagation();
+        isCommentsCollapsed = !isCommentsCollapsed;
+        localStorage.setItem('dn_admin_comments_collapsed', isCommentsCollapsed ? 'true' : 'false');
+        if (commentsListEl) commentsListEl.style.display = isCommentsCollapsed ? 'none' : 'flex';
+        if (commentsTxtEl) commentsTxtEl.textContent = isCommentsCollapsed ? 'Expand' : 'Collapse';
+        if (commentsIcEl) commentsIcEl.style.transform = isCommentsCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        if (commentsBox) {
+          if (isCommentsCollapsed) commentsBox.classList.add('is-collapsed');
+          else commentsBox.classList.remove('is-collapsed');
+        }
+      }
+
+      if (toggleCommentsBtn) toggleCommentsBtn.onclick = toggleCommentsCollapse;
+      if (commentsHeaderEl) {
+        commentsHeaderEl.onclick = (e) => {
+          if (e.target.closest('#btn-toggle-comments-box')) return;
+          toggleCommentsCollapse(e);
+        };
+      }
     }
 
 
