@@ -57,7 +57,8 @@ function doGet(e) {
         success: true,
         settings: data.settings,
         client: client,
-        reels: clientReels
+        reels: clientReels,
+        deletedReelIds: data.deletedReelIds || []
       });
     }
 
@@ -247,6 +248,28 @@ function doPost(e) {
       data.reels = (data.reels || []).filter(r => r.id !== reelId);
       saveData(data);
       return jsonResponse({ success: true, message: "Reel removed", deletedReelIds: data.deletedReelIds });
+    }
+
+    // 5B. Batch Delete Reels
+    if (action === "batchDeleteReels") {
+      const ids = Array.isArray(payload.ids) ? payload.ids : [];
+      const data = loadData();
+      if (!data.deletedReelIds) data.deletedReelIds = [];
+      ids.forEach(id => {
+        const reel = (data.reels || []).find(r => r.id === id);
+        if (reel && reel.fileId) {
+          try {
+            const file = DriveApp.getFileById(reel.fileId);
+            file.setTrashed(true);
+          } catch (ex) {}
+        }
+        if (!data.deletedReelIds.includes(id)) {
+          data.deletedReelIds.push(id);
+        }
+      });
+      data.reels = (data.reels || []).filter(r => !ids.includes(r.id));
+      saveData(data);
+      return jsonResponse({ success: true, count: ids.length, deletedReelIds: data.deletedReelIds, message: "Batch reels deleted" });
     }
 
     // 6. Toggle Hide / Unhide Reel
