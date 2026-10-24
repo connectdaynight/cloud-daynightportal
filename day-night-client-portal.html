@@ -5705,8 +5705,13 @@
     const MOCK_IDS = ['s1','s2','s3','s4','s5','story_tcs_01','story_tcs_02','poster_tcs_01','poster_tcs_02','rmv7woz8l'];
     const isMockOrTest = r => !r || Boolean(r.sample) || !r.url || MOCK_IDS.includes(r.id) || /\b(test|sample|mock|fake|dummy)\b/i.test(r.title || '');
 
-    const initialDeletedReels = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
-    const initialDeletedClients = JSON.parse(localStorage.getItem('dn_deleted_client_ids') || '[]');
+    const localDelRaw = localStorage.getItem('dn_deleted_reel_ids');
+    let initialDeletedReels = localDelRaw ? JSON.parse(localDelRaw) : [];
+    if (!Array.isArray(initialDeletedReels)) initialDeletedReels = [];
+
+    const localDelClientsRaw = localStorage.getItem('dn_deleted_client_ids');
+    let initialDeletedClients = localDelClientsRaw ? JSON.parse(localDelClientsRaw) : [];
+    if (!Array.isArray(initialDeletedClients)) initialDeletedClients = [];
 
     let DATA = JSON.parse(document.getElementById('portal-data').textContent);
     DATA.reels = (DATA.reels || []).filter(r => !isMockOrTest(r) && !initialDeletedReels.includes(r.id));
@@ -5726,20 +5731,18 @@
     const CURRENT_BUILD_VER = '2026-10-23-live-v4';
     DATA._buildVer = CURRENT_BUILD_VER;
 
-    // Strictly prioritize fresh build database with all 46 real reels over outdated device caches
+    // Strictly prioritize fresh build database while safely preserving user deletions
+    const CURRENT_BUILD_VER_KEY = '2026-10-24-live-v1';
+    DATA._buildVer = CURRENT_BUILD_VER_KEY;
+
     const cachedData = localStorage.getItem('dn_local_data');
     if (cachedData) {
       try {
         const parsed = JSON.parse(cachedData);
-        if (parsed && typeof parsed === 'object' && parsed._buildVer === CURRENT_BUILD_VER && Array.isArray(parsed.reels) && parsed.reels.length >= 46) {
+        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.reels)) {
           DATA = parsed;
-        } else {
-          console.log('Purged outdated device localStorage cache to guarantee fresh 46 real reels and live sync');
-          try { localStorage.removeItem('dn_local_data'); } catch(_) {}
         }
-      } catch(e) {
-        try { localStorage.removeItem('dn_local_data'); } catch(_) {}
-      }
+      } catch(e) {}
     }
     if (!DATA.reels) DATA.reels = [];
     if (!DATA.clients) DATA.clients = [];
@@ -5747,12 +5750,15 @@
     if (DATA.settings.introDuration == null) DATA.settings.introDuration = 6;
     if (DATA.settings.showSocialLinks == null) DATA.settings.showSocialLinks = true;
     if (!DATA.settings.social) DATA.settings.social = {};
-          DATA.deletedReelIds = initialDeletedReels;
-          DATA.deletedClientIds = initialDeletedClients;
 
-          // Clean out all legacy mock sample dummy reels, stories, posters, and deleted items
-          DATA.reels = DATA.reels.filter(r => !isMockOrTest(r) && !initialDeletedReels.includes(r.id));
-          DATA.clients = DATA.clients.filter(c => !initialDeletedClients.includes(c.id));
+    const allDeletedReels = Array.from(new Set([...initialDeletedReels, ...(DATA.deletedReelIds || [])]));
+    const allDeletedClients = Array.from(new Set([...initialDeletedClients, ...(DATA.deletedClientIds || [])]));
+    DATA.deletedReelIds = allDeletedReels;
+    DATA.deletedClientIds = allDeletedClients;
+
+    // Clean out all legacy mock sample dummy reels, stories, posters, and deleted items
+    DATA.reels = DATA.reels.filter(r => !isMockOrTest(r) && !allDeletedReels.includes(r.id));
+    DATA.clients = DATA.clients.filter(c => !allDeletedClients.includes(c.id));
           DATA.reels.forEach(r => {
             if (r.dur === '0:30') r.dur = '';
           });
@@ -6394,8 +6400,32 @@
         const json = await res.json();
         if (json.success && json.data) {
           connectionState = { status: 'online', message: 'Google Drive connected' };
-          const deletedReelIds = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
-          const deletedClientIds = JSON.parse(localStorage.getItem('dn_deleted_client_ids') || '[]');
+          let deletedReelIds = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
+          if (!Array.isArray(deletedReelIds)) deletedReelIds = [];
+          if (Array.isArray(json.data.deletedReelIds)) {
+            let updated = false;
+            json.data.deletedReelIds.forEach(id => {
+              if (!deletedReelIds.includes(id)) { deletedReelIds.push(id); updated = true; }
+            });
+            if (updated) {
+              try { localStorage.setItem('dn_deleted_reel_ids', JSON.stringify(deletedReelIds)); } catch(e) {}
+            }
+          }
+
+          let deletedClientIds = JSON.parse(localStorage.getItem('dn_deleted_client_ids') || '[]');
+          if (!Array.isArray(deletedClientIds)) deletedClientIds = [];
+          if (Array.isArray(json.data.deletedClientIds)) {
+            let updated = false;
+            json.data.deletedClientIds.forEach(id => {
+              if (!deletedClientIds.includes(id)) { deletedClientIds.push(id); updated = true; }
+            });
+            if (updated) {
+              try { localStorage.setItem('dn_deleted_client_ids', JSON.stringify(deletedClientIds)); } catch(e) {}
+            }
+          }
+
+          DATA.deletedReelIds = deletedReelIds;
+          DATA.deletedClientIds = deletedClientIds;
 
           // Server truth for cloud reels
           const gasReels = (json.data.reels || []).filter(r => !isMockOrTest(r) && !deletedReelIds.includes(r.id));
@@ -6419,9 +6449,13 @@
 
           if (gasReels.length > 0) {
             DATA.reels = gasReels;
+          } else {
+            DATA.reels = (DATA.reels || []).filter(r => !deletedReelIds.includes(r.id));
           }
           if (gasClients.length > 0) {
             DATA.clients = gasClients;
+          } else {
+            DATA.clients = (DATA.clients || []).filter(c => !deletedClientIds.includes(c.id));
           }
           if (json.data.settings) {
             DATA.settings = Object.assign({}, DATA.settings, json.data.settings);
@@ -11960,6 +11994,7 @@
         confirmModal('Remove this reel?', `"${r.title}" will be permanently removed from Google Drive.`, () => {
           DATA.deletedReelIds = DATA.deletedReelIds || [];
           if (!DATA.deletedReelIds.includes(r.id)) DATA.deletedReelIds.push(r.id);
+          try { localStorage.setItem('dn_deleted_reel_ids', JSON.stringify(DATA.deletedReelIds)); } catch(e) {}
           DATA.reels = (DATA.reels || []).filter(x => x.id !== r.id);
           if (CONFIG.gasUrl) gasApi('deleteReel', { id: r.id }).catch(() => {});
           persist('Reel removed');

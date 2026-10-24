@@ -1845,8 +1845,22 @@
         const res = await fetch(`${GAS_URL}?action=getData`);
         const json = await res.json();
         if (json.success && json.data) {
-          const deletedReelIds = getDeletedReelIds();
-          const deletedClientIds = getDeletedClientIds();
+          let deletedReelIds = getDeletedReelIds();
+          let deletedClientIds = getDeletedClientIds();
+          if (Array.isArray(json.data.deletedReelIds)) {
+            let upd = false;
+            json.data.deletedReelIds.forEach(id => {
+              if (!deletedReelIds.includes(id)) { deletedReelIds.push(id); upd = true; }
+            });
+            if (upd) setDeletedReelIds(deletedReelIds);
+          }
+          if (Array.isArray(json.data.deletedClientIds)) {
+            let upd = false;
+            json.data.deletedClientIds.forEach(id => {
+              if (!deletedClientIds.includes(id)) { deletedClientIds.push(id); upd = true; }
+            });
+            if (upd) setDeletedClientIds(deletedClientIds);
+          }
           DATA.deletedReelIds = deletedReelIds;
           DATA.deletedClientIds = deletedClientIds;
 
@@ -2041,28 +2055,9 @@
           <button class="btn-primary" id="btn-quick-upload">+ Upload New Reel</button>
         </div>
 
-        <!-- Real-Time Video Batch Actions Bar -->
-        <div id="admin-batch-bar" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(18,41,74,0.96);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,0.25);box-shadow:0 12px 36px rgba(0,0,0,0.35);border-radius:18px;padding:12px 22px;color:#fff;align-items:center;gap:12px;max-width:94vw;flex-wrap:wrap;">
-          <div style="font-weight:700;font-size:13px;white-space:nowrap;display:flex;align-items:center;gap:8px;">
-            <span id="batch-selected-count" style="background:#2F7DF6;padding:3px 10px;border-radius:99px;font-size:12px;color:#fff;font-weight:700;">0</span>
-            Videos Selected
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <button type="button" class="btn-portal" id="btn-batch-modal-edit" style="background:#2F7DF6;color:#fff;border-color:#2F7DF6;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;box-shadow:0 2px 8px rgba(47,125,246,0.35);">✏ Batch Edit</button>
-            <button type="button" class="btn-portal" id="btn-batch-approve" style="background:#1FAF64;color:#fff;border-color:#1FAF64;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">✓ Approve</button>
-            <button type="button" class="btn-portal" id="btn-batch-review" style="background:#D97706;color:#fff;border-color:#D97706;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">⏱ In Review</button>
-            <button type="button" class="btn-portal" id="btn-batch-deny" style="background:#DC2626;color:#fff;border-color:#DC2626;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">✕ Deny</button>
-            <button type="button" class="btn-portal" id="btn-batch-wave" style="background:var(--soft);color:var(--navy);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">🌊 Set Wave</button>
-            <button type="button" class="btn-portal" id="btn-batch-branch" style="background:var(--soft);color:var(--navy);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">📍 Set Branch</button>
-            <button type="button" class="btn-portal" id="btn-batch-hide" style="background:var(--soft);color:var(--navy);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">👁 Toggle Hide</button>
-            <button type="button" class="btn-portal" id="btn-batch-del" style="background:#FEE2E2;color:#DC2626;border-color:#FCA5A5;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">🗑 Delete</button>
-            <button type="button" class="btn-portal" id="btn-batch-clear" style="background:transparent;color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;">Deselect</button>
-          </div>
-        </div>
-
         <div class="reels-grid">
-          ${(DATA.reels || []).filter(r => !r.type || r.type === 'reel' || r.type === 'video').slice(0, 6).map(r => renderReelCard(r)).join('')}
-        </div>`;
+          ${(DATA.reels || []).filter(r => !r.type || r.type === 'reel' || r.type === 'video').slice(0, 6).map(r => renderReelCard(r, false)).join('')}
+        </div>`;`;
 
       document.getElementById('btn-quick-upload').onclick = openUploadModal;
       bindReelActions();
@@ -2267,8 +2262,10 @@
           </div>
         </div>
 
+        ${renderBatchEditBox('reels')}
+
         <div class="reels-grid">
-          ${filtered.length ? filtered.map(r => renderReelCard(r)).join('') : '<p style="grid-column:1/-1;text-align:center;padding:40px;color:var(--mute);">No reels found matching your criteria.</p>'}
+          ${filtered.length ? filtered.map(r => renderReelCard(r, true)).join('') : '<p style="grid-column:1/-1;text-align:center;padding:40px;color:var(--mute);">No reels found matching your criteria.</p>'}
         </div>`;
 
       document.getElementById('btn-add-reel').onclick = openUploadModal;
@@ -2283,15 +2280,16 @@
         renderReels();
       };
       bindReelActions();
+      bindBatchBoxActions('reels', renderReels);
     }
 
-    function renderReelCard(r) {
+    function renderReelCard(r, showCheckbox = true) {
       const isHidden = r.hidden === true;
       const clientObj = (DATA.clients || []).find(c => c.id === r.c) || { name: 'Client' };
       const sub = r.b ? r.b : (r.album ? r.album : '');
       return `
         <div class="reel-box" style="position:relative;" data-id="${r.id}">
-          <input type="checkbox" class="reel-batch-chk" data-id="${r.id}" title="Select for Batch Editing" style="position:absolute;top:10px;left:10px;z-index:25;width:20px;height:20px;cursor:pointer;accent-color:#2F7DF6;">
+          ${showCheckbox ? `<input type="checkbox" class="reel-batch-chk" data-id="${r.id}" title="Select for Batch Editing" style="position:absolute;top:10px;left:10px;z-index:25;width:20px;height:20px;cursor:pointer;accent-color:#2F7DF6;">` : ''}
           <div class="reel-thumb-wrap" data-play="${r.id}">
             ${r.coverUrl ? `<img src="${r.coverUrl}" alt="">` : ''}
             ${r.dur ? `<span class="dur">${r.dur}</span>` : ''}
@@ -2373,119 +2371,7 @@
         };
       }
 
-      // Batch Checkboxes & Floating Action Bar
-      const chks = document.querySelectorAll('.reel-batch-chk');
-      const selectAll = document.getElementById('chk-select-all');
-      const batchBar = document.getElementById('admin-batch-bar');
-      const countSpan = document.getElementById('batch-selected-count');
 
-      function updateBatchUI() {
-        const selected = Array.from(chks).filter(c => c.checked).map(c => c.dataset.id);
-        if (countSpan) countSpan.textContent = selected.length;
-        if (batchBar) batchBar.style.display = selected.length > 0 ? 'flex' : 'none';
-        if (selectAll) selectAll.checked = chks.length > 0 && selected.length === chks.length;
-      }
-
-      chks.forEach(chk => {
-        chk.onchange = () => updateBatchUI();
-      });
-
-      if (selectAll) {
-        selectAll.onchange = e => {
-          chks.forEach(c => c.checked = e.target.checked);
-          updateBatchUI();
-        };
-      }
-
-      function getSelectedReels() {
-        const selIds = Array.from(document.querySelectorAll('.reel-batch-chk:checked')).map(c => c.dataset.id);
-        return (DATA.reels || []).filter(r => selIds.includes(r.id));
-      }
-
-      document.getElementById('btn-batch-modal-edit')?.addEventListener('click', () => {
-        const targets = getSelectedReels();
-        if (!targets.length) {
-          toast('Please select at least 1 video reel to edit', 'amber');
-          return;
-        }
-        openBatchEditModal(targets);
-      });
-
-      document.getElementById('btn-batch-clear')?.addEventListener('click', () => {
-        chks.forEach(c => c.checked = false);
-        if (selectAll) selectAll.checked = false;
-        updateBatchUI();
-      });
-
-      document.getElementById('btn-batch-approve')?.addEventListener('click', () => {
-        const targets = getSelectedReels();
-        if (!targets.length) return;
-        confirmModal('Batch Approve Videos?', `Approve ${targets.length} selected video reels? They will be immediately published to the client Reels gallery.`, () => {
-          targets.forEach(r => r.status = 'approved');
-          persistLocal(`Batch approved ${targets.length} reels in real time`);
-          renderReels();
-        }, 'Approve All', false);
-      });
-
-      document.getElementById('btn-batch-review')?.addEventListener('click', () => {
-        const targets = getSelectedReels();
-        if (!targets.length) return;
-        targets.forEach(r => r.status = 'review');
-        persistLocal(`Marked ${targets.length} reels as Under Review`);
-        renderReels();
-      });
-
-      document.getElementById('btn-batch-deny')?.addEventListener('click', () => {
-        const targets = getSelectedReels();
-        if (!targets.length) return;
-        confirmModal('Batch Deny Videos?', `Mark ${targets.length} selected reels as Denied / Edits Requested?`, () => {
-          targets.forEach(r => r.status = 'denied');
-          persistLocal(`Marked ${targets.length} reels as Denied`);
-          renderReels();
-        }, 'Deny All', true);
-      });
-
-      document.getElementById('btn-batch-wave')?.addEventListener('click', () => {
-        const targets = getSelectedReels();
-        if (!targets.length) return;
-        const phaseName = prompt('Enter Wave / Phase name for selected reels (e.g. Phase 1, Phase 2, Phase 3):', 'Phase 1');
-        if (phaseName && phaseName.trim()) {
-          targets.forEach(r => { r.wave = phaseName.trim(); r.phase = phaseName.trim(); });
-          persistLocal(`Updated wave for ${targets.length} reels in real time`);
-          renderReels();
-        }
-      });
-
-      document.getElementById('btn-batch-branch')?.addEventListener('click', () => {
-        const targets = getSelectedReels();
-        if (!targets.length) return;
-        const branchName = prompt('Enter showroom Branch for selected reels (e.g. T. Nagar, Chromepet, Thiruvallur):', 'T. Nagar');
-        if (branchName && branchName.trim()) {
-          targets.forEach(r => r.b = branchName.trim());
-          persistLocal(`Updated branch for ${targets.length} reels in real time`);
-          renderReels();
-        }
-      });
-
-      document.getElementById('btn-batch-hide')?.addEventListener('click', () => {
-        const targets = getSelectedReels();
-        if (!targets.length) return;
-        const anyVisible = targets.some(r => !r.hidden);
-        targets.forEach(r => r.hidden = anyVisible);
-        persistLocal(`Updated visibility for ${targets.length} reels`);
-        renderReels();
-      });
-
-      document.getElementById('btn-batch-del')?.addEventListener('click', () => {
-        const targets = getSelectedReels();
-        if (!targets.length) return;
-        confirmModal('Delete Selected Videos?', `Are you sure you want to permanently remove ${targets.length} reels from the system?`, () => {
-          const ids = targets.map(r => r.id);
-          DATA.reels = (DATA.reels || []).filter(r => !ids.includes(r.id));
-          persistLocal(`Deleted ${targets.length} reels`);
-          renderReels();
-        }, 'Delete All Selected', true);
-      });
 
       document.querySelectorAll('[data-play]').forEach(b => {
         b.onclick = () => {
@@ -2567,6 +2453,285 @@
 
 
     // --------------------------------------------------------------------------
+
+    // --------------------------------------------------------------------------
+    // IN-PAGE LUXURY BATCH EDIT BOX (MATCHING ADMIN THEME - NO MODAL)
+    // --------------------------------------------------------------------------
+    function renderBatchEditBox(targetKind = 'reels') {
+      const client = (DATA.clients || []).find(c => c.id === selectedClientFilter) || (DATA.clients || [])[0] || {};
+      const branches = (client && client.branches && client.branches.length) ? client.branches : ['T. Nagar', 'Velachery', 'Chromepet', 'Thiruvallur'];
+      const waves = (client && client.waves && client.waves.length) ? client.waves : ['Phase 1', 'Phase 2', 'Phase 3'];
+      const kindLabel = targetKind === 'images' ? 'stories & posters' : 'video reels';
+
+      return `
+        <div id="admin-batch-panel" class="admin-batch-box" style="background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 22px;margin-bottom:24px;box-shadow:0 4px 20px rgba(0,0,0,0.06);transition:border-color 0.25s ease, box-shadow 0.25s ease;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line);">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span id="batch-selected-count" style="background:#2F7DF6;padding:4px 12px;border-radius:99px;font-size:12px;color:#fff;font-weight:700;">0</span>
+              <div>
+                <h3 style="margin:0;font-size:15px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2F7DF6" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Batch Edit &amp; Bulk Operations
+                </h3>
+                <p style="margin:2px 0 0;font-size:11.5px;color:var(--mute);">Select multiple ${kindLabel} below to update properties or perform bulk actions in real time.</p>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn-portal" id="btn-batch-approve" style="background:#1FAF64;color:#fff;border-color:#1FAF64;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">✓ Approve</button>
+              <button type="button" class="btn-portal" id="btn-batch-review" style="background:#D97706;color:#fff;border-color:#D97706;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">⏱ In Review</button>
+              <button type="button" class="btn-portal" id="btn-batch-deny" style="background:#DC2626;color:#fff;border-color:#DC2626;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">✕ Deny</button>
+              <button type="button" class="btn-portal" id="btn-batch-hide" style="background:var(--soft);color:var(--navy);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">👁 Toggle Hide</button>
+              <button type="button" class="btn-portal" id="btn-batch-del" style="background:#FEE2E2;color:#DC2626;border-color:#FCA5A5;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;">🗑 Delete</button>
+              <button type="button" class="btn-portal" id="btn-batch-clear" style="background:transparent;color:var(--mute);border-color:var(--line);font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;">Deselect All</button>
+            </div>
+          </div>
+
+          <!-- In-Page Properties Configuration Grid -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;align-items:end;">
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px;display:block;">Showroom Branch</label>
+              <select id="be-box-branch" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:12.5px;cursor:pointer;">
+                <option value="">-- Keep Unchanged --</option>
+                <option value="__none__">No Branch / General</option>
+                ${branches.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('')}
+                <option value="__custom__">+ Enter Custom Branch...</option>
+              </select>
+              <input type="text" id="be-box-branch-custom" placeholder="Custom branch..." style="display:none;width:100%;margin-top:6px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);font-size:12px;box-sizing:border-box;">
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px;display:block;">Delivery Wave / Phase</label>
+              <select id="be-box-wave" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:12.5px;cursor:pointer;">
+                <option value="">-- Keep Unchanged --</option>
+                ${waves.map((w, idx) => `<option value="wave_${idx}">${esc(w)}</option>`).join('')}
+                <option value="__custom__">+ Enter Custom Wave...</option>
+              </select>
+              <input type="text" id="be-box-wave-custom" placeholder="e.g. Week 4, Festive Wave" style="display:none;width:100%;margin-top:6px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);font-size:12px;box-sizing:border-box;">
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px;display:block;">Delivery Month</label>
+              <select id="be-box-month" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:12.5px;cursor:pointer;">
+                <option value="">-- Keep Unchanged --</option>
+                ${MONTHS.map((m, idx) => `<option value="${idx}">${m}</option>`).join('')}
+              </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px;display:block;">Approval Status</label>
+              <select id="be-box-status" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:12.5px;cursor:pointer;">
+                <option value="">-- Keep Unchanged --</option>
+                <option value="approved">✓ Approved (Publish to Gallery)</option>
+                <option value="review">⏱ In Review (Pre-Approval)</option>
+                <option value="denied">✕ Denied / Revisions</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px;display:block;">Client Visibility</label>
+              <select id="be-box-visibility" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:12.5px;cursor:pointer;">
+                <option value="">-- Keep Unchanged --</option>
+                <option value="show">Visible on Portal</option>
+                <option value="hide">Hidden from Portal</option>
+              </select>
+            </div>
+
+            <div style="margin:0;">
+              <button type="button" class="btn-primary" id="btn-batch-box-apply" style="width:100%;padding:9px 16px;font-size:12.5px;font-weight:700;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:6px;background:#2F7DF6;border-color:#2F7DF6;color:#fff;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(47,125,246,0.35);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Apply Changes (<span id="batch-btn-count">0</span>)
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function bindBatchBoxActions(targetKind = 'reels', renderCallback) {
+      const panel = document.getElementById('admin-batch-panel');
+      const chks = document.querySelectorAll('.reel-batch-chk');
+      const selectAll = document.getElementById('chk-select-all');
+      const countSpan = document.getElementById('batch-selected-count');
+      const btnCountSpan = document.getElementById('batch-btn-count');
+
+      function getSelectedItems() {
+        const selIds = Array.from(document.querySelectorAll('.reel-batch-chk:checked')).map(c => c.dataset.id);
+        return (DATA.reels || []).filter(r => selIds.includes(r.id));
+      }
+
+      function updateBatchUI() {
+        const selected = getSelectedItems();
+        const count = selected.length;
+        if (countSpan) countSpan.textContent = count;
+        if (btnCountSpan) btnCountSpan.textContent = count;
+        if (selectAll) selectAll.checked = chks.length > 0 && selected.length === chks.length;
+
+        if (panel) {
+          if (count > 0) {
+            panel.style.borderColor = '#2F7DF6';
+            panel.style.boxShadow = '0 6px 24px rgba(47,125,246,0.14)';
+          } else {
+            panel.style.borderColor = 'var(--line)';
+            panel.style.boxShadow = '0 4px 20px rgba(0,0,0,0.06)';
+          }
+        }
+      }
+
+      chks.forEach(chk => {
+        chk.onchange = () => updateBatchUI();
+      });
+
+      if (selectAll) {
+        selectAll.onchange = e => {
+          chks.forEach(c => c.checked = e.target.checked);
+          updateBatchUI();
+        };
+      }
+
+      // Branch Custom Input Toggle
+      const brSel = document.getElementById('be-box-branch');
+      const brCustom = document.getElementById('be-box-branch-custom');
+      if (brSel && brCustom) {
+        brSel.onchange = () => {
+          brCustom.style.display = brSel.value === '__custom__' ? 'block' : 'none';
+          if (brSel.value === '__custom__') brCustom.focus();
+        };
+      }
+
+      // Wave Custom Input Toggle
+      const waveSel = document.getElementById('be-box-wave');
+      const waveCustom = document.getElementById('be-box-wave-custom');
+      if (waveSel && waveCustom) {
+        waveSel.onchange = () => {
+          waveCustom.style.display = waveSel.value === '__custom__' ? 'block' : 'none';
+          if (waveSel.value === '__custom__') waveCustom.focus();
+        };
+      }
+
+      // Deselect All
+      document.getElementById('btn-batch-clear')?.addEventListener('click', () => {
+        chks.forEach(c => c.checked = false);
+        if (selectAll) selectAll.checked = false;
+        updateBatchUI();
+      });
+
+      // Apply Changes Button
+      document.getElementById('btn-batch-box-apply')?.addEventListener('click', async () => {
+        const targets = getSelectedItems();
+        if (!targets.length) {
+          toast('Please select at least 1 item using checkboxes below', 'amber');
+          return;
+        }
+
+        let branchVal = brSel ? brSel.value : '';
+        if (branchVal === '__custom__') branchVal = brCustom ? brCustom.value.trim() : '';
+        else if (branchVal === '__none__') branchVal = '';
+
+        let waveVal = waveSel ? waveSel.value : '';
+        if (waveVal === '__custom__') waveVal = waveCustom ? waveCustom.value.trim() : '';
+
+        const monthEl = document.getElementById('be-box-month');
+        const monthVal = monthEl ? monthEl.value : '';
+
+        const statusEl = document.getElementById('be-box-status');
+        const statusVal = statusEl ? statusEl.value : '';
+
+        const visEl = document.getElementById('be-box-visibility');
+        const visVal = visEl ? visEl.value : '';
+
+        if (!branchVal && branchVal !== '' && !waveVal && monthVal === '' && statusVal === '' && visVal === '') {
+          toast('Please select at least one property to update', 'amber');
+          return;
+        }
+
+        targets.forEach(r => {
+          if (branchVal !== '') r.b = branchVal;
+          if (waveVal !== '') { r.wave = waveVal; r.phase = waveVal; }
+          if (monthVal !== '') r.m = parseInt(monthVal, 10);
+          if (statusVal !== '') r.status = statusVal;
+          if (visVal === 'show') r.hidden = false;
+          else if (visVal === 'hide') r.hidden = true;
+        });
+
+        const targetClient = (DATA.clients || []).find(c => c.id === (targets[0] && targets[0].c));
+        if (branchVal && targetClient && targetClient.branches && !targetClient.branches.includes(branchVal)) {
+          targetClient.branches.push(branchVal);
+        }
+        if (waveVal && targetClient && targetClient.waves && !targetClient.waves.includes(waveVal)) {
+          targetClient.waves.push(waveVal);
+        }
+
+        saveAndBroadcast(`Batch updated ${targets.length} items in real time!`);
+        if (typeof renderCallback === 'function') renderCallback();
+
+        if (GAS_URL) {
+          api('syncData', { data: DATA }).catch(e => console.warn('Background sync:', e));
+        }
+      });
+
+      // Bulk Approve
+      document.getElementById('btn-batch-approve')?.addEventListener('click', () => {
+        const targets = getSelectedItems();
+        if (!targets.length) { toast('Please select items first', 'amber'); return; }
+        confirmModal('Batch Approve Items?', `Approve ${targets.length} selected items? They will be immediately published to client portals.`, () => {
+          targets.forEach(r => r.status = 'approved');
+          saveAndBroadcast(`Batch approved ${targets.length} items`);
+          if (typeof renderCallback === 'function') renderCallback();
+        }, 'Approve All', false);
+      });
+
+      // Bulk Review
+      document.getElementById('btn-batch-review')?.addEventListener('click', () => {
+        const targets = getSelectedItems();
+        if (!targets.length) { toast('Please select items first', 'amber'); return; }
+        targets.forEach(r => r.status = 'review');
+        saveAndBroadcast(`Marked ${targets.length} items as In Review`);
+        if (typeof renderCallback === 'function') renderCallback();
+      });
+
+      // Bulk Deny
+      document.getElementById('btn-batch-deny')?.addEventListener('click', () => {
+        const targets = getSelectedItems();
+        if (!targets.length) { toast('Please select items first', 'amber'); return; }
+        confirmModal('Batch Deny Items?', `Mark ${targets.length} selected items as Denied / Revisions Requested?`, () => {
+          targets.forEach(r => r.status = 'denied');
+          saveAndBroadcast(`Marked ${targets.length} items as Denied`);
+          if (typeof renderCallback === 'function') renderCallback();
+        }, 'Deny All', true);
+      });
+
+      // Bulk Toggle Hide
+      document.getElementById('btn-batch-hide')?.addEventListener('click', () => {
+        const targets = getSelectedItems();
+        if (!targets.length) { toast('Please select items first', 'amber'); return; }
+        const anyVisible = targets.some(r => !r.hidden);
+        targets.forEach(r => r.hidden = anyVisible);
+        saveAndBroadcast(`Updated visibility for ${targets.length} items`);
+        if (typeof renderCallback === 'function') renderCallback();
+      });
+
+      // Bulk Delete
+      document.getElementById('btn-batch-del')?.addEventListener('click', () => {
+        const targets = getSelectedItems();
+        if (!targets.length) { toast('Please select items first', 'amber'); return; }
+        confirmModal('Delete Selected Items?', `Are you sure you want to permanently remove ${targets.length} items? This cannot be undone.`, () => {
+          const ids = targets.map(r => r.id);
+          const delIds = getDeletedReelIds();
+          ids.forEach(id => {
+            if (!delIds.includes(id)) delIds.push(id);
+          });
+          setDeletedReelIds(delIds);
+          DATA.deletedReelIds = delIds;
+          DATA.reels = (DATA.reels || []).filter(r => !ids.includes(r.id));
+          ids.forEach(id => {
+            try { if (syncHub) syncHub.postMessage({ type: 'REEL_DELETED', id }); } catch(e) {}
+            api('deleteReel', { id }).catch(() => {});
+          });
+          saveAndBroadcast(`Deleted ${targets.length} items`);
+          if (typeof renderCallback === 'function') renderCallback();
+        }, 'Delete All Selected', true);
+      });
+    }
+
     // TAB 2B: STORIES & POSTERS MANAGER
     // --------------------------------------------------------------------------
     function renderImagesTab() {
@@ -2594,6 +2759,10 @@
             <p style="font-size:12px;color:var(--mute)">Upload, schedule, and deliver high-resolution 9:16 Stories and Festive Posters.</p>
           </div>
           <div class="action-group">
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;background:#fff;padding:8px 12px;border:1px solid var(--line);border-radius:10px;" title="Select all visible stories & posters for batch editing">
+              <input type="checkbox" id="chk-select-all" style="cursor:pointer;accent-color:#2F7DF6;">
+              Select All
+            </label>
             <select class="search-input" id="filter-img-type" style="width:auto;cursor:pointer;">
               <option value="" ${!imageTypeFilter ? 'selected' : ''}>All Types (${allImages.length})</option>
               <option value="story" ${imageTypeFilter === 'story' ? 'selected' : ''}>Stories 9:16 (${storiesCount})</option>
@@ -2612,8 +2781,10 @@
           </div>
         </div>
 
+        ${renderBatchEditBox('images')}
+
         <div class="reels-grid">
-          ${filtered.length ? filtered.map(it => renderImageAdminCard(it)).join('') : '<p style="grid-column:1/-1;text-align:center;padding:40px;color:var(--mute);">No stories or posters found. Click "+ Upload Story / Poster" to create one.</p>'}
+          ${filtered.length ? filtered.map(it => renderImageAdminCard(it, true)).join('') : '<p style="grid-column:1/-1;text-align:center;padding:40px;color:var(--mute);">No stories or posters found. Click "+ Upload Story / Poster" to create one.</p>'}
         </div>`;
 
       document.getElementById('btn-add-img').onclick = () => openAdminImageModal();
@@ -2630,14 +2801,16 @@
         renderImagesTab();
       };
       bindImageAdminActions();
+      bindBatchBoxActions('images', renderImagesTab);
     }
 
-    function renderImageAdminCard(it) {
+    function renderImageAdminCard(it, showCheckbox = true) {
       const clientObj = (DATA.clients || []).find(c => c.id === it.c) || { name: 'Client' };
       const sub = it.b ? it.b : (it.album ? it.album : '');
       const isStory = it.type === 'story';
       return `
-        <div class="reel-box">
+        <div class="reel-box" style="position:relative;" data-id="${it.id}">
+          ${showCheckbox ? `<input type="checkbox" class="reel-batch-chk" data-id="${it.id}" title="Select for Batch Editing" style="position:absolute;top:10px;left:10px;z-index:25;width:20px;height:20px;cursor:pointer;accent-color:#2F7DF6;">` : ''}
           <div class="reel-thumb-wrap" data-img-prev="${it.id}" style="aspect-ratio:${isStory ? '9/16' : '1/1'};cursor:pointer;">
             <img src="${it.url || it.coverUrl}" alt="" style="width:100%;height:100%;object-fit:cover;">
             <span class="dur" style="background:${isStory ? '#6C5CE7' : '#1FAF64'}">${isStory ? 'STORY 9:16' : 'POSTER'}</span>

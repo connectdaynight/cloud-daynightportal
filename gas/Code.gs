@@ -242,9 +242,11 @@ function doPost(e) {
           file.setTrashed(true);
         } catch (ex) {}
       }
+      if (!data.deletedReelIds) data.deletedReelIds = [];
+      if (!data.deletedReelIds.includes(reelId)) data.deletedReelIds.push(reelId);
       data.reels = (data.reels || []).filter(r => r.id !== reelId);
       saveData(data);
-      return jsonResponse({ success: true, message: "Reel removed" });
+      return jsonResponse({ success: true, message: "Reel removed", deletedReelIds: data.deletedReelIds });
     }
 
     // 6. Toggle Hide / Unhide Reel
@@ -449,8 +451,25 @@ function doPost(e) {
     // 13. Sync Full Dataset
     if (action === "syncData") {
       if (payload.data) {
+        const curData = loadData();
+        const mergedDeletedReels = Array.from(new Set([
+          ...(curData.deletedReelIds || []),
+          ...(payload.data.deletedReelIds || [])
+        ]));
+        const mergedDeletedClients = Array.from(new Set([
+          ...(curData.deletedClientIds || []),
+          ...(payload.data.deletedClientIds || [])
+        ]));
+        payload.data.deletedReelIds = mergedDeletedReels;
+        payload.data.deletedClientIds = mergedDeletedClients;
+        if (payload.data.reels) {
+          payload.data.reels = payload.data.reels.filter(r => !mergedDeletedReels.includes(r.id));
+        }
+        if (payload.data.clients) {
+          payload.data.clients = payload.data.clients.filter(c => !mergedDeletedClients.includes(c.id));
+        }
         saveData(payload.data);
-        return jsonResponse({ success: true, message: "Database synchronized with Google Drive" });
+        return jsonResponse({ success: true, message: "Database synchronized with Google Drive", deletedReelIds: mergedDeletedReels });
       }
     }
 
