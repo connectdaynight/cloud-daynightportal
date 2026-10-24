@@ -2466,9 +2466,11 @@
       transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
-    /* Lock body and viewport when any modal is active to prevent vertical bounce and scrolling */
-    html.has-modal,
-    body.has-modal,
+    /* Lock body scroll when modal is active without collapsing document scroll height */
+    body.has-modal {
+      overflow: hidden !important;
+      overscroll-behavior: none !important;
+    }
     html:has(.video-modal-scrim),
     body:has(.video-modal-scrim) {
       overflow: hidden !important;
@@ -5939,7 +5941,10 @@
       window.scrollTo(0, 0);
     }
 
-    // Initialize initial state in history
+    // Initialize initial state in history with manual scroll restoration
+    if ('scrollRestoration' in history) {
+      try { history.scrollRestoration = 'manual'; } catch(_) {}
+    }
     try { window.history.replaceState({ view: { ...view } }, ''); } catch(e) {}
 
     // Back Button Navigation Handling (Prevents closing website on back swipe/press)
@@ -6013,6 +6018,7 @@
 
     // Custom Modal Bottom / Center Sheet (Protected against accidental backdrop close)
     function sheet(html, onMount, center, customClass) {
+      const savedScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
       if (customClass !== 'share-modal-scrim') {
         document.querySelectorAll('.scrim:not(.share-modal-scrim)').forEach(el => el.remove());
       }
@@ -6042,6 +6048,10 @@
             nav.style.display = '';
           }
         }
+        window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+        });
         if (!isClosingModalViaHistory && window.history.state && window.history.state.modalOpen) {
           isProgrammaticHistoryBack = true;
           try { window.history.back(); } catch(e) {}
@@ -6096,8 +6106,9 @@
       return sc;
     }
 
-    // Custom Confirmation Dialog (No window.confirm)
-    function confirmModal(title, message, onConfirm, confirmText = 'Confirm', isDanger = false) {
+    // Custom Confirmation Dialog (Preserves exact scroll position)
+    function confirmModal(title, message, onConfirm, confirmText = 'Confirm', isDanger = false, explicitScrollY = null) {
+      const savedScrollY = explicitScrollY != null ? explicitScrollY : (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0);
       sheet(`
         <h4>${esc(title)}</h4>
         <p>${esc(message)}</p>
@@ -6106,7 +6117,20 @@
         sc.querySelector('#c-yes').addEventListener('click', () => {
           sc.remove();
           onConfirm && onConfirm();
+          window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+          });
         });
+        const cancelBtn = sc.querySelector('[data-close]');
+        if (cancelBtn) {
+          cancelBtn.addEventListener('click', () => {
+            window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+            requestAnimationFrame(() => {
+              window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+            });
+          });
+        }
       }, true);
     }
 
@@ -6559,6 +6583,31 @@
 
     // Luxury Milk-White Bottom Navigation Bar (Navbar - Synchronized Across Portal)
     
+    // Video Playback Color & Visual Calibration (Brightness, Contrast, Saturation)
+    let videoFilters = {
+      brightness: 100,
+      contrast: 100,
+      saturation: 100
+    };
+    try {
+      const savedFilters = JSON.parse(localStorage.getItem('dn_video_filters') || '{}');
+      if (savedFilters && typeof savedFilters.brightness === 'number') {
+        videoFilters = Object.assign(videoFilters, savedFilters);
+      }
+    } catch(_) {}
+
+    function applyVideoFilters(videoEl) {
+      if (!videoEl) return;
+      const b = videoFilters.brightness || 100;
+      const c = videoFilters.contrast || 100;
+      const s = videoFilters.saturation || 100;
+      if (b === 100 && c === 100 && s === 100) {
+        videoEl.style.filter = '';
+      } else {
+        videoEl.style.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
+      }
+    }
+
     // --------------------------------------------------------------------------
     // PRE-APPROVAL & INSTAGRAM PLAYER ENHANCEMENTS
     // --------------------------------------------------------------------------
@@ -6618,6 +6667,7 @@
     }
 
     function setReelApprovalStatus(reelId, newStatus) {
+      const savedScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
       const r = (DATA.reels || []).find(x => x.id === reelId);
       if (!r) return;
       const targetStatus = r.status === newStatus ? 'review' : newStatus;
@@ -6634,6 +6684,10 @@
         gasApi('updateReelStatus', { id: r.id, reelId: r.id, status: targetStatus }).catch(() => {});
       }
       render();
+      window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+      });
     }
 
     function submitReelComment(reelId, text, type = 'suggestion', parentId = null) {
@@ -9062,6 +9116,7 @@
     // IN-APP 9:16 VIDEO PLAYER
     // --------------------------------------------------------------------------
     function openVideoModal(r, initialList) {
+      const savedPageScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
       if (!r || !r.url) {
         toast('Direct stream unavailable for this reel.', 'amber');
         return;
@@ -9292,6 +9347,44 @@
                   <button type="button" id="ig-set-denied" style="flex:1;padding:8px 0;border-radius:10px;border:1.2px solid #E53225;background:rgba(229,50,37,0.1);color:#E53225;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Denied
                   </button>
+                </div>
+              </div>
+
+              <!-- Color Calibration & Filters (Brightness, Contrast, Saturation) -->
+              <div class="ig-filter-control-box" style="margin-bottom:14px;padding:12px 14px;background:var(--soft);border-radius:12px;border:1px solid var(--line);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                  <small style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    Display &amp; Color Calibration
+                  </small>
+                  <button type="button" id="ig-filter-reset" style="background:#FFFFFF;border:1px solid var(--line);border-radius:6px;font-size:10.5px;font-weight:700;color:#0D3B2E;cursor:pointer;padding:3px 8px;transition:all 0.15s ease;">Reset</button>
+                </div>
+
+                <!-- Brightness Slider -->
+                <div style="margin-bottom:9px;">
+                  <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink);font-weight:600;margin-bottom:3px;">
+                    <span>Brightness</span>
+                    <span id="ig-val-brightness" style="font-size:11px;font-weight:700;color:#0D3B2E;">${videoFilters.brightness}%</span>
+                  </div>
+                  <input type="range" id="ig-range-brightness" min="50" max="150" value="${videoFilters.brightness}" step="1" style="width:100%;height:5px;accent-color:#0D3B2E;cursor:pointer;display:block;">
+                </div>
+
+                <!-- Contrast Slider -->
+                <div style="margin-bottom:9px;">
+                  <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink);font-weight:600;margin-bottom:3px;">
+                    <span>Contrast</span>
+                    <span id="ig-val-contrast" style="font-size:11px;font-weight:700;color:#0D3B2E;">${videoFilters.contrast}%</span>
+                  </div>
+                  <input type="range" id="ig-range-contrast" min="50" max="150" value="${videoFilters.contrast}" step="1" style="width:100%;height:5px;accent-color:#0D3B2E;cursor:pointer;display:block;">
+                </div>
+
+                <!-- Saturation Slider -->
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink);font-weight:600;margin-bottom:3px;">
+                    <span>Saturation</span>
+                    <span id="ig-val-saturation" style="font-size:11px;font-weight:700;color:#0D3B2E;">${videoFilters.saturation}%</span>
+                  </div>
+                  <input type="range" id="ig-range-saturation" min="0" max="200" value="${videoFilters.saturation}" step="1" style="width:100%;height:5px;accent-color:#0D3B2E;cursor:pointer;display:block;">
                 </div>
               </div>
 
@@ -9699,6 +9792,7 @@
                 updateBookmarkButton();
                 renderCommentsList();
                 applyPlatformOverlay(socialPlatform);
+                applyVideoFilters(vid);
 
                 if (commentsDrawer) commentsDrawer.style.display = 'none';
                 if (settingsModal) settingsModal.style.display = 'none';
@@ -9928,6 +10022,49 @@
           }, 'Reject Reel', true);
         });
 
+        // Wire Color Calibration (Brightness, Contrast, Saturation) in Instagram Player
+        const igRangeB = modalSc.querySelector('#ig-range-brightness');
+        const igRangeC = modalSc.querySelector('#ig-range-contrast');
+        const igRangeS = modalSc.querySelector('#ig-range-saturation');
+        const igValB = modalSc.querySelector('#ig-val-brightness');
+        const igValC = modalSc.querySelector('#ig-val-contrast');
+        const igValS = modalSc.querySelector('#ig-val-saturation');
+        const igResetBtn = modalSc.querySelector('#ig-filter-reset');
+
+        function updateIgFilters() {
+          if (igRangeB) igRangeB.value = videoFilters.brightness;
+          if (igRangeC) igRangeC.value = videoFilters.contrast;
+          if (igRangeS) igRangeS.value = videoFilters.saturation;
+          if (igValB) igValB.textContent = videoFilters.brightness + '%';
+          if (igValC) igValC.textContent = videoFilters.contrast + '%';
+          if (igValS) igValS.textContent = videoFilters.saturation + '%';
+          applyVideoFilters(vid);
+          try { localStorage.setItem('dn_video_filters', JSON.stringify(videoFilters)); } catch(_) {}
+        }
+
+        // Apply filters to initial video
+        applyVideoFilters(vid);
+
+        igRangeB?.addEventListener('input', e => {
+          videoFilters.brightness = parseInt(e.target.value, 10);
+          updateIgFilters();
+        });
+        igRangeC?.addEventListener('input', e => {
+          videoFilters.contrast = parseInt(e.target.value, 10);
+          updateIgFilters();
+        });
+        igRangeS?.addEventListener('input', e => {
+          videoFilters.saturation = parseInt(e.target.value, 10);
+          updateIgFilters();
+        });
+        igResetBtn?.addEventListener('click', () => {
+          videoFilters.brightness = 100;
+          videoFilters.contrast = 100;
+          videoFilters.saturation = 100;
+          updateIgFilters();
+          toast('Video color calibration reset to default', 'info');
+        });
+
         modalSc.querySelectorAll('.ig-spd-btn').forEach(btn => {
           btn.addEventListener('click', () => {
             modalSc.querySelectorAll('.ig-spd-btn').forEach(b => {
@@ -10000,6 +10137,10 @@
           if (bNav && view.client && view.screen !== 'splash' && view.screen !== 'client-pin') {
             bNav.style.display = '';
           }
+          window.scrollTo({ top: savedPageScrollY, behavior: 'instant' });
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: savedPageScrollY, behavior: 'instant' });
+          });
         }
         if (backBtn) backBtn.addEventListener('click', closeReelsPlayer);
         modalSc.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeReelsPlayer));
@@ -10190,6 +10331,35 @@
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       Needs Edit
                     </button>
+                  </div>
+                </div>
+
+                <!-- Video Color Filters (Brightness, Contrast, Saturation) -->
+                <div class="v-menu-sec" style="padding-bottom:10px;margin-bottom:10px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <div class="v-menu-label" style="margin-bottom:0;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+                      Color &amp; Filter
+                    </div>
+                    <button type="button" id="v-filter-reset" style="background:#FFFFFF;border:1px solid var(--line);border-radius:6px;font-size:10px;font-weight:700;color:#0D3B2E;cursor:pointer;padding:2px 7px;">Reset</button>
+                  </div>
+                  <div style="margin-bottom:7px;">
+                    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--navy);font-weight:600;margin-bottom:2px;">
+                      <span>Brightness</span><span id="v-val-brightness" style="color:#0D3B2E;font-weight:700;">${videoFilters.brightness}%</span>
+                    </div>
+                    <input type="range" id="v-range-brightness" min="50" max="150" value="${videoFilters.brightness}" style="width:100%;height:4px;accent-color:#0D3B2E;cursor:pointer;display:block;">
+                  </div>
+                  <div style="margin-bottom:7px;">
+                    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--navy);font-weight:600;margin-bottom:2px;">
+                      <span>Contrast</span><span id="v-val-contrast" style="color:#0D3B2E;font-weight:700;">${videoFilters.contrast}%</span>
+                    </div>
+                    <input type="range" id="v-range-contrast" min="50" max="150" value="${videoFilters.contrast}" style="width:100%;height:4px;accent-color:#0D3B2E;cursor:pointer;display:block;">
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--navy);font-weight:600;margin-bottom:2px;">
+                      <span>Saturation</span><span id="v-val-saturation" style="color:#0D3B2E;font-weight:700;">${videoFilters.saturation}%</span>
+                    </div>
+                    <input type="range" id="v-range-saturation" min="0" max="200" value="${videoFilters.saturation}" style="width:100%;height:4px;accent-color:#0D3B2E;cursor:pointer;display:block;">
                   </div>
                 </div>
 
@@ -10452,6 +10622,48 @@
             btnReject.classList.add('active');
             btnApprove.classList.remove('active');
           }, 'Reject Reel', true);
+        });
+
+        // Wire Classic Player Color Calibration
+        const vRangeB = modalSc.querySelector('#v-range-brightness');
+        const vRangeC = modalSc.querySelector('#v-range-contrast');
+        const vRangeS = modalSc.querySelector('#v-range-saturation');
+        const vValB = modalSc.querySelector('#v-val-brightness');
+        const vValC = modalSc.querySelector('#v-val-contrast');
+        const vValS = modalSc.querySelector('#v-val-saturation');
+        const vResetBtn = modalSc.querySelector('#v-filter-reset');
+
+        function updateVFilters() {
+          if (vRangeB) vRangeB.value = videoFilters.brightness;
+          if (vRangeC) vRangeC.value = videoFilters.contrast;
+          if (vRangeS) vRangeS.value = videoFilters.saturation;
+          if (vValB) vValB.textContent = videoFilters.brightness + '%';
+          if (vValC) vValC.textContent = videoFilters.contrast + '%';
+          if (vValS) vValS.textContent = videoFilters.saturation + '%';
+          applyVideoFilters(vid);
+          try { localStorage.setItem('dn_video_filters', JSON.stringify(videoFilters)); } catch(_) {}
+        }
+
+        applyVideoFilters(vid);
+
+        vRangeB?.addEventListener('input', e => {
+          videoFilters.brightness = parseInt(e.target.value, 10);
+          updateVFilters();
+        });
+        vRangeC?.addEventListener('input', e => {
+          videoFilters.contrast = parseInt(e.target.value, 10);
+          updateVFilters();
+        });
+        vRangeS?.addEventListener('input', e => {
+          videoFilters.saturation = parseInt(e.target.value, 10);
+          updateVFilters();
+        });
+        vResetBtn?.addEventListener('click', () => {
+          videoFilters.brightness = 100;
+          videoFilters.contrast = 100;
+          videoFilters.saturation = 100;
+          updateVFilters();
+          toast('Video color calibration reset to default', 'info');
         });
 
         modalSc.querySelectorAll('.v-speed-btn').forEach(btn => {
@@ -11756,20 +11968,24 @@
       }
       else if (a === 'bnav-preapproval') go({ screen: 'preapproval', client: view.client });
       else if (a === 'preapp-approve') {
+        e.preventDefault();
         e.stopPropagation();
+        const savedScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         const title = r ? `"${r.title}"` : 'this reel';
         confirmModal('Approve Reel', `Are you sure you want to approve ${title}? Once approved, it will be published to the client Reels gallery.`, () => {
           setReelApprovalStatus(el.dataset.id, 'approved');
-        }, 'Approve Reel', false);
+        }, 'Approve Reel', false, savedScrollY);
       }
       else if (a === 'preapp-denied') {
+        e.preventDefault();
         e.stopPropagation();
+        const savedScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         const title = r ? `"${r.title}"` : 'this reel';
         confirmModal('Reject / Request Edits', `Are you sure you want to reject ${title} and request revisions?`, () => {
           setReelApprovalStatus(el.dataset.id, 'denied');
-        }, 'Reject Reel', true);
+        }, 'Reject Reel', true, savedScrollY);
       }
       else if (a === 'preapp-sug-focus') {
         e.stopPropagation();
