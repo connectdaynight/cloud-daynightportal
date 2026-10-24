@@ -2057,7 +2057,7 @@
 
         <div class="reels-grid">
           ${(DATA.reels || []).filter(r => !r.type || r.type === 'reel' || r.type === 'video').slice(0, 6).map(r => renderReelCard(r, false)).join('')}
-        </div>`;`;
+        </div>`;
 
       document.getElementById('btn-quick-upload').onclick = openUploadModal;
       bindReelActions();
