@@ -299,6 +299,44 @@ function doPost(e) {
       return jsonResponse({ success: false, error: "Reel not found" }, 404);
     }
 
+    // 6C. Add Reel Comment
+    if (action === "addComment") {
+      const reelId = payload.id || payload.reelId;
+      const comment = payload.comment;
+      if (!reelId || !comment) {
+        return jsonResponse({ success: false, error: "Missing reelId or comment" }, 400);
+      }
+      const data = loadData();
+      const reel = (data.reels || []).find(r => r.id === reelId);
+      if (reel) {
+        if (!reel.comments) reel.comments = [];
+        reel.comments.push(comment);
+        saveData(data);
+        return jsonResponse({ success: true, comments: reel.comments, message: "Comment added" });
+      }
+      return jsonResponse({ success: false, error: "Reel not found" }, 404);
+    }
+
+    // 6D. Batch Update Reels
+    if (action === "batchUpdateReels") {
+      const ids = Array.isArray(payload.ids) ? payload.ids : [];
+      const updates = payload.updates || {};
+      const data = loadData();
+      let updatedCount = 0;
+      (data.reels || []).forEach(r => {
+        if (ids.includes(r.id)) {
+          if (updates.b !== undefined && updates.b !== '') r.b = updates.b;
+          if (updates.wave !== undefined && updates.wave !== '') r.wave = updates.wave;
+          if (updates.m !== undefined && updates.m !== '') r.m = Number(updates.m);
+          if (updates.status !== undefined && updates.status !== '') r.status = updates.status;
+          if (updates.hidden !== undefined && updates.hidden !== '') r.hidden = (updates.hidden === true || updates.hidden === 'true');
+          updatedCount++;
+        }
+      });
+      saveData(data);
+      return jsonResponse({ success: true, count: updatedCount, message: "Batch reels updated" });
+    }
+
     // 7. Track Engagement (View / Download)
     if (action === "trackEvent") {
       const { reelId, type } = payload;

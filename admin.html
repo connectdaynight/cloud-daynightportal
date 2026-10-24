@@ -1230,9 +1230,7 @@
 
     const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
     const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    const MOCK_IDS = ['s1', 's2', 's3', 's4', 's5', 'story_tcs_01', 'story_tcs_02', 'poster_tcs_01', 'poster_tcs_02', 'rmv7woz8l', 'rmvkntawv'];
-    const SEED_DELETED_REELS = ['rmvkntawv', 'rmv7woz8l', 's1', 's2', 's3', 's4', 's5', 'story_tcs_01', 'story_tcs_02', 'poster_tcs_01', 'poster_tcs_02'];
-    const isMockOrTest = r => !r || Boolean(r.sample) || !r.url || MOCK_IDS.includes(r.id) || /\b(test|sample|mock|fake|dummy)\b/i.test(r.title || '');
+    // Production Server-driven mode: zero mock IDs or hardcoded seeds
 
     let DATA = {
       _updatedAt: Date.now(),
@@ -1263,60 +1261,19 @@
     };
 
     function getDeletedReelIds() {
-      try {
-        const raw = localStorage.getItem('dn_deleted_reel_ids');
-        const parsed = raw ? JSON.parse(raw) : [];
-        const list = Array.isArray(parsed) ? parsed : [];
-        return Array.from(new Set([...SEED_DELETED_REELS, ...list]));
-      } catch(e) {
-        return SEED_DELETED_REELS;
-      }
+      return Array.isArray(DATA.deletedReelIds) ? DATA.deletedReelIds : [];
     }
     function setDeletedReelIds(ids) {
-      try {
-        localStorage.setItem('dn_deleted_reel_ids', JSON.stringify(ids));
-      } catch(e) {}
+      DATA.deletedReelIds = Array.isArray(ids) ? ids : [];
     }
     function getDeletedClientIds() {
-      try {
-        const raw = localStorage.getItem('dn_deleted_client_ids');
-        const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
-      } catch(e) {
-        return [];
-      }
+      return Array.isArray(DATA.deletedClientIds) ? DATA.deletedClientIds : [];
     }
     function setDeletedClientIds(ids) {
-      try {
-        localStorage.setItem('dn_deleted_client_ids', JSON.stringify(ids));
-      } catch(e) {}
+      DATA.deletedClientIds = Array.isArray(ids) ? ids : [];
     }
 
-    // Load local cached database immediately and strip any legacy mock items & deleted items
-    const persistentDeletedReels = getDeletedReelIds();
-    const persistentDeletedClients = getDeletedClientIds();
-    DATA.deletedReelIds = persistentDeletedReels;
-    DATA.deletedClientIds = persistentDeletedClients;
-
-    const cachedData = localStorage.getItem('dn_local_data');
-    if (cachedData) {
-      try {
-        const parsed = JSON.parse(cachedData);
-        if (parsed && typeof parsed === 'object') {
-          DATA = parsed;
-          if (!DATA.reels) DATA.reels = [];
-          if (!DATA.clients) DATA.clients = [];
-          if (!DATA.settings) DATA.settings = {};
-          if (DATA.settings.introDuration == null) DATA.settings.introDuration = 6;
-          if (!DATA.settings.social) DATA.settings.social = {};
-          DATA.deletedReelIds = persistentDeletedReels;
-          DATA.deletedClientIds = persistentDeletedClients;
-          DATA.reels = DATA.reels.filter(r => !isMockOrTest(r) && !persistentDeletedReels.includes(r.id));
-          DATA.clients = DATA.clients.filter(c => !persistentDeletedClients.includes(c.id));
-          try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
-        }
-      } catch(e) {}
-    }
+    // Cloud Server Driven: Data is fetched directly from Google Apps Script / Cloudflare API
 
     let isAuthenticated = isMasterAdminAuth(sessionStorage.getItem('dn_admin_auth'));
     let activeTab = 'dashboard';
@@ -1761,14 +1718,14 @@
     function saveAndBroadcast(msg = '') {
       DATA._updatedAt = Date.now();
       try {
-        localStorage.setItem('dn_local_data', JSON.stringify(DATA));
+        
       } catch(e) {
         try {
           const slim = JSON.parse(JSON.stringify(DATA));
           if (slim.reels) {
             slim.reels.forEach(r => { if (r.coverUrl && r.coverUrl.length > 30000) r.coverUrl = ''; });
           }
-          localStorage.setItem('dn_local_data', JSON.stringify(slim));
+          localStorage.setItem('dn_cloud_cache', JSON.stringify(slim));
         } catch(ex) {}
       }
       try {
@@ -1812,7 +1769,7 @@
           DATA = e.data.data;
           DATA.deletedReelIds = delIds;
           DATA.reels = (DATA.reels || []).filter(r => !delIds.includes(r.id));
-          localStorage.setItem('dn_local_data', JSON.stringify(DATA));
+          
           render();
         }
       };
@@ -1824,7 +1781,7 @@
         DATA.deletedReelIds = delIds;
         DATA.reels = (DATA.reels || []).filter(r => !delIds.includes(r.id));
         render();
-      } else if (e.key === 'dn_local_data' && e.newValue) {
+      } else if (e.key === 'dn_cloud_cache' && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
           if (parsed && typeof parsed === 'object') {
@@ -1867,12 +1824,7 @@
           DATA.deletedClientIds = deletedClientIds;
 
           // Strip deleted and mock items; Google Drive is the source of truth
-          const gasReels = (json.data.reels || []).filter(r => !isMockOrTest(r) && !deletedReelIds.includes(r.id));
-          gasReels.forEach(r => {
-            if (r.c === 'cmvje2zfy') r.c = 'tcs';
-            if (!r.b) r.b = 'T. Nagar';
-            if (r.dur === '0:30') r.dur = '';
-          });
+          const gasReels = (json.data.reels || []).filter(r => !deletedReelIds.includes(r.id));
           const pendingLocal = (DATA.reels || []).filter(lr => lr && lr._isLocalDraft && !deletedReelIds.includes(lr.id));
           const mergedReels = [...gasReels];
           pendingLocal.forEach(plr => {
@@ -1880,14 +1832,6 @@
           });
 
           const gasClients = (json.data.clients || []).filter(c => !deletedClientIds.includes(c.id));
-          gasClients.forEach(c => {
-            if (c.id === 'cmvje2zfy' || c.id === 'tcs') {
-              c.branches = (c.branches && c.branches.length) ? c.branches : ['T. Nagar', 'Velachery', 'Chromepet', 'Thiruvallur'];
-              c.waves = (c.waves && c.waves.length) ? c.waves : ['Phase 1', 'Phase 2', 'Phase 3'];
-              c.code = '1962';
-              c.slug = 'thechennaisilks';
-            }
-          });
           const localClients = (DATA.clients || []).filter(c => !deletedClientIds.includes(c.id));
           const mergedClients = [...gasClients];
           localClients.forEach(lc => {
@@ -2113,7 +2057,7 @@
         dateStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
       DATA._updatedAt = Date.now();
-      try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
+      
       try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
       toast('Reply sent to client in real time!', 'success');
       if (GAS_URL) {
@@ -2127,7 +2071,7 @@
       if (!r) return;
       r.status = newStatus;
       DATA._updatedAt = Date.now();
-      try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
+      
       try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
       toast(newStatus === 'approved' ? 'Marked as Approved' : 'Marked as Denied', newStatus === 'approved' ? 'success' : 'amber');
       if (GAS_URL) {
@@ -6114,7 +6058,7 @@ function openEditModal(r) {
           };
           r.comments.push(newComm);
           DATA._updatedAt = Date.now();
-          try { localStorage.setItem('dn_local_data', JSON.stringify(DATA)); } catch(e) {}
+          
           try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
           toast('Reply sent to client in real time!', 'success');
           if (GAS_URL) {
