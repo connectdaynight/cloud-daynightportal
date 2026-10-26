@@ -327,6 +327,7 @@ function doPost(e) {
         if (ids.includes(r.id)) {
           if (updates.b !== undefined && updates.b !== '') r.b = updates.b;
           if (updates.wave !== undefined && updates.wave !== '') r.wave = updates.wave;
+          if (updates.album !== undefined && updates.album !== '') r.album = updates.album;
           if (updates.m !== undefined && updates.m !== '') r.m = Number(updates.m);
           if (updates.status !== undefined && updates.status !== '') r.status = updates.status;
           if (updates.hidden !== undefined && updates.hidden !== '') r.hidden = (updates.hidden === true || updates.hidden === 'true');

@@ -2176,7 +2176,7 @@
                       <div class="admin-comm-top-row">
                         <div style="flex:1;min-width:0;">
                           <b class="admin-comm-title">${esc(r.title)}</b>
-                          <small style="color:var(--mute);font-size:11px;display:block;">${[r.b || r.album || 'T. Nagar', r.dur].filter(Boolean).map(esc).join(' · ')}</small>
+                          <small style="color:var(--mute);font-size:11px;display:block;">${[r.b || r.album || 'General', r.dur].filter(Boolean).map(esc).join(' · ')}</small>
                         </div>
                         <span class="admin-comm-status-pill ${r.status === 'approved' ? 'approved' : (r.status === 'denied' ? 'denied' : 'review')}">
                           ${r.status === 'approved' ? '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Approved</span>' : (r.status === 'denied' ? '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Denied</span>' : '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>In Review</span>')}
@@ -2406,7 +2406,8 @@
     function renderBatchEditBox(targetKind = 'reels') {
       const client = selectedClientFilter ? ((DATA.clients || []).find(c => c.id === selectedClientFilter) || {}) : null;
       let branches = client ? (client.branches || []) : Array.from(new Set((DATA.clients || []).flatMap(c => c.branches || [])));
-      if (!branches.length) branches = ['T. Nagar', 'Velachery', 'Chromepet', 'Thiruvallur'];
+      // No hardcoded branches fallback; respect client configuration
+      let albums = client ? (client.albums || []) : Array.from(new Set((DATA.clients || []).flatMap(c => c.albums || [])));
       let waves = client ? (client.waves || []) : Array.from(new Set((DATA.clients || []).flatMap(c => c.waves || [])));
       if (!waves.length) waves = ['Phase 1', 'Phase 2', 'Phase 3'];
       const kindLabel = targetKind === 'images' ? 'stories & posters' : 'video reels';
@@ -2445,6 +2446,17 @@
                 <option value="__custom__">+ Enter Custom Branch...</option>
               </select>
               <input type="text" id="be-box-branch-custom" placeholder="Custom branch..." style="display:none;width:100%;margin-top:6px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);font-size:12px;box-sizing:border-box;">
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px;display:block;">Album / Collection</label>
+              <select id="be-box-album" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:12.5px;cursor:pointer;">
+                <option value="">-- Keep Unchanged --</option>
+                <option value="__none__">General (Default)</option>
+                ${albums.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('')}
+                <option value="__custom__">+ Enter Custom Album...</option>
+              </select>
+              <input type="text" id="be-box-album-custom" placeholder="e.g. Bridal 2026, Festive" style="display:none;width:100%;margin-top:6px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);font-size:12px;box-sizing:border-box;">
             </div>
 
             <div class="form-group" style="margin:0;">
@@ -2555,6 +2567,16 @@
         };
       }
 
+      // Album Custom Input Toggle
+      const albSel = document.getElementById('be-box-album');
+      const albCustom = document.getElementById('be-box-album-custom');
+      if (albSel && albCustom) {
+        albSel.onchange = () => {
+          albCustom.style.display = albSel.value === '__custom__' ? 'block' : 'none';
+          if (albSel.value === '__custom__') albCustom.focus();
+        };
+      }
+
       // Deselect All
       document.getElementById('btn-batch-clear')?.addEventListener('click', () => {
         chks.forEach(c => c.checked = false);
@@ -2577,6 +2599,10 @@
         let waveVal = waveSel ? waveSel.value : '';
         if (waveVal === '__custom__') waveVal = waveCustom ? waveCustom.value.trim() : '';
 
+        let albumVal = albSel ? albSel.value : '';
+        if (albumVal === '__custom__') albumVal = albCustom ? albCustom.value.trim() : '';
+        else if (albumVal === '__none__') albumVal = 'General';
+
         const monthEl = document.getElementById('be-box-month');
         const monthVal = monthEl ? monthEl.value : '';
 
@@ -2586,7 +2612,7 @@
         const visEl = document.getElementById('be-box-visibility');
         const visVal = visEl ? visEl.value : '';
 
-        if (!branchVal && branchVal !== '' && !waveVal && monthVal === '' && statusVal === '' && visVal === '') {
+        if (!branchVal && branchVal !== '' && !waveVal && !albumVal && monthVal === '' && statusVal === '' && visVal === '') {
           toast('Please select at least one property to update', 'amber');
           return;
         }
@@ -2594,6 +2620,7 @@
         targets.forEach(r => {
           if (branchVal !== '') r.b = branchVal;
           if (waveVal !== '') { r.wave = waveVal; r.phase = waveVal; }
+          if (albumVal !== '') r.album = albumVal;
           if (monthVal !== '') r.m = parseInt(monthVal, 10);
           if (statusVal !== '') r.status = statusVal;
           if (visVal === 'show') r.hidden = false;
@@ -2607,11 +2634,24 @@
         if (waveVal && targetClient && targetClient.waves && !targetClient.waves.includes(waveVal)) {
           targetClient.waves.push(waveVal);
         }
+        if (albumVal && albumVal !== 'General' && targetClient) {
+          targetClient.albums = targetClient.albums || [];
+          if (!targetClient.albums.includes(albumVal)) targetClient.albums.push(albumVal);
+        }
 
         saveAndBroadcast(`Batch updated ${targets.length} items in real time!`);
         if (typeof renderCallback === 'function') renderCallback();
 
         if (GAS_URL) {
+          const updates = {};
+          if (branchVal !== '') updates.b = branchVal;
+          if (waveVal !== '') updates.wave = waveVal;
+          if (albumVal !== '') updates.album = albumVal;
+          if (monthVal !== '') updates.m = monthVal;
+          if (statusVal !== '') updates.status = statusVal;
+          if (visVal === 'show') updates.hidden = false;
+          else if (visVal === 'hide') updates.hidden = true;
+          api('batchUpdateReels', { ids: targets.map(r => r.id), updates }).catch(e => console.warn('Background sync:', e));
           api('syncData', { data: DATA }).catch(e => console.warn('Background sync:', e));
         }
       });
@@ -3704,7 +3744,7 @@
                     </div>
                     <div style="flex:1;min-width:0;">
                       <b style="display:block;font-size:12.5px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(item.title || 'Untitled Reel')}</b>
-                      <small style="font-size:11px;color:var(--mute);">${(item.dur && item.dur !== 'Detecting...') ? item.dur : '0:30'} · ${esc(item.branch || 'T. Nagar')} · ${esc(item.wave || 'Phase 1')}</small>
+                      <small style="font-size:11px;color:var(--mute);">${(item.dur && item.dur !== 'Detecting...') ? item.dur : '0:30'} · ${esc(item.branch || item.album || 'General')} · ${esc(item.wave || 'Phase 1')}</small>
                       <div style="font-size:10.5px;color:#2563EB;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:4px;">
                         <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#2563EB;"></span>
                         <span>Ready · Click "Publish" top-right to upload</span>
@@ -3742,8 +3782,8 @@
                     <input id="st-f-title" value="${esc(activeItem.title || '')}" style="font-size:13px;font-weight:600;padding:8px 12px;">
                   </div>
 
-                  <!-- Delivery Wave & Branch -->
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                  <!-- Delivery Wave, Branch & Album -->
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
                     <div class="form-group">
                       <label style="font-size:12px;font-weight:700;color:var(--navy);">Delivery Wave / Phase</label>
                       <select id="st-f-wave" style="padding:8px 12px;font-size:12.5px;font-weight:600;">
@@ -3754,8 +3794,18 @@
                     <div class="form-group">
                       <label style="font-size:12px;font-weight:700;color:var(--navy);">Store Branch</label>
                       <select id="st-f-branch" style="padding:8px 12px;font-size:12.5px;font-weight:600;">
-                        ${(activeClient.branches && activeClient.branches.length ? activeClient.branches : ['T. Nagar', 'Velachery', 'Chromepet', 'Thiruvallur']).map(b => `<option value="${b}" ${activeItem.branch === b ? 'selected' : ''}>${esc(b)}</option>`).join('')}
+                        ${(activeClient.branches && activeClient.branches.length ? activeClient.branches : ['Main']).map(b => `<option value="${b}" ${activeItem.branch === b ? 'selected' : ''}>${esc(b)}</option>`).join('')}
                       </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label style="font-size:12px;font-weight:700;color:var(--navy);">Album / Collection</label>
+                      <select id="st-f-album" style="padding:8px 12px;font-size:12.5px;font-weight:600;">
+                        <option value="General" ${(!activeItem.album || activeItem.album === 'General') ? 'selected' : ''}>General (Default)</option>
+                        ${(activeClient.albums || []).map(a => `<option value="${esc(a)}" ${activeItem.album === a ? 'selected' : ''}>${esc(a)}</option>`).join('')}
+                        <option value="__custom__">+ Add New Album...</option>
+                      </select>
+                      <input id="st-f-album-custom" type="text" placeholder="New album name..." style="display:none;margin-top:6px;padding:6px 10px;border-radius:6px;border:1px solid var(--line);font-size:12px;width:100%;box-sizing:border-box;">
                     </div>
                   </div>
 
@@ -3872,7 +3922,7 @@
             const formattedTitle = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
             const waves = getClientWaves();
             const defaultWave = 'wave_0';
-            const defaultBranch = activeClient.branches && activeClient.branches[0] ? activeClient.branches[0] : 'T. Nagar';
+            const defaultBranch = activeClient.branches && activeClient.branches[0] ? activeClient.branches[0] : '';
 
             const newItem = {
               id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -3882,6 +3932,7 @@
               dur: '0:30',
               coverUrl: '',
               branch: defaultBranch,
+              album: activeClient.albums && activeClient.albums[0] ? activeClient.albums[0] : 'General',
               wave: defaultWave,
               status: 'review',
               date: new Date().toISOString().slice(0, 10),
@@ -3924,7 +3975,8 @@
                 url: link,
                 dur: '',
                 coverUrl: driveThumb,
-                branch: activeClient.branches && activeClient.branches[0] ? activeClient.branches[0] : 'T. Nagar',
+                branch: activeClient.branches && activeClient.branches[0] ? activeClient.branches[0] : '',
+                album: activeClient.albums && activeClient.albums[0] ? activeClient.albums[0] : 'General',
                 wave: 'wave_0',
                 status: 'review',
                 date: new Date().toISOString().slice(0, 10)
@@ -3975,6 +4027,23 @@
           const fBranch = studioEl.querySelector('#st-f-branch');
           if (fBranch) fBranch.onchange = () => { activeItem.branch = fBranch.value; };
 
+          const fAlbum = studioEl.querySelector('#st-f-album');
+          const fAlbumCustom = studioEl.querySelector('#st-f-album-custom');
+          if (fAlbum && fAlbumCustom) {
+            fAlbum.onchange = () => {
+              if (fAlbum.value === '__custom__') {
+                fAlbumCustom.style.display = 'block';
+                fAlbumCustom.focus();
+              } else {
+                fAlbumCustom.style.display = 'none';
+                activeItem.album = fAlbum.value;
+              }
+            };
+            fAlbumCustom.oninput = () => {
+              activeItem.album = fAlbumCustom.value.trim() || 'General';
+            };
+          }
+
           const fStatus = studioEl.querySelector('#st-f-status');
           if (fStatus) fStatus.onchange = () => { activeItem.status = fStatus.value; };
 
@@ -3988,10 +4057,11 @@
               queue.forEach(it => {
                 it.branch = activeItem.branch;
                 it.wave = activeItem.wave;
+                it.album = activeItem.album || 'General';
                 it.status = activeItem.status;
                 it.date = activeItem.date;
               });
-              toast('Applied settings to all queued reels!', 'success');
+              toast('Applied settings (including album & branch) to all queued reels!', 'success');
               renderStudio();
             };
           }
@@ -4084,13 +4154,19 @@
             try {
               let finalReel = null;
 
+              if (item.album && item.album !== 'General') {
+                activeClient.albums = activeClient.albums || [];
+                if (!activeClient.albums.includes(item.album)) {
+                  activeClient.albums.push(item.album);
+                }
+              }
               if (item.fileObj) {
                 // Actual video file upload to Google Drive
                 finalReel = await uploadVideoFileToDrive(item.fileObj, {
                   clientName: activeClient.name,
                   clientId: activeClient.id,
-                  branch: item.branch || 'T. Nagar',
-                  album: 'General',
+                  branch: item.branch || (activeClient.branches && activeClient.branches[0]) || '',
+                  album: item.album || 'General',
                   title: item.title || item.fileName.replace(/\.[^/.]+$/, ''),
                   date: item.date || new Date().toISOString().slice(0, 10),
                   wave: item.wave || 'wave_0',
@@ -4113,8 +4189,8 @@
                   c: activeClient.id,
                   y: new Date(item.date || Date.now()).getFullYear(),
                   m: new Date(item.date || Date.now()).getMonth(),
-                  b: item.branch || 'T. Nagar',
-                  album: 'General',
+                  b: item.branch || (activeClient.branches && activeClient.branches[0]) || '',
+                  album: item.album || 'General',
                   phase: item.wave || 'wave_0',
                   title: item.title || 'Untitled Reel',
                   date: item.date || new Date().toISOString().slice(0, 10),
