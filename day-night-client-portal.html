@@ -5789,6 +5789,22 @@
       }
     } catch(e) {}
 
+    // Immediate fallback if local cache is empty
+    if (!DATA.clients || DATA.clients.length === 0) {
+      try {
+        fetch('/portal-data.json')
+          .then(r => r.json())
+          .then(snap => {
+            if (snap && Array.isArray(snap.clients) && (!DATA.clients || DATA.clients.length === 0)) {
+              DATA.clients = snap.clients;
+              if (Array.isArray(snap.reels) && (!DATA.reels || DATA.reels.length === 0)) DATA.reels = snap.reels;
+              if (snap.settings && !DATA.settings) DATA.settings = snap.settings;
+            }
+          })
+          .catch(() => {});
+      } catch(_) {}
+    }
+
     const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
 
     const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -5944,7 +5960,8 @@
     const contentsFor = (y, m, b, alb, type) => (DATA.reels || []).filter(r => {
       if (!view.client || !isClientMatch(r.c, view.client)) return false;
       if (!CONFIG.isAdmin && r.hidden === true) return false;
-      if (!CONFIG.isAdmin && (!r.type || r.type === 'reel' || r.type === 'video') && r.status !== 'approved') return false;
+      const isAlbumMatch = (alb != null && alb !== 'all' && r.album === alb) || (r.album && r.album !== 'General');
+      if (!CONFIG.isAdmin && (!r.type || r.type === 'reel' || r.type === 'video') && r.status !== 'approved' && !isAlbumMatch) return false;
       if (y != null && r.y !== y) return false;
       if (m != null && r.m !== m) return false;
       if (b != null && b !== 'all') {
@@ -6463,83 +6480,93 @@
       }
     });
 
+    let liveDataPromise = null;
+    let isFetchingLiveData = false;
+
     async function fetchLiveData(force = false) {
+      if (liveDataPromise && !force) return liveDataPromise;
       if (!CONFIG.gasUrl || CONFIG.gasUrl === OLD_GAS_URL || CONFIG.gasUrl.includes('AKfycbxo')) {
         CONFIG.gasUrl = DEFAULT_GAS_URL;
         localStorage.setItem('dn_gas_url', DEFAULT_GAS_URL);
       }
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000);
-        const cb = '&_cb=' + Date.now();
-        const res = await fetch(CONFIG.gasUrl + '?action=getData' + cb, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        const json = await res.json();
-        if (json.success && json.data) {
-          connectionState = { status: 'online', message: 'Google Drive connected' };
+      isFetchingLiveData = true;
+      liveDataPromise = (async () => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 20000);
+          const cb = '&_cb=' + Date.now();
+          const res = await fetch(CONFIG.gasUrl + '?action=getData' + cb, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          const json = await res.json();
+          if (json.success && json.data) {
+            connectionState = { status: 'online', message: 'Google Drive connected' };
 
-          let deletedReelIds = Array.isArray(json.data.deletedReelIds) ? json.data.deletedReelIds : [];
-          let deletedClientIds = Array.isArray(json.data.deletedClientIds) ? json.data.deletedClientIds : [];
+            let deletedReelIds = Array.isArray(json.data.deletedReelIds) ? json.data.deletedReelIds : [];
+            let deletedClientIds = Array.isArray(json.data.deletedClientIds) ? json.data.deletedClientIds : [];
 
-          try {
-            const locReels = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
-            if (Array.isArray(locReels)) locReels.forEach(id => { if (!deletedReelIds.includes(id)) deletedReelIds.push(id); });
-            const locClients = JSON.parse(localStorage.getItem('dn_deleted_client_ids') || '[]');
-            if (Array.isArray(locClients)) locClients.forEach(id => { if (!deletedClientIds.includes(id)) deletedClientIds.push(id); });
-          } catch(e) {}
+            try {
+              const locReels = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
+              if (Array.isArray(locReels)) locReels.forEach(id => { if (!deletedReelIds.includes(id)) deletedReelIds.push(id); });
+              const locClients = JSON.parse(localStorage.getItem('dn_deleted_client_ids') || '[]');
+              if (Array.isArray(locClients)) locClients.forEach(id => { if (!deletedClientIds.includes(id)) deletedClientIds.push(id); });
+            } catch(e) {}
 
-          DATA.deletedReelIds = deletedReelIds;
-          DATA.deletedClientIds = deletedClientIds;
+            DATA.deletedReelIds = deletedReelIds;
+            DATA.deletedClientIds = deletedClientIds;
 
-          DATA.clients = (json.data.clients || []).filter(c => !deletedClientIds.includes(c.id));
-          DATA.reels = (json.data.reels || []).filter(r => !deletedReelIds.includes(r.id));
-          if (json.data.settings) {
-            DATA.settings = Object.assign({}, DATA.settings, json.data.settings);
-          }
+            DATA.clients = (json.data.clients || []).filter(c => !deletedClientIds.includes(c.id));
+            DATA.reels = (json.data.reels || []).filter(r => !deletedReelIds.includes(r.id));
+            if (json.data.settings) {
+              DATA.settings = Object.assign({}, DATA.settings, json.data.settings);
+            }
 
-          DATA._updatedAt = Date.now();
-          try {
-            localStorage.setItem('dn_cloud_cache', JSON.stringify({
-              clients: DATA.clients,
-              reels: DATA.reels,
-              settings: DATA.settings,
-              deletedReelIds: DATA.deletedReelIds,
-              deletedClientIds: DATA.deletedClientIds
-            }));
-          } catch(e) {}
+            DATA._updatedAt = Date.now();
+            try {
+              localStorage.setItem('dn_cloud_cache', JSON.stringify({
+                clients: DATA.clients,
+                reels: DATA.reels,
+                settings: DATA.settings,
+                deletedReelIds: DATA.deletedReelIds,
+                deletedClientIds: DATA.deletedClientIds
+              }));
+            } catch(e) {}
 
-          try {
-            if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
-          } catch(e) {}
+            try {
+              if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
+            } catch(e) {}
 
-          const urlParams = new URLSearchParams(window.location.search);
-          const targetSlug = urlParams.get('client') || urlParams.get('c') || window.location.hash.replace(/^#[/]?/, '').toLowerCase();
-          if (targetSlug) {
-            const matchedClient = (DATA.clients || []).find(c => c.slug === targetSlug || c.id === targetSlug);
-            if (matchedClient) {
-              view.client = matchedClient.id;
-              const logo = (matchedClient.id === 'tcs' ? '/Logo/tcs-logo.png' : (matchedClient.logo || '/Logo/logo.png'));
-              setFavicon(logo);
-              document.title = matchedClient.name + ' | DAY NIGHT';
-              if (isClientAuthenticated(matchedClient.id)) {
-                view.screen = 'landing';
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetSlug = urlParams.get('client') || urlParams.get('c') || window.location.hash.replace(/^#[/]?/, '').toLowerCase();
+            if (targetSlug) {
+              const matchedClient = (DATA.clients || []).find(c => c.slug === targetSlug || c.id === targetSlug);
+              if (matchedClient) {
+                view.client = matchedClient.id;
+                const logo = (matchedClient.id === 'tcs' ? '/Logo/tcs-logo.png' : (matchedClient.logo || '/Logo/logo.png'));
+                setFavicon(logo);
+                document.title = matchedClient.name + ' | DAY NIGHT';
+                if (isClientAuthenticated(matchedClient.id)) {
+                  view.screen = 'landing';
+                }
+              }
+            }
+
+            if (view.screen !== 'splash' && view.screen !== 'dn-intro') {
+              render();
+            } else {
+              const startBtn = document.getElementById('dn-start-btn');
+              if (startBtn) {
+                const c = client();
+                startBtn.innerHTML = c ? 'Access ' + esc(c.name) + ' ' + ic.arrow : 'Start ' + ic.arrow;
               }
             }
           }
-
-          if (view.screen !== 'splash' && view.screen !== 'dn-intro') {
-            render();
-          } else {
-            const startBtn = document.getElementById('dn-start-btn');
-            if (startBtn) {
-              const c = client();
-              startBtn.innerHTML = c ? 'Access ' + esc(c.name) + ' ' + ic.arrow : 'Start ' + ic.arrow;
-            }
-          }
+        } catch (e) {
+          console.warn('Live fetch notice:', e);
+        } finally {
+          isFetchingLiveData = false;
         }
-      } catch (e) {
-        console.warn('Live fetch notice:', e);
-      }
+      })();
+      return liveDataPromise;
     }
 
     async function checkConnection() {
@@ -8606,11 +8633,28 @@
       const ins = [...pinsBox.querySelectorAll('input')];
       const msg = app.querySelector('#c-pin-msg');
 
-      const check = () => {
+      const check = async () => {
         const code = ins.map(i => i.value).join('');
         if (code.length < 4) return;
 
-        if (c.status === 'blocked') {
+        let activeClient = (DATA.clients || []).find(x => x.id === c.id) || c;
+
+        if (code !== activeClient.code && (isFetchingLiveData || !DATA.clients || DATA.clients.length === 0)) {
+          if (msg) {
+            msg.className = 'code-msg';
+            msg.innerHTML = '<span class="spin-dot" style="display:inline-block;width:10px;height:10px;border:2px solid #2F7DF6;border-top-color:transparent;border-radius:50%;animation:v-spin 0.6s linear infinite;vertical-align:middle;margin-right:6px;"></span> Verifying access PIN...';
+          }
+          try {
+            if (liveDataPromise) {
+              await liveDataPromise;
+            } else {
+              await fetchLiveData(true);
+            }
+          } catch (_) {}
+          activeClient = (DATA.clients || []).find(x => x.id === c.id) || activeClient;
+        }
+
+        if (activeClient.status === 'blocked') {
           pinsBox.classList.remove('bad');
           void pinsBox.offsetWidth;
           pinsBox.classList.add('bad');
@@ -8625,7 +8669,7 @@
           return;
         }
 
-        if (c.status === 'paused') {
+        if (activeClient.status === 'paused') {
           pinsBox.classList.remove('bad');
           void pinsBox.offsetWidth;
           pinsBox.classList.add('bad');
@@ -8640,16 +8684,16 @@
           return;
         }
 
-        if (code === c.code) {
+        if (code === activeClient.code) {
           if (msg) {
             msg.className = 'code-msg';
             msg.style.color = 'var(--green)';
-            msg.textContent = 'Welcome ' + c.name;
+            msg.textContent = 'Welcome ' + activeClient.name;
           }
           pinsBox.classList.remove('bad');
-          setClientAuthenticated(c.id);
+          setClientAuthenticated(activeClient.id);
           setTimeout(() => {
-            go({ screen: 'landing', client: c.id });
+            go({ screen: 'landing', client: activeClient.id });
           }, 250);
         } else {
           pinsBox.classList.remove('bad');
@@ -8657,7 +8701,7 @@
           pinsBox.classList.add('bad');
           if (msg) {
             msg.className = 'code-msg bad';
-            msg.textContent = 'Incorrect PIN for ' + c.name + '. Please try again.';
+            msg.textContent = 'Incorrect PIN for ' + activeClient.name + '. Please try again.';
           }
           setTimeout(() => {
             ins.forEach(i => i.value = '');
@@ -8977,11 +9021,28 @@
       const ins = [...pinsBox.querySelectorAll('input')];
       const msg = document.getElementById('h-pin-msg');
 
-      const check = () => {
+      const check = async () => {
         const code = ins.map(i => i.value).join('');
         if (code.length < 4) return;
 
-        const c = (DATA.clients || []).find(x => x.code === code);
+        let c = (DATA.clients || []).find(x => x.code === code);
+
+        // If client not matched yet and data is still syncing in background or empty
+        if (!c && (isFetchingLiveData || !DATA.clients || DATA.clients.length === 0)) {
+          if (msg) {
+            msg.className = 'home-pin-msg';
+            msg.innerHTML = '<span class="spin-dot" style="display:inline-block;width:10px;height:10px;border:2px solid #2F7DF6;border-top-color:transparent;border-radius:50%;animation:v-spin 0.6s linear infinite;vertical-align:middle;margin-right:6px;"></span> Verifying access code...';
+          }
+          try {
+            if (liveDataPromise) {
+              await liveDataPromise;
+            } else {
+              await fetchLiveData(true);
+            }
+          } catch (_) {}
+          c = (DATA.clients || []).find(x => x.code === code);
+        }
+
         if (c) {
           if (c.status === 'blocked') {
             pinsBox.classList.remove('bad');
@@ -9085,11 +9146,28 @@
         const pins = sc.querySelector('#pins');
         const msg = sc.querySelector('#code-msg');
 
-        const check = () => {
+        const check = async () => {
           const code = ins.map(i => i.value).join('');
           if (code.length < 4) return;
 
-          const matched = targetClient ? (code === targetClient.code ? targetClient : null) : (DATA.clients || []).find(x => x.code === code);
+          let matched = targetClient ? (code === targetClient.code ? targetClient : null) : (DATA.clients || []).find(x => x.code === code);
+
+          if (!matched && (isFetchingLiveData || !DATA.clients || DATA.clients.length === 0)) {
+            if (msg) {
+              msg.className = 'code-msg';
+              msg.innerHTML = '<span class="spin-dot" style="display:inline-block;width:10px;height:10px;border:2px solid #2F7DF6;border-top-color:transparent;border-radius:50%;animation:v-spin 0.6s linear infinite;vertical-align:middle;margin-right:6px;"></span> Verifying access code...';
+            }
+            try {
+              if (liveDataPromise) {
+                await liveDataPromise;
+              } else {
+                await fetchLiveData(true);
+              }
+            } catch (_) {}
+            const refreshedTarget = targetClient ? ((DATA.clients || []).find(x => x.id === targetClient.id) || targetClient) : null;
+            matched = refreshedTarget ? (code === refreshedTarget.code ? refreshedTarget : null) : (DATA.clients || []).find(x => x.code === code);
+          }
+
           if (matched) {
             if (matched.status === 'blocked') {
               pins.classList.remove('bad');
@@ -10438,16 +10516,16 @@
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                     Client Approval
                   </div>
-                  <div id="v-status-indicator" class="v-status-badge ${currentReel.status === 'approved' ? 'approved' : 'review'}">
+                  <div id="v-status-indicator" class="v-status-badge ${(currentReel.status === 'approved' || (currentReel.album && currentReel.album !== 'General')) ? 'approved' : 'review'}">
                     <span class="v-status-dot"></span>
-                    <span id="v-status-text">${currentReel.status === 'approved' ? 'Approved by Client' : 'In Review / Pending'}</span>
+                    <span id="v-status-text">${(currentReel.status === 'approved' || (currentReel.album && currentReel.album !== 'General')) ? 'Approved by Client' : 'In Review / Pending'}</span>
                   </div>
                   <div class="v-approval-actions">
-                    <button type="button" class="v-act-btn approve-btn ${currentReel.status === 'approved' ? 'active' : ''}" id="v-btn-approve">
+                    <button type="button" class="v-act-btn approve-btn ${(currentReel.status === 'approved' || (currentReel.album && currentReel.album !== 'General')) ? 'active' : ''}" id="v-btn-approve">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="20 6 9 17 4 12"/></svg>
                       Approve
                     </button>
-                    <button type="button" class="v-act-btn reject-btn ${currentReel.status !== 'approved' ? 'active' : ''}" id="v-btn-reject">
+                    <button type="button" class="v-act-btn reject-btn ${!(currentReel.status === 'approved' || (currentReel.album && currentReel.album !== 'General')) ? 'active' : ''}" id="v-btn-reject">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       Needs Edit
                     </button>
@@ -12133,7 +12211,7 @@
         if (r) {
           const c = client() || { id: 'tcs' };
           const activeList = (view.screen === 'reels')
-            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && x.status === 'approved' )
+            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (x.status === 'approved' || (view.album && x.album === view.album) || (x.album && x.album !== 'General')))
             : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) );
           openVideoModal(r, activeList);
         }
@@ -12246,7 +12324,7 @@
         if (r) {
           const c = client() || { id: 'tcs' };
           const activeList = (view.screen === 'reels')
-            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && x.status === 'approved' )
+            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (x.status === 'approved' || (view.album && x.album === view.album) || (x.album && x.album !== 'General')))
             : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) );
           const pref = (function() { try { return localStorage.getItem('dn_player_mode'); } catch(_) { return null; } })();
           if (pref === 'legacy') openClassicPlayer(r, activeList);

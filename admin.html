@@ -1718,7 +1718,7 @@
     function saveAndBroadcast(msg = '') {
       DATA._updatedAt = Date.now();
       try {
-        
+        localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA));
       } catch(e) {
         try {
           const slim = JSON.parse(JSON.stringify(DATA));
@@ -2607,7 +2607,12 @@
         const monthVal = monthEl ? monthEl.value : '';
 
         const statusEl = document.getElementById('be-box-status');
-        const statusVal = statusEl ? statusEl.value : '';
+        let statusVal = statusEl ? statusEl.value : '';
+
+        // If an album is explicitly selected for items and status was left untouched, auto-approve them for that album
+        if (albumVal && albumVal !== 'General' && statusVal === '') {
+          statusVal = 'approved';
+        }
 
         const visEl = document.getElementById('be-box-visibility');
         const visVal = visEl ? visEl.value : '';
@@ -2660,41 +2665,68 @@
       document.getElementById('btn-batch-approve')?.addEventListener('click', () => {
         const targets = getSelectedItems();
         if (!targets.length) { toast('Please select items first', 'amber'); return; }
-        confirmModal('Batch Approve Items?', `Approve ${targets.length} selected items? They will be immediately published to client portals.`, () => {
+        confirmModal('Batch Approve Items?', `Approve ${targets.length} selected items? They will be immediately published to client portals.`, async () => {
           targets.forEach(r => r.status = 'approved');
           saveAndBroadcast(`Batch approved ${targets.length} items`);
           if (typeof renderCallback === 'function') renderCallback();
+          if (GAS_URL) {
+            try {
+              await api('batchUpdateReels', { ids: targets.map(r => r.id), updates: { status: 'approved' } });
+              await api('syncData', { data: DATA });
+              toast(`Synced ${targets.length} approved items to Google Drive!`, 'success');
+            } catch (e) {
+              console.warn('Batch approve sync error:', e);
+            }
+          }
         }, 'Approve All', false);
       });
 
       // Bulk Review
-      document.getElementById('btn-batch-review')?.addEventListener('click', () => {
+      document.getElementById('btn-batch-review')?.addEventListener('click', async () => {
         const targets = getSelectedItems();
         if (!targets.length) { toast('Please select items first', 'amber'); return; }
         targets.forEach(r => r.status = 'review');
         saveAndBroadcast(`Marked ${targets.length} items as In Review`);
         if (typeof renderCallback === 'function') renderCallback();
+        if (GAS_URL) {
+          try {
+            await api('batchUpdateReels', { ids: targets.map(r => r.id), updates: { status: 'review' } });
+            await api('syncData', { data: DATA });
+          } catch(e) {}
+        }
       });
 
       // Bulk Deny
       document.getElementById('btn-batch-deny')?.addEventListener('click', () => {
         const targets = getSelectedItems();
         if (!targets.length) { toast('Please select items first', 'amber'); return; }
-        confirmModal('Batch Deny Items?', `Mark ${targets.length} selected items as Denied / Revisions Requested?`, () => {
+        confirmModal('Batch Deny Items?', `Mark ${targets.length} selected items as Denied / Revisions Requested?`, async () => {
           targets.forEach(r => r.status = 'denied');
           saveAndBroadcast(`Marked ${targets.length} items as Denied`);
           if (typeof renderCallback === 'function') renderCallback();
+          if (GAS_URL) {
+            try {
+              await api('batchUpdateReels', { ids: targets.map(r => r.id), updates: { status: 'denied' } });
+              await api('syncData', { data: DATA });
+            } catch(e) {}
+          }
         }, 'Deny All', true);
       });
 
       // Bulk Toggle Hide
-      document.getElementById('btn-batch-hide')?.addEventListener('click', () => {
+      document.getElementById('btn-batch-hide')?.addEventListener('click', async () => {
         const targets = getSelectedItems();
         if (!targets.length) { toast('Please select items first', 'amber'); return; }
         const anyVisible = targets.some(r => !r.hidden);
         targets.forEach(r => r.hidden = anyVisible);
         saveAndBroadcast(`Updated visibility for ${targets.length} items`);
         if (typeof renderCallback === 'function') renderCallback();
+        if (GAS_URL) {
+          try {
+            await api('batchUpdateReels', { ids: targets.map(r => r.id), updates: { hidden: anyVisible } });
+            await api('syncData', { data: DATA });
+          } catch(e) {}
+        }
       });
 
       // Bulk Delete
@@ -5368,11 +5400,14 @@ function openEditModal(r) {
         </div>`, sc => {
 
         sc.querySelector('#btn-edit-new-br').onclick = () => {
-          promptModal('Add Branch Store', 'Branch Location:', '', val => {
+          promptModal('Add Branch Store', 'Branch Location:', '', async val => {
             if (client) {
               client.branches = client.branches || [];
               if (!client.branches.includes(val)) client.branches.push(val);
               saveAndBroadcast(`Branch "${val}" added`);
+              if (GAS_URL) {
+                try { await api('saveClient', { client }); } catch(e) {}
+              }
             }
             const sel = sc.querySelector('#e-branch');
             const opt = document.createElement('option');
@@ -5384,11 +5419,14 @@ function openEditModal(r) {
         };
 
         sc.querySelector('#btn-edit-new-alb').onclick = () => {
-          promptModal('Add Album / Campaign', 'Album Name:', '', val => {
+          promptModal('Add Album / Campaign', 'Album Name:', '', async val => {
             if (client) {
               client.albums = client.albums || [];
               if (!client.albums.includes(val)) client.albums.push(val);
               saveAndBroadcast(`Album "${val}" added`);
+              if (GAS_URL) {
+                try { await api('saveClient', { client }); } catch(e) {}
+              }
             }
             const sel = sc.querySelector('#e-album');
             const opt = document.createElement('option');
