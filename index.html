@@ -6791,20 +6791,20 @@
 
     function setReelApprovalStatus(reelId, newStatus) {
       const savedScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-      const r = (DATA.reels || []).find(x => x.id === reelId);
+      const r = (DATA.reels || []).find(x => String(x.id).trim() === String(reelId).trim());
       if (!r) return;
-      const targetStatus = r.status === newStatus ? 'review' : newStatus;
-      r.status = targetStatus;
+      r.status = newStatus;
       DATA._updatedAt = Date.now();
       try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(e) {}
       try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
-      if (targetStatus === 'review') {
-        toast('Content status reset to Under Review', 'info');
+      if (newStatus === 'review') {
+        toast('Content status set to Under Review', 'info');
       } else {
-        toast(targetStatus === 'approved' ? 'Content marked as Approved' : 'Content marked as Denied / Edits Requested', targetStatus === 'approved' ? 'success' : 'amber');
+        toast(newStatus === 'approved' ? 'Content marked as Approved' : 'Content marked as Denied / Edits Requested', newStatus === 'approved' ? 'success' : 'amber');
       }
       if (CONFIG.gasUrl) {
-        gasApi('updateReelStatus', { id: r.id, reelId: r.id, status: targetStatus }).catch(() => {});
+        gasApi('updateReelStatus', { id: r.id, reelId: r.id, status: newStatus })
+          .catch(() => gasApi('syncData', { data: DATA }).catch(() => {}));
       }
       render();
       window.scrollTo({ top: savedScrollY, behavior: 'instant' });
@@ -6815,7 +6815,7 @@
 
     function submitReelComment(reelId, text, type = 'suggestion', parentId = null) {
       if (!text || !text.trim()) return;
-      const r = (DATA.reels || []).find(x => x.id === reelId);
+      const r = (DATA.reels || []).find(x => String(x.id).trim() === String(reelId).trim());
       if (!r) return;
       const c = client();
       r.comments = r.comments || [];
@@ -6835,7 +6835,8 @@
       try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
       toast(parentId ? 'Reply posted in real time' : 'Suggestion sent to Day Night Media admin in real time', 'success');
       if (CONFIG.gasUrl) {
-        gasApi('modifyReel', { reel: r }).catch(() => {});
+        gasApi('modifyReel', { reel: r })
+          .catch(() => gasApi('syncData', { data: DATA }).catch(() => {}));
       }
       render();
     }

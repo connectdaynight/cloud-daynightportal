@@ -2056,26 +2056,21 @@
         time: Date.now(),
         dateStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
-      DATA._updatedAt = Date.now();
-      
-      try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
-      toast('Reply sent to client in real time!', 'success');
+      saveAndBroadcast('Reply sent to client in real time!');
       if (GAS_URL) {
-        api('modifyReel', { reel: r }).catch(() => {});
+        api('modifyReel', { reel: r }).catch(() => api('syncData', { data: DATA }).catch(() => {}));
       }
       renderReels();
     }
 
     function setAdminReelStatus(reelId, newStatus) {
-      const r = (DATA.reels || []).find(x => x.id === reelId);
+      const r = (DATA.reels || []).find(x => String(x.id).trim() === String(reelId).trim());
       if (!r) return;
       r.status = newStatus;
-      DATA._updatedAt = Date.now();
-      
-      try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
-      toast(newStatus === 'approved' ? 'Marked as Approved' : 'Marked as Denied', newStatus === 'approved' ? 'success' : 'amber');
+      saveAndBroadcast(newStatus === 'approved' ? 'Marked as Approved' : 'Marked as Denied');
       if (GAS_URL) {
-        api('updateReelStatus', { id: r.id, reelId: r.id, status: newStatus }).catch(() => {});
+        api('updateReelStatus', { id: r.id, reelId: r.id, status: newStatus })
+          .catch(() => api('syncData', { data: DATA }).catch(() => {}));
       }
       renderReels();
     }
@@ -6115,6 +6110,7 @@ function openEditModal(r) {
                 await api('updateReelStatus', { id: r.id, reelId: r.id, status: 'approved' });
               } catch (err) {
                 console.warn('Status sync notice:', err);
+                api('syncData', { data: DATA }).catch(() => {});
               }
             }
           });
@@ -6122,14 +6118,15 @@ function openEditModal(r) {
 
         if (btnReject) {
           btnReject.addEventListener('click', async () => {
-            updateStatusUi('review');
-            saveAndBroadcast();
+            updateStatusUi('denied');
+            saveAndBroadcast('Reel marked as Denied / Edits Requested');
             toast('Reel marked for review / edits', 'amber');
             if (GAS_URL) {
               try {
-                await api('updateReelStatus', { id: r.id, reelId: r.id, status: 'review' });
+                await api('updateReelStatus', { id: r.id, reelId: r.id, status: 'denied' });
               } catch (err) {
                 console.warn('Status sync notice:', err);
+                api('syncData', { data: DATA }).catch(() => {});
               }
             }
           });

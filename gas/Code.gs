@@ -212,7 +212,8 @@ function doPost(e) {
         return jsonResponse({ success: false, error: "Missing reel ID" }, 400);
       }
       const data = loadData();
-      const idx = (data.reels || []).findIndex(r => r.id === reelUpdate.id);
+      const targetId = String(reelUpdate.id).trim();
+      const idx = (data.reels || []).findIndex(r => String(r.id).trim() === targetId);
       if (idx === -1) {
         return jsonResponse({ success: false, error: "Reel not found" }, 404);
       }
@@ -234,9 +235,9 @@ function doPost(e) {
 
     // 5. Delete Reel (and Drive file if fileId exists)
     if (action === "deleteReel") {
-      const reelId = payload.id;
+      const reelId = String(payload.id || payload.reelId || "").trim();
       const data = loadData();
-      const reel = (data.reels || []).find(r => r.id === reelId);
+      const reel = (data.reels || []).find(r => String(r.id).trim() === reelId);
       if (reel && reel.fileId) {
         try {
           const file = DriveApp.getFileById(reel.fileId);
@@ -245,18 +246,18 @@ function doPost(e) {
       }
       if (!data.deletedReelIds) data.deletedReelIds = [];
       if (!data.deletedReelIds.includes(reelId)) data.deletedReelIds.push(reelId);
-      data.reels = (data.reels || []).filter(r => r.id !== reelId);
+      data.reels = (data.reels || []).filter(r => String(r.id).trim() !== reelId);
       saveData(data);
       return jsonResponse({ success: true, message: "Reel removed", deletedReelIds: data.deletedReelIds });
     }
 
     // 5B. Batch Delete Reels
     if (action === "batchDeleteReels") {
-      const ids = Array.isArray(payload.ids) ? payload.ids : [];
+      const ids = Array.isArray(payload.ids) ? payload.ids.map(x => String(x).trim()) : [];
       const data = loadData();
       if (!data.deletedReelIds) data.deletedReelIds = [];
       ids.forEach(id => {
-        const reel = (data.reels || []).find(r => r.id === id);
+        const reel = (data.reels || []).find(r => String(r.id).trim() === id);
         if (reel && reel.fileId) {
           try {
             const file = DriveApp.getFileById(reel.fileId);
@@ -267,16 +268,16 @@ function doPost(e) {
           data.deletedReelIds.push(id);
         }
       });
-      data.reels = (data.reels || []).filter(r => !ids.includes(r.id));
+      data.reels = (data.reels || []).filter(r => !ids.includes(String(r.id).trim()));
       saveData(data);
       return jsonResponse({ success: true, count: ids.length, deletedReelIds: data.deletedReelIds, message: "Batch reels deleted" });
     }
 
     // 6. Toggle Hide / Unhide Reel
     if (action === "toggleHideReel") {
-      const reelId = payload.id;
+      const reelId = String(payload.id || payload.reelId || "").trim();
       const data = loadData();
-      const reel = (data.reels || []).find(r => r.id === reelId);
+      const reel = (data.reels || []).find(r => String(r.id).trim() === reelId);
       if (reel) {
         reel.hidden = !reel.hidden;
         saveData(data);
@@ -287,12 +288,22 @@ function doPost(e) {
 
     // 6B. Update Reel Approval Status
     if (action === "updateReelStatus") {
-      const reelId = payload.id || payload.reelId;
+      const rawId = payload.id || payload.reelId || "";
+      const reelId = String(rawId).trim();
       const status = payload.status || "approved";
       const data = loadData();
-      const reel = (data.reels || []).find(r => r.id === reelId);
+      let reel = (data.reels || []).find(r => String(r.id).trim() === reelId);
+      if (!reel && (payload.fileId || payload.url)) {
+        reel = (data.reels || []).find(r => (payload.fileId && r.fileId === payload.fileId) || (payload.url && r.url === payload.url));
+      }
       if (reel) {
         reel.status = status;
+        if (payload.comments && Array.isArray(payload.comments)) {
+          reel.comments = payload.comments;
+        } else if (payload.comment) {
+          if (!reel.comments) reel.comments = [];
+          reel.comments.push(payload.comment);
+        }
         saveData(data);
         return jsonResponse({ success: true, status: reel.status, message: "Status updated to " + status });
       }
@@ -301,13 +312,14 @@ function doPost(e) {
 
     // 6C. Add Reel Comment
     if (action === "addComment") {
-      const reelId = payload.id || payload.reelId;
+      const rawId = payload.id || payload.reelId || "";
+      const reelId = String(rawId).trim();
       const comment = payload.comment;
       if (!reelId || !comment) {
         return jsonResponse({ success: false, error: "Missing reelId or comment" }, 400);
       }
       const data = loadData();
-      const reel = (data.reels || []).find(r => r.id === reelId);
+      const reel = (data.reels || []).find(r => String(r.id).trim() === reelId);
       if (reel) {
         if (!reel.comments) reel.comments = [];
         reel.comments.push(comment);
@@ -319,12 +331,12 @@ function doPost(e) {
 
     // 6D. Batch Update Reels
     if (action === "batchUpdateReels") {
-      const ids = Array.isArray(payload.ids) ? payload.ids : [];
+      const ids = Array.isArray(payload.ids) ? payload.ids.map(x => String(x).trim()) : [];
       const updates = payload.updates || {};
       const data = loadData();
       let updatedCount = 0;
       (data.reels || []).forEach(r => {
-        if (ids.includes(r.id)) {
+        if (ids.includes(String(r.id).trim())) {
           if (updates.b !== undefined && updates.b !== '') r.b = updates.b;
           if (updates.wave !== undefined && updates.wave !== '') r.wave = updates.wave;
           if (updates.album !== undefined && updates.album !== '') r.album = updates.album;
