@@ -889,7 +889,7 @@
       justify-content: flex-start !important;
       padding: 0 !important;
       margin: 0 !important;
-      background: #FFFFFF !important;
+      background: #000000 !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
       border: none !important;
@@ -922,7 +922,7 @@
       margin: 0 auto !important;
       padding: 0 !important;
       box-shadow: none !important;
-      background: #FFFFFF !important;
+      background: #000000 !important;
       color: var(--navy) !important;
       border: none !important;
       display: flex !important;
@@ -4878,10 +4878,53 @@
       transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.3s ease;
     }
     .ig-video-player {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
       background: #000000;
+      display: block;
+    }
+
+    
+    /* True Instagram Reels UI - Full Bleed Edge-to-Edge Without Any Spaces Left */
+    @media (max-width: 599px) {
+      .scrim.video-modal-scrim,
+      .scrim.video-modal-scrim .sheet,
+      .center.video-modal-scrim .sheet,
+      .ig-player-wrapper,
+      .ig-reels-container {
+        width: 100vw !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        max-width: 100vw !important;
+        max-height: 100dvh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        inset: 0 !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        box-shadow: none !important;
+        background: #000000 !important;
+      }
+      .ig-video-wrap {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .ig-video-player {
+        width: 100vw !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        object-fit: cover !important;
+      }
     }
 
     /* Play/Pause Central Flash */
@@ -9450,6 +9493,15 @@
                   <button type="button" class="ig-spd-btn" data-speed="1.5" style="flex:1;padding:6px 0;border-radius:8px;border:1px solid var(--line);background:var(--soft);font-size:11px;cursor:pointer;">1.5x</button>
                   <button type="button" class="ig-spd-btn" data-speed="2.0" style="flex:1;padding:6px 0;border-radius:8px;border:1px solid var(--line);background:var(--soft);font-size:11px;cursor:pointer;">2.0x</button>
                 </div>
+              </div>
+
+                            <!-- Edge-to-Edge Fill Toggle (Real Instagram UI) -->
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--soft);">
+                <div>
+                  <b style="font-size:12.5px;color:var(--navy);display:block;">Full Bleed (Instagram Style)</b>
+                  <small style="font-size:11px;color:var(--mute);">Fill full screen with no black edges</small>
+                </div>
+                <input type="checkbox" id="ig-fit-toggle" checked style="accent-color:#0D3B2E;transform:scale(1.2);cursor:pointer;">
               </div>
 
               <!-- Loop Toggle -->
