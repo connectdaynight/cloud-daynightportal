@@ -502,7 +502,10 @@
       <div class="dnm-profile-grid" id="dnm-profile-grid-items"></div>
     `;
 
+    let currentProfileTab = 'posts';
+
     function renderGridItems(tab) {
+      currentProfileTab = tab || 'posts';
       const tabs = wrap.querySelectorAll('.dnm-profile-tab');
       tabs.forEach(t => {
         if (t.dataset.pTab === tab) t.classList.add('active');
@@ -512,8 +515,11 @@
       const grid = wrap.querySelector('#dnm-profile-grid-items');
       if (!grid) return;
 
-      const currentAll = window.DNM_DATA.getAllApprovedReels();
-      const currentOwn = currentAll.filter(p => p.authorId === user.uid || (p.authorUsername && p.authorUsername === user.username));
+      const currentAll = window.DNM_DATA.getAllApprovedReels(true);
+      const currentOwn = currentAll.filter(p => p.authorId === user.uid || (p.authorUsername && p.authorUsername === user.username) || (user.displayName && p.authorName === user.displayName));
+      const countEl = wrap.querySelector('#dnm-user-posts-count');
+      if (countEl) countEl.textContent = currentOwn.length;
+
       const items = tab === 'saved' ? window.DNM_DATA.getSavedPosts() : currentOwn;
 
       if (!items.length) {
@@ -525,27 +531,58 @@
         return;
       }
 
-      grid.innerHTML = items.map(p => `
-        <div class="dnm-explore-item" data-post-id="${p.id}" style="cursor:pointer;position:relative;aspect-ratio:1;overflow:hidden;background:var(--ig-surface);">
-          <img class="dnm-explore-thumb" src="${p.coverUrl || p.mediaUrl || ''}" alt="" style="width:100%;height:100%;object-fit:cover;">
-          ${p.type === 'reel' || !p.type ? `
-            <div style="position:absolute;top:6px;right:6px;color:#FFF;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            </div>
-          ` : ''}
-        </div>
-      `).join('');
+      grid.innerHTML = items.map(p => {
+        const thumbSrc = window.DNM_DATA.getMediaUrl ? window.DNM_DATA.getMediaUrl(p) : (p.coverUrl || p.mediaUrl || '');
+        return `
+          <div class="dnm-explore-item" data-post-id="${p.id}" style="cursor:pointer;position:relative;aspect-ratio:1;overflow:hidden;background:var(--ig-surface);">
+            <img class="dnm-explore-thumb" src="${thumbSrc}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="if(this.src!=='${p.coverUrl}')this.src='${p.coverUrl}';">
+            ${p.hidden ? `
+              <div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.75);color:#FFF;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:3px;backdrop-filter:blur(4px);z-index:2;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                <span>Hidden</span>
+              </div>
+            ` : ''}
+            ${p.type === 'reel' || !p.type ? `
+              <div style="position:absolute;top:6px;right:6px;color:#FFF;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));z-index:2;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
 
       grid.querySelectorAll('.dnm-explore-item').forEach(card => {
         card.addEventListener('click', () => {
           const pid = card.dataset.postId;
           const targetItem = items.find(x => x.id === pid);
-          if (targetItem && window.DNM_PLAYER) {
-            window.DNM_PLAYER.openVideoPlaybackModal(targetItem, items);
+          if (!targetItem) return;
+
+          if (tab === 'posts') {
+            // User's own uploads: open full management options sheet (Play, Edit Caption, Hide, Delete)
+            if (window.DNM_MODALS && window.DNM_MODALS.openPostManagementModal) {
+              window.DNM_MODALS.openPostManagementModal(targetItem, () => {
+                renderGridItems('posts');
+              });
+            } else if (window.DNM_PLAYER) {
+              window.DNM_PLAYER.openVideoPlaybackModal(targetItem, items);
+            }
+          } else {
+            // Saved posts: open immersive full-screen playback
+            if (window.DNM_PLAYER) {
+              window.DNM_PLAYER.openVideoPlaybackModal(targetItem, items);
+            }
           }
         });
       });
     }
+
+    // React to real-time post changes
+    window.addEventListener('dnm-post-deleted', () => {
+      renderGridItems(currentProfileTab || 'posts');
+    });
+    window.addEventListener('dnm-post-updated', () => {
+      renderGridItems(currentProfileTab || 'posts');
+    });
 
     // Initial render of user posts
     renderGridItems('posts');

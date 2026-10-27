@@ -175,6 +175,11 @@ function doPost(e) {
         fileId: fileId,
         dur: dur,
         coverUrl: finalCoverUrl,
+        type: payload.type || "reel",
+        authorId: payload.authorId || "",
+        authorName: payload.authorName || "",
+        authorUsername: payload.authorUsername || "",
+        authorAvatar: payload.authorAvatar || "",
         hidden: false,
         status: payload.status || "approved", // 'draft' | 'review' | 'approved'
         views: 0,

@@ -62,11 +62,12 @@
     window.addEventListener('popstate', onPopState);
 
     function renderModalContent() {
-      const isClient = !!currentReel.c;
-      const clientObj = isClient ? window.DNM_DATA.getClient(currentReel.c) : null;
-      const authorName = isClient ? (clientObj ? clientObj.name : 'Brand') : (currentReel.authorName || 'Creator');
-      const authorHandle = isClient ? (clientObj ? clientObj.slug : 'brand') : (currentReel.authorUsername || 'creator');
-      const authorAvatar = isClient ? (clientObj ? clientObj.logo : './Logo/logo.png?v=2.8') : (currentReel.authorAvatar || './Logo/logo.png?v=2.8');
+      const clientObj = (currentReel.c && currentReel.c !== 'community') ? window.DNM_DATA.getClient(currentReel.c) : null;
+      const isClient = !!clientObj;
+      const authorName = isClient ? clientObj.name : (currentReel.authorName || (currentReel.authorUsername ? '@' + currentReel.authorUsername : 'Creator'));
+      const authorHandle = isClient ? clientObj.slug : (currentReel.authorUsername || 'creator');
+      const authorAvatar = isClient ? (clientObj.logo || './Logo/logo.png?v=3.2') : (currentReel.authorAvatar || './Logo/logo.png?v=3.2');
+      const mediaSrc = window.DNM_DATA.getMediaUrl ? window.DNM_DATA.getMediaUrl(currentReel) : window.DNM_DATA.getStreamUrl(currentReel);
       const streamUrl = window.DNM_DATA.getStreamUrl(currentReel);
       const likesSet = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
       const isLiked = likesSet.has(currentReel.id);
@@ -79,7 +80,7 @@
       modalSc.innerHTML = `
         <div class="ig-player-wrapper" id="ig-wrapper" style="width:100%;height:100%;position:relative;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;">
           <!-- Ambient blurred backdrop -->
-          <div class="ig-ambient-backdrop" id="ig-ambient" style="position:absolute;inset:0;background-image:url('${currentReel.coverUrl || ''}');background-size:cover;background-position:center;filter:blur(30px) brightness(0.4);transform:scale(1.1);pointer-events:none;"></div>
+          <div class="ig-ambient-backdrop" id="ig-ambient" style="position:absolute;inset:0;background-image:url('${mediaSrc || currentReel.coverUrl || ''}');background-size:cover;background-position:center;filter:blur(30px) brightness(0.4);transform:scale(1.1);pointer-events:none;"></div>
 
           <!-- Vertical 9:16 Instagram Reels Card -->
           <div class="ig-reels-container" id="ig-container" style="position:relative;width:100%;max-width:470px;height:100%;max-height:100dvh;display:flex;flex-direction:column;justify-content:space-between;background:#000;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,0.8);">
@@ -92,19 +93,24 @@
               <div class="ig-top-title" style="color:#FFF;font-weight:700;font-size:16px;letter-spacing:-0.2px;display:flex;align-items:center;gap:6px;">
                 <span>${isPhoto ? 'Photo' : 'Reels'}</span>
               </div>
-              <button type="button" class="ig-top-btn" id="ig-btn-sound" title="Toggle Sound" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:${isPhoto ? 'none' : 'flex'};align-items:center;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="ig-sound-icon">
-                  ${isSoundMuted 
-                    ? '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>' 
-                    : '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>'}
-                </svg>
-              </button>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <button type="button" class="ig-top-btn" id="ig-btn-sound" title="Toggle Sound" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:${isPhoto ? 'none' : 'flex'};align-items:center;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="ig-sound-icon">
+                    ${isSoundMuted 
+                      ? '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>' 
+                      : '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>'}
+                  </svg>
+                </button>
+                <button type="button" class="ig-top-btn" id="ig-btn-more" title="More Options" aria-label="More Options" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:flex;align-items:center;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                </button>
+              </div>
             </div>
 
             <!-- Video / Photo Player Wrap -->
             <div class="ig-video-wrap" id="ig-video-wrap" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline webkit-playsinline autoplay loop preload="auto" poster="${currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:cover;display:${isPhoto ? 'none' : 'block'};"></video>
-              <img id="ig-photo" class="ig-photo-player" src="${currentReel.coverUrl || streamUrl}" alt="" style="width:100%;height:100%;object-fit:contain;background:#000;display:${isPhoto ? 'block' : 'none'};">
+              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline webkit-playsinline autoplay loop preload="auto" poster="${mediaSrc || currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:cover;display:${isPhoto ? 'none' : 'block'};"></video>
+              <img id="ig-photo" class="ig-photo-player" src="${mediaSrc}" alt="" style="width:100%;height:100%;object-fit:contain;background:#000;display:${isPhoto ? 'block' : 'none'};">
               
               <!-- Perfectly Centered Stable Buffering Spinner -->
               <div class="video-loading-circle ${isPhoto ? '' : 'active'}" id="ig-loading-circle">
@@ -250,21 +256,23 @@
       const overlayHandle = modalSc.querySelector('#ig-overlay-handle');
       const overlayCaption = modalSc.querySelector('#ig-overlay-caption');
       const topTitle = modalSc.querySelector('.ig-top-title span');
+      const moreBtn = modalSc.querySelector('#ig-btn-more');
 
       function syncReelUi() {
-        const isClient = !!currentReel.c;
-        const clientObj = isClient ? window.DNM_DATA.getClient(currentReel.c) : null;
-        const authorName = isClient ? (clientObj ? clientObj.name : 'Brand') : (currentReel.authorName || 'Creator');
-        const authorHandle = isClient ? (clientObj ? clientObj.slug : 'brand') : (currentReel.authorUsername || 'creator');
-        const authorAvatar = isClient ? (clientObj ? clientObj.logo : './Logo/logo.png?v=2.8') : (currentReel.authorAvatar || './Logo/logo.png?v=2.8');
+        const clientObj = (currentReel.c && currentReel.c !== 'community') ? window.DNM_DATA.getClient(currentReel.c) : null;
+        const isClient = !!clientObj;
+        const authorName = isClient ? clientObj.name : (currentReel.authorName || (currentReel.authorUsername ? '@' + currentReel.authorUsername : 'Creator'));
+        const authorHandle = isClient ? clientObj.slug : (currentReel.authorUsername || 'creator');
+        const authorAvatar = isClient ? (clientObj.logo || './Logo/logo.png?v=3.2') : (currentReel.authorAvatar || './Logo/logo.png?v=3.2');
         const isPhoto = currentReel.type === 'photo';
+        const mediaSrc = window.DNM_DATA.getMediaUrl ? window.DNM_DATA.getMediaUrl(currentReel) : window.DNM_DATA.getStreamUrl(currentReel);
         const streamUrl = window.DNM_DATA.getStreamUrl(currentReel);
 
-        if (ambient) ambient.style.backgroundImage = `url('${currentReel.coverUrl || streamUrl || ''}')`;
+        if (ambient) ambient.style.backgroundImage = `url('${mediaSrc || currentReel.coverUrl || streamUrl || ''}')`;
         if (discAvatar) discAvatar.src = authorAvatar;
         if (overlayAvatar) overlayAvatar.src = authorAvatar;
         if (overlayHandle) overlayHandle.textContent = `@${authorHandle}`;
-        if (overlayCaption) overlayCaption.innerHTML = `<b>${currentReel.title || ''}</b>${currentReel.b ? ` &bull; ${currentReel.b}` : ''}`;
+        if (overlayCaption) overlayCaption.innerHTML = `<b>${currentReel.title || ''}</b>${currentReel.b && currentReel.b !== 'Community' ? ` &bull; ${currentReel.b}` : ''}`;
         if (topTitle) topTitle.textContent = isPhoto ? 'Photo' : 'Reels';
 
         const likesSet = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
@@ -459,6 +467,22 @@
         e.stopPropagation();
         if (window.DNM_FEED && window.DNM_FEED.showToast) {
           window.DNM_FEED.showToast('Comments drawer available from feed');
+        }
+      });
+
+      // More Options (Manage Post: Edit, Hide, Delete, Share)
+      moreBtn?.addEventListener('click', e => {
+        e.stopPropagation();
+        if (window.DNM_MODALS && window.DNM_MODALS.openPostManagementModal) {
+          window.DNM_MODALS.openPostManagementModal(currentReel, (updatedPost) => {
+            if (!updatedPost) {
+              // Post was deleted
+              closeModal(true);
+            } else {
+              // Post was updated or toggled
+              syncReelUi();
+            }
+          });
         }
       });
 

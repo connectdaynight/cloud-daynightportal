@@ -92,12 +92,13 @@
 
     let cardsHtml = '';
     allItems.forEach((item, idx) => {
-      const isClient = !!item.c;
-      const clientObj = isClient ? window.DNM_DATA.getClient(item.c) : null;
-      const authorName = isClient ? (clientObj ? clientObj.name : '') : (item.authorName || '');
-      const authorHandle = isClient ? (clientObj ? clientObj.slug : '') : (item.authorUsername || '');
-      const authorAvatar = isClient ? (clientObj ? clientObj.logo : './Logo/logo.png') : (item.authorAvatar || './Logo/logo.png');
-      const locationText = isClient ? (item.b || '') : (item.location || '');
+      const clientObj = (item.c && item.c !== 'community') ? window.DNM_DATA.getClient(item.c) : null;
+      const isClient = !!clientObj;
+      const authorName = isClient ? clientObj.name : (item.authorName || (item.authorUsername ? '@' + item.authorUsername : 'Creator'));
+      const authorHandle = isClient ? clientObj.slug : (item.authorUsername || 'creator');
+      const authorAvatar = isClient ? (clientObj.logo || './Logo/logo.png') : (item.authorAvatar || './Logo/logo.png');
+      const locationText = isClient ? (item.b || '') : (item.location || (item.b && item.b !== 'Community' ? item.b : ''));
+      const mediaSrc = window.DNM_DATA.getMediaUrl ? window.DNM_DATA.getMediaUrl(item) : (item.mediaUrl || item.coverUrl);
       const videoSrc = window.DNM_DATA.getStreamUrl(item);
       const isLiked = likedPosts.has(item.id);
       const isSaved = savedPosts.has(item.id);
@@ -110,12 +111,12 @@
       const postComments = commentsStore[item.id] || [];
 
       cardsHtml += `
-        <article class="dnm-post-card" data-post-id="${item.id}" data-idx="${idx}" data-author="${isClient ? item.c : (item.authorId || '')}">
+        <article class="dnm-post-card" data-post-id="${item.id}" data-idx="${idx}" data-author="${isClient ? item.c : (item.authorId || '')}" data-author-username="${authorHandle}">
           <!-- Header -->
           <div class="dnm-card-header">
-            <div class="dnm-user-info" data-action="view-profile" data-author="${isClient ? item.c : item.authorId}">
+            <div class="dnm-user-info" data-action="${isClient ? 'view-profile' : 'user-profile'}" data-author="${isClient ? item.c : item.authorId}">
               <div class="dnm-avatar-wrap ${isClient ? 'client' : ''}">
-                <img class="dnm-avatar-img" src="${authorAvatar}" alt="${authorName}">
+                <img class="dnm-avatar-img" src="${authorAvatar}" alt="${authorName}" onerror="this.src='./Logo/logo.png'">
               </div>
               <div class="dnm-meta-text">
                 <div class="dnm-username-row">
@@ -133,10 +134,10 @@
           <!-- Media Container (Strict 9:16 aspect ratio with cover fit, zero black gaps) -->
           <div class="dnm-media-wrapper" data-action="media-click">
             ${item.type === 'photo' ? `
-              <img class="dnm-media-photo" src="${item.mediaUrl || item.coverUrl}" alt="" loading="lazy">
+              <img class="dnm-media-photo" src="${mediaSrc}" alt="${item.title || ''}" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="if(this.src!=='${item.coverUrl}')this.src='${item.coverUrl}';">
             ` : `
-              <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" muted playsinline loop preload="metadata" poster="${item.coverUrl || ''}"></video>
-              <img class="dnm-feed-poster" src="${item.coverUrl || ''}" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;transition:opacity 0.25s ease;pointer-events:none;">
+              <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" muted playsinline loop preload="metadata" poster="${item.coverUrl && item.coverUrl.startsWith('data:') ? item.coverUrl : (mediaSrc || item.coverUrl || '')}"></video>
+              <img class="dnm-feed-poster" src="${item.coverUrl && item.coverUrl.startsWith('data:') ? item.coverUrl : (mediaSrc || item.coverUrl || '')}" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;transition:opacity 0.25s ease;pointer-events:none;">
               <button type="button" class="dnm-sound-pill" data-action="toggle-sound" aria-label="Toggle sound" style="z-index:5;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="dnm-sound-icon">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
@@ -466,6 +467,19 @@
 
   // Post Options Action Sheet
   function openPostOptionsSheet(cardEl) {
+    if (!cardEl) return;
+    const postId = cardEl.dataset.postId;
+    const all = window.DNM_DATA.getAllApprovedReels(true);
+    const post = all.find(r => r.id === postId);
+
+    if (post && window.DNM_MODALS && window.DNM_MODALS.openPostManagementModal) {
+      window.DNM_MODALS.openPostManagementModal(post, () => {
+        const feedWrap = document.querySelector('#dnm-feed-cards-wrap');
+        if (feedWrap) renderFeedCards(feedWrap);
+      });
+      return;
+    }
+
     const scrim = document.createElement('div');
     scrim.className = 'dnm-scrim active';
     scrim.innerHTML = `
@@ -484,7 +498,7 @@
 
     scrim.querySelector('#dnm-opt-copy')?.addEventListener('click', async () => {
       close();
-      const url = window.location.origin + '/Media%20Portal/index.html?post=' + cardEl.dataset.postId;
+      const url = window.location.origin + '/?post=' + cardEl.dataset.postId;
       try {
         await navigator.clipboard.writeText(url);
         showToast('Link copied to clipboard!');

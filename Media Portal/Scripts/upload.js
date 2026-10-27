@@ -252,9 +252,9 @@
 
         const payload = {
           action: 'uploadVideo',
-          clientName: taggedClient ? (window.DNM_DATA.getClient(taggedClient)?.name || 'Brand') : 'Community',
-          clientId: taggedClient || 'community',
-          branch: taggedClient ? 'Partner' : 'Community',
+          clientName: taggedClient ? (window.DNM_DATA.getClient(taggedClient)?.name || 'Brand') : '',
+          clientId: taggedClient || '',
+          branch: taggedClient ? 'Partner' : '',
           album: 'Uploads',
           title: caption,
           dur: durationStr,
@@ -265,7 +265,8 @@
           type: isVideo ? 'reel' : 'photo',
           authorId: user.uid,
           authorName: user.displayName || user.username || 'Creator',
-          authorAvatar: user.photoURL || './Logo/logo.png?v=3.0',
+          authorUsername: user.username || 'creator',
+          authorAvatar: user.photoURL || './Logo/logo.png?v=3.2',
           status: 'approved'
         };
 
@@ -290,12 +291,14 @@
 
         const fileId = serverData?.fileId || serverData?.reel?.fileId || ('drive_' + Date.now());
         const driveUrl = serverData?.viewUrl || serverData?.reel?.url || (fileId ? `https://drive.google.com/file/d/${fileId}/view` : '');
-        const finalCover = serverData?.reel?.coverUrl || thumbUrl || rawBase64;
+        const cloudProxyStream = fileId ? `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}&v=3` : '';
+        const finalMedia = isVideo ? (cloudProxyStream || driveUrl || rawBase64) : (rawBase64 || cloudProxyStream || driveUrl);
+        const finalCover = isVideo ? (thumbUrl || rawBase64) : rawBase64;
 
         const newPost = {
           id: serverData?.reel?.id || ('r' + Date.now().toString(36)),
-          c: taggedClient || 'community',
-          b: taggedClient ? 'Partner' : 'Community',
+          c: taggedClient || '',
+          b: taggedClient ? 'Partner' : '',
           album: 'Uploads',
           type: isVideo ? 'reel' : 'photo',
           title: caption,
@@ -303,9 +306,9 @@
           authorId: user.uid,
           authorName: user.displayName || user.username || 'Creator',
           authorUsername: user.username || 'creator',
-          authorAvatar: user.photoURL || './Logo/logo.png?v=3.0',
-          mediaUrl: driveUrl || rawBase64,
-          url: driveUrl,
+          authorAvatar: user.photoURL || './Logo/logo.png?v=3.2',
+          mediaUrl: finalMedia,
+          url: cloudProxyStream || driveUrl,
           fileId: fileId,
           coverUrl: finalCover,
           dur: durationStr,
