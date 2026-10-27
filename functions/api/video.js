@@ -214,3 +214,17 @@ export async function onRequestGet(context) {
 }
 
 export const onRequestHead = onRequestGet;
+
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+      "Access-Control-Allow-Headers": "Range, Authorization, Content-Type",
+      "Access-Control-Expose-Headers": "Content-Range, Content-Length, Accept-Ranges",
+      "Access-Control-Max-Age": "86400"
+    }
+  });
+}
+

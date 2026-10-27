@@ -138,17 +138,18 @@
               <img class="dnm-media-photo" src="${item.mediaUrl || item.coverUrl}" alt="" loading="lazy">
             ` : `
               <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" muted playsinline loop preload="metadata" poster="${item.coverUrl || ''}"></video>
-              <button type="button" class="dnm-sound-pill" data-action="toggle-sound" aria-label="Toggle sound">
+              <img class="dnm-feed-poster" src="${item.coverUrl || ''}" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;transition:opacity 0.25s ease;pointer-events:none;">
+              <button type="button" class="dnm-sound-pill" data-action="toggle-sound" aria-label="Toggle sound" style="z-index:5;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="dnm-sound-icon">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
                   <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
                 </svg>
               </button>
-              <div class="dnm-play-indicator">
+              <div class="dnm-play-indicator" style="z-index:4;">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
               </div>
             `}
-            <div class="dnm-heart-pop">
+            <div class="dnm-heart-pop" style="z-index:10;">
               <svg width="84" height="84" viewBox="0 0 24 24" fill="#FF3040"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             </div>
           </div>
@@ -545,6 +546,19 @@
     });
   }
 
+  function stopFeedAutoplay() {
+    if (feedObserver) {
+      feedObserver.disconnect();
+      feedObserver = null;
+    }
+    document.querySelectorAll('.dnm-feed-vid').forEach(v => {
+      try {
+        v.pause();
+        v.muted = true;
+      } catch(_) {}
+    });
+  }
+
   function initFeedAutoplay() {
     if (feedObserver) {
       feedObserver.disconnect();
@@ -552,36 +566,54 @@
     }
 
     feedObserver = new IntersectionObserver((entries) => {
-      if (document.querySelector('.dnm-scrim.active') || document.querySelector('#dnm-tab-reels.active')) {
+      // If modal or reels player is active, pause background feed videos
+      if (document.body.classList.contains('has-modal') || document.querySelector('#dnm-video-player-modal')) {
         document.querySelectorAll('.dnm-feed-vid').forEach(v => {
-          try { v.pause(); v.muted = true; } catch(_) {}
+          try {
+            v.pause();
+            v.muted = true;
+          } catch(_) {}
         });
         return;
       }
 
       entries.forEach(entry => {
-        const vid = entry.target.querySelector('video');
+        const wrap = entry.target.querySelector('.dnm-media-wrapper');
+        const vid = wrap ? wrap.querySelector('video') : null;
+        const poster = wrap ? wrap.querySelector('.dnm-feed-poster') : null;
         if (!vid) return;
 
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.45) {
+          // Pause any other playing feed video so only ONE plays at a time
           document.querySelectorAll('.dnm-feed-vid').forEach(other => {
             if (other !== vid) {
-              try { other.pause(); other.muted = true; } catch(_) {}
+              try {
+                other.pause();
+                other.muted = true;
+              } catch(_) {}
             }
           });
+
           vid.muted = isGlobalMuted;
           const p = vid.play();
           if (p !== undefined) {
-            p.catch(() => {
+            p.then(() => {
+              if (poster) poster.style.opacity = '0';
+            }).catch(() => {
               vid.muted = true;
-              vid.play().catch(() => {});
+              vid.play().then(() => {
+                if (poster) poster.style.opacity = '0';
+              }).catch(() => {});
             });
           }
         } else {
-          try { vid.pause(); vid.muted = true; } catch(_) {}
+          try {
+            vid.pause();
+            vid.muted = true;
+          } catch(_) {}
         }
       });
-    }, { threshold: [0, 0.35, 0.8] });
+    }, { threshold: [0, 0.45, 0.8] });
 
     document.querySelectorAll('.dnm-post-card').forEach(card => {
       feedObserver.observe(card);
@@ -590,6 +622,8 @@
 
   window.DNM_FEED = {
     initFeed,
+    initFeedAutoplay,
+    stopFeedAutoplay,
     renderStories,
     renderFeedCards,
     showToast

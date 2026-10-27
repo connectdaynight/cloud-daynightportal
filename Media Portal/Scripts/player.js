@@ -12,8 +12,11 @@
   function openVideoPlaybackModal(reel, initialPlaylist) {
     if (!reel) return;
 
-    // 1. Immediately pause and silence all background feed & reels videos
-    document.querySelectorAll('video').forEach(v => {
+    // 1. Immediately halt all feed autoplay and abort background network downloads
+    if (window.DNM_FEED && window.DNM_FEED.stopFeedAutoplay) {
+      window.DNM_FEED.stopFeedAutoplay();
+    }
+    document.querySelectorAll('.dnm-feed-vid, .dnm-reel-video-element').forEach(v => {
       try {
         v.pause();
         v.muted = true;
@@ -35,7 +38,7 @@
     if (activePlayerModal) {
       try {
         const oldVid = activePlayerModal.querySelector('video');
-        if (oldVid) { oldVid.pause(); oldVid.src = ''; }
+        if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
         activePlayerModal.remove();
       } catch(_) {}
       activePlayerModal = null;
@@ -53,7 +56,7 @@
 
     function onPopState(e) {
       if (activePlayerModal) {
-        closeModal(false); // Close without triggering history.back again
+        closeModal(false);
       }
     }
     window.addEventListener('popstate', onPopState);
@@ -63,7 +66,7 @@
       const clientObj = isClient ? window.DNM_DATA.getClient(currentReel.c) : null;
       const authorName = isClient ? (clientObj ? clientObj.name : 'Brand') : (currentReel.authorName || 'Creator');
       const authorHandle = isClient ? (clientObj ? clientObj.slug : 'brand') : (currentReel.authorUsername || 'creator');
-      const authorAvatar = isClient ? (clientObj ? clientObj.logo : './Logo/logo.png?v=2.6') : (currentReel.authorAvatar || './Logo/logo.png?v=2.6');
+      const authorAvatar = isClient ? (clientObj ? clientObj.logo : './Logo/logo.png?v=2.8') : (currentReel.authorAvatar || './Logo/logo.png?v=2.8');
       const streamUrl = window.DNM_DATA.getStreamUrl(currentReel);
       const likesSet = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
       const isLiked = likesSet.has(currentReel.id);
@@ -97,9 +100,9 @@
 
             <!-- Video Player Wrap -->
             <div class="ig-video-wrap" id="ig-video-wrap" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline webkit-playsinline loop preload="auto" poster="${currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:cover;"></video>
+              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline webkit-playsinline autoplay loop preload="auto" poster="${currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:cover;"></video>
               
-              <!-- Perfectly Centered Stable Buffering Spinner (No weird translation jumps) -->
+              <!-- Perfectly Centered Stable Buffering Spinner -->
               <div class="video-loading-circle active" id="ig-loading-circle">
                 <svg class="v-spinner-svg" viewBox="0 0 50 50">
                   <circle class="v-spinner-path" cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
@@ -153,7 +156,7 @@
 
               <!-- Rotating Vinyl Disc -->
               <div class="dnm-vinyl-disc" style="width:30px;height:30px;border-radius:50%;border:2px solid #FFF;overflow:hidden;animation:dnmSpin 3s linear infinite;">
-                <img src="${authorAvatar}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                <img id="ig-disc-avatar" src="${authorAvatar}" alt="" style="width:100%;height:100%;object-fit:cover;">
               </div>
             </div>
 
@@ -161,12 +164,12 @@
             <div class="ig-meta-overlay" id="ig-meta-overlay" style="position:absolute;left:16px;bottom:24px;right:80px;z-index:20;display:flex;flex-direction:column;gap:8px;color:#FFF;">
               <div class="ig-profile-row" style="display:flex;align-items:center;gap:10px;">
                 <div class="ig-avatar-ring" style="width:36px;height:36px;border-radius:50%;border:2px solid #FFF;overflow:hidden;flex-shrink:0;">
-                  <img src="${authorAvatar}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                  <img id="ig-overlay-avatar" src="${authorAvatar}" alt="" style="width:100%;height:100%;object-fit:cover;">
                 </div>
-                <span style="font-weight:700;font-size:14px;color:#FFF;">@${authorHandle}</span>
+                <span id="ig-overlay-handle" style="font-weight:700;font-size:14px;color:#FFF;">@${authorHandle}</span>
                 ${isClient ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="#0095F6"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' : ''}
               </div>
-              <div class="ig-caption-box" style="font-size:13px;line-height:1.4;color:#FFF;text-shadow:0 1px 3px rgba(0,0,0,0.8);">
+              <div class="ig-caption-box" id="ig-overlay-caption" style="font-size:13px;line-height:1.4;color:#FFF;text-shadow:0 1px 3px rgba(0,0,0,0.8);">
                 <b>${currentReel.title || ''}</b>${currentReel.b ? ` &bull; ${currentReel.b}` : ''}
               </div>
             </div>
@@ -188,13 +191,19 @@
       if (vid) {
         try {
           vid.pause();
-          vid.src = '';
+          vid.removeAttribute('src');
+          vid.load();
         } catch(_) {}
       }
       window.removeEventListener('popstate', onPopState);
       if (modalSc.parentNode) modalSc.remove();
       activePlayerModal = null;
       document.body.classList.remove('has-modal');
+
+      // Reconnect feed autoplay
+      if (window.DNM_FEED && window.DNM_FEED.initFeedAutoplay) {
+        window.DNM_FEED.initFeedAutoplay();
+      }
 
       if (shouldPopHistory && history.state && history.state.dnmModal === 'video_player') {
         try { history.back(); } catch(_) {}
@@ -219,8 +228,54 @@
       const shareBtn = modalSc.querySelector('#ig-btn-share');
       const dlBtn = modalSc.querySelector('#ig-btn-player-dl');
       const videoWrap = modalSc.querySelector('#ig-video-wrap');
+      const ambient = modalSc.querySelector('#ig-ambient');
+      const discAvatar = modalSc.querySelector('#ig-disc-avatar');
+      const overlayAvatar = modalSc.querySelector('#ig-overlay-avatar');
+      const overlayHandle = modalSc.querySelector('#ig-overlay-handle');
+      const overlayCaption = modalSc.querySelector('#ig-overlay-caption');
 
-      // Loader listeners (using class 'active' smoothly without jumping)
+      function syncReelUi() {
+        const isClient = !!currentReel.c;
+        const clientObj = isClient ? window.DNM_DATA.getClient(currentReel.c) : null;
+        const authorName = isClient ? (clientObj ? clientObj.name : 'Brand') : (currentReel.authorName || 'Creator');
+        const authorHandle = isClient ? (clientObj ? clientObj.slug : 'brand') : (currentReel.authorUsername || 'creator');
+        const authorAvatar = isClient ? (clientObj ? clientObj.logo : './Logo/logo.png?v=2.8') : (currentReel.authorAvatar || './Logo/logo.png?v=2.8');
+
+        if (ambient) ambient.style.backgroundImage = `url('${currentReel.coverUrl || ''}')`;
+        if (discAvatar) discAvatar.src = authorAvatar;
+        if (overlayAvatar) overlayAvatar.src = authorAvatar;
+        if (overlayHandle) overlayHandle.textContent = `@${authorHandle}`;
+        if (overlayCaption) overlayCaption.innerHTML = `<b>${currentReel.title || ''}</b>${currentReel.b ? ` &bull; ${currentReel.b}` : ''}`;
+
+        const likesSet = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
+        const isLiked = likesSet.has(currentReel.id);
+        const baseLikes = Number(currentReel.likes) || 0;
+        if (likeIcon) {
+          likeIcon.setAttribute('fill', isLiked ? '#FF3040' : 'none');
+          likeIcon.setAttribute('stroke', isLiked ? '#FF3040' : '#FFFFFF');
+        }
+        if (likeCount) likeCount.textContent = baseLikes + (isLiked ? 1 : 0);
+
+        if (vid) {
+          loader?.classList.add('active');
+          vid.src = window.DNM_DATA.getStreamUrl(currentReel);
+          vid.poster = currentReel.coverUrl || '';
+          vid.muted = isSoundMuted;
+          const p = vid.play();
+          if (p !== undefined) {
+            p.catch(() => {
+              vid.muted = true;
+              isSoundMuted = true;
+              if (soundIcon) {
+                soundIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+              }
+              vid.play().catch(() => {});
+            });
+          }
+        }
+      }
+
+      // Loader listeners (stays stable and centered)
       if (vid && loader) {
         loader.classList.add('active');
         const hideLoader = () => loader.classList.remove('active');
@@ -235,7 +290,6 @@
 
         vid.muted = isSoundMuted;
 
-        // Auto play with seamless muted fallback for browsers
         const p = vid.play();
         if (p !== undefined) {
           p.catch(() => {
@@ -247,6 +301,19 @@
             vid.play().catch(() => {});
           });
         }
+
+        // Resilient Stream Auto-Retry (Exact Client Portal logic)
+        let streamRetryAttempted = false;
+        vid.addEventListener('error', () => {
+          const fileId = currentReel.fileId || (currentReel.url ? (currentReel.url.match(/[-\w]{25,}/) || [])[0] : null);
+          if (fileId && !streamRetryAttempted) {
+            streamRetryAttempted = true;
+            console.warn('Retrying video stream with fresh token and cache-bypass...');
+            vid.src = `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}&t=${Date.now()}`;
+            vid.load();
+            vid.play().catch(e => console.log('Autoplay retry:', e));
+          }
+        });
 
         // Live Scrubber Progress
         vid.addEventListener('timeupdate', () => {
@@ -376,19 +443,19 @@
         a.remove();
       });
 
-      // Navigation: Swipe Up / Down or Keyboard
+      // Smooth Reel Navigation
       function nextReel() {
         if (currentIndex < playlist.length - 1) {
           currentIndex++;
           currentReel = playlist[currentIndex];
-          renderModalContent();
+          syncReelUi();
         }
       }
       function prevReel() {
         if (currentIndex > 0) {
           currentIndex--;
           currentReel = playlist[currentIndex];
-          renderModalContent();
+          syncReelUi();
         }
       }
 

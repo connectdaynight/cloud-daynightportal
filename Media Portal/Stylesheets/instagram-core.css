@@ -291,8 +291,8 @@ html, body {
 
 /* Equalized Profile Avatar Icon (balanced visually with 24px SVGs) */
 .dnm-nav-avatar-wrap {
-  width: 35px;
-  height: 35px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   padding: 1px;
   border: 1.5px solid transparent;

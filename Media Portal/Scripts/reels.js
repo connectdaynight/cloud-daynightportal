@@ -32,7 +32,7 @@
 
       reelsHtml += `
         <div class="dnm-reel-viewport" data-reel-id="${reel.id}" data-idx="${idx}">
-          <video class="dnm-reel-video-element" src="${videoSrc}" muted playsinline loop preload="${idx === 0 ? 'auto' : 'none'}" poster="${reel.coverUrl || ''}"></video>
+          <video class="dnm-reel-video-element" src="${videoSrc}" muted playsinline loop preload="metadata" poster="${reel.coverUrl || ''}"></video>
 
           <!-- Right Floating Actions Stack -->
           <div class="dnm-reel-actions-stack">

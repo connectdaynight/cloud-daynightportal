@@ -10,9 +10,9 @@
   let clientsMap = {};
   let approvedReels = [];
   let communityPosts = [];
-  let streamToken = '';
+  let streamToken = (function() { try { return sessionStorage.getItem('dn_st') || ''; } catch(_) { return ''; } })();
 
-  // Pre-warm authenticated video stream token
+  // Pre-warm authenticated video stream token for zero-buffer streaming
   async function fetchStreamToken() {
     try {
       const res = await fetch('https://daynight-portal.pages.dev/api/token');
