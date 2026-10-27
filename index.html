@@ -7530,8 +7530,9 @@
     // --------------------------------------------------------------------------
     let feedAutoplayObserver = null;
     let isFeedAudioMuted = (function() {
-      try { return localStorage.getItem('dn_feed_muted') === 'true'; } catch(_) { return true; }
+      try { return localStorage.getItem('dn_feed_muted') !== 'false'; } catch(_) { return true; }
     })();
+    window.isFeedAudioMuted = isFeedAudioMuted;
 
     function initFeedAutoplay() {
       if (feedAutoplayObserver) {
@@ -7647,7 +7648,7 @@
         try { return localStorage.getItem('dn_feed_autoplay') !== 'false'; } catch(_) { return true; }
       })();
       const isFeedMuted = (function() {
-        try { return localStorage.getItem('dn_feed_muted') === 'true'; } catch(_) { return true; }
+        try { return localStorage.getItem('dn_feed_muted') !== 'false'; } catch(_) { return true; }
       })();
 
       return `
@@ -11346,6 +11347,9 @@
           window.scrollTo({ top: savedPageScrollY, behavior: 'instant' });
           requestAnimationFrame(() => {
             window.scrollTo({ top: savedPageScrollY, behavior: 'instant' });
+            if (view.screen === 'genesis') {
+              try { initFeedAutoplay(); } catch(_) {}
+            }
           });
         }
         if (backBtn) {
@@ -13209,6 +13213,7 @@
         e.preventDefault();
         e.stopPropagation();
         isFeedAudioMuted = !isFeedAudioMuted;
+        window.isFeedAudioMuted = isFeedAudioMuted;
         try { localStorage.setItem('dn_feed_muted', isFeedAudioMuted ? 'true' : 'false'); } catch(_) {}
 
         // Immediately synchronize all video elements and icons across the feed
@@ -13220,6 +13225,18 @@
           if (m) m.style.display = isFeedAudioMuted ? 'inline-block' : 'none';
           if (a) a.style.display = isFeedAudioMuted ? 'none' : 'inline-block';
         });
+
+        // If unmuting, ensure the current visible video is actively playing with sound
+        const currentWrap = el.closest('.dn-feed-media-wrap');
+        const currentVid = currentWrap ? currentWrap.querySelector('.dn-feed-video') : null;
+        if (!isFeedAudioMuted && currentVid && currentVid.paused) {
+          try {
+            currentVid.play().then(() => {
+              if (currentWrap) currentWrap.classList.add('is-playing');
+            }).catch(() => {});
+          } catch(_) {}
+        }
+
         toast(isFeedAudioMuted ? 'Feed Muted' : 'Sound ON (All videos unmuted)', isFeedAudioMuted ? 'mute' : 'success');
       }
       else if (a === 'feed-media-click' || a === 'open-reel-modal') {
