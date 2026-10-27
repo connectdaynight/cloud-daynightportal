@@ -10,10 +10,10 @@
   async function init() {
     console.log('Daynight-Media Initializing with Real Server Data...');
 
-    // Apply saved theme
+    // Apply saved theme (Default is light / pristine white)
     const savedTheme = localStorage.getItem('dnm_theme');
-    if (savedTheme === 'light') {
-      document.documentElement.setAttribute('data-theme', 'light');
+    if (savedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.removeAttribute('data-theme');
     }
@@ -60,6 +60,20 @@
     const searchBtn = document.querySelector('#dnm-btn-search-header');
     if (searchBtn) {
       searchBtn.addEventListener('click', () => switchTab('explore'));
+    }
+
+    const themeToggleBtn = document.querySelector('#dnm-btn-theme-toggle');
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+          document.documentElement.removeAttribute('data-theme');
+          localStorage.setItem('dnm_theme', 'light');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          localStorage.setItem('dnm_theme', 'dark');
+        }
+      });
     }
 
     // Intelligent Smart Header Scroll Hide/Reveal
@@ -225,7 +239,7 @@
       matchAccounts.forEach(c => {
         html += `
           <div class="dnm-search-result-item" data-action="open-client-brand" data-client="${c.id}">
-            <img class="dnm-search-result-thumb" src="${c.logo || '/Logo/logo.png'}" alt="">
+            <img class="dnm-search-result-thumb" src="${c.logo || './Logo/logo.png'}" alt="">
             <div class="dnm-search-result-info">
               <span class="dnm-search-result-title">
                 ${c.name}
@@ -243,7 +257,7 @@
       matchReels.slice(0, 6).forEach(r => {
         html += `
           <div class="dnm-search-result-item" data-action="open-search-reel" data-reel-id="${r.id}">
-            <img class="dnm-search-result-thumb square" src="${r.coverUrl || '/Logo/logo.png'}" alt="">
+            <img class="dnm-search-result-thumb square" src="${r.coverUrl || './Logo/logo.png'}" alt="">
             <div class="dnm-search-result-info">
               <span class="dnm-search-result-title">${r.title || 'Reel Video'}</span>
               <span class="dnm-search-result-sub">${r.b || 'Chennai'} &bull; ${(r.likes || 12).toLocaleString()} likes</span>
@@ -280,7 +294,7 @@
       const isTall = idx % 5 === 2;
       html += `
         <div class="dnm-explore-item ${isTall ? 'tall' : ''}" data-action="explore-click" data-id="${r.id}">
-          <img class="dnm-explore-thumb" src="${r.coverUrl || '/Logo/logo.png'}" alt="" loading="lazy">
+          <img class="dnm-explore-thumb" src="${r.coverUrl || './Logo/logo.png'}" alt="" loading="lazy">
           <div class="dnm-explore-reel-badge">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           </div>
@@ -421,7 +435,7 @@
       <div class="dnm-profile-header">
         <div class="dnm-profile-top-row">
           <div class="dnm-profile-avatar-large" style="background:linear-gradient(135deg, #0095F6, #1FAF64);">
-            <img src="${client.logo || '/Logo/logo.png'}" alt="${client.name}">
+            <img src="${client.logo || './Logo/logo.png'}" alt="${client.name}">
           </div>
           <div class="dnm-profile-stats-row">
             <div class="dnm-stat-block">
@@ -457,7 +471,7 @@
       <div class="dnm-profile-grid">
         ${brandReels.map(r => `
           <div class="dnm-explore-item" data-reel-id="${r.id}">
-            <img class="dnm-explore-thumb" src="${r.coverUrl || '/Logo/logo.png'}" alt="">
+            <img class="dnm-explore-thumb" src="${r.coverUrl || './Logo/logo.png'}" alt="">
           </div>
         `).join('')}
       </div>
@@ -484,7 +498,7 @@
     const user = window.DNM_AUTH.getCurrentUser();
     const avatarImg = document.querySelector('#dnm-nav-user-avatar');
     if (avatarImg) {
-      avatarImg.src = user ? user.photoURL : '/Logo/logo.png';
+      avatarImg.src = user ? user.photoURL : './Logo/logo.png?v=2.2';
     }
   }
 

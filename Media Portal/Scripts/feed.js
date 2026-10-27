@@ -41,14 +41,14 @@
     let html = `
       <div class="dnm-story-item" data-action="story-user">
         <div class="dnm-story-ring ${user ? '' : 'seen'}">
-          <img class="dnm-story-avatar" src="${user ? user.photoURL : '/Logo/logo.png'}" alt="Your Story">
+          <img class="dnm-story-avatar" src="${user ? user.photoURL : './Logo/logo.png?v=2.2'}" alt="Your Story">
         </div>
         <span class="dnm-story-name">${user ? (user.username || user.displayName || 'You') : 'Sign In'}</span>
       </div>
     `;
 
     clients.forEach(c => {
-      const realLogo = c.logo || '/Logo/logo.png';
+      const realLogo = c.logo || './Logo/logo.png?v=2.2';
       html += `
         <div class="dnm-story-item" data-action="story-client" data-client="${c.id}">
           <div class="dnm-story-ring">
@@ -98,7 +98,7 @@
       const clientObj = isClient ? window.DNM_DATA.getClient(item.c) : null;
       const authorName = isClient ? (clientObj ? clientObj.name : '') : (item.authorName || '');
       const authorHandle = isClient ? (clientObj ? clientObj.slug : '') : (item.authorUsername || '');
-      const authorAvatar = isClient ? (clientObj ? clientObj.logo : '/Logo/logo.png') : (item.authorAvatar || '/Logo/logo.png');
+      const authorAvatar = isClient ? (clientObj ? clientObj.logo : './Logo/logo.png') : (item.authorAvatar || './Logo/logo.png');
       const locationText = isClient ? (item.b || '') : (item.location || '');
       const videoSrc = window.DNM_DATA.getStreamUrl(item);
       const isLiked = likedPosts.has(item.id);
@@ -137,7 +137,7 @@
             ${item.type === 'photo' ? `
               <img class="dnm-media-photo" src="${item.mediaUrl || item.coverUrl}" alt="" loading="lazy">
             ` : `
-              <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" playsinline loop preload="metadata" poster="${item.coverUrl || ''}"></video>
+              <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" muted playsinline loop preload="auto" poster="${item.coverUrl || ''}"></video>
               <button type="button" class="dnm-sound-pill" data-action="toggle-sound" aria-label="Toggle sound">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="dnm-sound-icon">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
@@ -250,7 +250,14 @@
           const indicator = mediaWrap.querySelector('.dnm-play-indicator');
           if (vid) {
             if (vid.paused) {
-              vid.play().catch(() => {});
+              vid.muted = isGlobalMuted;
+              const p = vid.play();
+              if (p !== undefined) {
+                p.catch(() => {
+                  vid.muted = true;
+                  vid.play().catch(() => {});
+                });
+              }
               if (indicator) {
                 indicator.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
                 indicator.classList.add('flash');
@@ -394,7 +401,7 @@
           </div>
         ` : comments.map(c => `
           <div class="dnm-comment-item">
-            <img class="dnm-comment-avatar" src="${c.avatar || '/Logo/logo.png'}" alt="">
+            <img class="dnm-comment-avatar" src="${c.avatar || './Logo/logo.png'}" alt="">
             <div class="dnm-comment-body">
               <span class="dnm-comment-username">@${c.user}</span>
               <span class="dnm-comment-text">${escapeHtml(c.text)}</span>
@@ -404,7 +411,7 @@
         `).join('')}
       </div>
       <form class="dnm-comment-input-bar" id="dnm-comment-form">
-        <img class="dnm-comment-avatar" src="${user ? user.photoURL : '/Logo/logo.png'}" alt="" style="width:28px;height:28px;">
+        <img class="dnm-comment-avatar" src="${user ? user.photoURL : './Logo/logo.png'}" alt="" style="width:28px;height:28px;">
         <input type="text" id="dnm-comment-input-text" class="dnm-comment-inp" placeholder="${user ? 'Add a comment as @' + (user.username || user.displayName) + '...' : 'Sign in to add a comment...'}" ${user ? '' : 'readonly'}>
         <button type="submit" id="dnm-comment-post-btn" class="dnm-comment-post-btn" ${user ? '' : 'disabled'}>Post</button>
       </form>
@@ -443,7 +450,7 @@
 
       const newComment = {
         user: user.username || user.displayName,
-        avatar: user.photoURL || '/Logo/logo.png',
+        avatar: user.photoURL || './Logo/logo.png',
         text: text,
         time: 'Just now'
       };
@@ -576,19 +583,25 @@
         const vid = entry.target.querySelector('video');
         if (!vid) return;
 
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
           document.querySelectorAll('.dnm-feed-vid').forEach(other => {
             if (other !== vid) {
               try { other.pause(); other.muted = true; } catch(_) {}
             }
           });
           vid.muted = isGlobalMuted;
-          vid.play().catch(() => {});
+          const p = vid.play();
+          if (p !== undefined) {
+            p.catch(() => {
+              vid.muted = true;
+              vid.play().catch(() => {});
+            });
+          }
         } else {
           try { vid.pause(); vid.muted = true; } catch(_) {}
         }
       });
-    }, { threshold: [0, 0.5, 0.9] });
+    }, { threshold: [0, 0.35, 0.8] });
 
     document.querySelectorAll('.dnm-post-card').forEach(card => {
       feedObserver.observe(card);

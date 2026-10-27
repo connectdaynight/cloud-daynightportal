@@ -2,27 +2,6 @@
    DAYNIGHT-MEDIA: INSTAGRAM-GRADE CORE STYLESHEET
    ========================================================================== */
 :root {
-  --ig-bg: #000000;
-  --ig-elevated: #121212;
-  --ig-surface: #1A1A1A;
-  --ig-card: #0D0D0D;
-  --ig-border: #262626;
-  --ig-text-primary: #F5F5F5;
-  --ig-text-secondary: #A8A8A8;
-  --ig-text-muted: #737373;
-  --ig-accent: #0095F6;
-  --ig-accent-hover: #1877F2;
-  --ig-heart: #FF3040;
-  --ig-gradient: linear-gradient(45deg, #F58529, #FEDA77, #DD2A7B, #8134AF, #515BD4);
-  --ig-gradient-ring: linear-gradient(135deg, #FBAA47, #D91A46, #A60F93);
-  --ig-verified: #0095F6;
-  --ig-font: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --ig-font-title: 'Montserrat', -apple-system, sans-serif;
-  --ig-nav-height: 52px;
-  --ig-header-height: 54px;
-}
-
-[data-theme="light"] {
   --ig-bg: #FFFFFF;
   --ig-elevated: #FAFAFA;
   --ig-surface: #F0F2F5;
@@ -33,6 +12,31 @@
   --ig-text-muted: #8E8E8E;
   --ig-accent: #0095F6;
   --ig-accent-hover: #1877F2;
+  --ig-heart: #FF3040;
+  --ig-header-bg: rgba(255, 255, 255, 0.96);
+  --ig-nav-bg: rgba(255, 255, 255, 0.96);
+  --ig-gradient: linear-gradient(45deg, #F58529, #FEDA77, #DD2A7B, #8134AF, #515BD4);
+  --ig-gradient-ring: linear-gradient(135deg, #FBAA47, #D91A46, #A60F93);
+  --ig-verified: #0095F6;
+  --ig-font: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --ig-font-title: 'Montserrat', -apple-system, sans-serif;
+  --ig-nav-height: 52px;
+  --ig-header-height: 54px;
+}
+
+[data-theme="dark"] {
+  --ig-bg: #000000;
+  --ig-elevated: #121212;
+  --ig-surface: #1A1A1A;
+  --ig-card: #0D0D0D;
+  --ig-border: #262626;
+  --ig-text-primary: #F5F5F5;
+  --ig-text-secondary: #A8A8A8;
+  --ig-text-muted: #737373;
+  --ig-accent: #0095F6;
+  --ig-accent-hover: #1877F2;
+  --ig-header-bg: rgba(0, 0, 0, 0.94);
+  --ig-nav-bg: rgba(0, 0, 0, 0.94);
 }
 
 * {
@@ -81,7 +85,7 @@ html, body {
   top: 0;
   z-index: 100;
   height: var(--ig-header-height);
-  background: rgba(0, 0, 0, 0.94);
+  background: var(--ig-header-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   display: flex;
@@ -99,23 +103,46 @@ html, body {
 .dnm-logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
   text-decoration: none;
+  color: var(--ig-text-primary);
 }
 
 .dnm-official-header-logo {
   height: 32px;
-  max-width: 140px;
-  width: auto;
-  object-fit: contain;
+  width: 32px;
+  border-radius: 8px;
+  object-fit: cover;
   display: block;
+}
+
+.dnm-header-brand-title {
+  font-family: var(--ig-font-title);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.4px;
+  color: var(--ig-text-primary);
+  line-height: 1;
+}
+
+.dnm-theme-icon-sun {
+  display: none;
+}
+.dnm-theme-icon-moon {
+  display: block;
+}
+[data-theme="dark"] .dnm-theme-icon-sun {
+  display: block;
+}
+[data-theme="dark"] .dnm-theme-icon-moon {
+  display: none;
 }
 
 .dnm-header-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .dnm-header-btn {
@@ -210,7 +237,7 @@ html, body {
   width: 100%;
   max-width: 470px;
   height: var(--ig-nav-height);
-  background: rgba(0, 0, 0, 0.94);
+  background: var(--ig-nav-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--ig-border);

@@ -8,8 +8,8 @@
   <meta name="description" content="Daynight-media - Official public platform for client brand reels, creator stories, and real-time social feeds">
 
   <!-- Favicon & Icons -->
-  <link rel="icon" type="image/png" href="/Logo/logo.png">
-  <link rel="apple-touch-icon" href="/Logo/logo.png">
+  <link rel="icon" type="image/png" href="./Logo/logo.png">
+  <link rel="apple-touch-icon" href="./Logo/logo.png">
 
   <!-- Google Fonts: Montserrat -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,13 +17,13 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
 
   <!-- Modular Instagram-Grade Stylesheets -->
-  <link rel="stylesheet" href="./Stylesheets/instagram-core.css">
-  <link rel="stylesheet" href="./Stylesheets/feed.css">
-  <link rel="stylesheet" href="./Stylesheets/reels.css">
-  <link rel="stylesheet" href="./Stylesheets/explore.css">
-  <link rel="stylesheet" href="./Stylesheets/settings.css">
-  <link rel="stylesheet" href="./Stylesheets/profile.css">
-  <link rel="stylesheet" href="./Stylesheets/upload.css">
+  <link rel="stylesheet" href="./Stylesheets/instagram-core.css?v=2.1">
+  <link rel="stylesheet" href="./Stylesheets/feed.css?v=2.1">
+  <link rel="stylesheet" href="./Stylesheets/reels.css?v=2.1">
+  <link rel="stylesheet" href="./Stylesheets/explore.css?v=2.1">
+  <link rel="stylesheet" href="./Stylesheets/settings.css?v=2.1">
+  <link rel="stylesheet" href="./Stylesheets/profile.css?v=2.1">
+  <link rel="stylesheet" href="./Stylesheets/upload.css?v=2.1">
 
   <!-- Real Google Identity Services & Firebase Auth SDKs -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -38,10 +38,15 @@
     <!-- Top Sticky Instagram Header with Intelligent Scroll Hide/Show -->
     <header class="dnm-top-header" id="dnm-main-header">
       <a href="#" class="dnm-logo" id="dnm-header-logo" aria-label="Daynight-media Home">
-        <img src="/Logo/logo.png" alt="Day Night" class="dnm-official-header-logo">
+        <img src="./Logo/logo.png?v=2.2" alt="Day Night" class="dnm-official-header-logo">
+        <span class="dnm-header-brand-title">Day Night</span>
       </a>
 
       <div class="dnm-header-actions">
+        <button type="button" class="dnm-header-btn" id="dnm-btn-theme-toggle" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">
+          <svg class="dnm-theme-icon-sun" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="dnm-theme-icon-moon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
         <button type="button" class="dnm-header-btn" id="dnm-btn-search-header" aria-label="Search">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
@@ -110,7 +115,7 @@
 
       <!-- 5. Profile -->
       <button type="button" class="dnm-nav-item" data-tab="profile" aria-label="Profile">
-        <img class="dnm-nav-avatar" id="dnm-nav-user-avatar" src="/Logo/logo.png" alt="Profile">
+        <img class="dnm-nav-avatar" id="dnm-nav-user-avatar" src="./Logo/logo.png?v=2.2" alt="Profile">
       </button>
     </nav>
 
@@ -120,13 +125,13 @@
   <div class="dnm-toast-container" id="dnm-toast-container"></div>
 
   <!-- Modular Scripts -->
-  <script src="./Scripts/firebase-config.js"></script>
-  <script src="./Scripts/auth.js"></script>
-  <script src="./Scripts/data.js"></script>
-  <script src="./Scripts/feed.js"></script>
-  <script src="./Scripts/reels.js"></script>
-  <script src="./Scripts/settings.js"></script>
-  <script src="./Scripts/upload.js"></script>
-  <script src="./Scripts/app.js"></script>
+  <script src="./Scripts/firebase-config.js?v=2.2"></script>
+  <script src="./Scripts/auth.js?v=2.2"></script>
+  <script src="./Scripts/data.js?v=2.2"></script>
+  <script src="./Scripts/feed.js?v=2.2"></script>
+  <script src="./Scripts/reels.js?v=2.2"></script>
+  <script src="./Scripts/settings.js?v=2.2"></script>
+  <script src="./Scripts/upload.js?v=2.2"></script>
+  <script src="./Scripts/app.js?v=2.2"></script>
 </body>
 </html>

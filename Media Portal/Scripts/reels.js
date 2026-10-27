@@ -25,14 +25,14 @@
       const isClient = !!reel.c;
       const clientObj = isClient ? window.DNM_DATA.getClient(reel.c) : null;
       const authorName = isClient ? (clientObj ? clientObj.name : '') : (reel.authorName || '');
-      const authorAvatar = isClient ? (clientObj ? clientObj.logo : '/Logo/logo.png') : '/Logo/logo.png';
+      const authorAvatar = isClient ? (clientObj ? clientObj.logo : './Logo/logo.png') : './Logo/logo.png';
       const isFollowing = followingSet.has(reel.c || authorName);
       const videoSrc = window.DNM_DATA.getStreamUrl(reel);
       const baseLikes = Number(reel.likes) || 0;
 
       reelsHtml += `
         <div class="dnm-reel-viewport" data-reel-id="${reel.id}" data-idx="${idx}">
-          <video class="dnm-reel-video-element" src="${videoSrc}" playsinline loop preload="${idx === 0 ? 'auto' : 'none'}" poster="${reel.coverUrl || ''}"></video>
+          <video class="dnm-reel-video-element" src="${videoSrc}" muted playsinline loop preload="${idx === 0 ? 'auto' : 'none'}" poster="${reel.coverUrl || ''}"></video>
 
           <!-- Right Floating Actions Stack -->
           <div class="dnm-reel-actions-stack">

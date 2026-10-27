@@ -10,6 +10,18 @@
   let clientsMap = {};
   let approvedReels = [];
   let communityPosts = [];
+  let streamToken = '';
+
+  // Pre-warm authenticated video stream token
+  async function fetchStreamToken() {
+    try {
+      const res = await fetch('https://daynight-portal.pages.dev/api/token');
+      if (res.ok) {
+        const d = await res.json();
+        if (d && d.token) streamToken = d.token;
+      }
+    } catch(_) {}
+  }
 
   // Load community posts persisted locally
   try {
@@ -18,9 +30,12 @@
   } catch(_) {}
 
   async function loadData() {
+    // Fetch stream token and portal-data in parallel
+    const tokenPromise = fetchStreamToken();
+
     try {
       // 1. Fetch real production portal-data.json
-      const res = await fetch('/portal-data.json?t=' + Date.now());
+      const res = await fetch('./portal-data.json?t=' + Date.now());
       if (res.ok) {
         rawData = await res.json();
       }
@@ -39,6 +54,8 @@
       }
     }
 
+    await tokenPromise;
+
     if (rawData) {
       // Clean duplicate clients by slug/id
       const seenSlugs = new Set();
@@ -55,8 +72,12 @@
         clientsMap[c.slug] = c;
       });
 
-      // Strictly approved, unhidden reels only! Real video streaming tokens & Drive file IDs!
-      approvedReels = (rawData.reels || []).filter(r => r.status === 'approved' && !r.hidden);
+      // Strictly approved, playable reels (filtering out macOS AppleDouble dot files)
+      approvedReels = (rawData.reels || []).filter(r => 
+        r.status === 'approved' && 
+        !r.hidden && 
+        (!r.title || !r.title.trim().startsWith('.'))
+      );
     }
 
     return {
@@ -99,7 +120,8 @@
     if (!reel) return '';
     const fileId = reel.fileId || (reel.url ? (reel.url.match(/[-\w]{25,}/) || [])[0] : null);
     if (fileId) {
-      return `/api/video?id=${encodeURIComponent(fileId)}&v=3`;
+      const tokParam = streamToken ? `&token=${encodeURIComponent(streamToken)}` : '';
+      return `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}${tokParam}&v=3`;
     }
     return reel.url || '';
   }

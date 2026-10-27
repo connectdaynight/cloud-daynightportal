@@ -10,7 +10,7 @@
   }
 
   function renderSettings(container) {
-    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const isAutoplay = localStorage.getItem('dnm_autoplay') !== 'false';
     const isMutedDefault = localStorage.getItem('dnm_default_muted') !== 'false';
     const streamQuality = localStorage.getItem('dnm_stream_quality') || 'hd';
@@ -171,10 +171,10 @@
       themeToggle.addEventListener('change', e => {
         const dark = e.target.checked;
         if (dark) {
-          document.documentElement.removeAttribute('data-theme');
+          document.documentElement.setAttribute('data-theme', 'dark');
           localStorage.setItem('dnm_theme', 'dark');
         } else {
-          document.documentElement.setAttribute('data-theme', 'light');
+          document.documentElement.removeAttribute('data-theme');
           localStorage.setItem('dnm_theme', 'light');
         }
       });
