@@ -106,33 +106,7 @@
           </div>
         </div>
 
-        <!-- 3. Real Server Engine Diagnostics -->
-        <div class="dnm-settings-section">
-          <span class="dnm-settings-section-title">Server Engine &amp; Diagnostics</span>
-          <div class="dnm-settings-row" style="flex-direction:column;align-items:stretch;gap:10px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;">
-              <div class="dnm-settings-label-group">
-                <span class="dnm-settings-label">Google Drive Engine Backend</span>
-                <span class="dnm-settings-desc">Live production Google Apps Script endpoint</span>
-              </div>
-              <button type="button" class="dnm-settings-btn primary" id="dnm-btn-ping">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                <span>Test Connection</span>
-              </button>
-            </div>
-            <div class="dnm-ping-status" id="dnm-ping-output">Click "Test Connection" to check live backend ping.</div>
-          </div>
-
-          <div class="dnm-settings-row">
-            <div class="dnm-settings-label-group">
-              <span class="dnm-settings-label">Live Production Records</span>
-              <span class="dnm-settings-desc">${reelsCount} Approved Reels &bull; ${clients.length} Verified Brands</span>
-            </div>
-            <span style="font-size:12px;font-weight:700;color:#1FAF64;">Synced 100%</span>
-          </div>
-        </div>
-
-        <!-- 4. Data & Cache Actions -->
+        <!-- 3. Data & Cache Actions -->
         <div class="dnm-settings-section">
           <span class="dnm-settings-section-title">Storage &amp; Actions</span>
           <div class="dnm-settings-row">
@@ -212,35 +186,7 @@
       });
     }
 
-    // 5. Real Backend Server Ping
-    const pingBtn = container.querySelector('#dnm-btn-ping');
-    const pingOutput = container.querySelector('#dnm-ping-output');
-    if (pingBtn && pingOutput) {
-      pingBtn.addEventListener('click', async () => {
-        pingOutput.className = 'dnm-ping-status loading';
-        pingOutput.textContent = 'Pinging Google Apps Script production engine...';
-        const start = Date.now();
-        try {
-          const gasUrl = window.DNM_CONFIG.gasUrl;
-          const res = await fetch(`${gasUrl}?action=ping`, { redirect: 'follow' });
-          const latency = Date.now() - start;
-          if (res.ok) {
-            const data = await res.json();
-            pingOutput.className = 'dnm-ping-status success';
-            pingOutput.textContent = `Connected: 200 OK | Latency: ${latency}ms | Folder: "${data.folderName || 'Day Night Media Portal'}" | Engine Status: Active`;
-          } else {
-            pingOutput.className = 'dnm-ping-status';
-            pingOutput.textContent = `Server responded with HTTP ${res.status} (${latency}ms)`;
-          }
-        } catch(err) {
-          const latency = Date.now() - start;
-          pingOutput.className = 'dnm-ping-status';
-          pingOutput.textContent = `Ping note: Completed (${latency}ms). Local proxy redirect configured.`;
-        }
-      });
-    }
-
-    // 6. Sign In / Sign Out
+    // 5. Sign In / Sign Out
     const signinBtn = container.querySelector('#dnm-btn-signin');
     if (signinBtn) {
       signinBtn.addEventListener('click', () => {

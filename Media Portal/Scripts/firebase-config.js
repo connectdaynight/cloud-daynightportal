@@ -7,12 +7,12 @@
 
   // Firebase configuration object for project daynight-media-portal
   const firebaseConfig = {
-    apiKey: "AIzaSyDayNightMediaAppKey2026Real",
+    apiKey: "AIzaSyBt3eCmu_sGhfY01DiKgsTLqQrmq6EmDxw",
     authDomain: "daynight-media-portal.firebaseapp.com",
     projectId: "daynight-media-portal",
     storageBucket: "daynight-media-portal.firebasestorage.app",
-    messagingSenderId: "608025535565",
-    appId: "1:608025535565:web:daynightmedia2026app"
+    messagingSenderId: "151346419700",
+    appId: "1:151346419700:web:dbe069eff93d27b1170ba1"
   };
 
   window.DNM_CONFIG = {

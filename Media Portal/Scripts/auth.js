@@ -52,10 +52,14 @@
         handleAuthSuccess(realUser);
         return realUser;
       } catch (err) {
-        console.warn('Firebase popup note:', err.message);
-        // If popup was blocked or project config pending, use Google Identity Services
+        console.warn('Firebase popup note:', err.code, err.message);
+        // If popup was blocked, fallback to redirect
         if (err.code === 'auth/popup-blocked') {
           return window.DNM_FIREBASE.auth.signInWithRedirect(provider);
+        }
+        if (err.code === 'auth/operation-not-allowed' || err.code === 'auth/configuration-not-found' || (err.message && err.message.includes('CONFIGURATION_NOT_FOUND'))) {
+          alert('Google Sign-In Activation Required:\n\n1. Visit Firebase Console:\nhttps://console.firebase.google.com/project/daynight-media-portal/authentication\n\n2. Click "Get Started" (if first time).\n3. Go to "Sign-in method" tab > click "Google" > toggle "Enable" > click "Save".\n\nGoogle will automatically authorize this domain!');
+          return;
         }
       }
     }
