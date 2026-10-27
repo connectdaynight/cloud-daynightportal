@@ -4,6 +4,7 @@ node_modules/
 *.log
 page-*.yml
 page-*.png
+.firebase/
 .playwright-mcp/
 scratch/
 .wrangler/

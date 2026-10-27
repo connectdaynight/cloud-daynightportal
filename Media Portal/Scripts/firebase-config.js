@@ -1,16 +1,16 @@
 /**
  * Daynight-Media: Firebase Configuration & SDK Initialization
- * Project: daynight-media
+ * Project: daynight-media-portal
  */
 (function(window) {
   'use strict';
 
-  // Firebase configuration object for project daynight-media
+  // Firebase configuration object for project daynight-media-portal
   const firebaseConfig = {
     apiKey: "AIzaSyDayNightMediaAppKey2026Real",
-    authDomain: "daynight-media.firebaseapp.com",
-    projectId: "daynight-media",
-    storageBucket: "daynight-media.firebasestorage.app",
+    authDomain: "daynight-media-portal.firebaseapp.com",
+    projectId: "daynight-media-portal",
+    storageBucket: "daynight-media-portal.firebasestorage.app",
     messagingSenderId: "608025535565",
     appId: "1:608025535565:web:daynightmedia2026app"
   };
