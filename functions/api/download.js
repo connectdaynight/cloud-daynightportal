@@ -9,18 +9,47 @@ const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-y
 let cachedToken = null;
 let tokenExpiry = 0;
 
-async function getStreamToken(gasUrl) {
+async function getStreamToken(gasUrl, reqUrl, forceRefresh = false) {
   const now = Date.now();
-  if (cachedToken && now < tokenExpiry) {
+  if (!forceRefresh && cachedToken && now < tokenExpiry) {
     return cachedToken;
   }
+
+  const origin = reqUrl ? new URL(reqUrl).origin : "https://daynight-portal.pages.dev";
+  const cacheReq = new Request(`${origin}/__internal_edge_token_v3__`);
+
+  // Check Edge Cache
+  if (!forceRefresh) {
+    try {
+      const cache = caches.default;
+      const cached = await cache.match(cacheReq);
+      if (cached) {
+        const data = await cached.json();
+        if (data && data.token) {
+          cachedToken = data.token;
+          tokenExpiry = now + 40 * 60 * 1000;
+          return cachedToken;
+        }
+      }
+    } catch (_) {}
+  }
+
   try {
     const res = await fetch(`${gasUrl}?action=getStreamToken`, { redirect: "follow" });
     if (res.ok) {
       const data = await res.json();
       if (data && data.success && data.token) {
         cachedToken = data.token;
-        tokenExpiry = now + 45 * 60 * 1000;
+        tokenExpiry = now + 40 * 60 * 1000;
+        try {
+          const cache = caches.default;
+          await cache.put(cacheReq, new Response(JSON.stringify({ token: data.token }), {
+            headers: {
+              "Content-Type": "application/json",
+              "Cache-Control": "public, max-age=2400"
+            }
+          }));
+        } catch (_) {}
         return cachedToken;
       }
     }
@@ -53,16 +82,25 @@ export async function onRequestGet(context) {
     }
 
     if (fileId) {
-      const token = await getStreamToken(gasUrl);
+      let token = await getStreamToken(gasUrl, request.url);
       if (token) {
         const driveApiUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
         const apiHeaders = {
           "Authorization": `Bearer ${token}`,
           ...fetchHeaders
         };
-        const apiRes = await fetch(driveApiUrl, { headers: apiHeaders });
-        const apiContentType = apiRes.headers.get("content-type") || "";
+        let apiRes = await fetch(driveApiUrl, { headers: apiHeaders });
 
+        if (apiRes.status === 401) {
+          cachedToken = null;
+          token = await getStreamToken(gasUrl, request.url, true);
+          if (token) {
+            apiHeaders["Authorization"] = `Bearer ${token}`;
+            apiRes = await fetch(driveApiUrl, { headers: apiHeaders });
+          }
+        }
+
+        const apiContentType = apiRes.headers.get("content-type") || "";
         if ((apiRes.ok || apiRes.status === 206) && !apiContentType.includes("text/html")) {
           videoStream = apiRes;
         }

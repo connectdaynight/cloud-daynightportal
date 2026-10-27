@@ -6601,6 +6601,17 @@
       return id ? `https://drive.google.com/uc?export=download&id=${id}` : u;
     };
 
+    function getStreamUrl(reel) {
+      if (!reel) return '';
+      const id = reel.fileId || driveId(reel.url);
+      if (!id) return reel.url || '';
+      if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+        return `/api/video?id=${encodeURIComponent(id)}&v=3`;
+      }
+      return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
+    }
+    window.getStreamUrl = getStreamUrl;
+
     // Filter contents by year, month, branch, album, and type (strictly for active client, real data only)
     const contentsFor = (y, m, b, alb, type) => (DATA.reels || []).filter(r => {
       if (!view.client || !isClientMatch(r.c, view.client)) return false;
@@ -11421,13 +11432,7 @@
       let currentReel = activeList[curIdx] || r;
 
       function getStream(reel) {
-        if (!reel) return '';
-        const id = reel.fileId || driveId(reel.url);
-        if (!id) return reel.url || '';
-        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-          return `/api/video?id=${encodeURIComponent(id)}`;
-        }
-        return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
+        return getStreamUrl(reel);
       }
 
       const sc = sheet(`
@@ -13242,9 +13247,9 @@
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
           const c = client() || { id: 'tcs' };
-          const activeList = (view.screen === 'reels')
-            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (x.status === 'approved' || (view.album && x.album === view.album) || (x.album && x.album !== 'General')))
-            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) );
+          const activeList = !CONFIG.isAdmin
+            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && !x.hidden && x.status === 'approved')
+            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id));
           openVideoModal(r, activeList);
         }
       }
@@ -13355,9 +13360,9 @@
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
           const c = client() || { id: 'tcs' };
-          const activeList = (view.screen === 'reels')
-            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (x.status === 'approved' || (view.album && x.album === view.album) || (x.album && x.album !== 'General')))
-            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) );
+          const activeList = !CONFIG.isAdmin
+            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && !x.hidden && x.status === 'approved')
+            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id));
           const pref = (function() { try { return localStorage.getItem('dn_player_mode'); } catch(_) { return null; } })();
           if (pref === 'legacy') openClassicPlayer(r, activeList);
           else openVideoModal(r, activeList);

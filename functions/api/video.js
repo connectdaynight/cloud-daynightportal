@@ -13,27 +13,33 @@ const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-y
 let memoryToken = null;
 let memoryExpiry = 0;
 
-async function getStreamToken(gasUrl) {
+async function getStreamToken(gasUrl, reqUrl, forceRefresh = false) {
   const now = Date.now();
-  if (memoryToken && now < memoryExpiry) {
+  if (!forceRefresh && memoryToken && now < memoryExpiry) {
     return memoryToken;
   }
 
-  // Check Edge Cache (shared across all Cloudflare isolates at this PoP)
-  try {
-    const cache = caches.default;
-    const cacheReq = new Request("https://daynight-portal-token.internal/token");
-    const cached = await cache.match(cacheReq);
-    if (cached) {
-      const data = await cached.json();
-      if (data && data.token) {
-        memoryToken = data.token;
-        memoryExpiry = now + 40 * 60 * 1000;
-        return memoryToken;
-      }
-    }
+  const origin = reqUrl ? new URL(reqUrl).origin : "https://daynight-portal.pages.dev";
+  const cacheReq = new Request(`${origin}/__internal_edge_token_v3__`);
 
-    // Fetch fresh token from Apps Script
+  // Check Edge Cache (shared across all Cloudflare isolates at this PoP)
+  if (!forceRefresh) {
+    try {
+      const cache = caches.default;
+      const cached = await cache.match(cacheReq);
+      if (cached) {
+        const data = await cached.json();
+        if (data && data.token) {
+          memoryToken = data.token;
+          memoryExpiry = now + 40 * 60 * 1000;
+          return memoryToken;
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Fetch fresh token from Apps Script
+  try {
     const res = await fetch(`${gasUrl}?action=getStreamToken`, { redirect: "follow" });
     if (res.ok) {
       const data = await res.json();
@@ -41,6 +47,7 @@ async function getStreamToken(gasUrl) {
         memoryToken = data.token;
         memoryExpiry = now + 40 * 60 * 1000;
         try {
+          const cache = caches.default;
           await cache.put(cacheReq, new Response(JSON.stringify({ token: data.token }), {
             headers: {
               "Content-Type": "application/json",
@@ -79,22 +86,26 @@ export async function onRequestGet(context) {
 
     if (fileId) {
       // 1. Primary: High-speed Authenticated Google Drive API v3 stream
-      const token = await getStreamToken(gasUrl);
+      let token = await getStreamToken(gasUrl, request.url);
       if (token) {
         const driveApiUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
         const apiHeaders = {
           "Authorization": `Bearer ${token}`,
           ...fetchHeaders
         };
-        const apiRes = await fetch(driveApiUrl, {
-          headers: apiHeaders,
-          cf: {
-            cacheEverything: true,
-            cacheTtl: 86400
-          }
-        });
-        const apiContentType = apiRes.headers.get("content-type") || "";
+        let apiRes = await fetch(driveApiUrl, { headers: apiHeaders });
 
+        // If token was rejected (401), immediately fetch a fresh token and retry once
+        if (apiRes.status === 401) {
+          memoryToken = null;
+          token = await getStreamToken(gasUrl, request.url, true);
+          if (token) {
+            apiHeaders["Authorization"] = `Bearer ${token}`;
+            apiRes = await fetch(driveApiUrl, { headers: apiHeaders });
+          }
+        }
+
+        const apiContentType = apiRes.headers.get("content-type") || "";
         if ((apiRes.ok || apiRes.status === 206) && !apiContentType.includes("text/html")) {
           videoStream = apiRes;
         }

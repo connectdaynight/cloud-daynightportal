@@ -6,3 +6,18 @@
 
 /Logo/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/api/video*
+  Accept-Ranges: bytes
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Headers: Range, Authorization, Content-Type
+  Access-Control-Expose-Headers: Content-Range, Content-Length, Accept-Ranges
+  Cache-Control: public, max-age=86400, s-maxage=86400, stale-while-revalidate=86400
+
+/api/download*
+  Accept-Ranges: bytes
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Headers: Range, Authorization, Content-Type
+  Access-Control-Expose-Headers: Content-Range, Content-Length, Accept-Ranges
+  Cache-Control: public, max-age=86400
+
