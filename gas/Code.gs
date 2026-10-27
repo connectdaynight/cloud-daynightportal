@@ -68,6 +68,15 @@ function doGet(e) {
       return jsonResponse({ success: true, data: data });
     }
 
+    // 4. Stream Token for Authenticated Google Drive API Video Streaming
+    if (action === "getStreamToken") {
+      DriveApp.getRootFolder();
+      return jsonResponse({
+        success: true,
+        token: ScriptApp.getOAuthToken()
+      });
+    }
+
     return jsonResponse({ success: false, error: "Unknown action" }, 400);
   } catch (err) {
     return jsonResponse({ success: false, error: err.toString() }, 500);
