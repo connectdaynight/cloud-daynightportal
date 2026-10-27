@@ -4526,6 +4526,62 @@
       line-height: 1.15;
       font-family: var(--sans);
     }
+    .top-brand-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .dn-ap-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 6px 3px 9px;
+      border-radius: 999px;
+      background: #FFFFFF;
+      border: 1px solid rgba(18, 41, 74, 0.12);
+      box-shadow: 0 1px 4px rgba(18, 41, 74, 0.05);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .dn-ap-toggle-btn:hover {
+      border-color: rgba(184, 147, 90, 0.45);
+      box-shadow: 0 2px 6px rgba(184, 147, 90, 0.15);
+    }
+    .dn-ap-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--navy);
+      letter-spacing: -0.1px;
+    }
+    .dn-ap-track {
+      width: 26px;
+      height: 15px;
+      border-radius: 999px;
+      background: #D1D5DB;
+      position: relative;
+      transition: background 0.25s ease;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .dn-ap-thumb {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+    .dn-ap-toggle-btn.active .dn-ap-track {
+      background: #1FAF64;
+    }
+    .dn-ap-toggle-btn.active .dn-ap-thumb {
+      transform: translateX(11px);
+    }
 
     /* Fixed & Floating "Open Approval Portal" Luxury Capsule at Bottom (Matching Website Theme, Elegant Height, Hidden PIN) */
     .dn-bottom-approval-bar {
@@ -4840,16 +4896,30 @@
       overflow: hidden;
       cursor: pointer;
     }
+    .dn-feed-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000000;
+      z-index: 1;
+    }
     .dn-feed-poster {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.3s ease;
+      transition: opacity 0.35s ease, transform 0.3s ease;
+      z-index: 2;
     }
     .dn-feed-media-wrap:hover .dn-feed-poster {
       transform: scale(1.02);
+    }
+    .dn-feed-media-wrap.is-playing .dn-feed-poster {
+      opacity: 0;
+      pointer-events: none;
     }
     .dn-feed-play-overlay {
       position: absolute;
@@ -4869,10 +4939,39 @@
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 5;
     }
+    .dn-feed-media-wrap.is-playing .dn-feed-play-overlay {
+      opacity: 0;
+      pointer-events: none;
+    }
     .dn-feed-media-wrap:hover .dn-feed-play-overlay {
       transform: translate(-50%, -50%) scale(1.08);
       background: rgba(18, 41, 74, 0.85);
       border-color: #FFFFFF;
+    }
+    .dn-feed-sound-btn {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #FFFFFF;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      z-index: 7;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .dn-feed-sound-btn:hover {
+      background: rgba(18, 41, 74, 0.85);
+      transform: scale(1.08);
+    }
+    .dn-feed-sound-btn:active {
+      transform: scale(0.92);
     }
     .dn-feed-dur-badge {
       position: absolute;
@@ -6496,12 +6595,21 @@
       return id ? `https://drive.google.com/uc?export=download&id=${id}` : u;
     };
 
+    const getStreamUrl = reel => {
+      if (!reel) return '';
+      const id = reel.fileId || driveId(reel.url);
+      if (!id) return reel.url || '';
+      if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+        return `/api/video?id=${encodeURIComponent(id)}`;
+      }
+      return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
+    };
+
     // Filter contents by year, month, branch, album, and type (strictly for active client, real data only)
     const contentsFor = (y, m, b, alb, type) => (DATA.reels || []).filter(r => {
       if (!view.client || !isClientMatch(r.c, view.client)) return false;
       if (!CONFIG.isAdmin && r.hidden === true) return false;
-      const isAlbumMatch = (alb != null && alb !== 'all' && r.album === alb) || (r.album && r.album !== 'General');
-      if (!CONFIG.isAdmin && (!r.type || r.type === 'reel' || r.type === 'video') && r.status !== 'approved' && !isAlbumMatch) return false;
+      if (!CONFIG.isAdmin && r.status !== 'approved') return false;
       if (y != null && r.y !== y) return false;
       if (m != null && r.m !== m) return false;
       if (b != null && b !== 'all') {
@@ -7382,6 +7490,69 @@
     }
 
     // --------------------------------------------------------------------------
+    // FEEDS TAB AUTOPLAY OBSERVER & CONTROLLER
+    // --------------------------------------------------------------------------
+    let feedAutoplayObserver = null;
+    function initFeedAutoplay() {
+      if (feedAutoplayObserver) {
+        feedAutoplayObserver.disconnect();
+        feedAutoplayObserver = null;
+      }
+
+      const isEnabled = (function() {
+        try { return localStorage.getItem('dn_feed_autoplay') !== 'false'; } catch(_) { return true; }
+      })();
+
+      const btn = document.getElementById('feed-autoplay-toggle');
+      if (btn) btn.classList.toggle('active', isEnabled);
+
+      const wraps = document.querySelectorAll('.dn-feed-media-wrap');
+      if (!wraps.length) return;
+
+      if (!isEnabled) {
+        wraps.forEach(wrap => {
+          const vid = wrap.querySelector('.dn-feed-video');
+          if (vid) vid.pause();
+          wrap.classList.remove('is-playing');
+        });
+        return;
+      }
+
+      feedAutoplayObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const wrap = entry.target;
+          const vid = wrap.querySelector('.dn-feed-video');
+          if (!vid) return;
+
+          const isStillEnabled = (function() {
+            try { return localStorage.getItem('dn_feed_autoplay') !== 'false'; } catch(_) { return true; }
+          })();
+
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.45 && isStillEnabled) {
+            vid.muted = true;
+            const playPromise = vid.play();
+            if (playPromise !== undefined) {
+              playPromise.then(() => {
+                wrap.classList.add('is-playing');
+              }).catch(() => {
+                // Autoplay may be restricted until user gesture; poster remains visible
+              });
+            }
+          } else {
+            vid.pause();
+            wrap.classList.remove('is-playing');
+          }
+        });
+      }, {
+        root: null,
+        rootMargin: '0px',
+        threshold: [0, 0.45, 0.8]
+      });
+
+      wraps.forEach(wrap => feedAutoplayObserver.observe(wrap));
+    }
+
+    // --------------------------------------------------------------------------
     // FEEDS TAB RENDERER (Instagram & YouTube Style Social Feed with Floating Approval Card)
     // --------------------------------------------------------------------------
     function renderFeedsPage(c) {
@@ -7392,7 +7563,8 @@
         if ((rCid === 'tcs' || rCid === 'cmvje2zfy') && (targetCid === 'tcs' || targetCid === 'cmvje2zfy')) return true;
         return false;
       }
-      let clientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin));
+      // Strictly show ONLY approved content in the feeds tab
+      let clientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin) && r.status === 'approved');
 
       // Calculate last updated relative string
       let lastUpdatedStr = 'Just now';
@@ -7415,9 +7587,12 @@
       });
 
       const favs = getFavorites();
+      const isFeedAutoplayOn = (function() {
+        try { return localStorage.getItem('dn_feed_autoplay') !== 'false'; } catch(_) { return true; }
+      })();
 
       return `
-        <!-- Top Header: Client Logo on Left, Title, Day Night Logo on Right -->
+        <!-- Top Header: Client Logo on Left, Title, Autoplay Toggle + Day Night Logo on Right -->
         <div class="top client-feeds-top">
           <div class="top-brand-left">
             <div class="top-client-avatar">
@@ -7428,7 +7603,13 @@
               <span>Home</span>
             </div>
           </div>
-          ${dnLogo('mini')}
+          <div class="top-brand-right">
+            <button type="button" class="dn-ap-toggle-btn ${isFeedAutoplayOn ? 'active' : ''}" data-act="toggle-feed-autoplay" id="feed-autoplay-toggle" title="Autoplay videos on scroll (Default: ON)" aria-label="Toggle Autoplay">
+              <span class="dn-ap-label">Autoplay</span>
+              <span class="dn-ap-track"><span class="dn-ap-thumb"></span></span>
+            </button>
+            ${dnLogo('mini')}
+          </div>
         </div>
 
         <!-- INSTAGRAM / YOUTUBE SOCIAL FEED -->
@@ -7464,12 +7645,25 @@
                   </button>
                 </header>
 
-                <!-- Media Area (Vertical Video Container) -->
-                <div class="dn-feed-media-wrap" data-act="open-reel-modal" data-id="${r.id}">
+                <!-- Media Area (Vertical Video Container with Auto-Play on Scroll) -->
+                <div class="dn-feed-media-wrap" data-act="feed-media-click" data-id="${r.id}">
+                  <video class="dn-feed-video"
+                         src="${getStreamUrl(r)}"
+                         poster="${esc(cover)}"
+                         playsinline
+                         webkit-playsinline
+                         muted
+                         loop
+                         preload="metadata"
+                         data-id="${r.id}"></video>
                   ${cover ? `<img src="${esc(cover)}" class="dn-feed-poster" alt="${esc(r.title)}" loading="lazy">` : ''}
                   <div class="dn-feed-play-overlay">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   </div>
+                  <button type="button" class="dn-feed-sound-btn" data-act="toggle-feed-sound" data-id="${r.id}" title="Toggle Sound" aria-label="Toggle Sound">
+                    <svg class="sound-icon-muted" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                    <svg class="sound-icon-audio" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                  </button>
                   <div class="dn-feed-dur-badge">${esc(r.dur || '0:30')}</div>
                 </div>
 
@@ -8043,6 +8237,10 @@
     function render() {
       const s = DATA.settings || {}, c = client();
       clearTimers();
+      if (view.screen !== 'genesis' && feedAutoplayObserver) {
+        feedAutoplayObserver.disconnect();
+        feedAutoplayObserver = null;
+      }
 
       // Dynamic favicon & title: Client logo for client screens, Logo folder icon for splash/general
       if (view.screen === 'splash' || !view.client || !c) {
@@ -8120,6 +8318,16 @@
             </div>`;
           return;
         }
+      }
+
+      if (view.screen !== 'genesis') {
+        if (feedAutoplayObserver) {
+          feedAutoplayObserver.disconnect();
+          feedAutoplayObserver = null;
+        }
+        document.querySelectorAll('.dn-feed-video').forEach(v => {
+          try { v.pause(); } catch(_) {}
+        });
       }
 
       // Screen 1: Day Night Signature Loading / Splash Animation (Home Screen)
@@ -8252,6 +8460,7 @@
       else if (view.screen === 'genesis') {
         if (!c) { go({ screen: 'splash', client: null }); return; }
         app.innerHTML = renderFeedsPage(c);
+        initFeedAutoplay();
       }
 
       // Screen 2A: Dedicated Client Approval Portal (Assigned Code Protected)
@@ -8269,7 +8478,7 @@
       else if (view.screen === 'branches') {
         if (!c) { go({ screen: 'splash', client: null }); return; }
         const list = c.branches || [];
-        const total = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin)).length;
+        const total = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin) && r.status === 'approved').length;
         app.innerHTML = `
           ${topbar(c.name, 'Store Branches')}
           <div class="head">
@@ -8311,7 +8520,7 @@
       else if (view.screen === 'collections' || view.screen === 'albums') {
         if (!c) { go({ screen: 'splash', client: null }); return; }
         const list = c.albums || [];
-        const total = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin)).length;
+        const total = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin) && r.status === 'approved').length;
         app.innerHTML = `
           ${topbar(c.name, 'Collections')}
           <div class="head">
@@ -8353,7 +8562,7 @@
       else if (view.screen === 'months') {
         if (!c) { go({ screen: 'splash', client: null }); return; }
         const y = view.year;
-        const total = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin)).length;
+        const total = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin) && (CONFIG.isAdmin || r.status === 'approved')).length;
         const availableYears = Array.from(new Set([TODAY.getFullYear(), ...(DATA.reels || []).map(r => r.y)])).sort();
         const hasBranches = !!(c.branches && c.branches.length);
         const hasAlbums = !!(c.albums && c.albums.length);
@@ -8642,7 +8851,7 @@
         if (!c) { go({ screen: 'splash', client: null }); return; }
         const favIds = [];
         try { favIds.push(...JSON.parse(localStorage.getItem('dn_favs_' + c.id) || '[]')); } catch(e) {}
-        const allFavs = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && favIds.includes(r.id));
+        const allFavs = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && favIds.includes(r.id) && (CONFIG.isAdmin || (!r.hidden && r.status === 'approved')));
         const currentType = view.contentType || 'all';
         const gridCols = view.gridCols || 2;
 
@@ -8747,7 +8956,7 @@
       // Screen 6: Client Profile & Brand Security Page
       else if (view.screen === 'profile') {
         if (!c) { go({ screen: 'splash', client: null }); return; }
-        const clientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id));
+        const clientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (CONFIG.isAdmin || (!r.hidden && r.status === 'approved')));
         const storiesCount = clientReels.filter(r => r.type === 'story').length;
         const postersCount = clientReels.filter(r => r.type === 'poster').length;
         const reelsCount = clientReels.filter(r => !r.type || r.type === 'reel' || r.type === 'video').length;
@@ -8803,7 +9012,7 @@
               <div class="profile-favs-grid">
                 ${(function(){
                   const favIds = getFavorites(c.id);
-                  const favReels = (DATA.reels || []).filter(r => favIds.includes(r.id));
+                  const favReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && favIds.includes(r.id) && (CONFIG.isAdmin || (!r.hidden && r.status === 'approved')));
                   if (!favReels.length) return '<p style="grid-column:1/-1;font-size:12px;color:var(--mute);padding:6px 0;">No favorites yet. Tap the bookmark icon on any reel to save it here for quick access.</p>';
                   return favReels.map(r => `
                     <div class="pfav-card" data-act="play-video" data-id="${r.id}">
@@ -10056,7 +10265,7 @@
       // Active playlist
       let playlist = initialList;
       if (!playlist || !playlist.length) {
-        playlist = (DATA.reels || []).filter(x => (!c || isClientMatch(x.c, c.id)) );
+        playlist = (DATA.reels || []).filter(x => (!c || isClientMatch(x.c, c.id)) && (!x.hidden || CONFIG.isAdmin) && (CONFIG.isAdmin || x.status === 'approved'));
       }
       if (!playlist || !playlist.length) playlist = [r];
 
@@ -11218,7 +11427,7 @@
 
       let activeList = initialList;
       if (!activeList || !activeList.length) {
-        activeList = (DATA.reels || []).filter(x => (!c || isClientMatch(x.c, c.id)) );
+        activeList = (DATA.reels || []).filter(x => (!c || isClientMatch(x.c, c.id)) && (!x.hidden || CONFIG.isAdmin) && (CONFIG.isAdmin || x.status === 'approved'));
       }
       if (!activeList || !activeList.length) activeList = [r];
 
@@ -12922,11 +13131,52 @@
           go({ screen: 'preapproval', client: view.client });
         }
       }
+      else if (a === 'toggle-feed-autoplay') {
+        e.preventDefault();
+        e.stopPropagation();
+        let currentVal = true;
+        try { currentVal = localStorage.getItem('dn_feed_autoplay') !== 'false'; } catch(_) {}
+        const newVal = !currentVal;
+        try { localStorage.setItem('dn_feed_autoplay', newVal ? 'true' : 'false'); } catch(_) {}
+        const btn = document.getElementById('feed-autoplay-toggle') || el.closest('.dn-ap-toggle-btn');
+        if (btn) btn.classList.toggle('active', newVal);
+        initFeedAutoplay();
+        toast(newVal ? 'Autoplay on scroll enabled' : 'Autoplay on scroll paused', newVal ? 'success' : 'mute');
+      }
+      else if (a === 'toggle-feed-sound') {
+        e.preventDefault();
+        e.stopPropagation();
+        const wrap = el.closest('.dn-feed-media-wrap');
+        const video = wrap ? wrap.querySelector('.dn-feed-video') : null;
+        if (video) {
+          video.muted = !video.muted;
+          const isMuted = video.muted;
+          const mIcon = el.querySelector('.sound-icon-muted');
+          const aIcon = el.querySelector('.sound-icon-audio');
+          if (mIcon) mIcon.style.display = isMuted ? 'inline-block' : 'none';
+          if (aIcon) aIcon.style.display = isMuted ? 'none' : 'inline-block';
+          toast(isMuted ? 'Muted' : 'Sound ON', 'info');
+        }
+      }
+      else if (a === 'feed-media-click') {
+        const wrap = el.closest('.dn-feed-media-wrap') || el;
+        const video = wrap.querySelector('.dn-feed-video');
+        if (video) {
+          if (video.paused) {
+            video.play().then(() => {
+              wrap.classList.add('is-playing');
+            }).catch(() => {});
+          } else {
+            video.pause();
+            wrap.classList.remove('is-playing');
+          }
+        }
+      }
       else if (a === 'open-reel-modal') {
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
           const c = client() || { id: 'tcs' };
-          const activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (x.status === 'approved' || r.id === x.id));
+          const activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && x.status === 'approved');
           openVideoModal(r, activeList.length ? activeList : [r]);
         }
       }
@@ -12934,7 +13184,7 @@
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
           const c = client() || { id: 'tcs' };
-          const activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (x.status === 'approved' || r.id === x.id));
+          const activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && x.status === 'approved');
           openVideoModal(r, activeList.length ? activeList : [r]);
         }
       }
@@ -12992,9 +13242,9 @@
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
           const c = client() || { id: 'tcs' };
-          const activeList = (view.screen === 'reels')
-            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (x.status === 'approved' || (view.album && x.album === view.album) || (x.album && x.album !== 'General')))
-            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) );
+          const activeList = (view.screen === 'preapproval')
+            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id))
+            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (!x.hidden || CONFIG.isAdmin) && (CONFIG.isAdmin || x.status === 'approved'));
           openVideoModal(r, activeList);
         }
       }
@@ -13105,9 +13355,9 @@
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
           const c = client() || { id: 'tcs' };
-          const activeList = (view.screen === 'reels')
-            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (x.status === 'approved' || (view.album && x.album === view.album) || (x.album && x.album !== 'General')))
-            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) );
+          const activeList = (view.screen === 'preapproval')
+            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id))
+            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (!x.hidden || CONFIG.isAdmin) && (CONFIG.isAdmin || x.status === 'approved'));
           const pref = (function() { try { return localStorage.getItem('dn_player_mode'); } catch(_) { return null; } })();
           if (pref === 'legacy') openClassicPlayer(r, activeList);
           else openVideoModal(r, activeList);
