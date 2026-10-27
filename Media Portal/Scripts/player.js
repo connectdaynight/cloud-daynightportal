@@ -72,6 +72,9 @@
       const isLiked = likesSet.has(currentReel.id);
       const baseLikes = Number(currentReel.likes) || 0;
       const totalLikes = baseLikes + (isLiked ? 1 : 0);
+      const savedSet = new Set(JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]'));
+      const isSaved = savedSet.has(currentReel.id);
+      const isPhoto = currentReel.type === 'photo';
 
       modalSc.innerHTML = `
         <div class="ig-player-wrapper" id="ig-wrapper" style="width:100%;height:100%;position:relative;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;">
@@ -87,9 +90,9 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
               </button>
               <div class="ig-top-title" style="color:#FFF;font-weight:700;font-size:16px;letter-spacing:-0.2px;display:flex;align-items:center;gap:6px;">
-                <span>Reels</span>
+                <span>${isPhoto ? 'Photo' : 'Reels'}</span>
               </div>
-              <button type="button" class="ig-top-btn" id="ig-btn-sound" title="Toggle Sound" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:flex;align-items:center;">
+              <button type="button" class="ig-top-btn" id="ig-btn-sound" title="Toggle Sound" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:${isPhoto ? 'none' : 'flex'};align-items:center;">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="ig-sound-icon">
                   ${isSoundMuted 
                     ? '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>' 
@@ -98,12 +101,13 @@
               </button>
             </div>
 
-            <!-- Video Player Wrap -->
+            <!-- Video / Photo Player Wrap -->
             <div class="ig-video-wrap" id="ig-video-wrap" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline webkit-playsinline autoplay loop preload="auto" poster="${currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:cover;"></video>
+              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline webkit-playsinline autoplay loop preload="auto" poster="${currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:cover;display:${isPhoto ? 'none' : 'block'};"></video>
+              <img id="ig-photo" class="ig-photo-player" src="${currentReel.coverUrl || streamUrl}" alt="" style="width:100%;height:100%;object-fit:contain;background:#000;display:${isPhoto ? 'block' : 'none'};">
               
               <!-- Perfectly Centered Stable Buffering Spinner -->
-              <div class="video-loading-circle active" id="ig-loading-circle">
+              <div class="video-loading-circle ${isPhoto ? '' : 'active'}" id="ig-loading-circle">
                 <svg class="v-spinner-svg" viewBox="0 0 50 50">
                   <circle class="v-spinner-path" cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
                 </svg>
@@ -146,12 +150,20 @@
                 <span class="ig-action-count" style="color:#FFF;font-size:11px;font-weight:600;">Share</span>
               </div>
 
-              <!-- Direct Download MP4 Action -->
+              <!-- Save / Bookmark Action -->
               <div class="ig-action-item" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-                <button type="button" class="ig-action-btn" id="ig-btn-player-dl" title="Download Master MP4" aria-label="Download" style="background:none;border:none;color:#FFF;cursor:pointer;padding:4px;">
+                <button type="button" class="ig-action-btn" id="ig-btn-bookmark" aria-label="Save" style="background:none;border:none;color:#FFF;cursor:pointer;padding:4px;">
+                  <svg width="25" height="25" viewBox="0 0 24 24" id="ig-icon-bookmark" fill="${isSaved ? '#FFD700' : 'none'}" stroke="${isSaved ? '#FFD700' : '#FFFFFF'}" stroke-width="2.2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                </button>
+                <span class="ig-action-count" id="ig-label-bookmark" style="color:#FFF;font-size:11px;font-weight:600;">${isSaved ? 'Saved' : 'Save'}</span>
+              </div>
+
+              <!-- Direct Download Action -->
+              <div class="ig-action-item" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <button type="button" class="ig-action-btn" id="ig-btn-player-dl" title="Download Master File" aria-label="Download" style="background:none;border:none;color:#FFF;cursor:pointer;padding:4px;">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 20h16"/></svg>
                 </button>
-                <span class="ig-action-count" style="color:#FFF;font-size:11px;font-weight:600;">Save</span>
+                <span class="ig-action-count" style="color:#FFF;font-size:11px;font-weight:600;">Download</span>
               </div>
 
               <!-- Rotating Vinyl Disc -->
@@ -175,7 +187,7 @@
             </div>
 
             <!-- Scrubber Timeline Bar -->
-            <div class="ig-scrubber-bar" id="ig-scrubber" style="position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(255,255,255,0.25);cursor:pointer;z-index:25;">
+            <div class="ig-scrubber-bar" id="ig-scrubber" style="position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(255,255,255,0.25);cursor:pointer;z-index:25;display:${isPhoto ? 'none' : 'block'};">
               <div class="ig-scrubber-fill" id="ig-scrubber-fill" style="width:0%;height:100%;background:#FFF;transition:width 0.1s linear;"></div>
             </div>
 
@@ -212,6 +224,7 @@
 
     function attachModalEvents() {
       const vid = modalSc.querySelector('#ig-video');
+      const photoImg = modalSc.querySelector('#ig-photo');
       const loader = modalSc.querySelector('#ig-loading-circle');
       const scrubberFill = modalSc.querySelector('#ig-scrubber-fill');
       const scrubber = modalSc.querySelector('#ig-scrubber');
@@ -223,6 +236,9 @@
       const likeBtn = modalSc.querySelector('#ig-btn-like');
       const likeIcon = modalSc.querySelector('#ig-icon-like');
       const likeCount = modalSc.querySelector('#ig-count-like');
+      const bookmarkBtn = modalSc.querySelector('#ig-btn-bookmark');
+      const bookmarkIcon = modalSc.querySelector('#ig-icon-bookmark');
+      const bookmarkLabel = modalSc.querySelector('#ig-label-bookmark');
       const backBtn = modalSc.querySelector('#ig-btn-back');
       const commentBtn = modalSc.querySelector('#ig-btn-comment');
       const shareBtn = modalSc.querySelector('#ig-btn-share');
@@ -233,6 +249,7 @@
       const overlayAvatar = modalSc.querySelector('#ig-overlay-avatar');
       const overlayHandle = modalSc.querySelector('#ig-overlay-handle');
       const overlayCaption = modalSc.querySelector('#ig-overlay-caption');
+      const topTitle = modalSc.querySelector('.ig-top-title span');
 
       function syncReelUi() {
         const isClient = !!currentReel.c;
@@ -240,12 +257,15 @@
         const authorName = isClient ? (clientObj ? clientObj.name : 'Brand') : (currentReel.authorName || 'Creator');
         const authorHandle = isClient ? (clientObj ? clientObj.slug : 'brand') : (currentReel.authorUsername || 'creator');
         const authorAvatar = isClient ? (clientObj ? clientObj.logo : './Logo/logo.png?v=2.8') : (currentReel.authorAvatar || './Logo/logo.png?v=2.8');
+        const isPhoto = currentReel.type === 'photo';
+        const streamUrl = window.DNM_DATA.getStreamUrl(currentReel);
 
-        if (ambient) ambient.style.backgroundImage = `url('${currentReel.coverUrl || ''}')`;
+        if (ambient) ambient.style.backgroundImage = `url('${currentReel.coverUrl || streamUrl || ''}')`;
         if (discAvatar) discAvatar.src = authorAvatar;
         if (overlayAvatar) overlayAvatar.src = authorAvatar;
         if (overlayHandle) overlayHandle.textContent = `@${authorHandle}`;
         if (overlayCaption) overlayCaption.innerHTML = `<b>${currentReel.title || ''}</b>${currentReel.b ? ` &bull; ${currentReel.b}` : ''}`;
+        if (topTitle) topTitle.textContent = isPhoto ? 'Photo' : 'Reels';
 
         const likesSet = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
         const isLiked = likesSet.has(currentReel.id);
@@ -256,21 +276,48 @@
         }
         if (likeCount) likeCount.textContent = baseLikes + (isLiked ? 1 : 0);
 
-        if (vid) {
-          loader?.classList.add('active');
-          vid.src = window.DNM_DATA.getStreamUrl(currentReel);
-          vid.poster = currentReel.coverUrl || '';
-          vid.muted = isSoundMuted;
-          const p = vid.play();
-          if (p !== undefined) {
-            p.catch(() => {
-              vid.muted = true;
-              isSoundMuted = true;
-              if (soundIcon) {
-                soundIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
-              }
-              vid.play().catch(() => {});
-            });
+        const savedSet = new Set(JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]'));
+        const isSaved = savedSet.has(currentReel.id);
+        if (bookmarkIcon) {
+          bookmarkIcon.setAttribute('fill', isSaved ? '#FFD700' : 'none');
+          bookmarkIcon.setAttribute('stroke', isSaved ? '#FFD700' : '#FFFFFF');
+        }
+        if (bookmarkLabel) {
+          bookmarkLabel.textContent = isSaved ? 'Saved' : 'Save';
+        }
+
+        if (scrubber) scrubber.style.display = isPhoto ? 'none' : 'block';
+        if (soundBtn) soundBtn.style.display = isPhoto ? 'none' : 'flex';
+
+        if (isPhoto) {
+          if (loader) loader.classList.remove('active');
+          if (vid) {
+            vid.style.display = 'none';
+            try { vid.pause(); } catch(_) {}
+          }
+          if (photoImg) {
+            photoImg.style.display = 'block';
+            photoImg.src = currentReel.coverUrl || streamUrl;
+          }
+        } else {
+          if (photoImg) photoImg.style.display = 'none';
+          if (vid) {
+            vid.style.display = 'block';
+            loader?.classList.add('active');
+            vid.src = streamUrl;
+            vid.poster = currentReel.coverUrl || '';
+            vid.muted = isSoundMuted;
+            const p = vid.play();
+            if (p !== undefined) {
+              p.catch(() => {
+                vid.muted = true;
+                isSoundMuted = true;
+                if (soundIcon) {
+                  soundIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+                }
+                vid.play().catch(() => {});
+              });
+            }
           }
         }
       }
@@ -431,13 +478,44 @@
         } catch(_) {}
       });
 
-      // Download
+      // Bookmark / Save toggle
+      bookmarkBtn?.addEventListener('click', e => {
+        e.stopPropagation();
+        const savedSet = new Set(JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]'));
+        const isSaved = savedSet.has(currentReel.id);
+        if (isSaved) {
+          savedSet.delete(currentReel.id);
+          if (bookmarkIcon) {
+            bookmarkIcon.setAttribute('fill', 'none');
+            bookmarkIcon.setAttribute('stroke', '#FFFFFF');
+          }
+          if (bookmarkLabel) bookmarkLabel.textContent = 'Save';
+          if (window.DNM_FEED && window.DNM_FEED.showToast) {
+            window.DNM_FEED.showToast('Removed from Saved');
+          }
+        } else {
+          savedSet.add(currentReel.id);
+          if (bookmarkIcon) {
+            bookmarkIcon.setAttribute('fill', '#FFD700');
+            bookmarkIcon.setAttribute('stroke', '#FFD700');
+          }
+          if (bookmarkLabel) bookmarkLabel.textContent = 'Saved';
+          if (window.DNM_FEED && window.DNM_FEED.showToast) {
+            window.DNM_FEED.showToast('Saved to your collection');
+          }
+        }
+        localStorage.setItem('dnm_saved_posts', JSON.stringify(Array.from(savedSet)));
+      });
+
+      // Download Master File (MP4 or Image)
       dlBtn?.addEventListener('click', e => {
         e.stopPropagation();
-        const downloadUrl = window.DNM_DATA.getStreamUrl(currentReel);
+        const isPhoto = currentReel.type === 'photo';
+        const downloadUrl = isPhoto ? (currentReel.coverUrl || currentReel.mediaUrl || currentReel.url) : window.DNM_DATA.getStreamUrl(currentReel);
+        const ext = isPhoto ? 'jpg' : 'mp4';
         const a = document.createElement('a');
         a.href = downloadUrl;
-        a.download = `${(currentReel.title || 'reel').replace(/[^a-z0-9]/gi, '_')}.mp4`;
+        a.download = `${(currentReel.title || 'media').replace(/[^a-z0-9]/gi, '_')}.${ext}`;
         document.body.appendChild(a);
         a.click();
         a.remove();

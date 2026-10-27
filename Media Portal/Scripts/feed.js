@@ -79,10 +79,8 @@
   // Render Real Production Feed Cards
   function renderFeedCards(wrapEl) {
     if (!wrapEl) return;
-    const reels = window.DNM_DATA.getAllApprovedReels();
-    const community = window.DNM_DATA.getCommunityPosts();
+    const allItems = window.DNM_DATA.getAllApprovedReels();
 
-    const allItems = [...community, ...reels];
     if (!allItems.length) {
       wrapEl.innerHTML = `
         <div style="padding:60px 20px;text-align:center;color:var(--ig-text-secondary);">

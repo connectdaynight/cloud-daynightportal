@@ -411,16 +411,49 @@
       return;
     }
 
-    const userPosts = window.DNM_DATA.getCommunityPosts().filter(p => p.authorId === user.uid);
+    const allApproved = window.DNM_DATA.getAllApprovedReels();
+    const userPosts = allApproved.filter(p => p.authorId === user.uid || (p.authorUsername && p.authorUsername === user.username));
 
     wrap.innerHTML = `
-      <!-- Profile Top Bar with Dedicated Settings Button -->
+      <!-- Profile Top Bar with Menu Drawer Button -->
       <div class="dnm-profile-top-bar" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--ig-border);">
-        <span style="font-size:16px;font-weight:700;color:var(--ig-text-primary);">@${user.username}</span>
-        <button type="button" class="dnm-profile-settings-btn" id="dnm-profile-settings-top-btn" aria-label="Settings" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:7px 14px;border-radius:10px;background:var(--ig-surface);border:1px solid var(--ig-border);color:var(--ig-text-primary);cursor:pointer;">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-          <span>Settings</span>
-        </button>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:16px;font-weight:700;color:var(--ig-text-primary);">@${user.username}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--ig-verified)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button type="button" class="dnm-profile-menu-btn" id="dnm-profile-slidebar-btn" aria-label="Open Menu" title="Menu" style="background:none;border:none;color:var(--ig-text-primary);cursor:pointer;padding:6px;display:flex;align-items:center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Slidebar Drawer Menu (Instagram-Style) -->
+      <div class="dnm-slidebar-scrim" id="dnm-profile-slidebar">
+        <div class="dnm-slidebar-drawer">
+          <div class="dnm-slidebar-header">
+            <span class="dnm-slidebar-title">Menu</span>
+            <button type="button" class="dnm-slidebar-close" id="dnm-slidebar-close-btn">&times;</button>
+          </div>
+          <div class="dnm-slidebar-menu">
+            <button type="button" class="dnm-slidebar-item" id="dnm-slidebar-saved-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              <span>Saved</span>
+            </button>
+            <button type="button" class="dnm-slidebar-item" id="dnm-slidebar-settings-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+              <span>Settings</span>
+            </button>
+            <button type="button" class="dnm-slidebar-item" id="dnm-slidebar-theme-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              <span>Switch Theme</span>
+            </button>
+            <button type="button" class="dnm-slidebar-item" id="dnm-slidebar-logout-btn" style="color:var(--ig-error);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span>Log Out</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="dnm-profile-header">
@@ -430,7 +463,7 @@
           </div>
           <div class="dnm-profile-stats-row">
             <div class="dnm-stat-block">
-              <span class="dnm-stat-number">${userPosts.length}</span>
+              <span class="dnm-stat-number" id="dnm-user-posts-count">${userPosts.length}</span>
               <span class="dnm-stat-label">Posts</span>
             </div>
             <div class="dnm-stat-block">
@@ -458,36 +491,125 @@
 
       <!-- Segmented Tabs -->
       <div class="dnm-profile-tabs">
-        <div class="dnm-profile-tab active" data-p-tab="posts">
+        <div class="dnm-profile-tab active" data-p-tab="posts" title="Posts">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
         </div>
-        <div class="dnm-profile-tab" data-p-tab="saved">
+        <div class="dnm-profile-tab" data-p-tab="saved" title="Saved">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         </div>
       </div>
 
-      <div class="dnm-profile-grid" id="dnm-profile-grid-items">
-        ${userPosts.length ? userPosts.map(p => `
-          <div class="dnm-explore-item">
-            <img class="dnm-explore-thumb" src="${p.coverUrl || p.mediaUrl}" alt="">
-          </div>
-        `).join('') : `
-          <div style="grid-column:span 3;padding:40px 20px;text-align:center;color:var(--ig-text-muted);">
-            <p>No uploads yet. Tap (+) to upload your first reel or photo!</p>
-          </div>
-        `}
-      </div>
+      <div class="dnm-profile-grid" id="dnm-profile-grid-items"></div>
     `;
+
+    function renderGridItems(tab) {
+      const tabs = wrap.querySelectorAll('.dnm-profile-tab');
+      tabs.forEach(t => {
+        if (t.dataset.pTab === tab) t.classList.add('active');
+        else t.classList.remove('active');
+      });
+
+      const grid = wrap.querySelector('#dnm-profile-grid-items');
+      if (!grid) return;
+
+      const currentAll = window.DNM_DATA.getAllApprovedReels();
+      const currentOwn = currentAll.filter(p => p.authorId === user.uid || (p.authorUsername && p.authorUsername === user.username));
+      const items = tab === 'saved' ? window.DNM_DATA.getSavedPosts() : currentOwn;
+
+      if (!items.length) {
+        grid.innerHTML = `
+          <div style="grid-column:span 3;padding:45px 20px;text-align:center;color:var(--ig-text-muted);">
+            <p>${tab === 'saved' ? 'No saved items yet. Bookmark any reel or photo to see it here!' : 'No uploads yet. Tap (+) to upload your first reel or photo!'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = items.map(p => `
+        <div class="dnm-explore-item" data-post-id="${p.id}" style="cursor:pointer;position:relative;aspect-ratio:1;overflow:hidden;background:var(--ig-surface);">
+          <img class="dnm-explore-thumb" src="${p.coverUrl || p.mediaUrl || ''}" alt="" style="width:100%;height:100%;object-fit:cover;">
+          ${p.type === 'reel' || !p.type ? `
+            <div style="position:absolute;top:6px;right:6px;color:#FFF;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.dnm-explore-item').forEach(card => {
+        card.addEventListener('click', () => {
+          const pid = card.dataset.postId;
+          const targetItem = items.find(x => x.id === pid);
+          if (targetItem && window.DNM_PLAYER) {
+            window.DNM_PLAYER.openVideoPlaybackModal(targetItem, items);
+          }
+        });
+      });
+    }
+
+    // Initial render of user posts
+    renderGridItems('posts');
+
+    // Tab switcher
+    wrap.querySelectorAll('.dnm-profile-tab').forEach(t => {
+      t.addEventListener('click', () => {
+        renderGridItems(t.dataset.pTab);
+      });
+    });
+
+    // Slidebar drawer setup
+    const slidebar = wrap.querySelector('#dnm-profile-slidebar');
+    const slidebarBtn = wrap.querySelector('#dnm-profile-slidebar-btn');
+    const closeBtn = wrap.querySelector('#dnm-slidebar-close-btn');
+
+    function openSlidebar() {
+      slidebar?.classList.add('active');
+    }
+    function closeSlidebar() {
+      slidebar?.classList.remove('active');
+    }
+
+    slidebarBtn?.addEventListener('click', openSlidebar);
+    closeBtn?.addEventListener('click', closeSlidebar);
+    slidebar?.addEventListener('click', e => {
+      if (e.target === slidebar) closeSlidebar();
+    });
+
+    wrap.querySelector('#dnm-slidebar-saved-btn')?.addEventListener('click', () => {
+      closeSlidebar();
+      renderGridItems('saved');
+    });
+
+    wrap.querySelector('#dnm-slidebar-settings-btn')?.addEventListener('click', () => {
+      closeSlidebar();
+      switchTab('settings');
+    });
+
+    wrap.querySelector('#dnm-slidebar-theme-btn')?.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('dnm_theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('dnm_theme', 'dark');
+      }
+      if (window.DNM_FEED && window.DNM_FEED.showToast) {
+        window.DNM_FEED.showToast(`Switched to ${isDark ? 'light' : 'dark'} mode`);
+      }
+    });
+
+    wrap.querySelector('#dnm-slidebar-logout-btn')?.addEventListener('click', () => {
+      closeSlidebar();
+      window.DNM_AUTH.signOut();
+      switchTab('profile');
+    });
 
     wrap.querySelector('#dnm-edit-profile-btn')?.addEventListener('click', () => {
       window.DNM_AUTH.openOnboardingModal(user);
     });
 
     wrap.querySelector('#dnm-settings-jump-btn')?.addEventListener('click', () => {
-      switchTab('settings');
-    });
-
-    wrap.querySelector('#dnm-profile-settings-top-btn')?.addEventListener('click', () => {
       switchTab('settings');
     });
   }

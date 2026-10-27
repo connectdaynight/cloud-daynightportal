@@ -230,3 +230,118 @@
 .dnm-profile-settings-btn:active {
   transform: scale(0.94);
 }
+
+/* ==========================================================================
+   PROFILE SLIDEBAR DRAWER (INSTAGRAM MENU)
+   ========================================================================== */
+.dnm-slidebar-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 1200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.dnm-slidebar-scrim.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dnm-slidebar-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 82%;
+  max-width: 320px;
+  background: var(--ig-bg);
+  box-shadow: -4px 0 28px rgba(0, 0, 0, 0.3);
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.dnm-slidebar-scrim.active .dnm-slidebar-drawer {
+  transform: translateX(0);
+}
+
+.dnm-slidebar-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ig-border);
+}
+
+.dnm-slidebar-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ig-text-primary);
+}
+
+.dnm-slidebar-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--ig-text-primary);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.dnm-slidebar-menu {
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dnm-slidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  background: none;
+  border: none;
+  border-radius: 12px;
+  color: var(--ig-text-primary);
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.dnm-slidebar-item:hover,
+.dnm-slidebar-item:active {
+  background: var(--ig-surface);
+}
+
+.dnm-slidebar-item svg {
+  flex-shrink: 0;
+}
+
+.dnm-profile-menu-btn {
+  background: none;
+  border: none;
+  color: var(--ig-text-primary);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.dnm-profile-menu-btn:active {
+  transform: scale(0.92);
+}
+

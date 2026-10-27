@@ -86,6 +86,43 @@
       );
     }
 
+    // 3. Merge locally cached uploaded posts immediately
+    try {
+      const storedUploads = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
+      if (Array.isArray(storedUploads) && storedUploads.length) {
+        const existingIds = new Set(approvedReels.map(r => r.id));
+        storedUploads.forEach(p => {
+          if (!existingIds.has(p.id)) {
+            approvedReels.unshift(p);
+            existingIds.add(p.id);
+          }
+        });
+      }
+    } catch(_) {}
+
+    // 4. Live Server Sync: fetch real-time community & client uploads from Google Apps Script
+    if (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) {
+      fetch(window.DNM_CONFIG.gasUrl + '?action=getData&_cb=' + Date.now())
+        .then(r => r.json())
+        .then(json => {
+          if (json && json.success && json.data && Array.isArray(json.data.reels)) {
+            let hasNew = false;
+            const existingIds = new Set(approvedReels.map(r => r.id));
+            json.data.reels.forEach(r => {
+              if (!existingIds.has(r.id) && r.status === 'approved' && !r.hidden && (!r.title || !r.title.trim().startsWith('.'))) {
+                approvedReels.unshift(r);
+                existingIds.add(r.id);
+                hasNew = true;
+              }
+            });
+            if (hasNew) {
+              window.dispatchEvent(new CustomEvent('dnm-data-synced'));
+            }
+          }
+        })
+        .catch(() => {});
+    }
+
     return {
       clients: clientsList,
       reels: approvedReels,
@@ -115,11 +152,40 @@
   }
 
   function addCommunityPost(post) {
-    communityPosts.unshift(post);
+    addUploadedPost(post);
+  }
+
+  function addUploadedPost(post) {
+    if (!post) return;
+    const existingIdx = approvedReels.findIndex(r => r.id === post.id);
+    if (existingIdx !== -1) {
+      approvedReels[existingIdx] = post;
+    } else {
+      approvedReels.unshift(post);
+    }
+
+    const cIdx = communityPosts.findIndex(p => p.id === post.id);
+    if (cIdx !== -1) {
+      communityPosts[cIdx] = post;
+    } else {
+      communityPosts.unshift(post);
+    }
+
     try {
+      const stored = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
+      const sIdx = stored.findIndex(p => p.id === post.id);
+      if (sIdx !== -1) stored[sIdx] = post;
+      else stored.unshift(post);
+      localStorage.setItem('dnm_uploaded_posts', JSON.stringify(stored));
       localStorage.setItem('dnm_community_posts', JSON.stringify(communityPosts));
     } catch(_) {}
+
     window.dispatchEvent(new CustomEvent('dnm-post-added', { detail: { post } }));
+  }
+
+  function getSavedPosts() {
+    const savedIds = new Set(JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]'));
+    return approvedReels.filter(r => savedIds.has(r.id));
   }
 
   function getStreamUrl(reel) {
@@ -141,6 +207,8 @@
     getClientReels,
     getCommunityPosts,
     addCommunityPost,
+    addUploadedPost,
+    getSavedPosts,
     getStreamUrl
   };
 
