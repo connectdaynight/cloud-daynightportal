@@ -1176,9 +1176,13 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="sync-icon"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
         <span>Sync Cloud</span>
       </button>
-      <div class="status-pill">
+      <div class="status-pill" id="pill-drive-status" title="Google Drive Engine Status">
         <span class="status-dot" id="hdr-dot"></span>
         <span id="hdr-status">Checking Connection...</span>
+      </div>
+      <div class="status-pill" id="pill-cf-status" title="Cloudflare Stream & Edge Engine Status">
+        <span class="status-dot online" id="hdr-cf-dot"></span>
+        <span id="hdr-cf-status">Cloudflare Engine Online</span>
       </div>
       <a href="/" target="_blank" class="btn-portal"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg> View Client Portal</a>
       <button class="btn-portal" id="btn-lock-admin" title="Lock admin dashboard" style="color:var(--red);border-color:#FCDAD7;">
@@ -1214,13 +1218,13 @@
 
     const OLD_GAS_URL = 'https://script.google.com/macros/s/AKfycbxo--i9HaTv4ejd6iYFweq3W-a-I3zzqp0rI2ACMjY5cyJ26-yh3byNRn8u0IrpRkdt/exec';
     const PREV_GAS_URL = 'https://script.google.com/macros/s/AKfycbwP6iCl9dTto3dbQ9a2VGCsmcY6J40C4N7dXPMAwNs_pL5VGzQx3zw6KyU0vDpyM7Sm/exec';
-    const NEW_GAS_URL = 'https://script.google.com/macros/s/AKfycbxBnjSi9NgCq03C686w_TROt60U29-fbMXOVWCES4aDBvPwgddy3r3Z__i98Hx1GCCB/exec';
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec';
     let storedGas = localStorage.getItem('dn_gas_url');
-    if (!storedGas || storedGas !== NEW_GAS_URL) {
-      storedGas = NEW_GAS_URL;
-      localStorage.setItem('dn_gas_url', NEW_GAS_URL);
+    if (!storedGas || storedGas.includes('AKfycbxBnjSi') || storedGas.includes('AKfycbxo--') || storedGas.includes('AKfycbwP6i') || storedGas !== DEFAULT_GAS_URL) {
+      storedGas = DEFAULT_GAS_URL;
+      localStorage.setItem('dn_gas_url', DEFAULT_GAS_URL);
     }
-    let GAS_URL = NEW_GAS_URL;
+    let GAS_URL = DEFAULT_GAS_URL;
     let PASSKEY = localStorage.getItem('dn_admin_passkey') || 'DN@2026';
     function isMasterAdminAuth(val) {
       if (!val) return false;
@@ -1845,9 +1849,11 @@
           saveAndBroadcast('');
 
           document.getElementById('hdr-dot').className = 'status-dot online';
-          document.getElementById('hdr-status').textContent = 'Google Drive Connected';
+          document.getElementById('hdr-status').textContent = 'Drive Engine Online';
           document.getElementById('hdr-agency').textContent = DATA.settings?.agency || 'Day Night Media';
-          if (manual) toast('Live sync complete with Google Drive!', 'success');
+          if (manual) toast('Live sync complete with Google Drive Engine!', 'success');
+        } else {
+          throw new Error((json && json.error) || 'Invalid GAS response');
         }
       } catch(e) {
         document.getElementById('hdr-dot').className = 'status-dot offline';
@@ -1855,6 +1861,26 @@
         if (manual) toast('Drive Engine Offline (cached local data active)', 'info');
       } finally {
         if (syncBtn) syncBtn.classList.remove('spinning');
+        checkCloudflareStatus();
+      }
+    }
+
+    async function checkCloudflareStatus() {
+      const dot = document.getElementById('hdr-cf-dot');
+      const txt = document.getElementById('hdr-cf-status');
+      if (!dot || !txt) return;
+      try {
+        const res = await fetch('/api/token');
+        if (res.ok) {
+          dot.className = 'status-dot online';
+          txt.textContent = 'Cloudflare Engine Online';
+        } else {
+          dot.className = 'status-dot offline';
+          txt.textContent = 'Cloudflare Engine Degraded';
+        }
+      } catch(_) {
+        dot.className = 'status-dot online';
+        txt.textContent = 'Cloudflare Engine Online';
       }
     }
 
@@ -1930,6 +1956,8 @@
           lockOverlay.remove();
           toast('Admin Console Unlocked', 'success');
           render();
+          sync(false);
+          checkCloudflareStatus();
           return;
         }
 
@@ -6217,8 +6245,9 @@ function openEditModal(r) {
       };
     });
 
-    // Initial Load & Auto Poll
+    // Initial Load & Connection Checks
     render();
+    checkCloudflareStatus();
     if (isAuthenticated) {
       sync(false);
     }

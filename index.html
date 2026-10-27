@@ -4535,29 +4535,34 @@
     .dn-ap-toggle-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 3px 6px 3px 9px;
+      justify-content: center;
+      gap: 8px;
+      height: 34px;
+      box-sizing: border-box;
+      padding: 0 10px 0 12px;
       border-radius: 999px;
       background: #FFFFFF;
-      border: 1px solid rgba(18, 41, 74, 0.12);
-      box-shadow: 0 1px 4px rgba(18, 41, 74, 0.05);
+      border: 1px solid rgba(18, 41, 74, 0.14);
+      box-shadow: 0 1px 4px rgba(18, 41, 74, 0.06);
       cursor: pointer;
       user-select: none;
       transition: all 0.2s ease;
+      flex-shrink: 0;
     }
     .dn-ap-toggle-btn:hover {
-      border-color: rgba(184, 147, 90, 0.45);
-      box-shadow: 0 2px 6px rgba(184, 147, 90, 0.15);
+      border-color: rgba(184, 147, 90, 0.55);
+      box-shadow: 0 2px 8px rgba(184, 147, 90, 0.18);
     }
     .dn-ap-label {
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
       color: var(--navy);
       letter-spacing: -0.1px;
+      line-height: 1;
     }
     .dn-ap-track {
-      width: 26px;
-      height: 15px;
+      width: 28px;
+      height: 16px;
       border-radius: 999px;
       background: #D1D5DB;
       position: relative;
@@ -4566,8 +4571,8 @@
       flex-shrink: 0;
     }
     .dn-ap-thumb {
-      width: 11px;
-      height: 11px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: #FFFFFF;
       position: absolute;
@@ -4580,7 +4585,7 @@
       background: #1FAF64;
     }
     .dn-ap-toggle-btn.active .dn-ap-thumb {
-      transform: translateX(11px);
+      transform: translateX(12px);
     }
 
     /* Fixed & Floating "Open Approval Portal" Luxury Capsule at Bottom (Matching Website Theme, Elegant Height, Hidden PIN) */
@@ -6819,6 +6824,16 @@
       try { window.history.pushState({ modalOpen: true, t: Date.now() }, ''); } catch(e) {}
       const origRemove = sc.remove.bind(sc);
       sc.remove = function() {
+        try {
+          sc.querySelectorAll('video, audio, iframe').forEach(m => {
+            try {
+              m.pause();
+              m.muted = true;
+              m.removeAttribute('src');
+              m.load();
+            } catch(_) {}
+          });
+        } catch(_) {}
         origRemove();
         if (!document.querySelector('.scrim')) {
           document.body.classList.remove('has-modal');
@@ -10264,6 +10279,13 @@
         return;
       }
 
+      // Pause all playing background feed videos immediately
+      document.querySelectorAll('.dn-feed-video').forEach(v => {
+        try { v.pause(); } catch(_) {}
+        const w = v.closest('.dn-feed-media-wrap');
+        if (w) w.classList.remove('is-playing');
+      });
+
       // Track View
       if (CONFIG.gasUrl) {
         gasApi('trackEvent', { reelId: r.id, type: 'view' }).catch(() => {});
@@ -11276,7 +11298,21 @@
         function closeReelsPlayer() {
           if (isReelPlayerClosed) return;
           isReelPlayerClosed = true;
-          try { vid.pause(); vid.src = ''; } catch(_) {}
+          try {
+            vid.pause();
+            vid.muted = true;
+            vid.removeAttribute('src');
+            vid.load();
+          } catch(_) {}
+          modalSc.querySelectorAll('video, audio, iframe').forEach(m => {
+            try {
+              m.pause();
+              m.muted = true;
+              m.removeAttribute('src');
+              m.load();
+            } catch(_) {}
+          });
+          window.removeEventListener('keydown', handleKey);
           modalSc.remove();
           document.body.classList.remove('has-modal');
           document.documentElement.classList.remove('has-modal');
@@ -11370,9 +11406,7 @@
               settingsModal.style.display = 'none';
               isSettingsOpen = false;
             } else {
-              vid.pause();
-              vid.src = '';
-              modalSc.remove();
+              closeReelsPlayer();
             }
           } else if (e.key === ' ') {
             if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
@@ -11425,6 +11459,13 @@
         toast('Direct stream unavailable for this reel.', 'amber');
         return;
       }
+
+      // Pause all playing background feed videos immediately
+      document.querySelectorAll('.dn-feed-video').forEach(v => {
+        try { v.pause(); } catch(_) {}
+        const w = v.closest('.dn-feed-media-wrap');
+        if (w) w.classList.remove('is-playing');
+      });
 
       const c = client() || { id: '', name: 'Client' };
       recordWatchHistory(r);
@@ -13156,40 +13197,16 @@
           toast(isMuted ? 'Muted' : 'Sound ON', 'info');
         }
       }
-      else if (a === 'feed-media-click') {
-        const wrap = el.closest('.dn-feed-media-wrap') || el;
-        const video = wrap ? wrap.querySelector('.dn-feed-video') : null;
-        if (video) {
-          if (video.paused) {
-            // Pause any other playing feed video
-            document.querySelectorAll('.dn-feed-video').forEach(otherVid => {
-              if (otherVid !== video && !otherVid.paused) {
-                try { otherVid.pause(); } catch(_) {}
-                const otherWrap = otherVid.closest('.dn-feed-media-wrap');
-                if (otherWrap) otherWrap.classList.remove('is-playing');
-              }
-            });
-            video.play().then(() => {
-              wrap.classList.add('is-playing');
-            }).catch(err => {
-              console.warn('Inline play blocked:', err);
-              const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
-              if (r) openVideoModal(r);
-            });
-          } else {
-            video.pause();
-            wrap.classList.remove('is-playing');
-          }
-        } else {
-          const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
-          if (r) openVideoModal(r);
-        }
-      }
-      else if (a === 'open-reel-modal') {
-        const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
+      else if (a === 'feed-media-click' || a === 'open-reel-modal') {
+        e.preventDefault();
+        e.stopPropagation();
+        const reelId = el.dataset.id || el.closest('[data-id]')?.dataset.id || el.closest('[data-reel-id]')?.dataset.reelId;
+        const r = (DATA.reels || []).find(x => x.id === reelId);
         if (r) {
           const c = client() || { id: 'tcs' };
-          const activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && x.status === 'approved');
+          const activeList = !CONFIG.isAdmin
+            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && !x.hidden && x.status === 'approved')
+            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id));
           openVideoModal(r, activeList.length ? activeList : [r]);
         }
       }
