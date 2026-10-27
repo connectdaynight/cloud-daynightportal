@@ -230,17 +230,17 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(18, 41, 74, 0.12);
-      padding: 8px 16px;
-      border-radius: 999px;
-      box-shadow: 0 14px 40px rgba(18, 41, 74, 0.16);
+      gap: 12px;
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      max-width: calc(100vw - 32px);
+      max-width: 100vw;
       box-sizing: border-box;
+      pointer-events: auto;
     }
     .dn-social-dock.dock-waiting {
       opacity: 0;
@@ -271,11 +271,11 @@
       100% { opacity: 1; transform: translateY(0) scale(1); }
     }
     .dn-social-btn {
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      background: var(--soft);
-      border: 1.5px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+      border: 1.5px solid rgba(18, 41, 74, 0.12);
       color: var(--navy);
       display: grid;
       place-items: center;
@@ -284,6 +284,9 @@
       position: relative;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       flex-shrink: 0;
+      box-shadow: 0 8px 24px rgba(18, 41, 74, 0.14);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
     .dn-social-btn svg {
       width: 18px;
@@ -376,15 +379,18 @@
         font-size: 14px;
       }
       .dn-social-dock {
-        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
         left: 50%;
         transform: translateX(-50%);
-        padding: 6px 12px;
-        gap: 8px;
-        max-width: calc(100vw - 20px);
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
+        padding: 0 !important;
+        gap: 9px;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        max-width: 100vw;
+        overflow-x: visible;
       }
       .dn-social-dock.dock-waiting {
         transform: translate(-50%, 24px) scale(0.95);
@@ -398,12 +404,12 @@
         display: none !important;
       }
       .dn-social-btn {
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
       }
       .dn-social-btn svg {
-        width: 16px;
-        height: 16px;
+        width: 17px;
+        height: 17px;
       }
     }
 
@@ -3883,6 +3889,35 @@
       line-height: 1.1;
       letter-spacing: -0.3px;
     }
+    .preapp-top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: none;
+    }
+    .preapp-code-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--navy);
+      box-shadow: 0 2px 6px rgba(18, 41, 74, 0.05);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .preapp-code-chip:hover {
+      background: var(--soft);
+      border-color: #CBD5E1;
+    }
+    .preapp-code-chip strong {
+      letter-spacing: 0.05em;
+      color: #0D3B2E;
+    }
     .preapp-brand-mark {
       width: 38px;
       height: 38px;
@@ -4434,6 +4469,408 @@
       color: #FFFFFF;
       border-color: #DC2626;
       box-shadow: 0 4px 14px rgba(239, 68, 68, 0.32);
+    }
+
+    /* Fixed & Floating "Open Approval Portal" Luxury Box */
+    .dn-approval-banner-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      padding: 12px 14px 8px;
+      background: linear-gradient(180deg, var(--bg) 80%, rgba(246, 247, 249, 0) 100%);
+      box-sizing: border-box;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .dn-approval-banner {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(47, 125, 246, 0.22);
+      border-radius: 18px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(18, 41, 74, 0.08), 0 1px 3px rgba(18, 41, 74, 0.04);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dn-approval-banner:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 38px rgba(47, 125, 246, 0.16);
+      border-color: rgba(47, 125, 246, 0.45);
+    }
+    .dn-approval-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .dn-approval-logo-ring {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      padding: 2px;
+      background: linear-gradient(135deg, #2F7DF6 0%, #1FAF64 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(47, 125, 246, 0.25);
+    }
+    .dn-approval-logo-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      background: #FFFFFF;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dn-approval-logo-inner img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+    .dn-approval-banner-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .dn-approval-title-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .dn-approval-client-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--navy);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dn-approval-vip-tag {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(47, 125, 246, 0.12);
+      color: var(--blue);
+      flex-shrink: 0;
+    }
+    .dn-approval-last-updated {
+      font-size: 11px;
+      color: var(--mute);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .dn-live-pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #1FAF64;
+      box-shadow: 0 0 8px #1FAF64;
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    .dn-approval-banner-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .dn-open-portal-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #12294A 0%, #1A3A68 100%);
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(18, 41, 74, 0.18);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .dn-open-portal-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(18, 41, 74, 0.26);
+    }
+    .dn-assigned-code-pill {
+      font-size: 10px;
+      color: var(--mute);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .dn-assigned-code-pill b {
+      color: var(--navy);
+      background: var(--soft);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: monospace;
+      letter-spacing: 0.5px;
+    }
+
+    /* Instagram / YouTube Style Social Feed */
+    .dn-feeds-container {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 0 14px 90px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      box-sizing: border-box;
+    }
+    .dn-feed-card {
+      background: #FFFFFF;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      box-shadow: 0 6px 20px rgba(18, 41, 74, 0.05);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .dn-feed-card:hover {
+      box-shadow: 0 12px 32px rgba(18, 41, 74, 0.09);
+    }
+    .dn-feed-header {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .dn-feed-author-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .dn-feed-avatar-ring {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      padding: 2px;
+      background: linear-gradient(135deg, #E1306C 0%, #F56040 50%, #FCAF45 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .dn-feed-avatar-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #FFFFFF;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dn-feed-avatar-inner img {
+      max-width: 85%;
+      max-height: 85%;
+      object-fit: contain;
+    }
+    .dn-feed-author-meta {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .dn-feed-author-name-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .dn-feed-author-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--navy);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dn-verified-badge {
+      display: inline-flex;
+      color: #2F7DF6;
+    }
+    .dn-feed-subtitle-row {
+      font-size: 11px;
+      color: var(--mute);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dn-feed-branch-pill {
+      background: var(--soft);
+      color: var(--ink);
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-weight: 600;
+      font-size: 10.5px;
+    }
+
+    /* Video Media Container */
+    .dn-feed-media-wrap {
+      width: 100%;
+      aspect-ratio: 9 / 14;
+      background: #090E17;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .dn-feed-poster {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .dn-feed-media-wrap:hover .dn-feed-poster {
+      transform: scale(1.02);
+    }
+    .dn-feed-play-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(255, 255, 255, 0.6);
+      color: #FFFFFF;
+      display: grid;
+      place-items: center;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 5;
+    }
+    .dn-feed-media-wrap:hover .dn-feed-play-overlay {
+      transform: translate(-50%, -50%) scale(1.1);
+      background: rgba(47, 125, 246, 0.85);
+      border-color: #FFFFFF;
+    }
+    .dn-feed-dur-badge {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      z-index: 6;
+    }
+
+    /* Interactive Social Action Row */
+    .dn-feed-actions {
+      padding: 12px 14px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dn-feed-actions-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .dn-feed-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--navy);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+    .dn-feed-btn:hover {
+      transform: scale(1.12);
+    }
+    .dn-feed-btn:active {
+      transform: scale(0.92);
+    }
+    .dn-feed-btn.heart.active {
+      color: #E53225;
+      animation: heartBeat 0.35s ease;
+    }
+    .dn-feed-btn.heart.active svg {
+      fill: #E53225;
+    }
+    @keyframes heartBeat {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.35); }
+      100% { transform: scale(1); }
+    }
+    .dn-feed-btn.comment:hover { color: var(--blue); }
+    .dn-feed-btn.share:hover { color: #1FAF64; }
+    .dn-feed-btn.download:hover { color: #8E44AD; }
+
+    /* Post Content Details */
+    .dn-feed-content-body {
+      padding: 0 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .dn-feed-views-count {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .dn-feed-caption {
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    .dn-feed-caption strong {
+      color: var(--navy);
+      margin-right: 6px;
+    }
+    .dn-feed-audio-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--mute);
+      margin-top: 2px;
+    }
+    .dn-feed-tags-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .dn-feed-tag {
+      font-size: 11px;
+      color: var(--blue);
+      font-weight: 600;
     }
 
     /* Elevated Floating Bottom Nav (Pulled up slightly from screen bottom) */
@@ -6841,6 +7278,171 @@
       render();
     }
 
+    // --------------------------------------------------------------------------
+    // FEEDS TAB RENDERER (Instagram & YouTube Style Social Feed with Floating Approval Card)
+    // --------------------------------------------------------------------------
+    function renderFeedsPage(c) {
+      if (!c) return '';
+      function isClientMatch(rCid, targetCid) {
+        if (!rCid || !targetCid) return false;
+        if (rCid === targetCid) return true;
+        if ((rCid === 'tcs' || rCid === 'cmvje2zfy') && (targetCid === 'tcs' || targetCid === 'cmvje2zfy')) return true;
+        return false;
+      }
+      let clientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin));
+
+      // Calculate last updated relative string
+      let lastUpdatedStr = 'Just now';
+      if (DATA._updatedAt) {
+        const diffMs = Date.now() - DATA._updatedAt;
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 1) lastUpdatedStr = 'Just now';
+        else if (diffMins < 60) lastUpdatedStr = `${diffMins}m ago`;
+        else if (diffMins < 1440) lastUpdatedStr = `${Math.floor(diffMins / 60)}h ago`;
+        else lastUpdatedStr = new Date(DATA._updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric' });
+      } else if (clientReels.length && clientReels[0].date) {
+        lastUpdatedStr = new Date(clientReels[0].date).toLocaleDateString([], { month: 'short', day: 'numeric' });
+      }
+
+      // Sort newest reels first
+      clientReels.sort((a, b) => {
+        const da = a.date ? new Date(a.date).getTime() : 0;
+        const db = b.date ? new Date(b.date).getTime() : 0;
+        return db - da;
+      });
+
+      const favs = getFavorites();
+
+      return `
+        <div class="top">
+          <button class="back" data-act="bnav-home" aria-label="Feeds" style="visibility:hidden;">${ic.back}</button>
+          <div class="crumb"><small>${esc(c.name)}</small><span>Feeds</span></div>
+          ${dnLogo('mini')}
+        </div>
+
+        <!-- FIXED & FLOATING "OPEN APPROVAL PORTAL" LUXURY BOX -->
+        <div class="dn-approval-banner-wrap">
+          <div class="dn-approval-banner" data-act="open-approval-portal">
+            <div class="dn-approval-banner-left">
+              <div class="dn-approval-logo-ring">
+                <div class="dn-approval-logo-inner">
+                  ${clientLogo(c, 'approval-banner-logo')}
+                </div>
+              </div>
+              <div class="dn-approval-banner-meta">
+                <div class="dn-approval-title-row">
+                  <span class="dn-approval-client-name">${esc(c.name)}</span>
+                  <span class="dn-approval-vip-tag">VIP Portal</span>
+                </div>
+                <div class="dn-approval-last-updated">
+                  <span class="dn-live-pulse-dot"></span>
+                  Last updated: <strong>${lastUpdatedStr}</strong>
+                </div>
+              </div>
+            </div>
+            <div class="dn-approval-banner-right">
+              <button type="button" class="dn-open-portal-btn" data-act="open-approval-portal">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+                <span>Approval Portal</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <span class="dn-assigned-code-pill" title="Assigned Client Access Code from Admin">
+                Code: <b>${c.code || '4821'}</b>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- INSTAGRAM / YOUTUBE SOCIAL FEED -->
+        <div class="dn-feeds-container">
+          ${clientReels.length ? clientReels.map(r => {
+            const isFav = favs.includes(r.id);
+            const cover = r.coverUrl || (r.fileId ? `https://drive.google.com/thumbnail?id=${r.fileId}&sz=w1000` : '');
+            const commentsCount = (r.comments || []).length;
+            const dateStr = r.date ? new Date(r.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'Delivered';
+            return `
+              <article class="dn-feed-card" data-reel-id="${r.id}">
+                <!-- Feed Post Header -->
+                <header class="dn-feed-header">
+                  <div class="dn-feed-author-wrap">
+                    <div class="dn-feed-avatar-ring">
+                      <div class="dn-feed-avatar-inner">
+                        ${clientLogo(c, 'dn-feed-avatar')}
+                      </div>
+                    </div>
+                    <div class="dn-feed-author-meta">
+                      <div class="dn-feed-author-name-row">
+                        <span class="dn-feed-author-name">${esc(c.name)}</span>
+                        <span class="dn-verified-badge" title="Verified Brand"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span>
+                      </div>
+                      <div class="dn-feed-subtitle-row">
+                        ${r.b ? `<span class="dn-feed-branch-pill">${esc(r.b)}</span>` : ''}
+                        <span>${dateStr}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button" class="dn-feed-btn" data-act="open-reel-modal" data-id="${r.id}" aria-label="Open Reel View">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                  </button>
+                </header>
+
+                <!-- Media Area (Vertical Video Container) -->
+                <div class="dn-feed-media-wrap" data-act="open-reel-modal" data-id="${r.id}">
+                  ${cover ? `<img src="${esc(cover)}" class="dn-feed-poster" alt="${esc(r.title)}" loading="lazy">` : ''}
+                  <div class="dn-feed-play-overlay">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </div>
+                  <div class="dn-feed-dur-badge">${esc(r.dur || '0:30')}</div>
+                </div>
+
+                <!-- Interactive Action Row -->
+                <div class="dn-feed-actions">
+                  <div class="dn-feed-actions-left">
+                    <button type="button" class="dn-feed-btn heart ${isFav ? 'active' : ''}" data-act="toggle-fav" data-id="${r.id}" aria-label="Favorite">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    </button>
+                    <button type="button" class="dn-feed-btn comment" data-act="feed-comment" data-id="${r.id}" aria-label="Comments">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                      ${commentsCount ? `<span>${commentsCount}</span>` : ''}
+                    </button>
+                    <button type="button" class="dn-feed-btn share" data-act="feed-share" data-id="${r.id}" aria-label="Share">
+                      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                  </div>
+                  <button type="button" class="dn-feed-btn download" data-act="direct-dl" data-id="${r.id}" aria-label="Download">
+                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  </button>
+                </div>
+
+                <!-- Feed Content Details -->
+                <div class="dn-feed-content-body">
+                  <div class="dn-feed-views-count">${(r.views || 0).toLocaleString()} views</div>
+                  <div class="dn-feed-caption">
+                    <strong>${esc(c.name)}</strong>${esc(r.title)}
+                  </div>
+                  <div class="dn-feed-audio-pill">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    <span>Day Night Media • Original Audio</span>
+                  </div>
+                  <div class="dn-feed-tags-row">
+                    ${r.b ? `<span class="dn-feed-tag">#${esc(r.b.replace(/\s+/g, ''))}</span>` : ''}
+                    ${r.album ? `<span class="dn-feed-tag">#${esc(r.album.replace(/\s+/g, ''))}</span>` : ''}
+                    <span class="dn-feed-tag">#DayNightReels</span>
+                  </div>
+                </div>
+              </article>
+            `;
+          }).join('') : `
+            <div style="text-align:center;padding:40px 20px;color:var(--mute);">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;opacity:0.6;"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg>
+              <h3 style="margin:0 0 6px;color:var(--navy);">No Feed Videos Yet</h3>
+              <p style="margin:0;font-size:13px;">Delivered reels will appear here in your social feed.</p>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
     // Pre-Approval Screen Renderer (Replaces Home Page Buttons & Provides Pre-Approval Screen)
     function renderPreApprovalPage(c, isHome = false) {
       const currentMonth = view.month != null ? view.month : 9; // October default (0-indexed 9)
@@ -6947,23 +7549,27 @@
       const logoSrc = c.logo || (c.id === 'tcs' ? '/Logo/tcs-logo.png' : '/Logo/logo.png');
 
       return `
-        <!-- Pre-Approval Top Bar Header -->
+        <!-- Approval Portal Top Bar Header -->
         <div class="preapp-topbar">
           <button class="preapp-back-btn" data-act="back" aria-label="Back">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <div class="preapp-title-group">
             <span class="preapp-sub">${esc(c.name || 'Client Portal')}</span>
-            <h1 class="preapp-heading">${isHome ? 'Client Overview' : 'Pre-Approval'}</h1>
+            <h1 class="preapp-heading">Approval Portal</h1>
           </div>
           <div class="preapp-top-right">
+            <div class="preapp-code-chip" data-act="lock-portal" title="Assigned PIN: ${esc(c.code || '4821')} (Click to Lock Portal)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>Code: <strong>${esc(c.code || '4821')}</strong></span>
+            </div>
             <div class="preapp-brand-mark" data-act="bnav-profile" title="Client Profile & Security">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
           </div>
         </div>
 
-        <!-- Pre-Approval Hero Banner -->
+        <!-- Approval Portal Hero Banner -->
         <div class="preapp-hero-banner ${bannerSrc ? 'has-custom-bg' : 'has-gradient-bg'}">
           ${bannerSrc ? `<img src="${esc(bannerSrc)}" class="preapp-banner-bg" alt="">` : ''}
           <div class="preapp-banner-overlay"></div>
@@ -6971,8 +7577,8 @@
             <div class="preapp-banner-logo-wrap">
               <img src="${esc(logoSrc)}" alt="${esc(c.name)}">
             </div>
-            <h2 class="preapp-banner-title">${isHome ? 'Client Content Hub' : 'Content Pre-Approval'}</h2>
-            <div class="preapp-banner-sub">for ${esc(c.name)}</div>
+            <h2 class="preapp-banner-title">Approval Portal</h2>
+            <div class="preapp-banner-sub">Pre-Approval &amp; Content Review for ${esc(c.name)}</div>
             <button type="button" class="preapp-branch-pill" data-act="open-branch-picker" title="Switch Branch Filter" aria-label="Switch Branch Filter" style="cursor:pointer;border:none;outline:none;">
               <span>${esc(activeBranch)}</span>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:4px;"><polyline points="6 9 12 15 18 9"/></svg>
@@ -7165,7 +7771,7 @@
         <nav class="client-bottom-nav" aria-label="Client Navigation">
           <button class="bnav-btn ${isHome ? 'active' : ''}" data-act="bnav-home">
             <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
-            <span class="bnav-label">Home</span>
+            <span class="bnav-label">Feeds</span>
           </button>
           <button class="bnav-btn ${isReels ? 'active' : ''}" data-act="bnav-reels">
             <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg></span>
@@ -7177,7 +7783,7 @@
           </button>
           <button class="bnav-btn ${isPreApp ? 'active' : ''}" data-act="bnav-preapproval">
             <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg></span>
-            <span class="bnav-label">Pre-Approval</span>
+            <span class="bnav-label">Approvals</span>
           </button>
           <button class="bnav-btn ${isCollections ? 'active' : ''}" data-act="bnav-collections">
             <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
@@ -7535,10 +8141,20 @@
         }, 2800);
       }
 
-      // Screen 2: Client Genesis Screen
-      else if (view.screen === 'genesis' || view.screen === 'preapproval') {
+      // Screen 2: Client Genesis Screen (Home / Feeds Tab)
+      else if (view.screen === 'genesis') {
         if (!c) { go({ screen: 'splash', client: null }); return; }
-        app.innerHTML = renderPreApprovalPage(c, view.screen === 'genesis');
+        app.innerHTML = renderFeedsPage(c);
+      }
+
+      // Screen 2A: Dedicated Client Approval Portal (Assigned Code Protected)
+      else if (view.screen === 'preapproval') {
+        if (!c) { go({ screen: 'splash', client: null }); return; }
+        if (!isClientAuthenticated(c.id)) {
+          openCode(c, 'preapproval');
+          return;
+        }
+        app.innerHTML = renderPreApprovalPage(c, false);
         attachWaveScroller();
       }
 
@@ -9130,7 +9746,7 @@
     // --------------------------------------------------------------------------
     // 4-DIGIT PIN AUTHENTICATION
     // --------------------------------------------------------------------------
-    function openCode(preselectedClient) {
+    function openCode(preselectedClient, targetScreen = 'landing') {
       const targetClient = preselectedClient || client();
       sheet(`
         <div class="code-head">
@@ -9195,7 +9811,7 @@
             const targetUrl = '/?client=' + encodeURIComponent(matched.slug || matched.id);
             try { history.pushState({ client: matched.id }, '', targetUrl); } catch (_) {}
             setClientAuthenticated(matched.id);
-            setTimeout(() => { sc.remove(); go({ screen: 'landing', client: matched.id }); }, 250);
+            setTimeout(() => { sc.remove(); go({ screen: targetScreen, client: matched.id }); }, 250);
           } else {
             pins.classList.remove('bad');
             void pins.offsetWidth;
@@ -9274,15 +9890,41 @@
 
       const dlEndpoint = id
         ? `/api/download?id=${encodeURIComponent(id)}&name=${encodeURIComponent(filename)}`
-        : (isImg ? r.url : `/api/download?url=${encodeURIComponent(r.url)}&name=${encodeURIComponent(filename)}`);
+        : `/api/download?url=${encodeURIComponent(r.url)}&name=${encodeURIComponent(filename)}`;
 
-      const a = document.createElement('a');
-      a.href = dlEndpoint;
-      a.download = filename;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => a.remove(), 1000);
+      // Fetch as blob and construct File with lastModified = Date.now()
+      // This guarantees the file saves with today's download timestamp and exact video/image format!
+      fetch(dlEndpoint)
+        .then(res => {
+          if (!res.ok) throw new Error('Download request failed');
+          return res.blob();
+        })
+        .then(blob => {
+          const mime = isImg ? 'image/jpeg' : 'video/mp4';
+          const file = new File([blob], filename, { type: mime, lastModified: Date.now() });
+          const blobUrl = URL.createObjectURL(file);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = filename;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            a.remove();
+            URL.revokeObjectURL(blobUrl);
+          }, 3000);
+          toast(isImg ? 'Image saved to downloads' : 'Video saved to downloads', 'success');
+        })
+        .catch(() => {
+          // Direct native fallback trigger
+          const a = document.createElement('a');
+          a.href = dlEndpoint;
+          a.download = filename;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => a.remove(), 1000);
+        });
     }
 
     // --------------------------------------------------------------------------
@@ -12165,7 +12807,39 @@
       else if (a === 'go-branch') {
         go({ screen: 'reels', branch: el.dataset.b, month: null, album: null, contentType: 'all', searchQuery: '' });
       }
-      else if (a === 'bnav-preapproval') go({ screen: 'preapproval', client: view.client });
+      else if (a === 'open-approval-portal' || a === 'bnav-preapproval') {
+        const c = client();
+        if (c && !isClientAuthenticated(c.id)) {
+          openCode(c, 'preapproval');
+        } else {
+          go({ screen: 'preapproval', client: view.client });
+        }
+      }
+      else if (a === 'open-reel-modal') {
+        const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
+        if (r) {
+          const c = client() || { id: 'tcs' };
+          const activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (x.status === 'approved' || r.id === x.id));
+          openVideoModal(r, activeList.length ? activeList : [r]);
+        }
+      }
+      else if (a === 'feed-comment') {
+        const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
+        if (r) {
+          const c = client() || { id: 'tcs' };
+          const activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (x.status === 'approved' || r.id === x.id));
+          openVideoModal(r, activeList.length ? activeList : [r]);
+        }
+      }
+      else if (a === 'feed-share') {
+        const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
+        if (r && r.url) openShare(r);
+      }
+      else if (a === 'feed-download') {
+        e.stopPropagation();
+        const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
+        if (r) triggerDirectDownload(r);
+      }
       else if (a === 'preapp-approve') {
         e.preventDefault();
         e.stopPropagation();

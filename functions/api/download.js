@@ -73,14 +73,27 @@ export async function onRequestGet(context) {
     }
 
     const responseHeaders = new Headers();
-    let contentType = videoStream.headers.get("Content-Type") || "video/mp4";
+    let contentType = "video/mp4";
     if (/\.jpe?g$/i.test(cleanFilename)) contentType = "image/jpeg";
     else if (/\.png$/i.test(cleanFilename)) contentType = "image/png";
     else if (/\.webp$/i.test(cleanFilename)) contentType = "image/webp";
+    else if (/\.mov$/i.test(cleanFilename)) contentType = "video/quicktime";
     else if (/\.mp4$/i.test(cleanFilename)) contentType = "video/mp4";
+    else {
+      const incoming = videoStream.headers.get("Content-Type") || "";
+      if (incoming.includes("image/")) contentType = incoming;
+      else contentType = "video/mp4";
+    }
+
+    const safeFilename = cleanFilename.replace(/["\r\n\\]/g, '').trim() || (contentType.startsWith('image/') ? 'image.jpg' : 'video.mp4');
+    const encodedFilename = encodeURIComponent(safeFilename);
+    const nowUtc = new Date().toUTCString();
 
     responseHeaders.set("Content-Type", contentType);
-    responseHeaders.set("Content-Disposition", `attachment; filename="${cleanFilename}"`);
+    responseHeaders.set("Content-Disposition", `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodedFilename}`);
+    responseHeaders.set("X-Content-Type-Options", "nosniff");
+    responseHeaders.set("Last-Modified", nowUtc);
+    responseHeaders.set("Date", nowUtc);
     responseHeaders.set("Accept-Ranges", "bytes");
     responseHeaders.set("Access-Control-Allow-Origin", "*");
     if (videoStream.headers.has("Content-Length")) {
@@ -89,7 +102,7 @@ export async function onRequestGet(context) {
     if (videoStream.headers.has("Content-Range")) {
       responseHeaders.set("Content-Range", videoStream.headers.get("Content-Range"));
     }
-    responseHeaders.set("Cache-Control", "no-cache");
+    responseHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate");
 
     return new Response(videoStream.body, {
       status: videoStream.status,
