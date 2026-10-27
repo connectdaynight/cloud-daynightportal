@@ -4471,106 +4471,168 @@
       box-shadow: 0 4px 14px rgba(239, 68, 68, 0.32);
     }
 
-    /* Fixed & Floating "Open Approval Portal" Luxury Box */
-    .dn-approval-banner-wrap {
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      padding: 12px 14px 8px;
-      background: linear-gradient(180deg, var(--bg) 80%, rgba(246, 247, 249, 0) 100%);
-      box-sizing: border-box;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    .dn-approval-banner {
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1.5px solid rgba(47, 125, 246, 0.22);
-      border-radius: 18px;
-      padding: 12px 16px;
+    /* Clean Feeds Top Header (Logo on Left, Zero Blank Space) */
+    .client-feeds-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      box-shadow: 0 10px 30px rgba(18, 41, 74, 0.08), 0 1px 3px rgba(18, 41, 74, 0.04);
-      cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 12px 16px;
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid rgba(18, 41, 74, 0.05);
     }
-    .dn-approval-banner:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 14px 38px rgba(47, 125, 246, 0.16);
-      border-color: rgba(47, 125, 246, 0.45);
-    }
-    .dn-approval-banner-left {
+    .top-brand-left {
       display: flex;
       align-items: center;
       gap: 12px;
       min-width: 0;
     }
-    .dn-approval-logo-ring {
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      padding: 2px;
-      background: linear-gradient(135deg, #2F7DF6 0%, #1FAF64 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .top-client-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(18, 41, 74, 0.12);
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      background: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(18, 41, 74, 0.08);
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(47, 125, 246, 0.25);
     }
-    .dn-approval-logo-inner {
+    .top-client-avatar img,
+    .top-client-avatar svg {
       width: 100%;
       height: 100%;
-      border-radius: 12px;
-      background: #FFFFFF;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .dn-approval-logo-inner img {
-      max-width: 90%;
-      max-height: 90%;
       object-fit: contain;
     }
-    .dn-approval-banner-meta {
+    .top-brand-left .crumb {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .top-brand-left .crumb small {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--mute);
+      line-height: 1.1;
+      letter-spacing: 0.2px;
+    }
+    .top-brand-left .crumb span {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1.15;
+      font-family: var(--sans);
+    }
+
+    /* Fixed & Floating "Open Approval Portal" Luxury Box at Bottom with Unlock PIN */
+    .dn-bottom-approval-bar {
+      position: fixed;
+      bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+      left: 14px;
+      right: 14px;
+      max-width: 520px;
+      margin: 0 auto;
+      z-index: 95;
+      background: rgba(13, 27, 42, 0.94);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1.2px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 14px 40px rgba(10, 20, 36, 0.42), 0 2px 8px rgba(0, 0, 0, 0.25);
+      border-radius: 20px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      box-sizing: border-box;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: floatUpIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes floatUpIn {
+      from { opacity: 0; transform: translateY(18px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .dn-bottom-approval-bar:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 46px rgba(10, 20, 36, 0.52);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+    .dn-bottom-approval-bar:active {
+      transform: scale(0.985);
+    }
+    .dn-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+    .dn-bar-logo-ring {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      padding: 1.5px;
+      background: linear-gradient(135deg, #E5B558 0%, #B8860B 100%);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(229, 181, 88, 0.35);
+    }
+    .dn-bar-logo-ring .dn-bar-logo,
+    .dn-bar-logo-ring img,
+    .dn-bar-logo-ring svg {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #FFFFFF;
+    }
+    .dn-bar-meta {
       display: flex;
       flex-direction: column;
       gap: 2px;
       min-width: 0;
     }
-    .dn-approval-title-row {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .dn-approval-client-name {
-      font-size: 14.5px;
-      font-weight: 700;
-      color: var(--navy);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .dn-approval-vip-tag {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 2px 7px;
-      border-radius: 999px;
-      background: rgba(47, 125, 246, 0.12);
-      color: var(--blue);
-      flex-shrink: 0;
-    }
-    .dn-approval-last-updated {
-      font-size: 11px;
-      color: var(--mute);
+    .dn-bar-name-row {
       display: flex;
       align-items: center;
       gap: 6px;
+    }
+    .dn-bar-client-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #FFFFFF;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: -0.1px;
+    }
+    .dn-bar-tag {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(47, 125, 246, 0.25);
+      color: #93C5FD;
+      flex-shrink: 0;
+    }
+    .dn-bar-sub-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10.5px;
+      color: #94A3B8;
+    }
+    .dn-bar-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       white-space: nowrap;
     }
     .dn-live-pulse-dot {
@@ -4585,54 +4647,85 @@
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.4; transform: scale(0.8); }
     }
-    .dn-approval-banner-right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-    .dn-open-portal-btn {
+    .dn-bar-pin-badge {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      padding: 8px 14px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #12294A 0%, #1A3A68 100%);
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 1.5px 7px;
+      border-radius: 6px;
+      color: #E2E8F0;
+      font-size: 10px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .dn-bar-pin-badge strong {
+      color: #FCD34D;
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+    .dn-bar-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 15px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
       color: #FFFFFF;
       font-size: 12px;
       font-weight: 700;
       border: none;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(18, 41, 74, 0.18);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
       transition: all 0.2s ease;
       white-space: nowrap;
+      flex-shrink: 0;
     }
-    .dn-open-portal-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(18, 41, 74, 0.26);
+    .dn-bar-cta-btn:hover {
+      background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+      transform: scale(1.03);
     }
-    .dn-assigned-code-pill {
-      font-size: 10px;
-      color: var(--mute);
-      display: flex;
-      align-items: center;
-      gap: 4px;
+    .dn-bar-cta-btn:active {
+      transform: scale(0.96);
     }
-    .dn-assigned-code-pill b {
-      color: var(--navy);
-      background: var(--soft);
-      padding: 1px 5px;
-      border-radius: 4px;
-      font-family: monospace;
-      letter-spacing: 0.5px;
+
+    @media (max-width: 480px) {
+      .dn-bottom-approval-bar {
+        left: 10px;
+        right: 10px;
+        bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+        padding: 8px 10px;
+        gap: 8px;
+        border-radius: 16px;
+      }
+      .dn-bar-logo-ring {
+        width: 36px;
+        height: 36px;
+      }
+      .dn-bar-client-name {
+        font-size: 12.5px;
+        max-width: 140px;
+      }
+      .dn-bar-pin-badge {
+        font-size: 9.5px;
+        padding: 1px 5px;
+      }
+      .dn-bar-pin-badge strong {
+        font-size: 10.5px;
+      }
+      .dn-bar-cta-btn {
+        padding: 8px 12px;
+        font-size: 11.5px;
+      }
     }
 
     /* Instagram / YouTube Style Social Feed */
     .dn-feeds-container {
       max-width: 580px;
       margin: 0 auto;
-      padding: 0 14px 90px;
+      padding: 12px 14px calc(150px + env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
       gap: 22px;
@@ -7314,43 +7407,18 @@
       const favs = getFavorites();
 
       return `
-        <div class="top">
-          <button class="back" data-act="bnav-home" aria-label="Feeds" style="visibility:hidden;">${ic.back}</button>
-          <div class="crumb"><small>${esc(c.name)}</small><span>Feeds</span></div>
-          ${dnLogo('mini')}
-        </div>
-
-        <!-- FIXED & FLOATING "OPEN APPROVAL PORTAL" LUXURY BOX -->
-        <div class="dn-approval-banner-wrap">
-          <div class="dn-approval-banner" data-act="open-approval-portal">
-            <div class="dn-approval-banner-left">
-              <div class="dn-approval-logo-ring">
-                <div class="dn-approval-logo-inner">
-                  ${clientLogo(c, 'approval-banner-logo')}
-                </div>
-              </div>
-              <div class="dn-approval-banner-meta">
-                <div class="dn-approval-title-row">
-                  <span class="dn-approval-client-name">${esc(c.name)}</span>
-                  <span class="dn-approval-vip-tag">VIP Portal</span>
-                </div>
-                <div class="dn-approval-last-updated">
-                  <span class="dn-live-pulse-dot"></span>
-                  Last updated: <strong>${lastUpdatedStr}</strong>
-                </div>
-              </div>
+        <!-- Top Header: Client Logo on Left, Title, Day Night Logo on Right -->
+        <div class="top client-feeds-top">
+          <div class="top-brand-left">
+            <div class="top-client-avatar">
+              ${clientLogo(c, 'top-avatar-img')}
             </div>
-            <div class="dn-approval-banner-right">
-              <button type="button" class="dn-open-portal-btn" data-act="open-approval-portal">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
-                <span>Approval Portal</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="9 18 15 12 9 6"/></svg>
-              </button>
-              <span class="dn-assigned-code-pill" title="Assigned Client Access Code from Admin">
-                Code: <b>${c.code || '4821'}</b>
-              </span>
+            <div class="crumb">
+              <small>${esc(c.name)}</small>
+              <span>Home</span>
             </div>
           </div>
+          ${dnLogo('mini')}
         </div>
 
         <!-- INSTAGRAM / YOUTUBE SOCIAL FEED -->
@@ -7440,6 +7508,34 @@
             </div>
           `}
         </div>
+
+        <!-- FIXED & FLOATING "OPEN APPROVAL PORTAL" LUXURY BOX AT BOTTOM WITH UNLOCK PIN -->
+        <div class="dn-bottom-approval-bar" data-act="open-approval-portal" role="button" aria-label="Open Approval Portal">
+          <div class="dn-bar-left">
+            <div class="dn-bar-logo-ring">
+              ${clientLogo(c, 'dn-bar-logo')}
+            </div>
+            <div class="dn-bar-meta">
+              <div class="dn-bar-name-row">
+                <span class="dn-bar-client-name">${esc(c.name)}</span>
+                <span class="dn-bar-tag">Approval Portal</span>
+              </div>
+              <div class="dn-bar-sub-row">
+                <span class="dn-bar-live"><span class="dn-live-pulse-dot"></span> ${lastUpdatedStr}</span>
+                <span class="dn-bar-pin-badge" title="Assigned Unlock PIN set by Admin">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  Unlock PIN: <strong>${esc(c.code || '4821')}</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="dn-bar-cta-btn" data-act="open-approval-portal">
+            <span>Open Portal</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        ${renderBottomNav()}
       `;
     }
 
@@ -7556,12 +7652,12 @@
           </button>
           <div class="preapp-title-group">
             <span class="preapp-sub">${esc(c.name || 'Client Portal')}</span>
-            <h1 class="preapp-heading">Approval Portal</h1>
+            <h1 class="preapp-heading">Pre-Approval</h1>
           </div>
           <div class="preapp-top-right">
-            <div class="preapp-code-chip" data-act="lock-portal" title="Assigned PIN: ${esc(c.code || '4821')} (Click to Lock Portal)">
+            <div class="preapp-code-chip" data-act="lock-portal" title="Assigned Unlock PIN: ${esc(c.code || '4821')} (Click to Lock Portal)">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span>Code: <strong>${esc(c.code || '4821')}</strong></span>
+              <span>Unlock PIN: <strong>${esc(c.code || '4821')}</strong></span>
             </div>
             <div class="preapp-brand-mark" data-act="bnav-profile" title="Client Profile & Security">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -7577,8 +7673,8 @@
             <div class="preapp-banner-logo-wrap">
               <img src="${esc(logoSrc)}" alt="${esc(c.name)}">
             </div>
-            <h2 class="preapp-banner-title">Approval Portal</h2>
-            <div class="preapp-banner-sub">Pre-Approval &amp; Content Review for ${esc(c.name)}</div>
+            <h2 class="preapp-banner-title">Content Pre-Approval</h2>
+            <div class="preapp-banner-sub">Review &amp; Feedback for ${esc(c.name)}</div>
             <button type="button" class="preapp-branch-pill" data-act="open-branch-picker" title="Switch Branch Filter" aria-label="Switch Branch Filter" style="cursor:pointer;border:none;outline:none;">
               <span>${esc(activeBranch)}</span>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:4px;"><polyline points="6 9 12 15 18 9"/></svg>
@@ -7771,7 +7867,7 @@
         <nav class="client-bottom-nav" aria-label="Client Navigation">
           <button class="bnav-btn ${isHome ? 'active' : ''}" data-act="bnav-home">
             <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
-            <span class="bnav-label">Feeds</span>
+            <span class="bnav-label">Home</span>
           </button>
           <button class="bnav-btn ${isReels ? 'active' : ''}" data-act="bnav-reels">
             <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg></span>
@@ -7783,7 +7879,7 @@
           </button>
           <button class="bnav-btn ${isPreApp ? 'active' : ''}" data-act="bnav-preapproval">
             <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg></span>
-            <span class="bnav-label">Approvals</span>
+            <span class="bnav-label">Pre-Approval</span>
           </button>
           <button class="bnav-btn ${isCollections ? 'active' : ''}" data-act="bnav-collections">
             <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
