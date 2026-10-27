@@ -280,7 +280,12 @@
     dropdown.querySelectorAll('[data-action="open-search-reel"]').forEach(item => {
       item.addEventListener('click', () => {
         dropdown.classList.remove('active');
-        switchTab('reels');
+        const reelId = item.dataset.reelId;
+        const reels = window.DNM_DATA.getAllApprovedReels();
+        const targetReel = reels.find(r => r.id === reelId);
+        if (targetReel && window.DNM_PLAYER) {
+          window.DNM_PLAYER.openVideoPlaybackModal(targetReel, reels);
+        }
       });
     });
   }
@@ -304,7 +309,13 @@
     gridWrap.innerHTML = html;
 
     gridWrap.querySelectorAll('.dnm-explore-item').forEach(item => {
-      item.addEventListener('click', () => switchTab('reels'));
+      item.addEventListener('click', () => {
+        const id = item.dataset.id;
+        const targetReel = reels.find(r => r.id === id);
+        if (targetReel && window.DNM_PLAYER) {
+          window.DNM_PLAYER.openVideoPlaybackModal(targetReel, reels);
+        }
+      });
     });
   }
 
@@ -329,8 +340,9 @@
             <b style="font-size:18px;color:var(--ig-text-primary);display:block;margin-bottom:6px;">Create Your Profile</b>
             <p style="font-size:13px;color:var(--ig-text-secondary);max-width:300px;">Sign in with your Google account to set your unique @username, upload videos and photos, and save reels.</p>
           </div>
-          <button type="button" id="dnm-login-prompt-btn" class="dnm-profile-btn primary" style="max-width:260px;padding:10px 0;border-radius:10px;font-size:14px;">
-            Sign in with Google
+          <button type="button" id="dnm-login-prompt-btn" class="dnm-profile-btn primary" style="width:auto;min-width:220px;padding:12px 28px;border-radius:12px;font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#FFF" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H8l4-5v4h3l-4 5z"/></svg>
+            <span>Sign in with Google</span>
           </button>
         </div>
       `;
@@ -476,6 +488,16 @@
         `).join('')}
       </div>
     `;
+
+    wrap.querySelectorAll('.dnm-profile-grid .dnm-explore-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const id = item.dataset.reelId;
+        const targetReel = brandReels.find(x => x.id === id);
+        if (targetReel && window.DNM_PLAYER) {
+          window.DNM_PLAYER.openVideoPlaybackModal(targetReel, brandReels);
+        }
+      });
+    });
 
     wrap.querySelector('#dnm-back-to-user-profile')?.addEventListener('click', () => {
       activeBrandClient = null;

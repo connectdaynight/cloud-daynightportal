@@ -101,10 +101,10 @@
     container.querySelectorAll('.dnm-reel-viewport').forEach(vp => {
       vp.addEventListener('click', e => {
         if (e.target.closest('.dnm-reel-actions-stack') || e.target.closest('.dnm-reel-meta-overlay')) return;
-        const vid = vp.querySelector('video');
-        if (vid) {
-          if (vid.paused) vid.play().catch(() => {});
-          else vid.pause();
+        const reelId = vp.dataset.reelId;
+        const r = currentReelsList.find(x => x.id === reelId);
+        if (r && window.DNM_PLAYER) {
+          window.DNM_PLAYER.openVideoPlaybackModal(r, currentReelsList);
         }
       });
     });

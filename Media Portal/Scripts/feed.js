@@ -245,32 +245,12 @@
             likeBtn.click();
           }
         } else {
-          // Single tap play/pause
-          const vid = mediaWrap.querySelector('video');
-          const indicator = mediaWrap.querySelector('.dnm-play-indicator');
-          if (vid) {
-            if (vid.paused) {
-              vid.muted = isGlobalMuted;
-              const p = vid.play();
-              if (p !== undefined) {
-                p.catch(() => {
-                  vid.muted = true;
-                  vid.play().catch(() => {});
-                });
-              }
-              if (indicator) {
-                indicator.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
-                indicator.classList.add('flash');
-                setTimeout(() => indicator.classList.remove('flash'), 450);
-              }
-            } else {
-              vid.pause();
-              if (indicator) {
-                indicator.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
-                indicator.classList.add('flash');
-                setTimeout(() => indicator.classList.remove('flash'), 450);
-              }
-            }
+          // Open full-screen video playback modal (from Client Portal)
+          const postId = card.dataset.postId;
+          const reels = window.DNM_DATA.getAllApprovedReels();
+          const targetReel = reels.find(r => r.id === postId) || reels[0];
+          if (targetReel && window.DNM_PLAYER) {
+            window.DNM_PLAYER.openVideoPlaybackModal(targetReel, reels);
           }
         }
         lastTap = now;

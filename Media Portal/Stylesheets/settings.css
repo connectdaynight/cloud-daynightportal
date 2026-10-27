@@ -119,20 +119,24 @@
 .dnm-settings-btn {
   background: var(--ig-elevated);
   border: 1px solid var(--ig-border);
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--ig-text-primary);
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 600;
-  padding: 7px 14px;
+  padding: 9px 18px;
+  min-height: 38px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.15s ease;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.18s ease;
+  white-space: nowrap;
 }
 
 .dnm-settings-btn:hover {
   background: var(--ig-border);
+  transform: translateY(-1px);
 }
 
 .dnm-settings-btn:active {
@@ -143,6 +147,8 @@
   background: var(--ig-accent);
   border-color: var(--ig-accent);
   color: #FFF;
+  box-shadow: 0 2px 8px rgba(0, 149, 246, 0.25);
+}
 }
 
 .dnm-settings-btn.danger {
