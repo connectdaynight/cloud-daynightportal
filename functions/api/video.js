@@ -76,8 +76,16 @@ export async function onRequestGet(context) {
       });
     }
 
+    const contentType = videoStream.headers.get("Content-Type") || "";
+    if (contentType.includes("text/html")) {
+      return new Response("Upstream returned HTML error page (Google Drive quota exceeded or confirmation required)", {
+        status: 502,
+        headers: { "Content-Type": "text/plain" }
+      });
+    }
+
     const responseHeaders = new Headers();
-    responseHeaders.set("Content-Type", videoStream.headers.get("Content-Type") || "video/mp4");
+    responseHeaders.set("Content-Type", contentType || "video/mp4");
     responseHeaders.set("Content-Disposition", "inline");
     responseHeaders.set("Accept-Ranges", "bytes");
     responseHeaders.set("Access-Control-Allow-Origin", "*");
