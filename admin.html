@@ -6248,9 +6248,7 @@ function openEditModal(r) {
     // Initial Load & Connection Checks
     render();
     checkCloudflareStatus();
-    if (isAuthenticated) {
-      sync(false);
-    }
+    sync(false);
     // Auto poll removed to prevent re-rendering over user forms and eliminate network lag.
     // User can manually sync anytime via the "Sync Cloud" header button.
 
