@@ -4790,11 +4790,11 @@
       gap: 0;
       box-sizing: border-box;
     }
-    @media (min-width: 900px) {
+    @media (min-width: 520px) {
       .dn-feeds-container {
         margin-inline: auto;
         width: 100%;
-        max-width: 520px;
+        max-width: 480px;
         border-inline: 1px solid var(--line);
       }
     }
@@ -4895,7 +4895,6 @@
     .dn-feed-media-wrap {
       width: 100%;
       aspect-ratio: 9 / 16;
-      max-height: 75vh;
       background: #000000;
       position: relative;
       overflow: hidden;
@@ -7549,6 +7548,23 @@
 
       const wraps = document.querySelectorAll('.dn-feed-media-wrap');
       if (!wraps.length) return;
+
+      // Ensure media wrap matches natural video aspect ratio with zero black pillarbox bars
+      wraps.forEach(wrap => {
+        const vid = wrap.querySelector('.dn-feed-video');
+        if (vid) {
+          const syncRatio = () => {
+            if (vid.videoWidth && vid.videoHeight) {
+              wrap.style.aspectRatio = `${vid.videoWidth} / ${vid.videoHeight}`;
+            }
+          };
+          if (vid.videoWidth && vid.videoHeight) {
+            syncRatio();
+          } else {
+            vid.addEventListener('loadedmetadata', syncRatio, { once: true });
+          }
+        }
+      });
 
       if (!isEnabled) {
         wraps.forEach(wrap => {
