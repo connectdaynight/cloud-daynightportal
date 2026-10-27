@@ -90,11 +90,14 @@
     try {
       const storedUploads = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
       if (Array.isArray(storedUploads) && storedUploads.length) {
-        const existingIds = new Set(approvedReels.map(r => r.id));
+        const existingMap = new Map(approvedReels.map(r => [r.id, r]));
         storedUploads.forEach(p => {
-          if (!existingIds.has(p.id)) {
+          if (existingMap.has(p.id)) {
+            const ex = existingMap.get(p.id);
+            Object.assign(ex, p);
+          } else {
             approvedReels.unshift(p);
-            existingIds.add(p.id);
+            existingMap.set(p.id, p);
           }
         });
       }
@@ -107,12 +110,35 @@
         .then(json => {
           if (json && json.success && json.data && Array.isArray(json.data.reels)) {
             let hasNew = false;
-            const existingIds = new Set(approvedReels.map(r => r.id));
+            let storedUploads = [];
+            try { storedUploads = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]'); } catch(_) {}
+            const storedMap = new Map();
+            storedUploads.forEach(p => {
+              if (p.id) storedMap.set(p.id, p);
+              if (p.fileId) storedMap.set(p.fileId, p);
+            });
+
+            const existingMap = new Map(approvedReels.map(r => [r.id, r]));
             json.data.reels.forEach(r => {
-              if (!existingIds.has(r.id) && r.status === 'approved' && !r.hidden && (!r.title || !r.title.trim().startsWith('.'))) {
-                approvedReels.unshift(r);
-                existingIds.add(r.id);
-                hasNew = true;
+              if (r.status === 'approved' && !r.hidden && (!r.title || !r.title.trim().startsWith('.'))) {
+                const localMatch = storedMap.get(r.id) || (r.fileId ? storedMap.get(r.fileId) : null);
+                if (localMatch) {
+                  r.authorName = localMatch.authorName || r.authorName;
+                  r.authorUsername = localMatch.authorUsername || r.authorUsername;
+                  r.authorAvatar = localMatch.authorAvatar || r.authorAvatar;
+                  r.authorId = localMatch.authorId || r.authorId;
+                  r.type = localMatch.type || r.type;
+                  r.aspectRatio = localMatch.aspectRatio || r.aspectRatio;
+                }
+
+                if (!existingMap.has(r.id)) {
+                  approvedReels.unshift(r);
+                  existingMap.set(r.id, r);
+                  hasNew = true;
+                } else {
+                  const ex = existingMap.get(r.id);
+                  Object.assign(ex, r, localMatch || {});
+                }
               }
             });
             if (hasNew) {
@@ -182,6 +208,117 @@
     } catch(_) {}
 
     window.dispatchEvent(new CustomEvent('dnm-post-added', { detail: { post } }));
+  }
+
+  function isPhoto(item) {
+    if (!item) return false;
+    if (item.type === 'photo' || item.type === 'image') return true;
+    if (item.type === 'reel' || item.type === 'video') return false;
+    if (item.mimeType && item.mimeType.startsWith('image/')) return true;
+    if (item.mimeType && item.mimeType.startsWith('video/')) return false;
+    const testStr = `${item.mediaUrl || ''} ${item.coverUrl || ''} ${item.url || ''} ${item.filename || ''} ${item.title || ''}`;
+    if (/\.(jpg|jpeg|png|webp|gif|avif|heic|bmp)(\?|$)/i.test(testStr)) return true;
+    if (typeof item.mediaUrl === 'string' && item.mediaUrl.startsWith('data:image/')) return true;
+    if (typeof item.coverUrl === 'string' && item.coverUrl.startsWith('data:image/') && (!item.mediaUrl || item.mediaUrl === item.coverUrl)) return true;
+    return false;
+  }
+
+  function getAuthorInfo(item) {
+    if (!item) return { isClient: false, name: 'Creator', handle: 'creator', avatar: './Logo/logo.png', isVerified: false };
+
+    const clientObj = (item.c && item.c !== 'community') ? getClient(item.c) : null;
+    if (clientObj) {
+      return {
+        isClient: true,
+        name: clientObj.name,
+        handle: clientObj.slug,
+        avatar: clientObj.logo || './Logo/logo.png',
+        isVerified: true
+      };
+    }
+
+    const currentUser = (window.DNM_AUTH && window.DNM_AUTH.getCurrentUser) ? window.DNM_AUTH.getCurrentUser() : null;
+    
+    let isCurrentUser = false;
+    if (currentUser) {
+      if (item.authorId && item.authorId === currentUser.uid) isCurrentUser = true;
+      if (item.authorUsername && currentUser.username && item.authorUsername.toLowerCase() === currentUser.username.toLowerCase()) isCurrentUser = true;
+      if (currentUser.displayName && item.authorName && item.authorName.toLowerCase() === currentUser.displayName.toLowerCase()) isCurrentUser = true;
+      
+      try {
+        const stored = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
+        if (stored.some(p => p.id === item.id || (p.fileId && p.fileId === item.fileId))) {
+          isCurrentUser = true;
+        }
+      } catch(_) {}
+    }
+
+    let rawName = item.authorName;
+    let rawHandle = item.authorUsername;
+    let rawAvatar = item.authorAvatar;
+
+    if (isCurrentUser && currentUser) {
+      if (!rawName || rawName === 'Creator') rawName = currentUser.displayName || currentUser.username;
+      if (!rawHandle || rawHandle === 'creator') rawHandle = currentUser.username;
+      if (!rawAvatar || rawAvatar.includes('Logo/logo.png')) rawAvatar = currentUser.photoURL;
+    }
+
+    const handle = (rawHandle && rawHandle !== 'creator') 
+      ? rawHandle 
+      : (rawName ? rawName.toLowerCase().replace(/[^a-z0-9_.]/g, '') : 'creator');
+
+    let name = (rawName && rawName !== 'Creator') ? rawName : (handle !== 'creator' ? handle : 'Community Member');
+
+    let avatar = rawAvatar;
+    if (!avatar || avatar.includes('Logo/logo.png')) {
+      if (isCurrentUser && currentUser && currentUser.photoURL && !currentUser.photoURL.includes('Logo/logo.png')) {
+        avatar = currentUser.photoURL;
+      } else {
+        avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=262626&color=ffffff&bold=true`;
+      }
+    }
+
+    return {
+      isClient: false,
+      name: name,
+      handle: handle,
+      avatar: avatar,
+      isVerified: false
+    };
+  }
+
+  function getUserPosts(user) {
+    if (!user) return [];
+    let storedUploads = [];
+    try {
+      storedUploads = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
+    } catch(_) {}
+
+    const localIds = new Set(storedUploads.map(p => p.id));
+    const localFileIds = new Set(storedUploads.map(p => p.fileId).filter(Boolean));
+    const uName = (user.username || '').toLowerCase();
+    const dName = (user.displayName || '').toLowerCase();
+    const uid = user.uid;
+
+    const all = getAllApprovedReels(true);
+    const matched = all.filter(p => {
+      if (localIds.has(p.id)) return true;
+      if (p.fileId && localFileIds.has(p.fileId)) return true;
+      if (uid && p.authorId === uid) return true;
+      if (uName && p.authorUsername && p.authorUsername.toLowerCase() === uName) return true;
+      if (dName && p.authorName && p.authorName.toLowerCase() === dName) return true;
+      return false;
+    });
+
+    const matchedIds = new Set(matched.map(p => p.id));
+    storedUploads.forEach(p => {
+      if (!matchedIds.has(p.id)) {
+        matched.unshift(p);
+        matchedIds.add(p.id);
+      }
+    });
+
+    return matched;
   }
 
   function getSavedPosts() {
@@ -360,10 +497,12 @@
     if (existing) existing.remove();
 
     const currentUser = window.DNM_AUTH ? window.DNM_AUTH.getCurrentUser() : null;
+    const userPosts = currentUser ? getUserPosts(currentUser) : [];
     const isOwner = currentUser && (
       post.authorId === currentUser.uid ||
-      post.authorUsername === currentUser.username ||
-      (currentUser.displayName && post.authorName === currentUser.displayName)
+      (post.authorUsername && currentUser.username && post.authorUsername.toLowerCase() === currentUser.username.toLowerCase()) ||
+      (currentUser.displayName && post.authorName && post.authorName.toLowerCase() === currentUser.displayName.toLowerCase()) ||
+      userPosts.some(up => up.id === post.id || (up.fileId && up.fileId === post.fileId))
     );
 
     const scrim = document.createElement('div');
@@ -531,6 +670,9 @@
     getCommunityPosts,
     addCommunityPost,
     addUploadedPost,
+    getUserPosts,
+    getAuthorInfo,
+    isPhoto,
     getSavedPosts,
     getStreamUrl,
     getMediaUrl,

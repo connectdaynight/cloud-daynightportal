@@ -411,8 +411,7 @@
       return;
     }
 
-    const allApproved = window.DNM_DATA.getAllApprovedReels();
-    const userPosts = allApproved.filter(p => p.authorId === user.uid || (p.authorUsername && p.authorUsername === user.username));
+    const userPosts = window.DNM_DATA.getUserPosts(user);
 
     wrap.innerHTML = `
       <!-- Profile Top Bar with Menu Drawer Button -->
@@ -515,8 +514,7 @@
       const grid = wrap.querySelector('#dnm-profile-grid-items');
       if (!grid) return;
 
-      const currentAll = window.DNM_DATA.getAllApprovedReels(true);
-      const currentOwn = currentAll.filter(p => p.authorId === user.uid || (p.authorUsername && p.authorUsername === user.username) || (user.displayName && p.authorName === user.displayName));
+      const currentOwn = window.DNM_DATA.getUserPosts(user);
       const countEl = wrap.querySelector('#dnm-user-posts-count');
       if (countEl) countEl.textContent = currentOwn.length;
 
@@ -533,6 +531,7 @@
 
       grid.innerHTML = items.map(p => {
         const thumbSrc = window.DNM_DATA.getMediaUrl ? window.DNM_DATA.getMediaUrl(p) : (p.coverUrl || p.mediaUrl || '');
+        const isPhotoItem = window.DNM_DATA.isPhoto(p);
         return `
           <div class="dnm-explore-item" data-post-id="${p.id}" style="cursor:pointer;position:relative;aspect-ratio:1;overflow:hidden;background:var(--ig-surface);">
             <img class="dnm-explore-thumb" src="${thumbSrc}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="if(this.src!=='${p.coverUrl}')this.src='${p.coverUrl}';">
@@ -542,7 +541,7 @@
                 <span>Hidden</span>
               </div>
             ` : ''}
-            ${p.type === 'reel' || !p.type ? `
+            ${!isPhotoItem ? `
               <div style="position:absolute;top:6px;right:6px;color:#FFF;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));z-index:2;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               </div>

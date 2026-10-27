@@ -12,7 +12,7 @@
   function generateVideoThumbnail(file, targetSec = 0.8) {
     return new Promise((resolve) => {
       if (!file || (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|mov|webm|m4v)$/i))) {
-        return resolve({ coverUrl: '', duration: '0:30' });
+        return resolve({ coverUrl: '', duration: '0:30', width: 720, height: 1280, aspectRatio: 0.5625 });
       }
       const video = document.createElement('video');
       video.preload = 'metadata';
@@ -36,7 +36,7 @@
         if (!resolved) {
           resolved = true;
           cleanup();
-          resolve({ coverUrl: '', duration: '0:30' });
+          resolve({ coverUrl: '', duration: '0:30', width: 720, height: 1280, aspectRatio: 0.5625 });
         }
       }, 8000);
 
@@ -55,6 +55,7 @@
           try {
             const rawW = video.videoWidth || 720;
             const rawH = video.videoHeight || 1280;
+            const aspect = +(rawW / rawH).toFixed(4);
             const maxW = 480;
             let targetW = rawW;
             let targetH = rawH;
@@ -71,10 +72,10 @@
             ctx.drawImage(video, 0, 0, targetW, targetH);
             const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
             cleanup();
-            resolve({ coverUrl: dataUrl, duration: durStr });
+            resolve({ coverUrl: dataUrl, duration: durStr, width: rawW, height: rawH, aspectRatio: aspect });
           } catch(e) {
             cleanup();
-            resolve({ coverUrl: '', duration: durStr });
+            resolve({ coverUrl: '', duration: durStr, width: 720, height: 1280, aspectRatio: 0.5625 });
           }
         };
       };
@@ -84,9 +85,34 @@
           resolved = true;
           clearTimeout(timeout);
           cleanup();
-          resolve({ coverUrl: '', duration: '0:30' });
+          resolve({ coverUrl: '', duration: '0:30', width: 720, height: 1280, aspectRatio: 0.5625 });
         }
       };
+    });
+  }
+
+  function detectIsPhoto(file) {
+    if (!file) return false;
+    if (file.type && file.type.startsWith('image/')) return true;
+    if (file.type && file.type.startsWith('video/')) return false;
+    return /\.(jpg|jpeg|png|webp|gif|avif|heic|bmp)$/i.test(file.name || '');
+  }
+
+  function getImageDimensions(file) {
+    return new Promise(resolve => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const w = img.naturalWidth || 1080;
+        const h = img.naturalHeight || 1080;
+        URL.revokeObjectURL(url);
+        resolve({ width: w, height: h, aspectRatio: +(w / h).toFixed(4) });
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve({ width: 1080, height: 1080, aspectRatio: 1 });
+      };
+      img.src = url;
     });
   }
 
@@ -202,13 +228,13 @@
       previewWrap.style.display = 'flex';
       fieldsWrap.style.display = 'flex';
 
-      const isVideo = file.type.startsWith('video/');
+      const isPhoto = detectIsPhoto(file);
       const objUrl = URL.createObjectURL(file);
 
-      if (isVideo) {
-        previewWrap.innerHTML = `<video class="dnm-upload-preview-media" src="${objUrl}" controls playsinline autoplay muted loop></video>`;
+      if (isPhoto) {
+        previewWrap.innerHTML = `<img class="dnm-upload-preview-media" src="${objUrl}" alt="Preview" style="max-height:320px;max-width:100%;object-fit:contain;border-radius:10px;">`;
       } else {
-        previewWrap.innerHTML = `<img class="dnm-upload-preview-media" src="${objUrl}" alt="Preview">`;
+        previewWrap.innerHTML = `<video class="dnm-upload-preview-media" src="${objUrl}" controls playsinline autoplay muted loop style="max-height:320px;max-width:100%;object-fit:contain;border-radius:10px;"></video>`;
       }
     }
 
@@ -223,19 +249,36 @@
       statusText.textContent = 'Preparing media for upload...';
       progFill.style.width = '15%';
 
-      const isVideo = selectedFile.type.startsWith('video/');
-      const caption = captionInp.value.trim() || (isVideo ? 'New Community Reel #DaynightMedia' : 'New Community Photo #DaynightMedia');
+      const isPhoto = detectIsPhoto(selectedFile);
+      const isVideo = !isPhoto;
+      const caption = captionInp.value.trim() || (isPhoto ? 'New Community Photo #DaynightMedia' : 'New Community Reel #DaynightMedia');
       const taggedClient = clientSelect.value || '';
 
+      const user = window.DNM_AUTH.getCurrentUser();
+      const effectiveHandle = (user && user.username && user.username !== 'creator')
+        ? user.username
+        : (user && user.displayName ? user.displayName.toLowerCase().replace(/[^a-z0-9_.]/g, '') : 'creator');
+      const effectiveName = (user && user.displayName && user.displayName !== 'Creator')
+        ? user.displayName
+        : (effectiveHandle !== 'creator' ? effectiveHandle : 'Creator');
+      const effectiveAvatar = (user && user.photoURL && !user.photoURL.includes('Logo/logo.png'))
+        ? user.photoURL
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(effectiveName)}&background=262626&color=ffffff&bold=true`;
+
       try {
-        // 1. Generate real thumbnail & duration for videos
+        let mediaDims = { width: 1080, height: 1080, aspectRatio: 1 };
         let thumbUrl = '';
-        let durationStr = '0:30';
-        if (isVideo) {
+        let durationStr = '';
+
+        if (isPhoto) {
+          statusText.textContent = 'Analyzing image aspect ratio...';
+          mediaDims = await getImageDimensions(selectedFile);
+        } else {
           statusText.textContent = 'Generating video cover thumbnail...';
           const thumbRes = await generateVideoThumbnail(selectedFile);
           thumbUrl = thumbRes.coverUrl;
           durationStr = thumbRes.duration;
+          mediaDims = { width: thumbRes.width || 720, height: thumbRes.height || 1280, aspectRatio: thumbRes.aspectRatio || 0.5625 };
         }
         progFill.style.width = '35%';
 
@@ -257,16 +300,19 @@
           branch: taggedClient ? 'Partner' : '',
           album: 'Uploads',
           title: caption,
-          dur: durationStr,
-          coverUrl: thumbUrl || (isVideo ? '' : rawBase64),
+          dur: isPhoto ? '' : durationStr,
+          coverUrl: thumbUrl || (isPhoto ? rawBase64 : ''),
           base64Data: rawBase64,
           filename: selectedFile.name,
-          mimeType: selectedFile.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
-          type: isVideo ? 'reel' : 'photo',
-          authorId: user.uid,
-          authorName: user.displayName || user.username || 'Creator',
-          authorUsername: user.username || 'creator',
-          authorAvatar: user.photoURL || './Logo/logo.png?v=3.2',
+          mimeType: selectedFile.type || (isPhoto ? 'image/jpeg' : 'video/mp4'),
+          type: isPhoto ? 'photo' : 'reel',
+          aspectRatio: mediaDims.aspectRatio,
+          width: mediaDims.width,
+          height: mediaDims.height,
+          authorId: user ? user.uid : '',
+          authorName: effectiveName,
+          authorUsername: effectiveHandle,
+          authorAvatar: effectiveAvatar,
           status: 'approved'
         };
 
@@ -300,18 +346,21 @@
           c: taggedClient || '',
           b: taggedClient ? 'Partner' : '',
           album: 'Uploads',
-          type: isVideo ? 'reel' : 'photo',
+          type: isPhoto ? 'photo' : 'reel',
           title: caption,
           caption: caption,
-          authorId: user.uid,
-          authorName: user.displayName || user.username || 'Creator',
-          authorUsername: user.username || 'creator',
-          authorAvatar: user.photoURL || './Logo/logo.png?v=3.2',
+          authorId: user ? user.uid : '',
+          authorName: effectiveName,
+          authorUsername: effectiveHandle,
+          authorAvatar: effectiveAvatar,
           mediaUrl: finalMedia,
           url: cloudProxyStream || driveUrl,
           fileId: fileId,
           coverUrl: finalCover,
-          dur: durationStr,
+          dur: isPhoto ? '' : durationStr,
+          aspectRatio: mediaDims.aspectRatio,
+          width: mediaDims.width,
+          height: mediaDims.height,
           likes: 0,
           views: 1,
           downloads: 0,
@@ -329,7 +378,7 @@
           window.DNM_FEED.renderFeedCards(feedWrap);
         }
         if (window.DNM_FEED && window.DNM_FEED.showToast) {
-          window.DNM_FEED.showToast('Post uploaded to Google Drive and shared to feed!');
+          window.DNM_FEED.showToast(`${isPhoto ? 'Photo' : 'Video'} uploaded to Google Drive and shared to feed!`);
         }
 
       } catch(err) {

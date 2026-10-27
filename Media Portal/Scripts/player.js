@@ -62,11 +62,11 @@
     window.addEventListener('popstate', onPopState);
 
     function renderModalContent() {
-      const clientObj = (currentReel.c && currentReel.c !== 'community') ? window.DNM_DATA.getClient(currentReel.c) : null;
-      const isClient = !!clientObj;
-      const authorName = isClient ? clientObj.name : (currentReel.authorName || (currentReel.authorUsername ? '@' + currentReel.authorUsername : 'Creator'));
-      const authorHandle = isClient ? clientObj.slug : (currentReel.authorUsername || 'creator');
-      const authorAvatar = isClient ? (clientObj.logo || './Logo/logo.png?v=3.2') : (currentReel.authorAvatar || './Logo/logo.png?v=3.2');
+      const author = window.DNM_DATA.getAuthorInfo(currentReel);
+      const isClient = author.isClient;
+      const authorName = author.name;
+      const authorHandle = author.handle;
+      const authorAvatar = author.avatar;
       const mediaSrc = window.DNM_DATA.getMediaUrl ? window.DNM_DATA.getMediaUrl(currentReel) : window.DNM_DATA.getStreamUrl(currentReel);
       const streamUrl = window.DNM_DATA.getStreamUrl(currentReel);
       const likesSet = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
@@ -75,7 +75,7 @@
       const totalLikes = baseLikes + (isLiked ? 1 : 0);
       const savedSet = new Set(JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]'));
       const isSaved = savedSet.has(currentReel.id);
-      const isPhoto = currentReel.type === 'photo';
+      const isPhoto = window.DNM_DATA.isPhoto(currentReel);
 
       modalSc.innerHTML = `
         <div class="ig-player-wrapper" id="ig-wrapper" style="width:100%;height:100%;position:relative;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;">
@@ -109,8 +109,8 @@
 
             <!-- Video / Photo Player Wrap -->
             <div class="ig-video-wrap" id="ig-video-wrap" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline webkit-playsinline autoplay loop preload="auto" poster="${mediaSrc || currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:cover;display:${isPhoto ? 'none' : 'block'};"></video>
-              <img id="ig-photo" class="ig-photo-player" src="${mediaSrc}" alt="" style="width:100%;height:100%;object-fit:contain;background:#000;display:${isPhoto ? 'block' : 'none'};">
+              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline webkit-playsinline autoplay loop preload="auto" poster="${mediaSrc || currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:contain;display:${isPhoto ? 'none' : 'block'};"></video>
+              <img id="ig-photo" class="ig-photo-player" src="${mediaSrc}" alt="" style="width:100%;height:100%;object-fit:contain;background:transparent;display:${isPhoto ? 'block' : 'none'};">
               
               <!-- Perfectly Centered Stable Buffering Spinner -->
               <div class="video-loading-circle ${isPhoto ? '' : 'active'}" id="ig-loading-circle">

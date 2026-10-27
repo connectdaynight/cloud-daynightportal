@@ -92,12 +92,13 @@
 
     let cardsHtml = '';
     allItems.forEach((item, idx) => {
-      const clientObj = (item.c && item.c !== 'community') ? window.DNM_DATA.getClient(item.c) : null;
-      const isClient = !!clientObj;
-      const authorName = isClient ? clientObj.name : (item.authorName || (item.authorUsername ? '@' + item.authorUsername : 'Creator'));
-      const authorHandle = isClient ? clientObj.slug : (item.authorUsername || 'creator');
-      const authorAvatar = isClient ? (clientObj.logo || './Logo/logo.png') : (item.authorAvatar || './Logo/logo.png');
+      const author = window.DNM_DATA.getAuthorInfo(item);
+      const isClient = author.isClient;
+      const authorName = author.name;
+      const authorHandle = author.handle;
+      const authorAvatar = author.avatar;
       const locationText = isClient ? (item.b || '') : (item.location || (item.b && item.b !== 'Community' ? item.b : ''));
+      const isPhoto = window.DNM_DATA.isPhoto(item);
       const mediaSrc = window.DNM_DATA.getMediaUrl ? window.DNM_DATA.getMediaUrl(item) : (item.mediaUrl || item.coverUrl);
       const videoSrc = window.DNM_DATA.getStreamUrl(item);
       const isLiked = likedPosts.has(item.id);
@@ -116,12 +117,12 @@
           <div class="dnm-card-header">
             <div class="dnm-user-info" data-action="${isClient ? 'view-profile' : 'user-profile'}" data-author="${isClient ? item.c : item.authorId}">
               <div class="dnm-avatar-wrap ${isClient ? 'client' : ''}">
-                <img class="dnm-avatar-img" src="${authorAvatar}" alt="${authorName}" onerror="this.src='./Logo/logo.png'">
+                <img class="dnm-avatar-img" src="${authorAvatar}" alt="${authorName}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=262626&color=ffffff&bold=true';">
               </div>
               <div class="dnm-meta-text">
                 <div class="dnm-username-row">
                   <span class="dnm-username">${authorName}</span>
-                  ${isClient ? '<svg class="dnm-badge-verified" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' : ''}
+                  ${author.isVerified ? '<svg class="dnm-badge-verified" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' : ''}
                 </div>
                 ${locationText ? `<span class="dnm-location">${locationText}</span>` : ''}
               </div>
@@ -131,13 +132,13 @@
             </button>
           </div>
 
-          <!-- Media Container (Strict 9:16 aspect ratio with cover fit, zero black gaps) -->
-          <div class="dnm-media-wrapper" data-action="media-click">
-            ${item.type === 'photo' ? `
-              <img class="dnm-media-photo" src="${mediaSrc}" alt="${item.title || ''}" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="if(this.src!=='${item.coverUrl}')this.src='${item.coverUrl}';">
+          <!-- Media Container (Preserves exact native aspect ratio: 1:1, 4:5, 16:9, or 9:16) -->
+          <div class="dnm-media-wrapper ${isPhoto ? 'photo-mode' : ''}" data-action="media-click" ${item.aspectRatio ? `style="aspect-ratio:${item.aspectRatio};"` : ''}>
+            ${isPhoto ? `
+              <img class="dnm-media-photo" src="${mediaSrc}" alt="${item.title || ''}" loading="lazy" onload="if(this.naturalWidth && this.naturalHeight){const r = +(this.naturalWidth / this.naturalHeight).toFixed(4); this.parentElement.style.aspectRatio = r;}" onerror="if(this.src!=='${item.coverUrl}')this.src='${item.coverUrl}';">
             ` : `
-              <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" muted playsinline loop preload="metadata" poster="${item.coverUrl && item.coverUrl.startsWith('data:') ? item.coverUrl : (mediaSrc || item.coverUrl || '')}"></video>
-              <img class="dnm-feed-poster" src="${item.coverUrl && item.coverUrl.startsWith('data:') ? item.coverUrl : (mediaSrc || item.coverUrl || '')}" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;transition:opacity 0.25s ease;pointer-events:none;">
+              <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" muted playsinline loop preload="metadata" onloadedmetadata="if(this.videoWidth && this.videoHeight){const r = +(this.videoWidth / this.videoHeight).toFixed(4); this.parentElement.style.aspectRatio = r;}" poster="${item.coverUrl && item.coverUrl.startsWith('data:') ? item.coverUrl : (mediaSrc || item.coverUrl || '')}"></video>
+              <img class="dnm-feed-poster" src="${item.coverUrl && item.coverUrl.startsWith('data:') ? item.coverUrl : (mediaSrc || item.coverUrl || '')}" alt="" loading="lazy">
               <button type="button" class="dnm-sound-pill" data-action="toggle-sound" aria-label="Toggle sound" style="z-index:5;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="dnm-sound-icon">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
