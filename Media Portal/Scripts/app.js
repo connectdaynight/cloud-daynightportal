@@ -33,7 +33,10 @@
     // 5. Render Active Tab
     switchTab('feed');
 
-    // 6. Listen for auth changes
+    // 6. Smoothly Dismiss Signature App Loading Screen
+    hideAppLoadingScreen();
+
+    // 7. Listen for auth changes
     window.addEventListener('dnm-auth-changed', () => {
       updateUserAvatars();
       if (currentTab === 'profile') renderProfileTab();
@@ -516,11 +519,23 @@
     });
   }
 
+  function hideAppLoadingScreen() {
+    const loader = document.querySelector('#dnm-app-loading-screen');
+    if (loader) {
+      setTimeout(() => {
+        loader.classList.add('dnm-loading-hidden');
+        setTimeout(() => {
+          if (loader.parentNode) loader.parentNode.removeChild(loader);
+        }, 450);
+      }, 350);
+    }
+  }
+
   function updateUserAvatars() {
     const user = window.DNM_AUTH.getCurrentUser();
     const avatarImg = document.querySelector('#dnm-nav-user-avatar');
     if (avatarImg) {
-      avatarImg.src = user ? user.photoURL : './Logo/logo.png?v=2.2';
+      avatarImg.src = user ? user.photoURL : './Logo/logo.png?v=2.6';
     }
   }
 

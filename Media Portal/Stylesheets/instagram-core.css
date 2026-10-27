@@ -67,7 +67,7 @@ html, body {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding-bottom: var(--ig-nav-height);
+  padding-bottom: calc(var(--ig-nav-height) + 24px);
   border-left: 1px solid var(--ig-border);
   border-right: 1px solid var(--ig-border);
 }
@@ -228,30 +228,37 @@ html, body {
   letter-spacing: -0.2px;
 }
 
-/* Bottom Navigation Bar */
+/* Floating Bottom Navigation Bar with empty bottom space */
 .dnm-bottom-nav {
   position: fixed;
-  bottom: 0;
+  bottom: max(10px, env(safe-area-inset-bottom, 10px)); /* Leaves generous empty space below the floating dock */
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 470px;
+  width: calc(100% - 20px);
+  max-width: 460px;
   height: var(--ig-nav-height);
   background: var(--ig-nav-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid var(--ig-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--ig-border);
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: space-around;
   z-index: 200;
-  padding: 0 4px;
+  padding: 0 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s ease, background-color 0.2s ease;
 }
 
 @media (min-width: 768px) {
   .dnm-bottom-nav {
-    max-width: 500px;
+    max-width: 480px;
   }
+}
+
+[data-theme="dark"] .dnm-bottom-nav {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 .dnm-nav-item {
@@ -261,7 +268,6 @@ html, body {
   border: none;
   color: var(--ig-text-primary);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
@@ -270,23 +276,136 @@ html, body {
 }
 
 .dnm-nav-item:active {
-  transform: scale(0.85);
+  transform: scale(0.88);
+}
+
+.dnm-nav-item svg {
+  width: 24px;
+  height: 24px;
+  display: block;
 }
 
 .dnm-nav-item.active svg {
   stroke-width: 2.6;
 }
 
-.dnm-nav-avatar {
-  width: 25px;
-  height: 25px;
+/* Equalized Profile Avatar Icon (balanced visually with 24px SVGs) */
+.dnm-nav-avatar-wrap {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
+  padding: 1px;
   border: 1.5px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.dnm-nav-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.dnm-nav-item.active .dnm-nav-avatar-wrap {
+  border-color: var(--ig-text-primary);
+}
+
+/* Daynight-Media Signature App Loading Screen */
+.dnm-app-loading-screen {
+  position: fixed;
+  inset: 0;
+  background-color: var(--ig-bg);
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top, 20px) + 50px) 20px calc(env(safe-area-inset-bottom, 20px) + 30px) 20px;
+  opacity: 1;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s ease;
+  box-sizing: border-box;
+}
+
+.dnm-app-loading-screen.dnm-loading-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.dnm-loading-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.dnm-loading-logo-box {
+  width: 80px;
+  height: 80px;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ig-surface);
+  animation: dnmPulse 2s ease-in-out infinite;
+}
+
+.dnm-loading-logo-img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
-.dnm-nav-item.active .dnm-nav-avatar {
-  border-color: var(--ig-text-primary);
+.dnm-loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(0, 149, 246, 0.18);
+  border-top-color: var(--ig-accent);
+  border-radius: 50%;
+  animation: dnmSpin 0.75s linear infinite;
+  margin-top: 8px;
+}
+
+.dnm-loading-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dnm-loading-footer-from {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--ig-text-muted);
+  font-weight: 600;
+}
+
+.dnm-loading-footer-brand {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: var(--ig-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes dnmPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes dnmSpin {
+  to { transform: rotate(360deg); }
 }
 
 .dnm-badge-dot {

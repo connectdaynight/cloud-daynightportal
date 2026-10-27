@@ -17,14 +17,14 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
 
   <!-- Modular Instagram-Grade Stylesheets -->
-  <link rel="stylesheet" href="./Stylesheets/instagram-core.css?v=2.5">
-  <link rel="stylesheet" href="./Stylesheets/feed.css?v=2.5">
-  <link rel="stylesheet" href="./Stylesheets/reels.css?v=2.5">
-  <link rel="stylesheet" href="./Stylesheets/explore.css?v=2.5">
-  <link rel="stylesheet" href="./Stylesheets/settings.css?v=2.5">
-  <link rel="stylesheet" href="./Stylesheets/profile.css?v=2.5">
-  <link rel="stylesheet" href="./Stylesheets/upload.css?v=2.5">
-  <link rel="stylesheet" href="./Stylesheets/player.css?v=2.5">
+  <link rel="stylesheet" href="./Stylesheets/instagram-core.css?v=2.6">
+  <link rel="stylesheet" href="./Stylesheets/feed.css?v=2.6">
+  <link rel="stylesheet" href="./Stylesheets/reels.css?v=2.6">
+  <link rel="stylesheet" href="./Stylesheets/explore.css?v=2.6">
+  <link rel="stylesheet" href="./Stylesheets/settings.css?v=2.6">
+  <link rel="stylesheet" href="./Stylesheets/profile.css?v=2.6">
+  <link rel="stylesheet" href="./Stylesheets/upload.css?v=2.6">
+  <link rel="stylesheet" href="./Stylesheets/player.css?v=2.6">
 
   <!-- Real Google Identity Services & Firebase Auth SDKs -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -33,13 +33,28 @@
 </head>
 <body>
 
+  <!-- Signature App Loading Splash Screen -->
+  <div class="dnm-app-loading-screen" id="dnm-app-loading-screen">
+    <div style="height:20px;"></div>
+    <div class="dnm-loading-center">
+      <div class="dnm-loading-logo-box">
+        <img src="./Logo/logo.png?v=2.6" alt="Day Night Media" class="dnm-loading-logo-img">
+      </div>
+      <div class="dnm-loading-spinner"></div>
+    </div>
+    <div class="dnm-loading-footer">
+      <span class="dnm-loading-footer-from">From</span>
+      <span class="dnm-loading-footer-brand">Day Night Media</span>
+    </div>
+  </div>
+
   <!-- App Main Frame -->
   <div class="dnm-app-container">
 
     <!-- Top Sticky Instagram Header with Intelligent Scroll Hide/Show -->
     <header class="dnm-top-header" id="dnm-main-header">
       <a href="#" class="dnm-logo" id="dnm-header-logo" aria-label="Daynight-media Home">
-        <img src="./Logo/logo.png?v=2.2" alt="Day Night" class="dnm-official-header-logo">
+        <img src="./Logo/logo.png?v=2.6" alt="Day Night" class="dnm-official-header-logo">
         <span class="dnm-header-brand-title">Day Night</span>
       </a>
 
@@ -116,7 +131,9 @@
 
       <!-- 5. Profile -->
       <button type="button" class="dnm-nav-item" data-tab="profile" aria-label="Profile">
-        <img class="dnm-nav-avatar" id="dnm-nav-user-avatar" src="./Logo/logo.png?v=2.2" alt="Profile">
+        <div class="dnm-nav-avatar-wrap">
+          <img class="dnm-nav-avatar" id="dnm-nav-user-avatar" src="./Logo/logo.png?v=2.6" alt="Profile">
+        </div>
       </button>
     </nav>
 
@@ -126,14 +143,14 @@
   <div class="dnm-toast-container" id="dnm-toast-container"></div>
 
   <!-- Modular Scripts -->
-  <script src="./Scripts/firebase-config.js?v=2.5"></script>
-  <script src="./Scripts/auth.js?v=2.5"></script>
-  <script src="./Scripts/data.js?v=2.5"></script>
-  <script src="./Scripts/player.js?v=2.5"></script>
-  <script src="./Scripts/feed.js?v=2.5"></script>
-  <script src="./Scripts/reels.js?v=2.5"></script>
-  <script src="./Scripts/settings.js?v=2.5"></script>
-  <script src="./Scripts/upload.js?v=2.5"></script>
-  <script src="./Scripts/app.js?v=2.5"></script>
+  <script src="./Scripts/firebase-config.js?v=2.6"></script>
+  <script src="./Scripts/auth.js?v=2.6"></script>
+  <script src="./Scripts/data.js?v=2.6"></script>
+  <script src="./Scripts/player.js?v=2.6"></script>
+  <script src="./Scripts/feed.js?v=2.6"></script>
+  <script src="./Scripts/reels.js?v=2.6"></script>
+  <script src="./Scripts/settings.js?v=2.6"></script>
+  <script src="./Scripts/upload.js?v=2.6"></script>
+  <script src="./Scripts/app.js?v=2.6"></script>
 </body>
 </html>
