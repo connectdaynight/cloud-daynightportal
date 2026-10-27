@@ -4,7 +4,7 @@
  * Uses authenticated Google Drive API v3 (via Google Apps Script OAuth token) with graceful public fallback.
  */
 
-const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxBnjSi9NgCq03C686w_TROt60U29-fbMXOVWCES4aDBvPwgddy3r3Z__i98Hx1GCCB/exec";
+const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec";
 
 let cachedToken = null;
 let tokenExpiry = 0;
