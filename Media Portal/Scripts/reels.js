@@ -5,7 +5,6 @@
   'use strict';
 
   let currentReelsList = [];
-  let activeIndex = 0;
   let reelsObserver = null;
   const followingSet = new Set(JSON.parse(localStorage.getItem('dnm_following_set') || '[]'));
 
@@ -26,7 +25,7 @@
       const isClient = !!reel.c;
       const clientObj = isClient ? window.DNM_DATA.getClient(reel.c) : null;
       const authorName = isClient ? (clientObj ? clientObj.name : 'The Chennai Silks') : 'Creator';
-      const authorAvatar = isClient ? (reel.c === 'tcs' ? '/Logo/tcs-logo.png' : '/Logo/logo.png') : '/Logo/logo.png';
+      const authorAvatar = isClient ? (clientObj ? clientObj.logo : '/Logo/tcs-logo.png') : '/Logo/logo.png';
       const isFollowing = followingSet.has(reel.c || authorName);
       const videoSrc = window.DNM_DATA.getStreamUrl(reel);
 
@@ -81,7 +80,6 @@
   }
 
   function attachReelsEvents(container) {
-    // Follow button
     container.querySelectorAll('.dnm-reel-follow-btn').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
@@ -99,7 +97,6 @@
       });
     });
 
-    // Tap on reel viewport to toggle play / pause
     container.querySelectorAll('.dnm-reel-viewport').forEach(vp => {
       vp.addEventListener('click', e => {
         if (e.target.closest('.dnm-reel-actions-stack') || e.target.closest('.dnm-reel-meta-overlay')) return;
@@ -111,7 +108,6 @@
       });
     });
 
-    // Reel like
     container.querySelectorAll('[data-action="reel-like"]').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
@@ -137,7 +133,6 @@
         if (!vid) return;
 
         if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
-          // Pause all other videos
           container.querySelectorAll('video').forEach(other => {
             if (other !== vid) {
               try { other.pause(); } catch(_) {}
@@ -147,7 +142,6 @@
           vid.play().then(() => {
             if (disc) disc.classList.remove('paused');
           }).catch(() => {
-            // Unmuted autoplay blocked fallback
             vid.muted = true;
             vid.play().catch(() => {});
           });

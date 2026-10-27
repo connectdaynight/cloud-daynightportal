@@ -1,5 +1,5 @@
 /**
- * Daynight-Media: Home Feed & Stories Controller
+ * Daynight-Media: Home Feed & Real Stories Controller
  */
 (function(window) {
   'use strict';
@@ -16,34 +16,28 @@
     initFeedAutoplay();
   }
 
-  // Render Stories Tray
+  // Render Real Stories Tray
   function renderStories(trayEl) {
     if (!trayEl) return;
-    const clients = (window.DNM_DATA ? window.DNM_DATA.loadData : null);
-    const clientList = [
-      { id: 'tcs', name: 'The Chennai Silks', avatar: '/Logo/tcs-logo.png' },
-      { id: 'shealin', name: 'Shealin Designers', avatar: '/Logo/logo.png' },
-      { id: 'sarasaa', name: 'Sarasaa Saloon', avatar: '/Logo/logo.png' },
-      { id: 'khalids', name: 'Khalids Cuisine', avatar: '/Logo/logo.png' },
-      { id: 'vivaha', name: 'Vivaha Silks', avatar: '/Logo/logo.png' }
-    ];
-
+    const clients = window.DNM_DATA.getClients();
     const user = window.DNM_AUTH ? window.DNM_AUTH.getCurrentUser() : null;
 
     let html = `
       <div class="dnm-story-item" data-action="story-user">
         <div class="dnm-story-ring ${user ? '' : 'seen'}">
-          <img class="dnm-story-avatar" src="${user ? user.photoURL : '/Logo/logo.png'}" alt="">
+          <img class="dnm-story-avatar" src="${user ? user.photoURL : '/Logo/logo.png'}" alt="Your Story">
         </div>
-        <span class="dnm-story-name">${user ? 'Your Story' : 'Sign In'}</span>
+        <span class="dnm-story-name">${user ? (user.username || 'You') : 'Sign In'}</span>
       </div>
     `;
 
-    clientList.forEach(c => {
+    clients.forEach(c => {
+      // Use real logo from portal-data.json
+      const realLogo = c.logo || '/Logo/logo.png';
       html += `
         <div class="dnm-story-item" data-action="story-client" data-client="${c.id}">
           <div class="dnm-story-ring">
-            <img class="dnm-story-avatar" src="${c.avatar}" alt="${c.name}">
+            <img class="dnm-story-avatar" src="${realLogo}" alt="${c.name}">
           </div>
           <span class="dnm-story-name">${c.name.split(' ')[0]}</span>
         </div>
@@ -51,9 +45,24 @@
     });
 
     trayEl.innerHTML = html;
+
+    // Attach click to open brand page
+    trayEl.querySelectorAll('[data-action="story-client"]').forEach(item => {
+      item.addEventListener('click', () => {
+        window.DNM_APP.openBrandProfile(item.dataset.client);
+      });
+    });
+
+    trayEl.querySelector('[data-action="story-user"]')?.addEventListener('click', () => {
+      if (!user) {
+        window.DNM_AUTH.signInWithGoogle();
+      } else {
+        window.DNM_APP.switchTab('profile');
+      }
+    });
   }
 
-  // Render Feed Cards
+  // Render Feed Cards with Real Logos & Real Content
   function renderFeedCards(wrapEl) {
     if (!wrapEl) return;
     const reels = window.DNM_DATA.getAllApprovedReels();
@@ -62,8 +71,8 @@
     const allItems = [...community, ...reels];
     if (!allItems.length) {
       wrapEl.innerHTML = `
-        <div style="padding:40px 20px;text-align:center;color:var(--ig-text-secondary);">
-          <p>No posts available yet. Be the first to share a video or photo!</p>
+        <div style="padding:50px 20px;text-align:center;color:var(--ig-text-secondary);">
+          <p>Loading real production feed...</p>
         </div>
       `;
       return;
@@ -73,13 +82,13 @@
     allItems.forEach((item, idx) => {
       const isClient = !!item.c;
       const clientObj = isClient ? window.DNM_DATA.getClient(item.c) : null;
-      const authorName = isClient ? (clientObj ? clientObj.name : 'The Chennai Silks') : (item.authorName || 'Creative Member');
-      const authorAvatar = isClient ? (item.c === 'tcs' ? '/Logo/tcs-logo.png' : '/Logo/logo.png') : (item.authorAvatar || '/Logo/logo.png');
+      const authorName = isClient ? (clientObj ? clientObj.name : 'The Chennai Silks') : (item.authorName || 'Creator');
+      const authorAvatar = isClient ? (clientObj ? clientObj.logo : '/Logo/tcs-logo.png') : (item.authorAvatar || '/Logo/logo.png');
       const locationText = isClient ? (item.b || 'Chennai, India') : (item.location || 'Daynight-media');
       const videoSrc = window.DNM_DATA.getStreamUrl(item);
       const isLiked = likedPosts.has(item.id);
       const isSaved = savedPosts.has(item.id);
-      const likesCount = (item.likes || 14) + (isLiked ? 1 : 0);
+      const likesCount = (item.likes || 18) + (isLiked ? 1 : 0);
 
       cardsHtml += `
         <article class="dnm-post-card" data-post-id="${item.id}" data-idx="${idx}">
@@ -87,7 +96,7 @@
           <div class="dnm-card-header">
             <div class="dnm-user-info" data-action="view-profile" data-author="${isClient ? item.c : item.authorId}">
               <div class="dnm-avatar-wrap ${isClient ? 'client' : ''}">
-                <img class="dnm-avatar-img" src="${authorAvatar}" alt="">
+                <img class="dnm-avatar-img" src="${authorAvatar}" alt="${authorName}">
               </div>
               <div class="dnm-meta-text">
                 <div class="dnm-username-row">
@@ -104,7 +113,7 @@
 
           <!-- Media Container -->
           <div class="dnm-media-wrapper" data-action="media-click">
-            ${item.type === 'photo' || item.type === 'ai-picture' ? `
+            ${item.type === 'photo' ? `
               <img class="dnm-media-photo" src="${item.mediaUrl || item.coverUrl}" alt="" loading="lazy">
             ` : `
               <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" playsinline loop preload="metadata" poster="${item.coverUrl || ''}"></video>
@@ -143,9 +152,9 @@
             <span class="dnm-likes-count">${likesCount.toLocaleString()} likes</span>
             <div class="dnm-caption">
               <span class="dnm-caption-user">${authorName}</span>
-              ${item.title || item.caption || 'New reel showcase #DaynightMedia #Creative'}
+              ${item.title || item.caption || 'Verified Reel Showcase'}
             </div>
-            <span class="dnm-comments-summary" data-action="comment-post">View all ${item.commentsCount || 4} comments</span>
+            <span class="dnm-comments-summary">View all ${item.commentsCount || 4} comments</span>
             <span class="dnm-post-time">${item.date || 'Today'}</span>
           </div>
         </article>
@@ -179,14 +188,13 @@
       });
     });
 
-    // Double tap heart pop on media
+    // Double tap heart pop
     wrapEl.querySelectorAll('.dnm-media-wrapper').forEach(mediaWrap => {
       let lastTap = 0;
       mediaWrap.addEventListener('click', e => {
         if (e.target.closest('[data-action="toggle-sound"]')) return;
         const now = Date.now();
         if (now - lastTap < 300) {
-          // Double tap
           const pop = mediaWrap.querySelector('.dnm-heart-pop');
           if (pop) {
             pop.classList.add('pop');
@@ -198,7 +206,6 @@
             likeBtn.click();
           }
         } else {
-          // Single tap: toggle play / pause on video
           const vid = mediaWrap.querySelector('video');
           if (vid) {
             if (vid.paused) vid.play().catch(() => {});
@@ -221,7 +228,7 @@
       });
     });
 
-    // Save / Bookmark button
+    // Save button
     wrapEl.querySelectorAll('[data-action="save-post"]').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
@@ -239,6 +246,16 @@
         localStorage.setItem('dnm_saved_posts', JSON.stringify(Array.from(savedPosts)));
       });
     });
+
+    // View profile click
+    wrapEl.querySelectorAll('[data-action="view-profile"]').forEach(item => {
+      item.addEventListener('click', () => {
+        const author = item.dataset.author;
+        if (author) {
+          window.DNM_APP.openBrandProfile(author);
+        }
+      });
+    });
   }
 
   function updateSoundIcons(wrapEl) {
@@ -249,7 +266,6 @@
     });
   }
 
-  // IntersectionObserver to autoplay single video in viewport
   function initFeedAutoplay() {
     if (feedObserver) {
       feedObserver.disconnect();
@@ -257,7 +273,6 @@
     }
 
     feedObserver = new IntersectionObserver((entries) => {
-      // Guard: if any modal or reels tab is active, halt all feed videos
       if (document.querySelector('.dnm-scrim.active') || document.querySelector('#dnm-tab-reels.active')) {
         document.querySelectorAll('.dnm-feed-vid').forEach(v => {
           try { v.pause(); v.muted = true; } catch(_) {}
@@ -270,7 +285,6 @@
         if (!vid) return;
 
         if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-          // Pause other feed videos
           document.querySelectorAll('.dnm-feed-vid').forEach(other => {
             if (other !== vid) {
               try { other.pause(); other.muted = true; } catch(_) {}

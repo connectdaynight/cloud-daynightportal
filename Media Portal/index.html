@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
   <title>Daynight-media | Official Social Platform</title>
-  <meta name="description" content="Daynight-media - Discover reels, fashion lookbooks, AI visuals, and creator stories">
+  <meta name="description" content="Daynight-media - Official public platform for client brand reels, creator stories, and real-time social feeds">
 
   <!-- Favicon & Icons -->
   <link rel="icon" type="image/png" href="/Logo/logo.png">
@@ -21,11 +21,12 @@
   <link rel="stylesheet" href="./Stylesheets/feed.css">
   <link rel="stylesheet" href="./Stylesheets/reels.css">
   <link rel="stylesheet" href="./Stylesheets/explore.css">
-  <link rel="stylesheet" href="./Stylesheets/ai-pictures.css">
+  <link rel="stylesheet" href="./Stylesheets/settings.css">
   <link rel="stylesheet" href="./Stylesheets/profile.css">
   <link rel="stylesheet" href="./Stylesheets/upload.css">
 
-  <!-- Firebase Web SDK (Compat version for zero-build browser runtime) -->
+  <!-- Real Google Identity Services & Firebase Auth SDKs -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 </head>
@@ -45,23 +46,19 @@
         <button type="button" class="dnm-header-btn" id="dnm-btn-search-header" aria-label="Search">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
-        <button type="button" class="dnm-header-btn" id="dnm-btn-notif" aria-label="Notifications">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <button type="button" class="dnm-header-btn" id="dnm-btn-notif" aria-label="Settings">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
         </button>
       </div>
     </header>
 
     <!-- Tab 1: Home Social Feed -->
     <main class="dnm-tab-view active" id="dnm-tab-feed">
-      <!-- Stories Carousel Tray -->
-      <section class="dnm-stories-tray" id="dnm-stories-tray">
-        <!-- Rendered dynamically -->
-      </section>
+      <!-- Stories Carousel Tray with Real Client Logos -->
+      <section class="dnm-stories-tray" id="dnm-stories-tray"></section>
 
       <!-- Feed Cards Wrap -->
-      <section class="dnm-feed-container" id="dnm-feed-cards-wrap">
-        <!-- Rendered dynamically -->
-      </section>
+      <section class="dnm-feed-container" id="dnm-feed-cards-wrap"></section>
     </main>
 
     <!-- Tab 2: Explore & Search Tab -->
@@ -87,18 +84,11 @@
       <div class="dnm-reels-feed-container" id="dnm-reels-feed-container"></div>
     </main>
 
-    <!-- Tab 4: AI Pictures & Visual Stills Tab -->
-    <main class="dnm-tab-view" id="dnm-tab-pictures" style="display:none;">
-      <div class="dnm-ai-container">
-        <div id="dnm-ai-banner-wrap"></div>
-        <div class="dnm-pictures-grid" id="dnm-pictures-grid-wrap"></div>
-      </div>
-    </main>
+    <!-- Tab 4: Platform Settings Page with Working Buttons -->
+    <main class="dnm-tab-view" id="dnm-tab-settings" style="display:none;"></main>
 
     <!-- Tab 5: Profile & Brand Hub Tab -->
-    <main class="dnm-tab-view" id="dnm-tab-profile" style="display:none;">
-      <!-- Rendered dynamically -->
-    </main>
+    <main class="dnm-tab-view" id="dnm-tab-profile" style="display:none;"></main>
 
     <!-- Bottom Navigation Bar -->
     <nav class="dnm-bottom-nav">
@@ -122,9 +112,9 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="4"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
       </button>
 
-      <!-- 5. Pictures (AI Visuals) -->
-      <button type="button" class="dnm-nav-item" data-tab="pictures" aria-label="Pictures and AI Visuals">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <!-- 5. Settings Tab -->
+      <button type="button" class="dnm-nav-item" data-tab="settings" aria-label="Settings">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
       </button>
 
       <!-- 6. Profile -->
@@ -141,7 +131,7 @@
   <script src="./Scripts/data.js"></script>
   <script src="./Scripts/feed.js"></script>
   <script src="./Scripts/reels.js"></script>
-  <script src="./Scripts/ai-engine.js"></script>
+  <script src="./Scripts/settings.js"></script>
   <script src="./Scripts/upload.js"></script>
   <script src="./Scripts/app.js"></script>
 </body>

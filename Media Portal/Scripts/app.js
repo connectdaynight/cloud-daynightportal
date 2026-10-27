@@ -4,11 +4,19 @@
 (function(window) {
   'use strict';
 
-  let currentTab = 'feed'; // 'feed', 'explore', 'reels', 'pictures', 'profile'
+  let currentTab = 'feed'; // 'feed', 'explore', 'reels', 'settings', 'profile'
   let activeBrandClient = null;
 
   async function init() {
-    console.log('Daynight-Media Initializing...');
+    console.log('Daynight-Media Initializing with Real Server Data...');
+
+    // Apply saved theme
+    const savedTheme = localStorage.getItem('dnm_theme');
+    if (savedTheme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
     
     // 1. Load Data Layer
     await window.DNM_DATA.loadData();
@@ -29,6 +37,10 @@
     window.addEventListener('dnm-auth-changed', () => {
       updateUserAvatars();
       if (currentTab === 'profile') renderProfileTab();
+      if (currentTab === 'settings') {
+        const settingsView = document.querySelector('#dnm-tab-settings');
+        if (settingsView && window.DNM_SETTINGS) window.DNM_SETTINGS.initSettingsPage(settingsView);
+      }
     });
 
     updateUserAvatars();
@@ -39,6 +51,7 @@
     if (logo) {
       logo.addEventListener('click', e => {
         e.preventDefault();
+        activeBrandClient = null;
         switchTab('feed');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
@@ -52,7 +65,7 @@
     const notifBtn = document.querySelector('#dnm-btn-notif');
     if (notifBtn) {
       notifBtn.addEventListener('click', () => {
-        alert('You are all caught up! New notifications will appear here.');
+        switchTab('settings');
       });
     }
   }
@@ -65,6 +78,7 @@
         if (tab === 'upload') {
           window.DNM_UPLOAD.openUploadModal();
         } else {
+          activeBrandClient = null;
           switchTab(tab);
         }
       });
@@ -97,14 +111,13 @@
         window.DNM_REELS.initReelsTab(targetView.querySelector('#dnm-reels-feed-container'));
       } else if (tab === 'explore') {
         renderExploreGrid(targetView.querySelector('#dnm-explore-grid-wrap'));
-      } else if (tab === 'pictures') {
-        window.DNM_AI.initAIEngine(targetView);
+      } else if (tab === 'settings') {
+        if (window.DNM_SETTINGS) window.DNM_SETTINGS.initSettingsPage(targetView);
       } else if (tab === 'profile') {
         renderProfileTab(targetView);
       }
     }
 
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
@@ -135,7 +148,6 @@
       });
     }
 
-    // Close dropdown on outside click
     document.addEventListener('click', e => {
       if (!e.target.closest('.dnm-search-bar')) {
         dropdown.classList.remove('active');
@@ -145,18 +157,12 @@
 
   function executeSearch(query, dropdown) {
     const reels = window.DNM_DATA.getAllApprovedReels();
-    const clients = [
-      { id: 'tcs', name: 'The Chennai Silks', slug: 'thechennaisilks', logo: '/Logo/tcs-logo.png' },
-      { id: 'shealin', name: 'Shealin Designers', slug: 'shealin', logo: '/Logo/logo.png' },
-      { id: 'sarasaa', name: 'Sarasaa Saloon', slug: 'sarasaa', logo: '/Logo/logo.png' },
-      { id: 'khalids', name: 'Khalids Multi Cuisine Restaurant', slug: 'khalids', logo: '/Logo/logo.png' },
-      { id: 'vivaha', name: 'Vivaha Silks & Sarees', slug: 'vivaha', logo: '/Logo/logo.png' }
-    ];
+    const clients = window.DNM_DATA.getClients();
 
-    // Filter accounts
-    const matchAccounts = clients.filter(c => c.name.toLowerCase().includes(query) || c.slug.includes(query));
+    // Match accounts with real client data
+    const matchAccounts = clients.filter(c => (c.name && c.name.toLowerCase().includes(query)) || (c.slug && c.slug.includes(query)));
 
-    // Filter reels
+    // Match reels
     const matchReels = reels.filter(r => (r.title && r.title.toLowerCase().includes(query)) || (r.b && r.b.toLowerCase().includes(query)));
 
     if (!matchAccounts.length && !matchReels.length) {
@@ -176,7 +182,7 @@
       matchAccounts.forEach(c => {
         html += `
           <div class="dnm-search-result-item" data-action="open-client-brand" data-client="${c.id}">
-            <img class="dnm-search-result-thumb" src="${c.logo}" alt="">
+            <img class="dnm-search-result-thumb" src="${c.logo || '/Logo/logo.png'}" alt="">
             <div class="dnm-search-result-info">
               <span class="dnm-search-result-title">
                 ${c.name}
@@ -190,7 +196,7 @@
     }
 
     if (matchReels.length) {
-      html += '<div class="dnm-search-section-title">Reels & Videos</div>';
+      html += '<div class="dnm-search-section-title">Reels &amp; Videos</div>';
       matchReels.slice(0, 6).forEach(r => {
         html += `
           <div class="dnm-search-result-item" data-action="open-search-reel" data-reel-id="${r.id}">
@@ -207,7 +213,6 @@
     dropdown.innerHTML = html;
     dropdown.classList.add('active');
 
-    // Attach click events on search results
     dropdown.querySelectorAll('[data-action="open-client-brand"]').forEach(item => {
       item.addEventListener('click', () => {
         dropdown.classList.remove('active');
@@ -223,7 +228,7 @@
     });
   }
 
-  // Render Explore Grid
+  // Render Explore Grid with Real Media
   function renderExploreGrid(gridWrap) {
     if (!gridWrap) return;
     const reels = window.DNM_DATA.getAllApprovedReels();
@@ -251,7 +256,6 @@
     const wrap = profileContainer || document.querySelector('#dnm-tab-profile');
     if (!wrap) return;
 
-    // Check if viewing a specific client brand page or the logged-in user
     if (activeBrandClient) {
       renderBrandProfilePage(wrap, activeBrandClient);
       return;
@@ -280,7 +284,6 @@
     }
 
     const userPosts = window.DNM_DATA.getCommunityPosts().filter(p => p.authorId === user.uid);
-    const savedPosts = JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]');
 
     wrap.innerHTML = `
       <div class="dnm-profile-header">
@@ -294,11 +297,11 @@
               <span class="dnm-stat-label">Posts</span>
             </div>
             <div class="dnm-stat-block">
-              <span class="dnm-stat-number">${user.followersCount || 18}</span>
+              <span class="dnm-stat-number">${user.followersCount || 0}</span>
               <span class="dnm-stat-label">Followers</span>
             </div>
             <div class="dnm-stat-block">
-              <span class="dnm-stat-number">${user.followingCount || 8}</span>
+              <span class="dnm-stat-number">${user.followingCount || 1}</span>
               <span class="dnm-stat-label">Following</span>
             </div>
           </div>
@@ -307,12 +310,12 @@
         <div class="dnm-profile-bio-box">
           <span class="dnm-profile-fullname">${user.displayName}</span>
           <span class="dnm-profile-handle">@${user.username}</span>
-          <p class="dnm-profile-bio">${user.bio || 'Creative Member on Daynight-media'}</p>
+          <p class="dnm-profile-bio">${user.bio || 'Verified Member on Daynight-media'}</p>
         </div>
 
         <div class="dnm-profile-actions-strip">
           <button type="button" id="dnm-edit-profile-btn" class="dnm-profile-btn">Edit Profile</button>
-          <button type="button" id="dnm-signout-btn" class="dnm-profile-btn" style="color:var(--ig-heart);">Sign Out</button>
+          <button type="button" id="dnm-settings-jump-btn" class="dnm-profile-btn">Settings</button>
         </div>
       </div>
 
@@ -343,8 +346,8 @@
       window.DNM_AUTH.openOnboardingModal(user);
     });
 
-    wrap.querySelector('#dnm-signout-btn')?.addEventListener('click', () => {
-      window.DNM_AUTH.signOut();
+    wrap.querySelector('#dnm-settings-jump-btn')?.addEventListener('click', () => {
+      switchTab('settings');
     });
   }
 
@@ -354,38 +357,36 @@
   }
 
   function renderBrandProfilePage(wrap, clientId) {
-    const clients = [
-      { id: 'tcs', name: 'The Chennai Silks', slug: 'thechennaisilks', logo: '/Logo/tcs-logo.png', bio: 'India’s largest textile kingdom with pure silk weaves, festive bridal wear & daily heritage collections.', branch: 'T. Nagar, Chennai' },
-      { id: 'shealin', name: 'Shealin Designers', slug: 'shealin', logo: '/Logo/logo.png', bio: 'Boutique bridal couture, designer lehengas, and contemporary festive wear.', branch: 'Chennai, India' },
-      { id: 'sarasaa', name: 'Sarasaa Saloon', slug: 'sarasaa', logo: '/Logo/logo.png', bio: 'Luxury family salon, bridal artistry & organic skin therapies.', branch: 'Coimbatore, India' },
-      { id: 'khalids', name: 'Khalids Multi Cuisine Restaurant', slug: 'khalids', logo: '/Logo/logo.png', bio: 'Legendary authentic biryani and coastal specialties since 1998.', branch: 'Chennai, India' },
-      { id: 'vivaha', name: 'Vivaha Silks & Sarees', slug: 'vivaha', logo: '/Logo/logo.png', bio: 'Exclusive handloom wedding silks and auspicious ceremonial sarees.', branch: 'Kanchipuram, India' }
-    ];
-
-    const brand = clients.find(c => c.id === clientId) || clients[0];
-    const brandReels = window.DNM_DATA.getClientReels(brand.id);
+    const client = window.DNM_DATA.getClient(clientId) || {
+      id: 'tcs',
+      name: 'The Chennai Silks',
+      slug: 'thechennaisilks',
+      logo: '/Logo/tcs-logo.png',
+      tagline: 'Leading textile retailer with extensive bridal, silk and heritage collections'
+    };
+    const brandReels = window.DNM_DATA.getClientReels(client.id);
 
     wrap.innerHTML = `
       <div style="padding:10px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--ig-border);">
         <button type="button" id="dnm-back-to-user-profile" style="background:none;border:none;color:var(--ig-text-primary);cursor:pointer;display:flex;align-items:center;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <span style="font-size:15px;font-weight:700;">@${brand.slug}</span>
+        <span style="font-size:15px;font-weight:700;">@${client.slug}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--ig-verified)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
       </div>
 
       <div class="dnm-profile-header">
         <div class="dnm-profile-top-row">
           <div class="dnm-profile-avatar-large" style="background:linear-gradient(135deg, #0095F6, #1FAF64);">
-            <img src="${brand.logo}" alt="">
+            <img src="${client.logo || '/Logo/logo.png'}" alt="${client.name}">
           </div>
           <div class="dnm-profile-stats-row">
             <div class="dnm-stat-block">
-              <span class="dnm-stat-number">${brandReels.length || 50}</span>
+              <span class="dnm-stat-number">${brandReels.length}</span>
               <span class="dnm-stat-label">Reels</span>
             </div>
             <div class="dnm-stat-block">
-              <span class="dnm-stat-number">284K</span>
+              <span class="dnm-stat-number">${client.id === 'tcs' ? '284K' : '14K'}</span>
               <span class="dnm-stat-label">Followers</span>
             </div>
             <div class="dnm-stat-block">
@@ -396,14 +397,14 @@
         </div>
 
         <div class="dnm-profile-bio-box">
-          <span class="dnm-profile-fullname">${brand.name}</span>
-          <span class="dnm-profile-handle">@${brand.slug} &bull; Verified Brand</span>
-          <p class="dnm-profile-bio">${brand.bio}</p>
+          <span class="dnm-profile-fullname">${client.name}</span>
+          <span class="dnm-profile-handle">@${client.slug} &bull; Verified Brand</span>
+          <p class="dnm-profile-bio">${client.tagline || 'Official Brand Partner on Daynight-media'}</p>
         </div>
 
         <div class="dnm-profile-actions-strip">
           <button type="button" class="dnm-profile-btn primary" id="dnm-brand-follow-btn">Follow Brand</button>
-          <a href="https://daynight-portal.pages.dev/?client=${brand.slug}" target="_blank" class="dnm-profile-btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <a href="https://daynight-portal.pages.dev/?client=${client.slug}" target="_blank" class="dnm-profile-btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;">
             <span>Client Portal</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
@@ -444,7 +445,6 @@
     }
   }
 
-  // Bootstrap when DOM is ready
   document.addEventListener('DOMContentLoaded', init);
 
   window.DNM_APP = {

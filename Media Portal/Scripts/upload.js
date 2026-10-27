@@ -13,6 +13,9 @@
       return;
     }
 
+    const existing = document.querySelector('#dnm-upload-scrim');
+    if (existing) existing.remove();
+
     const scrim = document.createElement('div');
     scrim.className = 'dnm-scrim active';
     scrim.id = 'dnm-upload-scrim';
