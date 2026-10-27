@@ -3241,10 +3241,6 @@
       position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain !important;
       background: #000000; border: 0; display: block;
     }
-    .video-frame-box iframe {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      border: 0; border-radius: 18px; display: none; background: #000;
-    }
 
     .progress-bar-wrap { width: 100%; height: 8px; background: var(--soft); border-radius: 999px; overflow: hidden; display: none; }
     .progress-bar-fill { height: 100%; width: 0%; background: var(--green); transition: width 0.2s ease; }
@@ -4896,23 +4892,6 @@
       overflow: hidden;
       cursor: pointer;
     }
-    .dn-feed-player-slot {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      background: #000000;
-    }
-    .dn-feed-drive-frame {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #000000;
-      z-index: 1;
-    }
     .dn-feed-video {
       position: absolute;
       inset: 0;
@@ -4964,31 +4943,6 @@
       transform: translate(-50%, -50%) scale(1.08);
       background: rgba(18, 41, 74, 0.85);
       border-color: #FFFFFF;
-    }
-    .dn-feed-expand-btn {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      color: #FFFFFF;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      z-index: 7;
-      transition: transform 0.15s ease, background 0.15s ease;
-    }
-    .dn-feed-expand-btn:hover {
-      background: rgba(18, 41, 74, 0.85);
-      transform: scale(1.08);
-    }
-    .dn-feed-expand-btn:active {
-      transform: scale(0.92);
     }
     .dn-feed-sound-btn {
       position: absolute;
@@ -6634,7 +6588,7 @@
 
     const previewUrl = u => {
       const id = driveId(u);
-      return id ? `https://drive.google.com/file/d/${id}/preview` : u;
+      return id ? `/api/video?id=${encodeURIComponent(id)}` : u;
     };
 
     const dlUrl = u => {
@@ -6646,10 +6600,7 @@
       if (!reel) return '';
       const id = reel.fileId || driveId(reel.url);
       if (!id) return reel.url || '';
-      if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
-        return `/api/video?id=${encodeURIComponent(id)}`;
-      }
-      return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
+      return `/api/video?id=${encodeURIComponent(id)}`;
     };
 
     // Filter contents by year, month, branch, album, and type (strictly for active client, real data only)
@@ -7558,8 +7509,6 @@
 
       if (!isEnabled) {
         wraps.forEach(wrap => {
-          const slot = wrap.querySelector('.dn-feed-player-slot');
-          if (slot) slot.innerHTML = '';
           const vid = wrap.querySelector('.dn-feed-video');
           if (vid) { try { vid.pause(); } catch(_) {} }
           wrap.classList.remove('is-playing');
@@ -7570,47 +7519,26 @@
       feedAutoplayObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           const wrap = entry.target;
-          const slot = wrap.querySelector('.dn-feed-player-slot');
-          const dId = wrap.dataset.driveId;
+          const vid = wrap.querySelector('.dn-feed-video');
+          if (!vid) return;
 
           const isStillEnabled = (function() {
             try { return localStorage.getItem('dn_feed_autoplay') !== 'false'; } catch(_) { return true; }
           })();
 
           if (entry.isIntersecting && entry.intersectionRatio >= 0.45 && isStillEnabled) {
-            if (slot && dId) {
-              if (!slot.querySelector('iframe')) {
-                // Keep only one active playing video to prevent multiple audio tracks playing
-                document.querySelectorAll('.dn-feed-player-slot').forEach(s => {
-                  if (s !== slot) {
-                    s.innerHTML = '';
-                    const pw = s.closest('.dn-feed-media-wrap');
-                    if (pw) pw.classList.remove('is-playing');
-                  }
-                });
-                slot.innerHTML = `<iframe class="dn-feed-drive-frame" src="https://drive.google.com/file/d/${encodeURIComponent(dId)}/preview?autoplay=1" allow="autoplay; fullscreen; encrypted-media" style="position:absolute;inset:0;width:100%;height:100%;border:none;background:#000;z-index:1;"></iframe>`;
+            vid.muted = true;
+            const playPromise = vid.play();
+            if (playPromise !== undefined) {
+              playPromise.then(() => {
                 wrap.classList.add('is-playing');
-              }
-            } else {
-              const vid = wrap.querySelector('.dn-feed-video');
-              if (vid) {
-                vid.muted = true;
-                const playPromise = vid.play();
-                if (playPromise !== undefined) {
-                  playPromise.then(() => wrap.classList.add('is-playing')).catch(() => {});
-                }
-              }
+              }).catch(() => {
+                // Autoplay may be restricted until user gesture; poster remains visible
+              });
             }
           } else {
-            if (slot && slot.innerHTML) {
-              slot.innerHTML = '';
-              wrap.classList.remove('is-playing');
-            }
-            const vid = wrap.querySelector('.dn-feed-video');
-            if (vid) {
-              try { vid.pause(); } catch(_) {}
-              wrap.classList.remove('is-playing');
-            }
+            try { vid.pause(); } catch(_) {}
+            wrap.classList.remove('is-playing');
           }
         });
       }, {
@@ -7716,8 +7644,7 @@
                 </header>
 
                 <!-- Media Area (Vertical Video Container with Auto-Play on Scroll) -->
-                <div class="dn-feed-media-wrap" data-act="feed-media-click" data-id="${r.id}" data-drive-id="${driveId(r.url) || r.fileId || ''}">
-                  <div class="dn-feed-player-slot"></div>
+                <div class="dn-feed-media-wrap" data-act="feed-media-click" data-id="${r.id}">
                   <video class="dn-feed-video"
                          src="${getStreamUrl(r)}"
                          poster="${esc(cover)}"
@@ -7725,15 +7652,12 @@
                          webkit-playsinline
                          muted
                          loop
-                         preload="none"
+                         preload="metadata"
                          data-id="${r.id}"></video>
                   ${cover ? `<img src="${esc(cover)}" class="dn-feed-poster" alt="${esc(r.title)}" loading="lazy">` : ''}
                   <div class="dn-feed-play-overlay">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   </div>
-                  <button type="button" class="dn-feed-expand-btn" data-act="open-reel-modal" data-id="${r.id}" title="Full Screen View" aria-label="Full Screen View">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                  </button>
                   <button type="button" class="dn-feed-sound-btn" data-act="toggle-feed-sound" data-id="${r.id}" title="Toggle Sound" aria-label="Toggle Sound">
                     <svg class="sound-icon-muted" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
                     <svg class="sound-icon-audio" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
@@ -10361,10 +10285,7 @@
         if (!reel) return '';
         const id = reel.fileId || driveId(reel.url);
         if (!id) return reel.url || '';
-        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-          return `/api/video?id=${encodeURIComponent(id)}`;
-        }
-        return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
+        return `/api/video?id=${encodeURIComponent(id)}`;
       }
 
       sheet(`
@@ -10395,17 +10316,8 @@
             </div>
 
             <!-- Video Player Wrap -->
-            <div class="ig-video-wrap" id="ig-video-wrap" style="position:relative;width:100%;height:100%;background:#000000;overflow:hidden;">
-              ${(currentReel.fileId || driveId(currentReel.url)) ? `
-                <iframe id="ig-drive-frame"
-                        src="https://drive.google.com/file/d/${encodeURIComponent(currentReel.fileId || driveId(currentReel.url))}/preview?autoplay=1"
-                        allow="autoplay; fullscreen; encrypted-media"
-                        allowfullscreen
-                        style="position:absolute;inset:0;width:100%;height:100%;border:none;background:#000000;z-index:2;"></iframe>
-                <video id="ig-video" class="ig-video-player" playsinline preload="none" style="display:none;"></video>
-              ` : `
-                <video id="ig-video" class="ig-video-player" src="${getStreamUrl(currentReel)}" playsinline autoplay loop preload="auto" poster="${esc(currentReel.coverUrl || '')}"></video>
-              `}
+            <div class="ig-video-wrap" id="ig-video-wrap">
+              <video id="ig-video" class="ig-video-player" src="${getStreamUrl(currentReel)}" playsinline autoplay loop preload="auto" poster="${esc(currentReel.coverUrl || '')}"></video>
               <div class="video-loading-circle active" id="ig-loading-circle">
                 <svg class="v-spinner-svg" viewBox="0 0 50 50">
                   <circle class="v-spinner-path" cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
@@ -10720,18 +10632,6 @@
           vid.addEventListener('seeked', hideLoader);
         }
 
-        const igDriveFrame = modalSc.querySelector('#ig-drive-frame');
-        if (igDriveFrame) {
-          igDriveFrame.addEventListener('load', () => {
-            if (loadingCircle) loadingCircle.classList.remove('active');
-          });
-          setTimeout(() => {
-            if (loadingCircle) loadingCircle.classList.remove('active');
-          }, 1200);
-          const resEl = modalSc.querySelector('#ig-spec-res');
-          if (resEl) resEl.textContent = '1080 × 1920 Full HD';
-        }
-
         // Dynamically populate real video resolution
         if (vid) {
           vid.addEventListener('loadedmetadata', () => {
@@ -10741,13 +10641,12 @@
             }
           });
           vid.addEventListener('error', () => {
-            const id = currentReel.fileId || driveId(currentReel.url);
-            if (id) {
-              const wrap = modalSc.querySelector('#ig-video-wrap');
-              if (wrap && !wrap.querySelector('#ig-drive-frame')) {
-                wrap.innerHTML = `<iframe id="ig-drive-frame" src="https://drive.google.com/file/d/${encodeURIComponent(id)}/preview?autoplay=1" allow="autoplay; fullscreen; encrypted-media" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:none;background:#000000;z-index:2;"></iframe>`;
-                if (loadingCircle) loadingCircle.classList.remove('active');
-              }
+            console.warn('Video load error, attempting stream refresh...');
+            const altSrc = getStreamUrl(currentReel);
+            if (vid.src !== altSrc) {
+              vid.src = altSrc;
+              vid.load();
+              vid.play().catch(() => {});
             }
           });
         }
@@ -11010,14 +10909,8 @@
                 currentReel = playlist[currentIndex];
                 recordWatchHistory(currentReel);
 
-                const fId = currentReel.fileId || driveId(currentReel.url);
-                const igFrame = modalSc.querySelector('#ig-drive-frame');
-                if (igFrame && fId) {
-                  igFrame.src = `https://drive.google.com/file/d/${encodeURIComponent(fId)}/preview?autoplay=1`;
-                } else if (vid) {
-                  vid.src = getStreamUrl(currentReel);
-                  vid.poster = currentReel.coverUrl || '';
-                }
+                vid.src = getStreamUrl(currentReel);
+                vid.poster = currentReel.coverUrl || '';
                 if (ambient) ambient.style.backgroundImage = `url('${esc(currentReel.coverUrl || '')}')`;
 
                 const capEl = modalSc.querySelector('#ig-caption');
@@ -11049,7 +10942,7 @@
                 container.style.transform = 'translateY(0)';
                 container.style.opacity = '1';
 
-                if (vid && !igFrame) vid.play().catch(() => {});
+                vid.play().catch(() => {});
               } catch (err) {
                 console.error('Error in navigateToReel update:', err);
               } finally {
@@ -11540,10 +11433,7 @@
         if (!reel) return '';
         const id = reel.fileId || driveId(reel.url);
         if (!id) return reel.url || '';
-        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-          return `/api/video?id=${encodeURIComponent(id)}`;
-        }
-        return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
+        return `/api/video?id=${encodeURIComponent(id)}`;
       }
 
       const sc = sheet(`
@@ -11671,16 +11561,7 @@
               </button>
 
               <div class="video-card-inner app-slide-active" id="v-card-inner" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden;display:flex;align-items:center;justify-content:center;">
-                ${(currentReel.fileId || driveId(currentReel.url)) ? `
-                  <iframe id="v-drive-frame"
-                          src="https://drive.google.com/file/d/${encodeURIComponent(currentReel.fileId || driveId(currentReel.url))}/preview?autoplay=1"
-                          allow="autoplay; fullscreen; encrypted-media"
-                          allowfullscreen
-                          style="position:absolute;inset:0;width:100%;height:100%;border:none;background:#000000;z-index:2;"></iframe>
-                  <video id="v-native-player" playsinline style="display:none;"></video>
-                ` : `
-                  <video id="v-native-player" src="${getStream(currentReel)}" autoplay playsinline loop preload="auto" poster="${esc(currentReel.coverUrl || '')}" style="width:100%;height:100%;object-fit:contain;background:#000000;display:block;cursor:pointer;"></video>
-                `}
+                <video id="v-native-player" src="${getStream(currentReel)}" autoplay playsinline loop preload="auto" poster="${esc(currentReel.coverUrl || '')}" style="width:100%;height:100%;object-fit:contain;background:#000000;display:block;cursor:pointer;"></video>
                 <div class="video-loading-circle active" id="v-loading-circle">
                   <svg class="v-spinner-svg" viewBox="0 0 50 50">
                     <circle class="v-spinner-path" cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
@@ -11759,16 +11640,13 @@
           vid.addEventListener('seeked', hideLegLoader);
         }
 
-        const vDriveFrame = modalSc.querySelector('#v-drive-frame');
-        if (vDriveFrame) {
-          vDriveFrame.addEventListener('load', () => {
-            if (legLoadingCircle) legLoadingCircle.classList.remove('active');
+        if (vid) {
+          vid.addEventListener('loadedmetadata', () => {
+            const specRes = modalSc.querySelector('#v-spec-res');
+            if (specRes && vid.videoWidth && vid.videoHeight) {
+              specRes.textContent = `${vid.videoWidth} × ${vid.videoHeight}`;
+            }
           });
-          setTimeout(() => {
-            if (legLoadingCircle) legLoadingCircle.classList.remove('active');
-          }, 1200);
-          const specRes = modalSc.querySelector('#v-spec-res');
-          if (specRes) specRes.textContent = '1080 × 1920 Full HD';
         }
 
         // Play/Pause State Management
@@ -11958,11 +11836,7 @@
           curIdx = idx;
           currentReel = activeList[curIdx];
           recordWatchHistory(currentReel);
-          const fId = currentReel.fileId || driveId(currentReel.url);
-          const vFrame = modalSc.querySelector('#v-drive-frame');
-          if (vFrame && fId) {
-            vFrame.src = `https://drive.google.com/file/d/${encodeURIComponent(fId)}/preview?autoplay=1`;
-          } else if (vid) {
+          if (vid) {
             vid.src = getStream(currentReel);
             attemptClassicPlay();
           }
@@ -13288,34 +13162,25 @@
       }
       else if (a === 'feed-media-click') {
         const wrap = el.closest('.dn-feed-media-wrap') || el;
-        const slot = wrap.querySelector('.dn-feed-player-slot');
-        const dId = wrap.dataset.driveId;
-        if (slot && dId) {
-          if (slot.querySelector('iframe')) {
-            // Already playing inline: remove iframe to pause/stop
-            slot.innerHTML = '';
-            wrap.classList.remove('is-playing');
-          } else {
-            // Stop any other currently playing video
-            document.querySelectorAll('.dn-feed-player-slot').forEach(s => {
-              s.innerHTML = '';
-              const pw = s.closest('.dn-feed-media-wrap');
-              if (pw) pw.classList.remove('is-playing');
+        const video = wrap ? wrap.querySelector('.dn-feed-video') : null;
+        if (video) {
+          if (video.paused) {
+            // Pause any other playing feed video
+            document.querySelectorAll('.dn-feed-video').forEach(otherVid => {
+              if (otherVid !== video && !otherVid.paused) {
+                try { otherVid.pause(); } catch(_) {}
+                const otherWrap = otherVid.closest('.dn-feed-media-wrap');
+                if (otherWrap) otherWrap.classList.remove('is-playing');
+              }
             });
-            slot.innerHTML = `<iframe class="dn-feed-drive-frame" src="https://drive.google.com/file/d/${encodeURIComponent(dId)}/preview?autoplay=1" allow="autoplay; fullscreen; encrypted-media" style="position:absolute;inset:0;width:100%;height:100%;border:none;background:#000;z-index:1;"></iframe>`;
-            wrap.classList.add('is-playing');
-          }
-        } else {
-          const video = wrap.querySelector('.dn-feed-video');
-          if (video) {
-            if (video.paused) {
-              video.play().then(() => {
-                wrap.classList.add('is-playing');
-              }).catch(() => {});
-            } else {
-              video.pause();
-              wrap.classList.remove('is-playing');
-            }
+            video.play().then(() => {
+              wrap.classList.add('is-playing');
+            }).catch(err => {
+              console.warn('Feed playback error:', err);
+            });
+          } else {
+            video.pause();
+            wrap.classList.remove('is-playing');
           }
         }
       }

@@ -23,26 +23,35 @@ export async function onRequestGet(context) {
     }
 
     if (fileId) {
-      const initialUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=t`;
+      // 1. Initial request to Google Drive download URL (with export=download)
+      const initialUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
       const res1 = await fetch(initialUrl, {
         headers: fetchHeaders,
         redirect: "manual"
       });
 
-      const contentType1 = res1.headers.get("content-type") || "";
       const cookie1 = res1.headers.get("set-cookie") || "";
+      const loc1 = res1.headers.get("location");
+      const targetUrl = loc1 || `https://drive.usercontent.google.com/download?id=${fileId}&export=download`;
 
-      if (res1.status === 302 || res1.status === 303) {
-        const redirectUrl = res1.headers.get("location");
-        if (redirectUrl) {
-          const headers2 = { ...fetchHeaders };
-          if (cookie1) headers2["Cookie"] = cookie1;
-          videoStream = await fetch(redirectUrl, { headers: headers2 });
-        }
-      } else if (contentType1.includes("video") || contentType1.includes("application/octet-stream")) {
-        videoStream = res1;
+      const headers2 = { ...fetchHeaders };
+      if (cookie1) headers2["Cookie"] = cookie1;
+
+      // 2. Fetch the target download URL
+      const res2 = await fetch(targetUrl, {
+        headers: headers2,
+        redirect: "manual"
+      });
+
+      const contentType2 = res2.headers.get("content-type") || "";
+      const cookie2 = res2.headers.get("set-cookie") || "";
+      const combinedCookies = [cookie1, cookie2].filter(Boolean).join("; ");
+
+      if (contentType2.includes("video") || contentType2.includes("application/octet-stream")) {
+        videoStream = res2;
       } else {
-        const text = await res1.text();
+        // 3. Google Drive large-file confirmation form: parse form parameters including uuid
+        const text = await res2.text();
         const formMatch = text.match(/<form[^>]*action="([^"]+)"[^>]*>([\s\S]*?)<\/form>/i);
         if (formMatch) {
           const action = formMatch[1];
@@ -52,17 +61,16 @@ export async function onRequestGet(context) {
           if (!params.has("confirm")) params.append("confirm", "t");
           const submitUrl = action + "?" + params.toString();
 
-          const headers2 = { ...fetchHeaders };
-          if (cookie1) headers2["Cookie"] = cookie1;
-          videoStream = await fetch(submitUrl, { headers: headers2 });
+          const headers3 = { ...fetchHeaders };
+          if (combinedCookies) headers3["Cookie"] = combinedCookies;
+          videoStream = await fetch(submitUrl, { headers: headers3 });
         } else {
           const confirmCode = (text.match(/confirm=([0-9A-Za-z_-]+)/i) || [])[1] || 't';
-          const linkMatch = text.match(/href="([^"]*(?:confirm=[^"&]+|export=download[^"]*))"/i);
-          let submitUrl = linkMatch ? linkMatch[1].replace(/&amp;/g, '&') : `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=${confirmCode}`;
-          if (submitUrl.startsWith('/')) submitUrl = `https://drive.usercontent.google.com${submitUrl}`;
-          const headers2 = { ...fetchHeaders };
-          if (cookie1) headers2["Cookie"] = cookie1;
-          videoStream = await fetch(submitUrl, { headers: headers2 });
+          const uuid = (text.match(/name="uuid"\s+value="([^"]+)"/i) || [])[1] || '';
+          let submitUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=${confirmCode}${uuid ? '&uuid=' + uuid : ''}`;
+          const headers3 = { ...fetchHeaders };
+          if (combinedCookies) headers3["Cookie"] = combinedCookies;
+          videoStream = await fetch(submitUrl, { headers: headers3 });
         }
       }
     } else if (directUrl) {
@@ -111,4 +119,3 @@ export async function onRequestGet(context) {
 }
 
 export const onRequestHead = onRequestGet;
-
