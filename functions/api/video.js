@@ -115,10 +115,13 @@ export async function onRequestGet(context) {
       videoStream = await fetch(directUrl, { headers: fetchHeaders });
     }
 
-    if (!videoStream || !videoStream.ok && videoStream.status !== 206) {
+    if (!videoStream || (!videoStream.ok && videoStream.status !== 206)) {
       return new Response(`Unable to stream video (status ${videoStream ? videoStream.status : 'error'})`, {
         status: videoStream ? videoStream.status : 502,
-        headers: { "Content-Type": "text/plain" }
+        headers: {
+          "Content-Type": "text/plain",
+          "Cache-Control": "no-store, no-cache, must-revalidate"
+        }
       });
     }
 
@@ -126,7 +129,10 @@ export async function onRequestGet(context) {
     if (contentType.includes("text/html")) {
       return new Response("Upstream returned HTML (Google Drive quota exceeded on public link)", {
         status: 502,
-        headers: { "Content-Type": "text/plain" }
+        headers: {
+          "Content-Type": "text/plain",
+          "Cache-Control": "no-store, no-cache, must-revalidate"
+        }
       });
     }
 

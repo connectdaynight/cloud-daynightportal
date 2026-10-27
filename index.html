@@ -10077,7 +10077,7 @@
         const id = reel.fileId || driveId(reel.url);
         if (!id) return reel.url || '';
         if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-          return `/api/video?id=${encodeURIComponent(id)}`;
+          return `/api/video?id=${encodeURIComponent(id)}&v=3`;
         }
         return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
       }
@@ -10434,16 +10434,15 @@
               resEl.textContent = `${vid.videoWidth} × ${vid.videoHeight} HD`;
             }
           });
+          let streamRetryAttempted = false;
           vid.addEventListener('error', () => {
-            console.warn('Primary stream failed, attempting direct Google Drive stream fallback...');
             const id = currentReel.fileId || driveId(currentReel.url);
-            if (id) {
-              const altSrc = `https://drive.usercontent.google.com/download?id=${encodeURIComponent(id)}&export=download&confirm=t`;
-              if (vid.src !== altSrc) {
-                vid.src = altSrc;
-                vid.load();
-                vid.play().catch(e => console.log('Autoplay fallback:', e));
-              }
+            if (id && !streamRetryAttempted) {
+              streamRetryAttempted = true;
+              console.warn('Retrying video stream with fresh token and cache-bypass...');
+              vid.src = `/api/video?id=${encodeURIComponent(id)}&t=${Date.now()}`;
+              vid.load();
+              vid.play().catch(e => console.log('Autoplay retry:', e));
             }
           });
         }
