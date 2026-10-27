@@ -4480,8 +4480,15 @@
       background: var(--bg);
       position: sticky;
       top: 0;
-      z-index: 30;
+      z-index: 120;
       border-bottom: 1px solid rgba(18, 41, 74, 0.05);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+      will-change: transform;
+    }
+    .top.top-hidden,
+    .client-feeds-top.top-hidden {
+      transform: translateY(-115%) !important;
+      pointer-events: none !important;
     }
     .top-brand-left {
       display: flex;
@@ -4784,7 +4791,7 @@
       width: calc(100% + 32px);
       max-width: none;
       margin-top: 0;
-      padding: 0 0 calc(140px + env(safe-area-inset-bottom, 0px));
+      padding: 0 0 calc(80px + env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
       gap: 0;
@@ -7626,6 +7633,56 @@
     }
 
     // --------------------------------------------------------------------------
+    // INTELLIGENT SMART-HIDE HEADER ON SCROLL
+    // --------------------------------------------------------------------------
+    (function initSmartHeaderScroll() {
+      let lastScrollY = window.scrollY || 0;
+      let ticking = false;
+      let downAccum = 0;
+
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            const currentY = window.scrollY || document.documentElement.scrollTop || 0;
+            const topHeader = document.querySelector('.top') || document.querySelector('.client-feeds-top');
+            if (!topHeader) {
+              lastScrollY = currentY;
+              ticking = false;
+              return;
+            }
+
+            // Always show header at top of the page or inside active modals
+            if (currentY <= 25 || document.body.classList.contains('has-modal')) {
+              topHeader.classList.remove('top-hidden');
+              downAccum = 0;
+              lastScrollY = currentY;
+              ticking = false;
+              return;
+            }
+
+            const diff = currentY - lastScrollY;
+
+            if (diff > 0) {
+              // Scrolling DOWN: accumulate downward scroll
+              downAccum += diff;
+              if (downAccum > 20 && currentY > 50) {
+                topHeader.classList.add('top-hidden');
+              }
+            } else if (diff < -2) {
+              // Scrolling UP: instantly bring header back!
+              downAccum = 0;
+              topHeader.classList.remove('top-hidden');
+            }
+
+            lastScrollY = currentY;
+            ticking = false;
+          });
+          ticking = true;
+        }
+      }, { passive: true });
+    })();
+
+    // --------------------------------------------------------------------------
     // FEEDS TAB RENDERER (Instagram & YouTube Style Social Feed with Floating Approval Card)
     // --------------------------------------------------------------------------
     function renderFeedsPage(c) {
@@ -7787,33 +7844,6 @@
               <p style="margin:0;font-size:13px;">Delivered reels will appear here in your social feed.</p>
             </div>
           `}
-        </div>
-
-        <!-- FIXED & FLOATING "OPEN APPROVAL PORTAL" LUXURY CAPSULE AT BOTTOM (MATCHING THEME, SLIM HEIGHT, SECURE PIN) -->
-        <div class="dn-bottom-approval-bar" data-act="open-approval-portal" role="button" aria-label="Open Approval Portal">
-          <div class="dn-bar-left">
-            <div class="dn-bar-logo-ring">
-              ${clientLogo(c, 'dn-bar-logo')}
-            </div>
-            <div class="dn-bar-meta">
-              <div class="dn-bar-name-row">
-                <span class="dn-bar-client-name">${esc(c.name)}</span>
-                <span class="dn-bar-pin-badge" title="Protected by Client Access PIN">
-                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  <span>PIN Protected</span>
-                </span>
-              </div>
-              <div class="dn-bar-sub-row">
-                <span class="dn-bar-live"><span class="dn-live-pulse-dot"></span> Approval Portal</span>
-                <span>•</span>
-                <span>${lastUpdatedStr}</span>
-              </div>
-            </div>
-          </div>
-          <button type="button" class="dn-bar-cta-btn" data-act="open-approval-portal">
-            <span>Open Portal</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
         </div>
 
         ${renderBottomNav()}
