@@ -7529,6 +7529,10 @@
     // FEEDS TAB AUTOPLAY OBSERVER & CONTROLLER
     // --------------------------------------------------------------------------
     let feedAutoplayObserver = null;
+    let isFeedAudioMuted = (function() {
+      try { return localStorage.getItem('dn_feed_muted') === 'true'; } catch(_) { return true; }
+    })();
+
     function initFeedAutoplay() {
       if (feedAutoplayObserver) {
         feedAutoplayObserver.disconnect();
@@ -7565,13 +7569,29 @@
           })();
 
           if (entry.isIntersecting && entry.intersectionRatio >= 0.45 && isStillEnabled) {
-            vid.muted = true;
+            // Pause any other playing feed video so only ONE audio track plays
+            document.querySelectorAll('.dn-feed-video').forEach(otherVid => {
+              if (otherVid !== vid && !otherVid.paused) {
+                try { otherVid.pause(); } catch(_) {}
+                const otherWrap = otherVid.closest('.dn-feed-media-wrap');
+                if (otherWrap) otherWrap.classList.remove('is-playing');
+              }
+            });
+
+            // Synchronize sound across scrolling videos (respects unmuted state)
+            vid.muted = isFeedAudioMuted;
             const playPromise = vid.play();
             if (playPromise !== undefined) {
               playPromise.then(() => {
                 wrap.classList.add('is-playing');
               }).catch(() => {
-                // Autoplay may be restricted until user gesture; poster remains visible
+                // If browser restricted unmuted autoplay, mute and retry seamlessly
+                if (!vid.muted) {
+                  vid.muted = true;
+                  vid.play().then(() => {
+                    wrap.classList.add('is-playing');
+                  }).catch(() => {});
+                }
               });
             }
           } else {
@@ -7625,6 +7645,9 @@
       const favs = getFavorites();
       const isFeedAutoplayOn = (function() {
         try { return localStorage.getItem('dn_feed_autoplay') !== 'false'; } catch(_) { return true; }
+      })();
+      const isFeedMuted = (function() {
+        try { return localStorage.getItem('dn_feed_muted') === 'true'; } catch(_) { return true; }
       })();
 
       return `
@@ -7688,7 +7711,7 @@
                          poster="${esc(cover)}"
                          playsinline
                          webkit-playsinline
-                         muted
+                         ${isFeedMuted ? 'muted' : ''}
                          loop
                          preload="metadata"
                          data-id="${r.id}"></video>
@@ -7697,8 +7720,8 @@
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   </div>
                   <button type="button" class="dn-feed-sound-btn" data-act="toggle-feed-sound" data-id="${r.id}" title="Toggle Sound" aria-label="Toggle Sound">
-                    <svg class="sound-icon-muted" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-                    <svg class="sound-icon-audio" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    <svg class="sound-icon-muted" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:${isFeedMuted ? 'inline-block' : 'none'};"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                    <svg class="sound-icon-audio" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:${isFeedMuted ? 'none' : 'inline-block'};"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                   </button>
                   <div class="dn-feed-dur-badge">${esc(r.dur || '0:30')}</div>
                 </div>
@@ -13185,17 +13208,19 @@
       else if (a === 'toggle-feed-sound') {
         e.preventDefault();
         e.stopPropagation();
-        const wrap = el.closest('.dn-feed-media-wrap');
-        const video = wrap ? wrap.querySelector('.dn-feed-video') : null;
-        if (video) {
-          video.muted = !video.muted;
-          const isMuted = video.muted;
-          const mIcon = el.querySelector('.sound-icon-muted');
-          const aIcon = el.querySelector('.sound-icon-audio');
-          if (mIcon) mIcon.style.display = isMuted ? 'inline-block' : 'none';
-          if (aIcon) aIcon.style.display = isMuted ? 'none' : 'inline-block';
-          toast(isMuted ? 'Muted' : 'Sound ON', 'info');
-        }
+        isFeedAudioMuted = !isFeedAudioMuted;
+        try { localStorage.setItem('dn_feed_muted', isFeedAudioMuted ? 'true' : 'false'); } catch(_) {}
+
+        // Immediately synchronize all video elements and icons across the feed
+        document.querySelectorAll('.dn-feed-media-wrap').forEach(w => {
+          const v = w.querySelector('.dn-feed-video');
+          if (v) v.muted = isFeedAudioMuted;
+          const m = w.querySelector('.sound-icon-muted');
+          const a = w.querySelector('.sound-icon-audio');
+          if (m) m.style.display = isFeedAudioMuted ? 'inline-block' : 'none';
+          if (a) a.style.display = isFeedAudioMuted ? 'none' : 'inline-block';
+        });
+        toast(isFeedAudioMuted ? 'Feed Muted' : 'Sound ON (All videos unmuted)', isFeedAudioMuted ? 'mute' : 'success');
       }
       else if (a === 'feed-media-click' || a === 'open-reel-modal') {
         e.preventDefault();
