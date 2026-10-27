@@ -3,7 +3,6 @@
     "rules": "firestore.rules"
   },
   "hosting": {
-    "site": "daynight-media",
     "public": "Media Portal",
     "ignore": [
       "firebase.json",
