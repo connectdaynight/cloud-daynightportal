@@ -766,6 +766,23 @@
     }
   }
 
+  // Live Auto-Refresh for Profile and Explore tabs when server data syncs
+  function handleGlobalDataSync() {
+    const profileTab = document.querySelector('#dnm-tab-profile');
+    if (profileTab && profileTab.classList.contains('active')) {
+      renderProfileTab(profileTab);
+    }
+    const exploreTab = document.querySelector('#dnm-tab-explore');
+    if (exploreTab && exploreTab.classList.contains('active')) {
+      renderExploreGrid(exploreTab.querySelector('#dnm-explore-grid-wrap'));
+    }
+  }
+
+  window.addEventListener('dnm-data-synced', handleGlobalDataSync);
+  window.addEventListener('dnm-post-added', handleGlobalDataSync);
+  window.addEventListener('dnm-post-deleted', handleGlobalDataSync);
+  window.addEventListener('dnm-post-updated', handleGlobalDataSync);
+
   document.addEventListener('DOMContentLoaded', init);
 
   window.DNM_APP = {

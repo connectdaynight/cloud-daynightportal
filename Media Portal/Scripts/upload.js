@@ -370,6 +370,9 @@
         };
 
         window.DNM_DATA.addUploadedPost(newPost);
+        if (window.DNM_FIREBASE && window.DNM_FIREBASE.savePost) {
+          window.DNM_FIREBASE.savePost(newPost).catch(e => console.warn('Firestore save post:', e));
+        }
         scrim.remove();
 
         // Refresh active views

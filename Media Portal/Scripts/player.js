@@ -465,8 +465,8 @@
       // Comment
       commentBtn?.addEventListener('click', e => {
         e.stopPropagation();
-        if (window.DNM_FEED && window.DNM_FEED.showToast) {
-          window.DNM_FEED.showToast('Comments drawer available from feed');
+        if (window.DNM_FEED && window.DNM_FEED.openCommentsDrawer) {
+          window.DNM_FEED.openCommentsDrawer(currentReel.id);
         }
       });
 

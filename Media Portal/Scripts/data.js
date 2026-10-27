@@ -8,6 +8,8 @@
   let rawData = null;
   let clientsList = [];
   let clientsMap = {};
+  let basePortalReels = [];
+  let firestorePostsList = [];
   let approvedReels = [];
   let communityPosts = [];
   let streamToken = (function() { try { return sessionStorage.getItem('dn_st') || ''; } catch(_) { return ''; } })();
@@ -29,15 +31,69 @@
   // Refresh token periodically (every 25 minutes)
   setInterval(fetchStreamToken, 25 * 60 * 1000);
 
-  // Load community posts persisted locally
-  try {
-    const rawComm = localStorage.getItem('dnm_community_posts');
-    if (rawComm) communityPosts = JSON.parse(rawComm);
-  } catch(_) {}
+  function mergeAllReels() {
+    const existingMap = new Map();
+    const merged = [];
+
+    // 1. Add all Firestore community/user posts (latest uploads first)
+    firestorePostsList.forEach(p => {
+      if (p && p.id && !p.hidden && !existingMap.has(String(p.id))) {
+        existingMap.set(String(p.id), p);
+        merged.push(p);
+      }
+    });
+
+    // 2. Add base portal reels (brand reels)
+    basePortalReels.forEach(r => {
+      if (r && r.id && !r.hidden && !existingMap.has(String(r.id))) {
+        existingMap.set(String(r.id), r);
+        merged.push(r);
+      }
+    });
+
+    approvedReels = merged;
+    communityPosts = approvedReels.filter(r => !r.c || r.c === 'community' || !clientsMap[r.c]);
+    window.dispatchEvent(new CustomEvent('dnm-data-synced'));
+  }
+
+  async function fetchFirestorePosts() {
+    if (window.DNM_FIREBASE && window.DNM_FIREBASE.db) {
+      try {
+        const snap = await window.DNM_FIREBASE.db.collection('posts')
+          .where('status', '==', 'approved')
+          .get();
+        const posts = [];
+        snap.forEach(doc => {
+          const d = doc.data();
+          if (d && !d.hidden) posts.push(Object.assign({ id: doc.id }, d));
+        });
+        posts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        firestorePostsList = posts;
+      } catch(err) {
+        console.warn('Initial Firestore posts fetch:', err);
+      }
+    }
+  }
+
+  let firestorePostsSubscribed = false;
+  function initFirestorePostsSync() {
+    if (firestorePostsSubscribed) return;
+    if (window.DNM_FIREBASE && window.DNM_FIREBASE.syncPosts) {
+      firestorePostsSubscribed = true;
+      window.DNM_FIREBASE.syncPosts((posts) => {
+        if (Array.isArray(posts)) {
+          posts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          firestorePostsList = posts;
+          mergeAllReels();
+        }
+      });
+    }
+  }
 
   async function loadData() {
-    // Fetch stream token and portal-data in parallel
+    // Fetch stream token, portal-data, and live Firestore posts in parallel
     const tokenPromise = fetchStreamToken();
+    const firestorePromise = fetchFirestorePosts();
 
     try {
       // 1. Fetch real production portal-data.json
@@ -60,7 +116,7 @@
       }
     }
 
-    await tokenPromise;
+    await Promise.all([tokenPromise, firestorePromise]);
 
     if (rawData) {
       // Clean duplicate clients by slug/id
@@ -73,77 +129,40 @@
       });
 
       clientsList.forEach(c => {
-        // Ensure real logo from database
         clientsMap[c.id] = c;
         clientsMap[c.slug] = c;
       });
 
-      // Strictly approved, playable reels (filtering out macOS AppleDouble dot files)
-      approvedReels = (rawData.reels || []).filter(r => 
+      // Strictly approved, playable brand reels
+      basePortalReels = (rawData.reels || []).filter(r => 
         r.status === 'approved' && 
         !r.hidden && 
         (!r.title || !r.title.trim().startsWith('.'))
       );
     }
 
-    // 3. Merge locally cached uploaded posts immediately
-    try {
-      const storedUploads = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
-      if (Array.isArray(storedUploads) && storedUploads.length) {
-        const existingMap = new Map(approvedReels.map(r => [r.id, r]));
-        storedUploads.forEach(p => {
-          if (existingMap.has(p.id)) {
-            const ex = existingMap.get(p.id);
-            Object.assign(ex, p);
-          } else {
-            approvedReels.unshift(p);
-            existingMap.set(p.id, p);
-          }
-        });
-      }
-    } catch(_) {}
+    // 3. Merge live Firestore posts and brand reels
+    mergeAllReels();
 
-    // 4. Live Server Sync: fetch real-time community & client uploads from Google Apps Script
+    // 4. Listen for real-time Firestore post updates continuously
+    initFirestorePostsSync();
+
+    // 5. Background sync from GAS if needed
     if (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) {
       fetch(window.DNM_CONFIG.gasUrl + '?action=getData&_cb=' + Date.now())
         .then(r => r.json())
         .then(json => {
           if (json && json.success && json.data && Array.isArray(json.data.reels)) {
-            let hasNew = false;
-            let storedUploads = [];
-            try { storedUploads = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]'); } catch(_) {}
-            const storedMap = new Map();
-            storedUploads.forEach(p => {
-              if (p.id) storedMap.set(p.id, p);
-              if (p.fileId) storedMap.set(p.fileId, p);
-            });
-
-            const existingMap = new Map(approvedReels.map(r => [r.id, r]));
+            const existingMap = new Map(basePortalReels.map(r => [r.id, r]));
             json.data.reels.forEach(r => {
               if (r.status === 'approved' && !r.hidden && (!r.title || !r.title.trim().startsWith('.'))) {
-                const localMatch = storedMap.get(r.id) || (r.fileId ? storedMap.get(r.fileId) : null);
-                if (localMatch) {
-                  r.authorName = localMatch.authorName || r.authorName;
-                  r.authorUsername = localMatch.authorUsername || r.authorUsername;
-                  r.authorAvatar = localMatch.authorAvatar || r.authorAvatar;
-                  r.authorId = localMatch.authorId || r.authorId;
-                  r.type = localMatch.type || r.type;
-                  r.aspectRatio = localMatch.aspectRatio || r.aspectRatio;
-                }
-
                 if (!existingMap.has(r.id)) {
-                  approvedReels.unshift(r);
+                  basePortalReels.push(r);
                   existingMap.set(r.id, r);
-                  hasNew = true;
-                } else {
-                  const ex = existingMap.get(r.id);
-                  Object.assign(ex, r, localMatch || {});
                 }
               }
             });
-            if (hasNew) {
-              window.dispatchEvent(new CustomEvent('dnm-data-synced'));
-            }
+            mergeAllReels();
           }
         })
         .catch(() => {});
@@ -184,19 +203,13 @@
 
   function addUploadedPost(post) {
     if (!post) return;
-    const existingIdx = approvedReels.findIndex(r => r.id === post.id);
+    const existingIdx = firestorePostsList.findIndex(p => p.id === post.id);
     if (existingIdx !== -1) {
-      approvedReels[existingIdx] = post;
+      firestorePostsList[existingIdx] = post;
     } else {
-      approvedReels.unshift(post);
+      firestorePostsList.unshift(post);
     }
-
-    const cIdx = communityPosts.findIndex(p => p.id === post.id);
-    if (cIdx !== -1) {
-      communityPosts[cIdx] = post;
-    } else {
-      communityPosts.unshift(post);
-    }
+    mergeAllReels();
 
     try {
       const stored = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
@@ -376,8 +389,9 @@
     if (!postId) return false;
     const targetId = String(postId).trim();
 
-    approvedReels = approvedReels.filter(r => String(r.id).trim() !== targetId);
-    communityPosts = communityPosts.filter(p => String(p.id).trim() !== targetId);
+    firestorePostsList = firestorePostsList.filter(p => String(p.id).trim() !== targetId);
+    basePortalReels = basePortalReels.filter(r => String(r.id).trim() !== targetId);
+    mergeAllReels();
 
     try {
       const stored = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
@@ -388,6 +402,11 @@
       const saved = JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]');
       localStorage.setItem('dnm_saved_posts', JSON.stringify(saved.filter(id => id !== targetId)));
     } catch(_) {}
+
+    // Cloud Firestore Delete
+    if (window.DNM_FIREBASE && window.DNM_FIREBASE.deletePost) {
+      window.DNM_FIREBASE.deletePost(targetId).catch(e => console.warn('Firestore delete error:', e));
+    }
 
     if (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) {
       fetch(window.DNM_CONFIG.gasUrl, {
@@ -406,16 +425,12 @@
     const targetId = String(postId).trim();
     let currentHidden = false;
 
-    const reel = approvedReels.find(r => String(r.id).trim() === targetId);
-    if (reel) {
-      reel.hidden = !reel.hidden;
-      currentHidden = reel.hidden;
+    const post = firestorePostsList.find(p => String(p.id).trim() === targetId) || basePortalReels.find(r => String(r.id).trim() === targetId);
+    if (post) {
+      post.hidden = !post.hidden;
+      currentHidden = post.hidden;
     }
-
-    const cPost = communityPosts.find(p => String(p.id).trim() === targetId);
-    if (cPost) {
-      cPost.hidden = currentHidden;
-    }
+    mergeAllReels();
 
     try {
       const stored = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
@@ -426,6 +441,11 @@
       }
       localStorage.setItem('dnm_community_posts', JSON.stringify(communityPosts));
     } catch(_) {}
+
+    // Cloud Firestore Update
+    if (window.DNM_FIREBASE && window.DNM_FIREBASE.updatePost) {
+      window.DNM_FIREBASE.updatePost(targetId, { hidden: currentHidden }).catch(e => console.warn('Firestore updatePost error:', e));
+    }
 
     if (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) {
       fetch(window.DNM_CONFIG.gasUrl, {
@@ -444,17 +464,12 @@
     const targetId = String(postId).trim();
 
     let updatedItem = null;
-    const reel = approvedReels.find(r => String(r.id).trim() === targetId);
-    if (reel) {
-      Object.assign(reel, updates);
-      updatedItem = reel;
+    const post = firestorePostsList.find(p => String(p.id).trim() === targetId) || basePortalReels.find(r => String(r.id).trim() === targetId);
+    if (post) {
+      Object.assign(post, updates);
+      updatedItem = post;
     }
-
-    const cPost = communityPosts.find(p => String(p.id).trim() === targetId);
-    if (cPost) {
-      Object.assign(cPost, updates);
-      if (!updatedItem) updatedItem = cPost;
-    }
+    mergeAllReels();
 
     try {
       const stored = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
@@ -465,6 +480,11 @@
       }
       localStorage.setItem('dnm_community_posts', JSON.stringify(communityPosts));
     } catch(_) {}
+
+    // Cloud Firestore Update
+    if (window.DNM_FIREBASE && window.DNM_FIREBASE.updatePost) {
+      window.DNM_FIREBASE.updatePost(targetId, updates).catch(e => console.warn('Firestore updatePost error:', e));
+    }
 
     if (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) {
       fetch(window.DNM_CONFIG.gasUrl, {
@@ -508,37 +528,49 @@
     const scrim = document.createElement('div');
     scrim.className = 'dnm-scrim active';
     scrim.id = 'dnm-post-manage-modal';
+    scrim.style.cssText = 'z-index: 1000000 !important; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);';
+    
+    const mediaThumb = window.DNM_DATA.getMediaUrl ? window.DNM_DATA.getMediaUrl(post) : (post.coverUrl || post.mediaUrl || './Logo/logo.png');
+    const author = window.DNM_DATA.getAuthorInfo(post);
+
     scrim.innerHTML = `
-      <div class="dnm-modal-dialog" style="max-width:320px;padding:0;overflow:hidden;border-radius:16px;text-align:center;">
-        <div style="padding:16px 20px 12px;border-bottom:1px solid var(--ig-border);">
-          <b style="font-size:15px;color:var(--ig-text-primary);display:block;margin-bottom:4px;">Manage Post</b>
-          <span style="font-size:12px;color:var(--ig-text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;">${escapeHtml(post.title || 'Untitled Post')}</span>
-          ${post.hidden ? '<span style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:var(--ig-accent);background:rgba(0,149,246,0.12);padding:2px 8px;border-radius:10px;">Hidden from Public Feed</span>' : ''}
+      <div class="dnm-modal-dialog" style="max-width:340px;width:90%;padding:0;overflow:hidden;border-radius:22px;background:var(--ig-surface, #1e1e1e);border:1px solid rgba(255,255,255,0.12);box-shadow:0 24px 60px rgba(0,0,0,0.8);text-align:center;animation:dnmScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);">
+        
+        <!-- Post Preview Strip Header -->
+        <div style="padding:18px 18px 14px;border-bottom:1px solid var(--ig-border);display:flex;align-items:center;gap:12px;text-align:left;">
+          <div style="width:50px;height:50px;border-radius:12px;overflow:hidden;background:#000;flex-shrink:0;border:1px solid rgba(255,255,255,0.1);">
+            <img src="${mediaThumb}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='./Logo/logo.png';">
+          </div>
+          <div style="flex:1;min-width:0;">
+            <b style="font-size:14.5px;color:var(--ig-text-primary);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(post.title || post.caption || 'Community Post')}</b>
+            <span style="font-size:12px;color:var(--ig-text-secondary);display:block;margin-top:2px;">@${escapeHtml(author.handle)}</span>
+            ${post.hidden ? '<span style="display:inline-block;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--ig-accent);background:rgba(0,149,246,0.14);padding:2px 8px;border-radius:8px;">Hidden from Public Feed</span>' : ''}
+          </div>
         </div>
         
-        <button type="button" id="dnm-pm-play" style="width:100%;padding:14px;background:none;border:none;border-bottom:1px solid var(--ig-border);color:var(--ig-accent);font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <button type="button" id="dnm-pm-play" style="width:100%;padding:14px 18px;background:none;border:none;border-bottom:1px solid var(--ig-border);color:var(--ig-accent);font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.15s ease;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           <span>View / Play Post</span>
         </button>
 
         ${isOwner ? `
-          <button type="button" id="dnm-pm-edit" style="width:100%;padding:14px;background:none;border:none;border-bottom:1px solid var(--ig-border);color:var(--ig-text-primary);font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <button type="button" id="dnm-pm-edit" style="width:100%;padding:14px 18px;background:none;border:none;border-bottom:1px solid var(--ig-border);color:var(--ig-text-primary);font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.15s ease;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             <span>Edit Caption</span>
           </button>
 
-          <button type="button" id="dnm-pm-hide" style="width:100%;padding:14px;background:none;border:none;border-bottom:1px solid var(--ig-border);color:var(--ig-text-primary);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${post.hidden ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg>
+          <button type="button" id="dnm-pm-hide" style="width:100%;padding:14px 18px;background:none;border:none;border-bottom:1px solid var(--ig-border);color:var(--ig-text-primary);font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.15s ease;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">${post.hidden ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg>
             <span>${post.hidden ? 'Unhide (Make Public on Feed)' : 'Hide (Remove from Public Feed)'}</span>
           </button>
 
-          <button type="button" id="dnm-pm-delete" style="width:100%;padding:14px;background:none;border:none;border-bottom:1px solid var(--ig-border);color:var(--ig-error);font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          <button type="button" id="dnm-pm-delete" style="width:100%;padding:14px 18px;background:none;border:none;border-bottom:1px solid var(--ig-border);color:var(--ig-error);font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.15s ease;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
             <span>Delete Post</span>
           </button>
         ` : ''}
 
-        <button type="button" id="dnm-pm-cancel" style="width:100%;padding:14px;background:none;border:none;color:var(--ig-text-secondary);font-size:14px;cursor:pointer;">
+        <button type="button" id="dnm-pm-cancel" style="width:100%;padding:14px;background:none;border:none;color:var(--ig-text-secondary);font-size:14px;font-weight:600;cursor:pointer;transition:background 0.15s ease;">
           <span>Cancel</span>
         </button>
       </div>
@@ -585,6 +617,7 @@
     const scrim = document.createElement('div');
     scrim.className = 'dnm-scrim active';
     scrim.id = 'dnm-edit-caption-modal';
+    scrim.style.cssText = 'z-index: 1000000 !important; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);';
     scrim.innerHTML = `
       <div class="dnm-modal-dialog" style="max-width:360px;padding:20px;border-radius:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -626,6 +659,7 @@
     const scrim = document.createElement('div');
     scrim.className = 'dnm-scrim active';
     scrim.id = 'dnm-delete-confirm-modal';
+    scrim.style.cssText = 'z-index: 1000000 !important; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);';
     scrim.innerHTML = `
       <div class="dnm-modal-dialog" style="max-width:320px;padding:22px 20px;border-radius:16px;text-align:center;">
         <div style="width:48px;height:48px;border-radius:50%;background:rgba(237,73,86,0.12);color:var(--ig-error);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">

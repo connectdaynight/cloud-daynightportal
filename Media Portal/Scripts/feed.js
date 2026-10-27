@@ -10,20 +10,8 @@
   const likedPosts = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
   const savedPosts = new Set(JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]'));
 
-  // Real user comments storage (filtered of any legacy test data)
-  let commentsStore = {};
-  try {
-    const raw = localStorage.getItem('dnm_comments_store');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      for (const k in parsed) {
-        if (Array.isArray(parsed[k])) {
-          parsed[k] = parsed[k].filter(c => c && c.user !== 'ananya_s' && c.user !== 'karthik_v');
-        }
-      }
-      commentsStore = parsed;
-    }
-  } catch(_) {}
+  // Real user comments in-memory cache (strictly 100% server-synced with Cloud Firestore)
+  let inMemoryComments = {};
 
   function initFeed(container) {
     if (!container) return;
@@ -109,7 +97,7 @@
       const totalLikes = baseLikes + (isLiked ? 1 : 0);
 
       // Real comments: only real user comments
-      const postComments = commentsStore[item.id] || [];
+      const postComments = inMemoryComments[item.id] || [];
 
       cardsHtml += `
         <article class="dnm-post-card" data-post-id="${item.id}" data-idx="${idx}" data-author="${isClient ? item.c : (item.authorId || '')}" data-author-username="${authorHandle}">
@@ -352,48 +340,39 @@
     });
   }
 
-  // Interactive Comments Drawer (Strictly Real Comments Only)
+  // Interactive Comments Drawer (Strictly Real Server Database Sync via Cloud Firestore - Zero Local Storage)
   function openCommentsDrawer(postId, cardEl) {
     const existing = document.querySelector('#dnm-active-comments-sheet');
     if (existing) existing.remove();
     const existingScrim = document.querySelector('#dnm-comments-scrim');
     if (existingScrim) existingScrim.remove();
 
-    const comments = commentsStore[postId] || [];
     const user = window.DNM_AUTH ? window.DNM_AUTH.getCurrentUser() : null;
 
     const scrim = document.createElement('div');
     scrim.className = 'dnm-scrim active';
     scrim.id = 'dnm-comments-scrim';
+    scrim.style.cssText = 'z-index: 1000000 !important;';
 
     const sheet = document.createElement('div');
     sheet.className = 'dnm-comments-sheet active';
     sheet.id = 'dnm-active-comments-sheet';
+    sheet.style.cssText = 'z-index: 1000001 !important;';
     sheet.innerHTML = `
       <div class="dnm-comments-drag-handle"></div>
       <div class="dnm-comments-header">
-        <span class="dnm-comments-title">Comments (${comments.length})</span>
+        <span class="dnm-comments-title">Comments</span>
         <button type="button" class="dnm-comments-close" id="dnm-close-comments-btn">&times;</button>
       </div>
       <div class="dnm-comments-list" id="dnm-comments-list-items">
-        ${comments.length === 0 ? `
-          <div class="dnm-empty-comments" style="padding:40px 16px;text-align:center;color:var(--ig-text-secondary);font-size:13px;">
-            No comments yet. Be the first to comment.
-          </div>
-        ` : comments.map(c => `
-          <div class="dnm-comment-item">
-            <img class="dnm-comment-avatar" src="${c.avatar || './Logo/logo.png'}" alt="">
-            <div class="dnm-comment-body">
-              <span class="dnm-comment-username">@${c.user}</span>
-              <span class="dnm-comment-text">${escapeHtml(c.text)}</span>
-              <span class="dnm-comment-time">${c.time || 'Just now'}</span>
-            </div>
-          </div>
-        `).join('')}
+        <div class="dnm-loading-comments" style="padding:40px 16px;text-align:center;color:var(--ig-text-secondary);font-size:13px;">
+          <div class="dnm-loading-spinner" style="width:24px;height:24px;margin:0 auto 8px;border-width:2.5px;"></div>
+          <span>Loading comments from server...</span>
+        </div>
       </div>
       <form class="dnm-comment-input-bar" id="dnm-comment-form">
-        <img class="dnm-comment-avatar" src="${user ? user.photoURL : './Logo/logo.png'}" alt="" style="width:28px;height:28px;">
-        <input type="text" id="dnm-comment-input-text" class="dnm-comment-inp" placeholder="${user ? 'Add a comment as @' + (user.username || user.displayName) + '...' : 'Sign in to add a comment...'}" ${user ? '' : 'readonly'}>
+        <img class="dnm-comment-avatar" src="${user ? (user.photoURL || './Logo/logo.png') : './Logo/logo.png'}" alt="" style="width:28px;height:28px;">
+        <input type="text" id="dnm-comment-input-text" class="dnm-comment-inp" placeholder="${user ? 'Add a comment as @' + (user.username || user.displayName) + '...' : 'Sign in to comment...'}" ${user ? '' : 'readonly'}>
         <button type="submit" id="dnm-comment-post-btn" class="dnm-comment-post-btn" ${user ? '' : 'disabled'}>Post</button>
       </form>
     `;
@@ -401,7 +380,13 @@
     document.body.appendChild(scrim);
     document.body.appendChild(sheet);
 
+    let unsubscribeComments = null;
+
     function closeComments() {
+      if (unsubscribeComments) {
+        try { unsubscribeComments(); } catch(_) {}
+        unsubscribeComments = null;
+      }
       sheet.classList.remove('active');
       scrim.classList.remove('active');
       setTimeout(() => {
@@ -416,6 +401,41 @@
     const form = sheet.querySelector('#dnm-comment-form');
     const input = sheet.querySelector('#dnm-comment-input-text');
     const list = sheet.querySelector('#dnm-comments-list-items');
+    const titleEl = sheet.querySelector('.dnm-comments-title');
+
+    // Live Server Sync from Cloud Firestore
+    if (window.DNM_FIREBASE && window.DNM_FIREBASE.syncComments) {
+      unsubscribeComments = window.DNM_FIREBASE.syncComments(postId, (serverComments) => {
+        inMemoryComments[postId] = serverComments || [];
+        const count = inMemoryComments[postId].length;
+        if (titleEl) titleEl.textContent = `Comments (${count})`;
+        
+        if (cardEl) {
+          const summary = cardEl.querySelector('.dnm-comments-summary');
+          if (summary) summary.textContent = count > 0 ? `View all ${count} comments` : 'Add a comment...';
+        }
+
+        if (!serverComments || serverComments.length === 0) {
+          list.innerHTML = `
+            <div class="dnm-empty-comments" style="padding:40px 16px;text-align:center;color:var(--ig-text-secondary);font-size:13px;">
+              No comments yet. Be the first to comment.
+            </div>
+          `;
+          return;
+        }
+
+        list.innerHTML = serverComments.map(c => `
+          <div class="dnm-comment-item">
+            <img class="dnm-comment-avatar" src="${c.avatar || './Logo/logo.png'}" alt="" onerror="this.src='./Logo/logo.png';">
+            <div class="dnm-comment-body">
+              <span class="dnm-comment-username">@${escapeHtml(c.user || c.authorUsername || 'creator')}</span>
+              <span class="dnm-comment-text">${escapeHtml(c.text || '')}</span>
+              <span class="dnm-comment-time">${c.time || 'Just now'}</span>
+            </div>
+          </div>
+        `).join('');
+      });
+    }
 
     if (!user) {
       input.addEventListener('click', () => {
@@ -424,45 +444,55 @@
       });
     }
 
-    form?.addEventListener('submit', e => {
+    form?.addEventListener('submit', async e => {
       e.preventDefault();
       const text = input.value.trim();
       if (!text || !user) return;
 
-      const newComment = {
-        user: user.username || user.displayName,
-        avatar: user.photoURL || './Logo/logo.png',
-        text: text,
-        time: 'Just now'
-      };
-      comments.unshift(newComment);
-      commentsStore[postId] = comments;
-      try {
-        localStorage.setItem('dnm_comments_store', JSON.stringify(commentsStore));
-      } catch(_) {}
-
-      const emptyMsg = list.querySelector('.dnm-empty-comments');
-      if (emptyMsg) emptyMsg.remove();
-
-      const itemHtml = `
-        <div class="dnm-comment-item" style="animation:dnmToastIn 0.25s ease;">
-          <img class="dnm-comment-avatar" src="${newComment.avatar}" alt="">
-          <div class="dnm-comment-body">
-            <span class="dnm-comment-username">@${newComment.user}</span>
-            <span class="dnm-comment-text">${escapeHtml(text)}</span>
-            <span class="dnm-comment-time">Just now</span>
-          </div>
-        </div>
-      `;
-      list.insertAdjacentHTML('afterbegin', itemHtml);
-      input.value = '';
-
-      if (cardEl) {
-        const summary = cardEl.querySelector('.dnm-comments-summary');
-        if (summary) summary.textContent = `View all ${comments.length} comments`;
+      const postBtn = form.querySelector('#dnm-comment-post-btn');
+      if (postBtn) {
+        postBtn.disabled = true;
+        postBtn.textContent = 'Posting...';
       }
-      sheet.querySelector('.dnm-comments-title').textContent = `Comments (${comments.length})`;
-      showToast('Comment posted');
+
+      try {
+        const commentData = {
+          userId: user.uid,
+          user: user.username || user.displayName,
+          authorUsername: user.username || 'creator',
+          avatar: user.photoURL || './Logo/logo.png',
+          text: text
+        };
+
+        // Write directly to Cloud Firestore (strictly 100% server sync)
+        if (window.DNM_FIREBASE && window.DNM_FIREBASE.addComment) {
+          await window.DNM_FIREBASE.addComment(postId, commentData);
+        }
+
+        // Secondary backup to Google Apps Script backend
+        if (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) {
+          fetch(window.DNM_CONFIG.gasUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'addComment',
+              id: postId,
+              comment: commentData
+            })
+          }).catch(() => {});
+        }
+
+        input.value = '';
+        showToast('Comment posted to server');
+      } catch(err) {
+        console.error('Comment post error:', err);
+        showToast('Failed to post comment. Check connection.');
+      } finally {
+        if (postBtn) {
+          postBtn.disabled = false;
+          postBtn.textContent = 'Post';
+        }
+      }
     });
   }
 
@@ -633,13 +663,27 @@
     });
   }
 
+  // Automatic Real-Time Server Sync Listeners: ensures fresh uploads immediately show and never disappear
+  function handleFeedAutoUpdate() {
+    const wrapEl = document.querySelector('#dnm-feed-cards-wrap');
+    if (wrapEl && document.querySelector('#dnm-tab-feed')?.classList.contains('active')) {
+      renderFeedCards(wrapEl);
+    }
+  }
+
+  window.addEventListener('dnm-data-synced', handleFeedAutoUpdate);
+  window.addEventListener('dnm-post-added', handleFeedAutoUpdate);
+  window.addEventListener('dnm-post-deleted', handleFeedAutoUpdate);
+  window.addEventListener('dnm-post-updated', handleFeedAutoUpdate);
+
   window.DNM_FEED = {
     initFeed,
     initFeedAutoplay,
     stopFeedAutoplay,
     renderStories,
     renderFeedCards,
-    showToast
+    showToast,
+    openCommentsDrawer
   };
 
 })(window);
