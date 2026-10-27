@@ -16,8 +16,8 @@
   --ig-gradient: linear-gradient(45deg, #F58529, #FEDA77, #DD2A7B, #8134AF, #515BD4);
   --ig-gradient-ring: linear-gradient(135deg, #FBAA47, #D91A46, #A60F93);
   --ig-verified: #0095F6;
-  --ig-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --ig-font-title: 'Grand Hotel', cursive, -apple-system, sans-serif;
+  --ig-font: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --ig-font-title: 'Montserrat', -apple-system, sans-serif;
   --ig-nav-height: 52px;
   --ig-header-height: 54px;
 }
@@ -44,7 +44,6 @@
 
 html, body {
   width: 100%;
-  height: 100%;
   min-height: 100%;
   background-color: var(--ig-bg);
   color: var(--ig-text-primary);
@@ -76,20 +75,25 @@ html, body {
   }
 }
 
-/* Top App Header */
+/* Top App Header with Intelligent Scroll Transitions */
 .dnm-top-header {
   position: sticky;
   top: 0;
   z-index: 100;
   height: var(--ig-header-height);
-  background: rgba(0, 0, 0, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(0, 0, 0, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
   border-bottom: 1px solid var(--ig-border);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+}
+
+.dnm-top-header.dnm-header-hidden {
+  transform: translateY(-100%);
 }
 
 .dnm-logo {
@@ -100,30 +104,12 @@ html, body {
   text-decoration: none;
 }
 
-.dnm-logo-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #E53225;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  color: #FFF;
-  font-size: 13px;
-  letter-spacing: -0.5px;
-}
-
-.dnm-logo-text {
-  font-family: 'Poppins', var(--ig-font);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  color: var(--ig-text-primary);
-}
-
-.dnm-logo-text span {
-  color: var(--ig-accent);
+.dnm-official-header-logo {
+  height: 32px;
+  max-width: 140px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .dnm-header-actions {
@@ -325,4 +311,187 @@ html, body {
 
 .dnm-scrim.active .dnm-modal-dialog {
   transform: scale(1);
+}
+
+/* Toast Notification Floating Pill */
+.dnm-toast-container {
+  position: fixed;
+  bottom: calc(var(--ig-nav-height) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  width: 90%;
+  max-width: 380px;
+}
+
+.dnm-toast {
+  background: rgba(28, 28, 30, 0.94);
+  color: #FFF;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  animation: dnmToastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+
+@keyframes dnmToastIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Slide-Up Comments Drawer */
+.dnm-comments-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%;
+  max-width: 470px;
+  height: 70vh;
+  max-height: 600px;
+  background: var(--ig-elevated);
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  border-top: 1px solid var(--ig-border);
+  z-index: 2100;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 -8px 30px rgba(0,0,0,0.6);
+}
+
+@media (min-width: 768px) {
+  .dnm-comments-sheet {
+    max-width: 500px;
+  }
+}
+
+.dnm-comments-sheet.active {
+  transform: translateX(-50%) translateY(0);
+}
+
+.dnm-comments-drag-handle {
+  width: 38px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ig-border);
+  margin: 10px auto 4px auto;
+}
+
+.dnm-comments-header {
+  padding: 8px 16px 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ig-border);
+}
+
+.dnm-comments-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ig-text-primary);
+}
+
+.dnm-comments-close {
+  background: none;
+  border: none;
+  color: var(--ig-text-primary);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.dnm-comments-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dnm-comment-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.dnm-comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.dnm-comment-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dnm-comment-username {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ig-text-primary);
+}
+
+.dnm-comment-text {
+  font-size: 13px;
+  color: var(--ig-text-primary);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.dnm-comment-time {
+  font-size: 11px;
+  color: var(--ig-text-muted);
+}
+
+.dnm-comment-input-bar {
+  padding: 10px 14px;
+  border-top: 1px solid var(--ig-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--ig-elevated);
+}
+
+.dnm-comment-inp {
+  flex: 1;
+  background: var(--ig-surface);
+  border: 1px solid var(--ig-border);
+  border-radius: 20px;
+  padding: 8px 14px;
+  color: var(--ig-text-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  outline: none;
+}
+
+.dnm-comment-post-btn {
+  background: none;
+  border: none;
+  color: var(--ig-accent);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 4px;
+}
+
+.dnm-comment-post-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }

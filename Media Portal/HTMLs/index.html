@@ -11,10 +11,10 @@
   <link rel="icon" type="image/png" href="/Logo/logo.png">
   <link rel="apple-touch-icon" href="/Logo/logo.png">
 
-  <!-- Google Fonts: Poppins -->
+  <!-- Google Fonts: Montserrat -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
 
   <!-- Modular Production Stylesheets -->
   <link rel="stylesheet" href="../Stylesheets/instagram-core.css">
@@ -35,19 +35,15 @@
   <!-- App Main Frame -->
   <div class="dnm-app-container">
 
-    <!-- Top Sticky Instagram Header -->
-    <header class="dnm-top-header">
-      <a href="#" class="dnm-logo" id="dnm-header-logo">
-        <div class="dnm-logo-mark">DN</div>
-        <span class="dnm-logo-text">Daynight<span>-media</span></span>
+    <!-- Top Sticky Instagram Header with Intelligent Scroll Hide/Show -->
+    <header class="dnm-top-header" id="dnm-main-header">
+      <a href="#" class="dnm-logo" id="dnm-header-logo" aria-label="Daynight-media Home">
+        <img src="/Logo/logo.png" alt="Day Night" class="dnm-official-header-logo">
       </a>
 
       <div class="dnm-header-actions">
         <button type="button" class="dnm-header-btn" id="dnm-btn-search-header" aria-label="Search">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </button>
-        <button type="button" class="dnm-header-btn" id="dnm-btn-notif" aria-label="Settings">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
       </div>
     </header>
@@ -84,13 +80,13 @@
       <div class="dnm-reels-feed-container" id="dnm-reels-feed-container"></div>
     </main>
 
-    <!-- Tab 4: Platform Settings Page with Working Buttons -->
+    <!-- Tab 4: Platform Settings Page (Accessed from Profile) -->
     <main class="dnm-tab-view" id="dnm-tab-settings" style="display:none;"></main>
 
     <!-- Tab 5: Profile & Brand Hub Tab -->
     <main class="dnm-tab-view" id="dnm-tab-profile" style="display:none;"></main>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom Navigation Bar (5 Classic Instagram Tabs - No Settings Button) -->
     <nav class="dnm-bottom-nav">
       <!-- 1. Home Feed -->
       <button type="button" class="dnm-nav-item active" data-tab="feed" aria-label="Home Feed">
@@ -112,18 +108,16 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="4"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
       </button>
 
-      <!-- 5. Settings Tab -->
-      <button type="button" class="dnm-nav-item" data-tab="settings" aria-label="Settings">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-      </button>
-
-      <!-- 6. Profile -->
+      <!-- 5. Profile -->
       <button type="button" class="dnm-nav-item" data-tab="profile" aria-label="Profile">
         <img class="dnm-nav-avatar" id="dnm-nav-user-avatar" src="/Logo/logo.png" alt="Profile">
       </button>
     </nav>
 
   </div>
+
+  <!-- Toast Container -->
+  <div class="dnm-toast-container" id="dnm-toast-container"></div>
 
   <!-- Modular Scripts -->
   <script src="../Scripts/firebase-config.js"></script>

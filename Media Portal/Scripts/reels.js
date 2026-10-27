@@ -24,10 +24,11 @@
     currentReelsList.forEach((reel, idx) => {
       const isClient = !!reel.c;
       const clientObj = isClient ? window.DNM_DATA.getClient(reel.c) : null;
-      const authorName = isClient ? (clientObj ? clientObj.name : 'The Chennai Silks') : 'Creator';
-      const authorAvatar = isClient ? (clientObj ? clientObj.logo : '/Logo/tcs-logo.png') : '/Logo/logo.png';
+      const authorName = isClient ? (clientObj ? clientObj.name : '') : (reel.authorName || '');
+      const authorAvatar = isClient ? (clientObj ? clientObj.logo : '/Logo/logo.png') : '/Logo/logo.png';
       const isFollowing = followingSet.has(reel.c || authorName);
       const videoSrc = window.DNM_DATA.getStreamUrl(reel);
+      const baseLikes = Number(reel.likes) || 0;
 
       reelsHtml += `
         <div class="dnm-reel-viewport" data-reel-id="${reel.id}" data-idx="${idx}">
@@ -35,13 +36,13 @@
 
           <!-- Right Floating Actions Stack -->
           <div class="dnm-reel-actions-stack">
-            <button type="button" class="dnm-reel-action-btn" data-action="reel-like" aria-label="Like">
+            <button type="button" class="dnm-reel-action-btn" data-action="reel-like" aria-label="Like" data-base-likes="${baseLikes}">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              <span class="dnm-reel-action-count">${(reel.likes || 128).toLocaleString()}</span>
+              <span class="dnm-reel-action-count">${baseLikes > 0 ? baseLikes.toLocaleString() : '0'}</span>
             </button>
             <button type="button" class="dnm-reel-action-btn" data-action="reel-comment" aria-label="Comment">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-              <span class="dnm-reel-action-count">14</span>
+              <span class="dnm-reel-action-count">0</span>
             </button>
             <button type="button" class="dnm-reel-action-btn" data-action="reel-share" aria-label="Share">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -64,7 +65,7 @@
                 ${isFollowing ? 'Following' : 'Follow'}
               </button>
             </div>
-            <div class="dnm-reel-caption-text">${reel.title || 'Brand Reel Showcase #Fashion #Reels'}</div>
+            ${reel.title ? `<div class="dnm-reel-caption-text">${reel.title}</div>` : ''}
             <div class="dnm-reel-audio-pill">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
               <span>${authorName} &bull; Original Audio</span>

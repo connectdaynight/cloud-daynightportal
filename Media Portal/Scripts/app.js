@@ -62,12 +62,55 @@
       searchBtn.addEventListener('click', () => switchTab('explore'));
     }
 
-    const notifBtn = document.querySelector('#dnm-btn-notif');
-    if (notifBtn) {
-      notifBtn.addEventListener('click', () => {
-        switchTab('settings');
-      });
-    }
+    // Intelligent Smart Header Scroll Hide/Reveal
+    initSmartHeaderScroll();
+  }
+
+  function initSmartHeaderScroll() {
+    let lastScrollY = window.scrollY || 0;
+    let ticking = false;
+    let downAccum = 0;
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentY = window.scrollY || document.documentElement.scrollTop || 0;
+          const topHeader = document.querySelector('.dnm-top-header');
+          if (!topHeader) {
+            lastScrollY = currentY;
+            ticking = false;
+            return;
+          }
+
+          // Always show header at top of the page or inside active modals
+          if (currentY <= 25 || document.querySelector('.dnm-scrim.active')) {
+            topHeader.classList.remove('dnm-header-hidden');
+            downAccum = 0;
+            lastScrollY = currentY;
+            ticking = false;
+            return;
+          }
+
+          const diff = currentY - lastScrollY;
+
+          if (diff > 0) {
+            // Scrolling DOWN: accumulate downward scroll
+            downAccum += diff;
+            if (downAccum > 15 && currentY > 45) {
+              topHeader.classList.add('dnm-header-hidden');
+            }
+          } else if (diff < -2) {
+            // Scrolling UP: instantly bring header back!
+            downAccum = 0;
+            topHeader.classList.remove('dnm-header-hidden');
+          }
+
+          lastScrollY = currentY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
   }
 
   function setupBottomNav() {
@@ -301,7 +344,7 @@
               <span class="dnm-stat-label">Followers</span>
             </div>
             <div class="dnm-stat-block">
-              <span class="dnm-stat-number">${user.followingCount || 1}</span>
+              <span class="dnm-stat-number">${user.followingCount || 0}</span>
               <span class="dnm-stat-label">Following</span>
             </div>
           </div>
@@ -386,12 +429,12 @@
               <span class="dnm-stat-label">Reels</span>
             </div>
             <div class="dnm-stat-block">
-              <span class="dnm-stat-number">${client.id === 'tcs' ? '284K' : '14K'}</span>
-              <span class="dnm-stat-label">Followers</span>
+              <span class="dnm-stat-number">${client.branches ? client.branches.length : 0}</span>
+              <span class="dnm-stat-label">Branches</span>
             </div>
             <div class="dnm-stat-block">
-              <span class="dnm-stat-number">12</span>
-              <span class="dnm-stat-label">Following</span>
+              <span class="dnm-stat-number">${client.collections ? client.collections.length : 0}</span>
+              <span class="dnm-stat-label">Collections</span>
             </div>
           </div>
         </div>
@@ -399,7 +442,7 @@
         <div class="dnm-profile-bio-box">
           <span class="dnm-profile-fullname">${client.name}</span>
           <span class="dnm-profile-handle">@${client.slug} &bull; Verified Brand</span>
-          <p class="dnm-profile-bio">${client.tagline || 'Official Brand Partner on Daynight-media'}</p>
+          ${client.tagline ? `<p class="dnm-profile-bio">${client.tagline}</p>` : ''}
         </div>
 
         <div class="dnm-profile-actions-strip">

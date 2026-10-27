@@ -94,11 +94,12 @@
   padding: 4px;
 }
 
-/* Post Media Wrapper */
+/* Post Media Wrapper - Strict 9:16 vertical ratio with zero black side gaps */
 .dnm-media-wrapper {
   position: relative;
   width: 100%;
-  background: #050505;
+  aspect-ratio: 9 / 16;
+  background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -109,9 +110,37 @@
 .dnm-media-video,
 .dnm-media-photo {
   width: 100%;
+  height: 100%;
   display: block;
-  object-fit: contain;
-  max-height: 80vh;
+  object-fit: cover; /* Eliminates black bars on left/right edges */
+}
+
+/* Play/Pause Center Indicator */
+.dnm-play-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 8;
+}
+
+.dnm-play-indicator.flash {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 
 /* Floating Audio / Sound Button */

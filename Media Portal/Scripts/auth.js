@@ -44,9 +44,9 @@
           displayName: fbUser.displayName || fbUser.email.split('@')[0],
           username: generateHandle(fbUser.displayName || fbUser.email),
           photoURL: fbUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(fbUser.displayName || 'U')}&background=0095F6&color=fff`,
-          bio: 'Verified Creator on Daynight-media',
+          bio: '',
           followersCount: 0,
-          followingCount: 1,
+          followingCount: 0,
           provider: 'google.com'
         };
         handleAuthSuccess(realUser);
@@ -84,9 +84,9 @@
                   displayName: gProfile.name,
                   username: generateHandle(gProfile.name || gProfile.email),
                   photoURL: gProfile.picture,
-                  bio: 'Verified Creator on Daynight-media',
+                  bio: '',
                   followersCount: 0,
-                  followingCount: 1,
+                  followingCount: 0,
                   provider: 'accounts.google.com'
                 };
                 handleAuthSuccess(realUser);
