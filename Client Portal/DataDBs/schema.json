@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DayNightClientPortalSchema",
+  "description": "Database schema for Day Night Client Portal and shared media assets",
+  "type": "object",
+  "properties": {
+    "settings": {
+      "type": "object",
+      "properties": {
+        "agencyName": { "type": "string" },
+        "portalTitle": { "type": "string" },
+        "version": { "type": "string" },
+        "gasUrl": { "type": "string" }
+      }
+    },
+    "clients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "slug"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "code": { "type": "string" },
+          "tagline": { "type": "string" },
+          "logo": { "type": "string" },
+          "banner": { "type": "string" },
+          "accent": { "type": "string" },
+          "animStyle": { "type": "string" },
+          "branches": { "type": "array", "items": { "type": "string" } },
+          "albums": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "reels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "c", "url", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "c": { "type": "string", "description": "Client ID reference" },
+          "type": { "type": "string", "enum": ["reel", "video", "photo"] },
+          "y": { "type": "number", "description": "Year" },
+          "m": { "type": "number", "description": "Month index (0-11)" },
+          "b": { "type": "string", "description": "Branch name" },
+          "album": { "type": "string" },
+          "title": { "type": "string" },
+          "date": { "type": "string", "format": "date" },
+          "url": { "type": "string", "format": "uri" },
+          "fileId": { "type": "string" },
+          "dur": { "type": "string" },
+          "coverUrl": { "type": "string" },
+          "hidden": { "type": "boolean" },
+          "status": { "type": "string", "enum": ["approved", "pending", "denied"] },
+          "views": { "type": "number" },
+          "likes": { "type": "number" },
+          "downloads": { "type": "number" }
+        }
+      }
+    }
+  }
+}

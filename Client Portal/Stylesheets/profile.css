@@ -1,0 +1,283 @@
+/* ==========================================================================
+
+ * PROFILE TAB STYLESHEET: Client Profile, Stats, Watch History & Settings
+
+ * ========================================================================== */
+
+    /* Favorites & Profile Styling (Luxury Milk-White Theme) */
+    .fav-toggle-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      cursor: pointer;
+      z-index: 4;
+      transition: all 0.18s ease;
+    }
+    .fav-toggle-btn:hover {
+      transform: scale(1.15);
+      background: rgba(0, 0, 0, 0.6);
+    }
+    .fav-toggle-btn.is-fav {
+      background: #FFFFFF;
+      border-color: var(--rose, #E8457A);
+      box-shadow: 0 4px 12px rgba(232, 69, 122, 0.35);
+    }
+    .fav-toggle-btn.is-fav svg {
+      fill: var(--rose, #E8457A);
+      stroke: var(--rose, #E8457A);
+    }
+
+    /* Profile Card & Layout */
+    .profile-card {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .profile-hero {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 24px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 6px 24px rgba(18, 41, 74, 0.05);
+    }
+    .profile-avatar-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--soft);
+      border: 2px solid var(--line);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(18, 41, 74, 0.08);
+    }
+    .profile-avatar { width: 100%; height: 100%; object-fit: contain; }
+    .profile-avatar-ph { font-size: 26px; font-weight: 700; color: var(--navy); }
+    .profile-name { font-size: 20px; font-weight: 700; color: var(--navy); margin: 0 0 4px; line-height: 1.2; }
+    .profile-slogan { font-size: 12px; color: var(--mute); margin: 0 0 12px; }
+    .profile-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    .profile-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .pstat-item {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 6px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .pstat-item b { font-size: 17px; font-weight: 700; color: var(--navy); line-height: 1.2; }
+    .pstat-item small { font-size: 10px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: 0.03em; }
+
+    .profile-section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    .profile-section h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 0 0 12px;
+    }
+    .pbranch-list { display: flex; flex-direction: column; gap: 8px; }
+    .pbranch-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--soft);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--navy);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pbranch-item:hover { background: #FFFFFF; box-shadow: 0 3px 10px rgba(18, 41, 74, 0.06); }
+    .pbranch-item small { color: var(--gold, #B8935A); font-weight: 600; font-size: 11px; }
+
+    .paction-box { display: flex; flex-direction: column; gap: 12px; }
+    .btn-lock {
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      color: var(--red);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn-lock:hover { background: #FEE2E2; border-color: #FCDAD7; }
+
+    .profile-footer {
+      text-align: center;
+      padding: 10px 0 20px;
+    }
+    .dn-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      text-align: left;
+    }
+    .dn-badge b { display: block; font-size: 12px; color: var(--navy); line-height: 1.2; }
+    .dn-badge small { display: block; font-size: 10px; color: var(--mute); }
+
+      /* 12. Client Profile Screen */
+      .profile-card {
+        max-width: 720px;
+        margin: 24px auto 0;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 16px !important;
+      }
+
+      /* 13. Centered Desktop Modals */
+      .scrim:not(.video-modal-scrim):not(.share-modal-scrim) {
+
+    /* Watch History & Favorites inside Profile */
+    .profile-media-section {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .profile-media-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .profile-media-header h4 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .history-item:hover {
+      background: #FFFFFF;
+    }
+    .history-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #000;
+      flex: none;
+    }
+    .history-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .history-info b {
+      display: block;
+      font-size: 12.5px;
+      color: var(--navy);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .history-info small {
+      font-size: 11px;
+      color: var(--mute);
+    }
+
+    /* Favorites Grid in Profile */
+    .profile-favs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .pfav-card {
+      position: relative;
+      aspect-ratio: 9/15;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #111;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    .pfav-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .pfav-card .pfav-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.75) 100%);
+      display: flex;
+      align-items: flex-end;
+      padding: 6px;
+      color: #FFF;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+  

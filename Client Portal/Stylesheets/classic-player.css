@@ -1,0 +1,105 @@
+/* ==========================================================================
+
+ * CLASSIC / LEGACY VIDEO PLAYER FALLBACK STYLESHEET
+
+ * ========================================================================== */
+
+    /* Legacy Player Sleek Progress Bar with Seconds Indicator */
+    .v-legacy-scrubber-wrap {
+      width: 100%;
+      background: #000000;
+      padding: 4px 12px 6px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 20;
+    }
+    .v-legacy-play-btn {
+      background: none;
+      border: none;
+      color: #FFFFFF;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      padding: 3px;
+      flex: none;
+      transition: transform 0.15s ease;
+    }
+    .v-legacy-play-btn:active {
+      transform: scale(0.9);
+    }
+    .v-legacy-track-box {
+      flex: 1;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      touch-action: none;
+    }
+    .v-legacy-track {
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+      position: relative;
+      transition: height 0.15s ease;
+    }
+    .v-legacy-track-box:hover .v-legacy-track,
+    .v-legacy-track-box.is-scrubbing .v-legacy-track {
+      height: 5px;
+    }
+    .v-legacy-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--gold);
+      border-radius: 2px;
+      position: relative;
+    }
+    .v-legacy-thumb {
+      position: absolute;
+      right: -5px;
+      top: 50%;
+      transform: translateY(-50%) scale(0);
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+      transition: transform 0.15s ease;
+    }
+    .v-legacy-track-box:hover .v-legacy-thumb,
+    .v-legacy-track-box.is-scrubbing .v-legacy-thumb {
+      transform: translateY(-50%) scale(1);
+    }
+    .v-legacy-time-bubble {
+      position: absolute;
+      bottom: 22px;
+      left: 0;
+      transform: translateX(-50%);
+      background: rgba(18, 41, 74, 0.94);
+      color: #FFFFFF;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      pointer-events: none;
+      white-space: nowrap;
+      display: none;
+      z-index: 30;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .v-legacy-track-box.is-scrubbing .v-legacy-time-bubble,
+    .v-legacy-track-box:hover .v-legacy-time-bubble {
+      display: block;
+    }
+    .v-legacy-time-label {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 11px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      flex: none;
+      letter-spacing: 0.2px;
+    }

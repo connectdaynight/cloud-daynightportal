@@ -1,0 +1,807 @@
+/* ==========================================================================
+
+ * PRE-APPROVAL TAB STYLESHEET: Wave Accordions, Approval Cards & Review Actions
+
+ * ========================================================================== */
+
+    /* ==========================================================================
+       THE CHENNAI SILKS PRE-APPROVAL PAGE & INSTAGRAM REELS PLAYER SYSTEM
+       ========================================================================== */
+
+    /* Pre-Approval Header matching reference image */
+    .preapp-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 25;
+      margin-inline: -16px;
+      border-bottom: 1px solid rgba(18, 41, 74, 0.05);
+    }
+    .preapp-back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      color: var(--navy);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(18, 41, 74, 0.06);
+      transition: all 0.15s ease;
+      flex: none;
+    }
+    .preapp-back-btn:active {
+      transform: scale(0.94);
+    }
+    .preapp-title-group {
+      flex: 1;
+      padding-left: 14px;
+      display: flex;
+      flex-direction: column;
+    }
+    .preapp-sub {
+      font-family: var(--serif);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #0D3B2E;
+      letter-spacing: 0.2px;
+      line-height: 1.1;
+    }
+    .preapp-heading {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 700;
+      color: #0D3B2E;
+      margin: 0;
+      line-height: 1.1;
+      letter-spacing: -0.3px;
+    }
+    .preapp-top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: none;
+    }
+    .preapp-code-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--navy);
+      box-shadow: 0 2px 6px rgba(18, 41, 74, 0.05);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .preapp-code-chip:hover {
+      background: var(--soft);
+      border-color: #CBD5E1;
+    }
+    .preapp-code-chip strong {
+      letter-spacing: 0.05em;
+      color: #0D3B2E;
+    }
+    .preapp-brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      flex: none;
+      background: #B91C1C;
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(185, 28, 28, 0.25);
+    }
+
+    /* Hero Banner matching image */
+    .preapp-hero-banner {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 12px 0 16px;
+      box-shadow: 0 8px 24px rgba(18, 41, 74, 0.08);
+      background: #FFFFFF;
+      min-height: 175px;
+      display: flex;
+      align-items: center;
+      border: 1.2px solid rgba(184, 147, 90, 0.35);
+    }
+    .preapp-banner-bg {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 58%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center right;
+      filter: saturate(1.15) brightness(1.02);
+    }
+    .preapp-banner-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, #FFFDF8 0%, #FFFDF8 42%, rgba(255, 253, 248, 0.88) 52%, rgba(255, 253, 248, 0.2) 75%, transparent 100%);
+      z-index: 1;
+    }
+    .preapp-banner-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      padding: 16px 20px;
+      max-width: 62%;
+    }
+    .preapp-banner-logo-wrap {
+      max-width: 170px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .preapp-banner-logo-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .preapp-banner-title {
+      font-family: var(--serif);
+      font-size: 21px;
+      font-weight: 700;
+      color: #0D3B2E;
+      margin: 0;
+      line-height: 1.15;
+      letter-spacing: -0.2px;
+    }
+    .preapp-banner-sub {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #4A5568;
+      margin: 2px 0 8px;
+    }
+    .preapp-branch-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 14px;
+      border-radius: 99px;
+      border: 1.2px solid #B8935A;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 2px 6px rgba(184, 147, 90, 0.18);
+    }
+    .preapp-branch-pill span {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #0D3B2E;
+      text-transform: uppercase;
+    }
+    .preapp-flourish {
+      color: #B8935A;
+      margin-top: 4px;
+      opacity: 0.85;
+    }
+
+    /* Hide scrollbars on controls */
+    .preapp-phase-group::-webkit-scrollbar,
+    .preapp-controls-row2::-webkit-scrollbar {
+      display: none;
+    }
+    .preapp-phase-group,
+    .preapp-controls-row2 {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    /* Filter Controls Row 1 (Month + View Switcher) */
+    .preapp-controls-row1 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .preapp-month-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #FFFFFF;
+      border: 1.2px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #0D3B2E;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(18, 41, 74, 0.04);
+      transition: all 0.15s ease;
+      flex: none;
+    }
+    .preapp-month-btn:hover {
+      border-color: #0D3B2E;
+    }
+    .preapp-dropdowns-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .preapp-wave-btn {
+      color: #0D3B2E;
+    }
+    .ig-exit-clean-btn {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      background: rgba(0, 0, 0, 0.76);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #FFFFFF;
+      border: 1.2px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      padding: 7px 18px;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    .ig-exit-clean-btn:hover {
+      background: rgba(0, 0, 0, 0.92);
+      transform: translateX(-50%) scale(1.05);
+    }
+
+    /* Dedicated Delivery Waves / Phases Scroll Bar */
+    .preapp-waves-wrap {
+      width: 100%;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .preapp-phase-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      justify-content: flex-start;
+      overflow-x: auto;
+      overflow-y: hidden;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;
+      scrollbar-width: thin;
+      padding: 4px 2px 6px;
+      cursor: grab;
+      user-select: none;
+    }
+    .preapp-phase-group.grabbing {
+      cursor: grabbing;
+    }
+    .preapp-phase-group::-webkit-scrollbar {
+      height: 4px;
+    }
+    .preapp-phase-group::-webkit-scrollbar-track {
+      background: rgba(184, 147, 90, 0.08);
+      border-radius: 4px;
+    }
+    .preapp-phase-group::-webkit-scrollbar-thumb {
+      background: rgba(184, 147, 90, 0.35);
+      border-radius: 4px;
+    }
+    .preapp-phase-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 10px;
+      padding: 7px 13px;
+      font-size: 12px;
+      flex: none;
+      font-weight: 600;
+      color: #4A4A4A;
+      background: #F4EFE7;
+      border: 1px solid rgba(184, 147, 90, 0.25);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .preapp-phase-btn .phase-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #C4A575;
+      display: inline-block;
+    }
+    .preapp-phase-btn.active {
+      background: #0D3B2E;
+      color: #FFFFFF;
+      border-color: #0D3B2E;
+      box-shadow: 0 2px 8px rgba(13, 59, 46, 0.25);
+    }
+    .preapp-phase-btn.active .phase-dot {
+      background: #E8A735;
+    }
+
+    /* Filter Controls Row 3 (Status Filter Pills) */
+    .preapp-controls-row2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding-bottom: 2px;
+    }
+    .preapp-status-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #FFFFFF;
+      border: 1.2px solid var(--line);
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 12px;
+      flex: none;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(18, 41, 74, 0.03);
+    }
+    .preapp-status-btn.active {
+      background: #0D3B2E;
+      color: #FFFFFF;
+      border-color: #0D3B2E;
+      box-shadow: 0 2px 8px rgba(13, 59, 46, 0.22);
+    }
+    .preapp-status-btn .status-emoji {
+      font-size: 11px;
+      display: inline-block;
+    }
+
+    /* 2-Column Pre-Approval Cards Grid (Fluid & Roomy) */
+    .preapp-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 34px;
+    }
+    @media (max-width: 480px) {
+      .preapp-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+    }
+    @media (min-width: 900px) {
+      .preapp-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 18px;
+      }
+    }
+
+    /* Optimized 2-per-row card styling */
+    .preapp-card {
+      background: #FFFFFF;
+      border-radius: 16px;
+      border: 1.2px solid var(--line);
+      box-shadow: 0 4px 14px rgba(18, 41, 74, 0.04);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+      box-sizing: border-box;
+    }
+    .preapp-card:hover {
+      box-shadow: 0 8px 24px rgba(18, 41, 74, 0.08);
+    }
+    .preapp-thumb-wrap {
+      width: 100%;
+      aspect-ratio: 9/15.5;
+      position: relative;
+      background: #0D1B2A;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .preapp-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    /* Legacy preapp block cleaned */
+
+    /* Card Item */
+    .preapp-card {
+      background: #FFFFFF;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      box-shadow: 0 4px 14px rgba(18, 41, 74, 0.04);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .preapp-card:hover {
+      box-shadow: 0 8px 24px rgba(18, 41, 74, 0.09);
+      transform: translateY(-2px);
+    }
+
+    /* Card Thumbnail Area */
+    .preapp-thumb-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 9/15.5;
+      background: #090E17;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .preapp-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    .preapp-card:hover .preapp-thumb-img {
+      transform: scale(1.04);
+    }
+    .preapp-thumb-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #12294A 0%, #0D3B2E 100%);
+      color: #FFFFFF;
+      padding: 12px;
+      text-align: center;
+    }
+
+    /* Thumbnail Controls */
+    .preapp-thumb-dots {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: none;
+      color: #FFFFFF;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      z-index: 5;
+    }
+    .preapp-thumb-top-right {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 5;
+    }
+    .preapp-dur-pill {
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: #FFFFFF;
+      padding: 2px 7px;
+      border-radius: 99px;
+    }
+    .preapp-thumb-dl {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: none;
+      color: #FFFFFF;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .preapp-thumb-dl:hover {
+      background: rgba(0, 0, 0, 0.7);
+    }
+    .preapp-play-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: grid;
+      place-items: center;
+      color: var(--navy);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+      pointer-events: none;
+      transition: transform 0.18s ease;
+    }
+    .preapp-card:hover .preapp-play-btn {
+      transform: translate(-50%, -50%) scale(1.1);
+      background: #FFFFFF;
+    }
+    .preapp-views-pill {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      padding: 2px 7px;
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #FFFFFF;
+      z-index: 5;
+    }
+
+    /* Video Box Action Dock (Icons Only - Ultra Modern & Premium) */
+    .preapp-actions-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 10px 10px;
+      background: #FFFFFF;
+      border-top: 1px solid rgba(18, 41, 74, 0.06);
+      box-sizing: border-box;
+    }
+    .preapp-act-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 38px;
+      border-radius: 11px;
+      border: 1.2px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-sizing: border-box;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .preapp-act-btn svg {
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: block;
+      pointer-events: none;
+    }
+    .preapp-act-btn:hover svg {
+      transform: scale(1.15);
+    }
+    .preapp-act-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Approve Button (Emerald Glass Glow) */
+    .preapp-act-btn.approve {
+      color: #059669;
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.22);
+    }
+    .preapp-act-btn.approve:hover {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: rgba(16, 185, 129, 0.38);
+      box-shadow: 0 3px 10px rgba(16, 185, 129, 0.18);
+    }
+    .preapp-act-btn.approve.active {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      color: #FFFFFF;
+      border-color: #059669;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.36);
+    }
+
+    /* Denied Button (Crimson Glass Glow) */
+    .preapp-act-btn.denied {
+      color: #DC2626;
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+    .preapp-act-btn.denied:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.36);
+      box-shadow: 0 3px 10px rgba(239, 68, 68, 0.18);
+    }
+    .preapp-act-btn.denied.active {
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      color: #FFFFFF;
+      border-color: #DC2626;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.32);
+    }
+
+
+    }
+
+    body.has-bnav .app {
+      padding-bottom: 96px !important;
+    }
+
+    /* List View for Pre-Approval */
+    .preapp-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 84px;
+    }
+    .preapp-list-card {
+      background: #FFFFFF;
+      border-radius: 16px;
+      border: 1.2px solid var(--line);
+      box-shadow: 0 4px 14px rgba(18, 41, 74, 0.04);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      gap: 10px;
+      box-sizing: border-box;
+    }
+    .preapp-list-top {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      width: 100%;
+    }
+    .preapp-list-thumb {
+      width: 78px;
+      aspect-ratio: 9/16;
+      border-radius: 10px;
+      background: #0D1B2A;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .preapp-list-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .preapp-list-thumb .preapp-play-btn {
+      width: 32px;
+      height: 32px;
+    }
+    .preapp-list-content {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .preapp-list-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0D3B2E;
+      margin: 0;
+      line-height: 1.28;
+      word-break: break-word;
+      cursor: pointer;
+    }
+    .preapp-list-meta {
+      font-size: 11px;
+      color: var(--mute);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+    .preapp-list-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: auto;
+      margin-left: auto;
+      justify-content: flex-end;
+    }
+    .preapp-list-actions .preapp-act-btn {
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+    }
+    .preapp-act-btn.dl {
+      color: #0D5C3A;
+      background: rgba(13, 92, 58, 0.08);
+      border-color: rgba(13, 92, 58, 0.22);
+    }
+    .preapp-act-btn.dl:hover {
+      background: rgba(13, 92, 58, 0.16);
+      border-color: rgba(13, 92, 58, 0.38);
+      box-shadow: 0 3px 10px rgba(13, 92, 58, 0.18);
+    }
+    .preapp-act-btn.share {
+      color: #B8935A;
+      background: rgba(184, 147, 90, 0.1);
+      border-color: rgba(184, 147, 90, 0.25);
+    }
+    .preapp-act-btn.share:hover {
+      background: rgba(184, 147, 90, 0.18);
+      border-color: rgba(184, 147, 90, 0.4);
+      box-shadow: 0 3px 10px rgba(184, 147, 90, 0.18);
+    }
+
+    /* View Switcher Toggle (Grid vs List - Always Fixed & Prominent) */
+    .preapp-controls-row2 {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 8px !important;
+      margin-bottom: 16px !important;
+      flex-wrap: nowrap !important;
+    }
+    .preapp-status-group {
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      overflow-x: auto !important;
+      scrollbar-width: none !important;
+      -webkit-overflow-scrolling: touch !important;
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+    }
+    .preapp-status-group::-webkit-scrollbar {
+      display: none !important;
+    }
+    .preapp-view-toggle {
+      display: flex !important;
+      align-items: center !important;
+      gap: 2px !important;
+      background: var(--soft) !important;
+      border: 1.2px solid var(--line) !important;
+      border-radius: 10px !important;
+      padding: 2px !important;
+      flex-shrink: 0 !important;
+      margin-left: 8px !important;
+    }
+    .preapp-vbtn {
+      width: 32px;
+      height: 30px;
+      border-radius: 8px;
+      background: none;
+      border: none;
+      color: var(--mute);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .preapp-vbtn.active {
+      background: #FFFFFF;
+      color: #0D3B2E;
+      box-shadow: 0 1px 4px rgba(18, 41, 74, 0.1);
+    }

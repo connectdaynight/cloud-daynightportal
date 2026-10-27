@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DaynightMediaSchema",
+  "description": "Data schema for Daynight-media public social platform",
+  "type": "object",
+  "properties": {
+    "users": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["uid", "username", "email"],
+        "properties": {
+          "uid": { "type": "string" },
+          "email": { "type": "string" },
+          "displayName": { "type": "string" },
+          "username": { "type": "string" },
+          "photoURL": { "type": "string" },
+          "bio": { "type": "string" },
+          "followersCount": { "type": "number" },
+          "followingCount": { "type": "number" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "posts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "authorId", "type", "mediaUrl"],
+        "properties": {
+          "id": { "type": "string" },
+          "authorId": { "type": "string" },
+          "authorRole": { "type": "string", "enum": ["client", "user", "ai"] },
+          "type": { "type": "string", "enum": ["reel", "photo", "ai-picture"] },
+          "title": { "type": "string" },
+          "caption": { "type": "string" },
+          "mediaUrl": { "type": "string" },
+          "coverUrl": { "type": "string" },
+          "driveFileId": { "type": "string" },
+          "likesCount": { "type": "number" },
+          "commentsCount": { "type": "number" },
+          "viewsCount": { "type": "number" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

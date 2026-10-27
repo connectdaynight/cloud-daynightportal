@@ -1,0 +1,192 @@
+/* ==========================================================================
+   DAYNIGHT-MEDIA: AI PICTURES & CREATIVE VISUALS STYLESHEET
+   ========================================================================== */
+.dnm-ai-studio-banner {
+  margin: 14px 14px 10px 14px;
+  padding: 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(81, 91, 212, 0.25), rgba(221, 42, 123, 0.25), rgba(254, 218, 119, 0.15));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dnm-ai-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dnm-ai-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFF;
+}
+
+.dnm-ai-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--ig-gradient);
+  color: #FFF;
+}
+
+.dnm-ai-prompt-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dnm-ai-input-wrap {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 6px 10px;
+  gap: 8px;
+}
+
+.dnm-ai-prompt-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #FFF;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.dnm-ai-prompt-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.dnm-ai-gen-btn {
+  background: var(--ig-gradient);
+  border: none;
+  border-radius: 8px;
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.dnm-ai-gen-btn:active {
+  transform: scale(0.92);
+}
+
+.dnm-ai-gen-btn.loading {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+/* Style Presets Pills */
+.dnm-ai-presets-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.dnm-ai-presets-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.dnm-ai-preset-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 4px 10px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.dnm-ai-preset-pill:hover,
+.dnm-ai-preset-pill.active {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #FFF;
+  color: #FFF;
+}
+
+/* Pictures Masonry Feed */
+.dnm-pictures-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 10px 14px;
+}
+
+.dnm-picture-card {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111;
+  display: flex;
+  flex-direction: column;
+}
+
+.dnm-picture-img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  display: block;
+}
+
+.dnm-picture-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 40%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 10px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.dnm-picture-card:hover .dnm-picture-overlay {
+  opacity: 1;
+}
+
+.dnm-picture-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFF;
+}
+
+.dnm-picture-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.dnm-picture-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 6px;
+  color: #FFF;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

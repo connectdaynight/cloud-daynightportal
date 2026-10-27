@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>Daynight-media | Official Social Platform</title>
+  <meta name="description" content="Daynight-media - Discover reels, fashion lookbooks, AI visuals, and creator stories">
+
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/png" href="/Logo/logo.png">
+  <link rel="apple-touch-icon" href="/Logo/logo.png">
+
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap">
+
+  <!-- Modular Instagram-Grade Stylesheets -->
+  <link rel="stylesheet" href="./Stylesheets/instagram-core.css">
+  <link rel="stylesheet" href="./Stylesheets/feed.css">
+  <link rel="stylesheet" href="./Stylesheets/reels.css">
+  <link rel="stylesheet" href="./Stylesheets/explore.css">
+  <link rel="stylesheet" href="./Stylesheets/ai-pictures.css">
+  <link rel="stylesheet" href="./Stylesheets/profile.css">
+  <link rel="stylesheet" href="./Stylesheets/upload.css">
+
+  <!-- Firebase Web SDK (Compat version for zero-build browser runtime) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+
+  <!-- App Main Frame -->
+  <div class="dnm-app-container">
+
+    <!-- Top Sticky Instagram Header -->
+    <header class="dnm-top-header">
+      <a href="#" class="dnm-logo" id="dnm-header-logo">
+        <div class="dnm-logo-mark">DN</div>
+        <span class="dnm-logo-text">Daynight<span>-media</span></span>
+      </a>
+
+      <div class="dnm-header-actions">
+        <button type="button" class="dnm-header-btn" id="dnm-btn-search-header" aria-label="Search">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <button type="button" class="dnm-header-btn" id="dnm-btn-notif" aria-label="Notifications">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Tab 1: Home Social Feed -->
+    <main class="dnm-tab-view active" id="dnm-tab-feed">
+      <!-- Stories Carousel Tray -->
+      <section class="dnm-stories-tray" id="dnm-stories-tray">
+        <!-- Rendered dynamically -->
+      </section>
+
+      <!-- Feed Cards Wrap -->
+      <section class="dnm-feed-container" id="dnm-feed-cards-wrap">
+        <!-- Rendered dynamically -->
+      </section>
+    </main>
+
+    <!-- Tab 2: Explore & Search Tab -->
+    <main class="dnm-tab-view" id="dnm-tab-explore" style="display:none;">
+      <div class="dnm-explore-container">
+        <!-- Search Header -->
+        <div class="dnm-search-header">
+          <div class="dnm-search-bar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="dnm-global-search-inp" class="dnm-search-input" placeholder="Search accounts, reels, or tags...">
+            <button type="button" id="dnm-global-search-clear" class="dnm-search-clear" style="display:none;" aria-label="Clear">&times;</button>
+            <div class="dnm-search-dropdown" id="dnm-global-search-dropdown"></div>
+          </div>
+        </div>
+
+        <!-- Explore Grid Wrap -->
+        <div class="dnm-explore-grid" id="dnm-explore-grid-wrap"></div>
+      </div>
+    </main>
+
+    <!-- Tab 3: Full-Screen Reels Tab -->
+    <main class="dnm-tab-view" id="dnm-tab-reels" style="display:none;">
+      <div class="dnm-reels-feed-container" id="dnm-reels-feed-container"></div>
+    </main>
+
+    <!-- Tab 4: AI Pictures & Visual Stills Tab -->
+    <main class="dnm-tab-view" id="dnm-tab-pictures" style="display:none;">
+      <div class="dnm-ai-container">
+        <div id="dnm-ai-banner-wrap"></div>
+        <div class="dnm-pictures-grid" id="dnm-pictures-grid-wrap"></div>
+      </div>
+    </main>
+
+    <!-- Tab 5: Profile & Brand Hub Tab -->
+    <main class="dnm-tab-view" id="dnm-tab-profile" style="display:none;">
+      <!-- Rendered dynamically -->
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="dnm-bottom-nav">
+      <!-- 1. Home Feed -->
+      <button type="button" class="dnm-nav-item active" data-tab="feed" aria-label="Home Feed">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </button>
+
+      <!-- 2. Explore / Search -->
+      <button type="button" class="dnm-nav-item" data-tab="explore" aria-label="Explore and Search">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+
+      <!-- 3. Upload Studio (+) -->
+      <button type="button" class="dnm-nav-item" data-tab="upload" aria-label="Upload Video or Photo">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      </button>
+
+      <!-- 4. Reels Tab -->
+      <button type="button" class="dnm-nav-item" data-tab="reels" aria-label="Video Reels">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="4"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+      </button>
+
+      <!-- 5. Pictures (AI Visuals) -->
+      <button type="button" class="dnm-nav-item" data-tab="pictures" aria-label="Pictures and AI Visuals">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </button>
+
+      <!-- 6. Profile -->
+      <button type="button" class="dnm-nav-item" data-tab="profile" aria-label="Profile">
+        <img class="dnm-nav-avatar" id="dnm-nav-user-avatar" src="/Logo/logo.png" alt="Profile">
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- Modular Scripts -->
+  <script src="./Scripts/firebase-config.js"></script>
+  <script src="./Scripts/auth.js"></script>
+  <script src="./Scripts/data.js"></script>
+  <script src="./Scripts/feed.js"></script>
+  <script src="./Scripts/reels.js"></script>
+  <script src="./Scripts/ai-engine.js"></script>
+  <script src="./Scripts/upload.js"></script>
+  <script src="./Scripts/app.js"></script>
+</body>
+</html>

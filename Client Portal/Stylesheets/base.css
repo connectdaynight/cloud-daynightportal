@@ -1,0 +1,1254 @@
+/* ==========================================================================
+
+ * BASE STYLESHEET: Variables, Reset, Typography, Navigation & Modals
+
+ * ========================================================================== */
+
+    /* ==========================================================================
+       DAY NIGHT MEDIA - SIGNATURE LUXURY MILK-WHITE THEME
+       ========================================================================== */
+    :root {
+      --bg: #FFFDF8;
+      --card: #FFFFFF;
+      --line: #EEE8DD;
+      --soft: #F7F3EC;
+      --ink: #1D2433;
+      --navy: #12294A;
+      --mute: #7A7468;
+      --gold: #B8935A;
+      --red: #E53225;
+      --rose: #E8457A;
+      --teal: #17A598;
+      --amber: #F2992E;
+      --violet: #6C5CE7;
+      --blue: #2F7DF6;
+      --green: #1FAF64;
+      --f: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+      color-scheme: light;
+    }
+
+    html, body {
+      min-height: 100%;
+      min-height: 100dvh;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      -webkit-text-size-adjust: 100%;
+      overscroll-behavior-y: none;
+    }
+
+    body {
+      color: var(--ink);
+      font-family: var(--f);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      display: flex;
+      flex-direction: column;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+      color: inherit;
+      touch-action: manipulation;
+    }
+
+    button {
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    button:active, .btn:active, .act:active, .home-client-btn:active, .month:active, .branch:active, .back:active {
+      transform: scale(0.96) !important;
+      transition: transform 0.08s ease;
+    }
+
+    :focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+
+    .app {
+      max-width: 440px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      width: 100%;
+      padding-inline: 16px;
+      padding-bottom: max(32px, calc(18px + env(safe-area-inset-bottom, 0px)));
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Day Night Signature Mark */
+    .dn { display: block; }
+    .dn .scrib { stroke-dasharray: 1; stroke-dashoffset: 0; }
+    .splash .dn .scrib, .dn-intro .dn .scrib { animation: draw 3.5s 0.5s cubic-bezier(0.4, 0, 0.2, 1) both; }
+    @keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+    /* Splash / Day Night Intro Animation (Home Screen) */
+    .splash, .dn-intro {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      text-align: center;
+      padding-block: 64px 120px;
+      position: relative;
+      overflow: hidden;
+      min-height: 90vh;
+      min-height: 90dvh;
+      cursor: default;
+    }
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      z-index: 2;
+    }
+    .splash .mark, .dn-intro .mark {
+      width: 76px;
+      height: 76px;
+      filter: drop-shadow(0 8px 16px rgba(229, 50, 37, 0.16));
+    }
+    .mark-wrap {
+      animation: fadeIn 0.8s ease-out both;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .splash h1, .dn-intro h1 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: -0.01em;
+      color: var(--navy);
+      line-height: 1.15;
+      text-wrap: balance;
+    }
+    .splash .sub, .dn-intro .sub {
+      margin: 5px 0 0;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .splash .slogan, .dn-intro .slogan {
+      margin: 0;
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 500;
+      font-size: 17px;
+      color: var(--mute);
+    }
+    .a2 { animation: rise 0.8s 2.2s ease-out both; }
+    .a3 { animation: rise 0.8s 2.8s ease-out both; }
+    @keyframes rise {
+      from { transform: translateY(14px); opacity: 0; }
+      to { transform: none; opacity: 1; }
+    }
+    .splash .start, .dn-intro .start {
+      position: absolute;
+      bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%) !important;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease !important;
+      z-index: 90;
+      padding: 14px 34px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-radius: 999px;
+      box-shadow: 0 12px 30px rgba(18, 41, 74, 0.24);
+      min-width: 124px;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .splash .start svg, .dn-intro .start svg {
+      width: 16px;
+      height: 16px;
+      pointer-events: none;
+    }
+    .splash .start:hover svg, .dn-intro .start:hover svg {
+      transform: none !important;
+    }
+    .splash.ready .start, .dn-intro.ready .start {
+      opacity: 1 !important;
+      transform: translateX(-50%) !important;
+      pointer-events: auto !important;
+      cursor: pointer;
+    }
+
+    /* Animated Floating Social Media & Email Dock (Intro Screen Only) */
+    .dn-social-dock {
+      position: absolute;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 85;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      max-width: 100vw;
+      box-sizing: border-box;
+      pointer-events: auto;
+    }
+    .dn-social-dock.dock-waiting {
+      opacity: 0;
+      transform: translate(-50%, 28px) scale(0.95);
+      pointer-events: none;
+      transition: none;
+    }
+    .dn-social-dock.cinematic-in {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+      pointer-events: auto;
+      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dn-social-dock.cinematic-in .dn-social-btn {
+      animation: socIconIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(1) { animation-delay: 0.04s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(2) { animation-delay: 0.10s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(3) { animation-delay: 0.16s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(4) { animation-delay: 0.22s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(5) { animation-delay: 0.28s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(6) { animation-delay: 0.34s; }
+    .dn-social-dock.cinematic-in .dn-social-btn:nth-child(7) { animation-delay: 0.40s; }
+
+    @keyframes socIconIn {
+      0% { opacity: 0; transform: translateY(14px) scale(0.72); }
+      65% { transform: translateY(-3px) scale(1.06); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .dn-social-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1.5px solid rgba(18, 41, 74, 0.12);
+      color: var(--navy);
+      display: grid;
+      place-items: center;
+      text-decoration: none;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      flex-shrink: 0;
+      box-shadow: 0 8px 24px rgba(18, 41, 74, 0.14);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .dn-social-btn svg {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.25s ease;
+    }
+    .dn-social-btn:hover {
+      transform: translateY(-3px) scale(1.12);
+      box-shadow: 0 8px 20px rgba(18, 41, 74, 0.18);
+      background: #FFFFFF;
+    }
+    .dn-social-btn:hover svg {
+      transform: scale(1.1);
+    }
+    .dn-social-btn.instagram:hover { color: #E1306C; border-color: rgba(225, 48, 108, 0.35); }
+    .dn-social-btn.youtube:hover { color: #FF0000; border-color: rgba(255, 0, 0, 0.35); }
+    .dn-social-btn.facebook:hover { color: #1877F2; border-color: rgba(24, 119, 242, 0.35); }
+    .dn-social-btn.whatsapp:hover { color: #25D366; border-color: rgba(37, 211, 102, 0.35); }
+    .dn-social-btn.x:hover { color: #000000; border-color: rgba(0, 0, 0, 0.35); }
+    .dn-social-btn.linkedin:hover { color: #0A66C2; border-color: rgba(10, 102, 194, 0.35); }
+    .dn-social-btn.email:hover { color: var(--blue); border-color: rgba(47, 125, 246, 0.35); }
+
+    .dn-social-btn .soc-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: var(--navy);
+      color: #FFFFFF;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .dn-social-btn:hover .soc-tooltip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Website Pause / Maintenance Screen */
+    .site-paused-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .site-paused-card {
+      max-width: 480px;
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 36px 28px;
+      box-shadow: 0 20px 60px rgba(18, 41, 74, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .site-paused-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      background: #FEE2E2;
+      color: #DC2626;
+      display: grid;
+      place-items: center;
+    }
+
+    body.has-bnav .dn-social-dock,
+    body:not(.is-intro-screen) .dn-social-dock {
+      display: none !important;
+    }
+
+    @media (max-width: 640px) {
+      .splash .start, .dn-intro .start {
+        bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+        padding: 13px 30px;
+        font-size: 14px;
+      }
+      .dn-social-dock {
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 0 !important;
+        gap: 9px;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        max-width: 100vw;
+        overflow-x: visible;
+      }
+      .dn-social-dock.dock-waiting {
+        transform: translate(-50%, 24px) scale(0.95);
+      }
+      .dn-social-dock.cinematic-in {
+        transform: translate(-50%, 0) scale(1);
+      }
+      .dn-social-dock::-webkit-scrollbar { display: none; }
+      body.has-bnav .dn-social-dock,
+      body:not(.is-intro-screen) .dn-social-dock {
+        display: none !important;
+      }
+      .dn-social-btn {
+        width: 38px;
+        height: 38px;
+      }
+      .dn-social-btn svg {
+        width: 17px;
+        height: 17px;
+      }
+    }
+
+    /* Client Dedicated PIN Screen */
+    .client-pin-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      animation: rise 0.35s ease-out both;
+    }
+    .client-pin-card {
+      margin-top: 14px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 28px 20px;
+      box-shadow: 0 16px 40px rgba(18, 41, 74, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+    .client-pin-logo-box {
+      width: 200px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 8px 16px;
+      box-shadow: 0 4px 14px rgba(18, 41, 74, 0.06);
+    }
+    .client-pin-logo-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .client-pin-logo-box .wordmark {
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 24px;
+      color: var(--navy);
+    }
+    .client-pin-title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--navy);
+      letter-spacing: -0.01em;
+    }
+    .client-pin-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--violet);
+      background: rgba(108, 92, 231, 0.08);
+      padding: 4px 14px;
+      border-radius: 999px;
+      letter-spacing: 0.03em;
+    }
+    .client-pin-desc {
+      margin: 0;
+      font-size: 13px;
+      color: var(--mute);
+    }
+    .client-pin-footer {
+      font-size: 11px;
+      color: var(--mute);
+      margin-top: 4px;
+    }
+
+    /* ==========================================================================
+       DAY NIGHT MEDIA - ULTRA-LUXURY HOME HUB (MOBILE-FIRST)
+       ========================================================================== */
+    .home-hub {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding-block: 14px 28px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+
+    .canvas-fx {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .home-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      z-index: 2;
+      animation: pop 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .home-logo-wrap {
+      width: 82px;
+      height: 82px;
+      border-radius: 26px;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      padding: 10px;
+      box-shadow: 0 12px 32px rgba(18, 41, 74, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+      position: relative;
+    }
+    .home-logo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .home-title {
+      font-size: clamp(24px, 6vw, 30px);
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .home-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+
+    .home-slogan {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: clamp(15px, 4vw, 17px);
+      color: var(--mute);
+      margin: 0;
+      max-width: 320px;
+    }
+
+    /* Home Direct PIN Card */
+    .home-card {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 20px 18px;
+      box-shadow: 0 10px 30px rgba(18, 41, 74, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      text-align: left;
+      z-index: 2;
+      animation: rise 0.7s 0.2s ease-out both;
+    }
+
+    .home-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .home-card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--navy), #1D3A63);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      flex: none;
+      box-shadow: 0 6px 16px rgba(18, 41, 74, 0.2);
+    }
+    .home-card-header b {
+      display: block;
+      font-size: 15px;
+      color: var(--navy);
+      font-weight: 600;
+    }
+    .home-card-header small {
+      display: block;
+      font-size: 11px;
+      color: var(--mute);
+      line-height: 1.3;
+    }
+
+    /* Direct PIN Row */
+    .home-pin-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 280px;
+      margin: 2px auto 0;
+      width: 100%;
+    }
+    .home-pin-row input {
+      width: 100%;
+      height: 56px;
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      background: var(--bg);
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--navy);
+      font-variant-numeric: tabular-nums;
+      outline: none;
+      transition: all 0.2s ease;
+      -webkit-appearance: none;
+    }
+    .home-pin-row input:focus {
+      border-color: var(--navy);
+      background: #FFFFFF;
+      box-shadow: 0 0 0 4px rgba(18, 41, 74, 0.1);
+      transform: translateY(-2px);
+    }
+    .home-pin-row.bad input {
+      border-color: var(--red);
+      animation: shake 0.35s;
+    }
+
+    .home-pin-msg {
+      text-align: center;
+      font-size: 12px;
+      min-height: 18px;
+      color: var(--mute);
+      font-weight: 500;
+    }
+    .home-pin-msg.bad { color: var(--red); }
+    .home-pin-msg.ok { color: var(--green); }
+
+    /* Client Selector List */
+    .home-clients-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--mute);
+      margin-top: 2px;
+    }
+    .home-clients-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .home-client-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: var(--ink);
+      width: 100%;
+    }
+    .home-client-btn:hover, .home-client-btn:active {
+      background: #FFFFFF;
+      border-color: var(--navy);
+      transform: translateX(2px);
+      box-shadow: 0 4px 12px rgba(18, 41, 74, 0.06);
+    }
+    .home-client-logo {
+      width: 44px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      flex: none;
+    }
+    .home-client-logo img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .home-client-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .home-client-info b {
+      display: block;
+      font-size: 13px;
+      color: var(--navy);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .home-client-info small {
+      display: block;
+      font-size: 10px;
+      color: var(--mute);
+    }
+    .home-client-arrow {
+      color: var(--mute);
+      flex: none;
+    }
+
+    /* Home Footer Info */
+    .home-footer-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      z-index: 2;
+      animation: rise 0.7s 0.4s ease-out both;
+    }
+    .cloud-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--mute);
+    }
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #E53225;
+      display: inline-block;
+    }
+    .pulse-dot.online {
+      background: #16884D;
+      box-shadow: 0 0 0 3px rgba(22, 136, 77, 0.18);
+    }
+    .admin-hint {
+      font-size: 10px;
+      color: var(--mute);
+    }
+    .admin-hint code {
+      font-family: inherit;
+      font-weight: 700;
+      color: var(--navy);
+      background: var(--soft);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      z-index: 2;
+    }
+
+    .mark-wrap { animation: fadeIn 0.8s ease-out both; }
+
+    .a2 { animation: rise 0.7s 1.2s ease-out both; }
+    .a3 { animation: rise 0.7s 1.6s ease-out both; }
+    @keyframes rise {
+      from { transform: translateY(14px); opacity: 0; }
+      to { transform: none; opacity: 1; }
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 24px;
+      font-weight: 600;
+      font-size: 13px;
+      background: var(--navy);
+      color: #fff;
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 10px 24px rgba(18, 41, 74, 0.18);
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: #1C3A63; }
+
+    /* Top Navigation Bar */
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 120 !important;
+      pointer-events: auto !important;
+      background: rgba(255, 253, 248, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      margin-inline: -16px;
+      padding: max(10px, env(safe-area-inset-top, 0px)) 16px 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(238, 232, 221, 0.7);
+    }
+
+    .back {
+      cursor: pointer !important;
+      pointer-events: auto !important;
+      position: relative !important;
+      z-index: 121 !important;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--card);
+      display: grid;
+      place-items: center;
+      flex: none;
+      box-shadow: 0 4px 12px rgba(29, 36, 51, 0.06);
+    }
+
+    .top .crumb { min-width: 0; flex: 1; }
+    .top .crumb small {
+      display: block;
+      font-size: 11px;
+      color: var(--mute);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top .crumb span {
+      display: block;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--navy);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top .mini { width: 34px; height: 34px; flex: none; }
+
+
+    /* 4-Digit PIN Code Modal */
+    .code-head {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .code-head .key {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--violet), var(--blue));
+      display: grid;
+      place-items: center;
+      box-shadow: 0 10px 20px -8px var(--violet);
+    }
+
+    .pins {
+      display: grid;
+      grid-template-columns: repeat(4, 56px);
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .pins input {
+      width: 56px;
+      height: 64px;
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      background: var(--bg);
+      text-align: center;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--navy);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pins input:focus {
+      border-color: var(--blue);
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(47, 125, 246, 0.15);
+    }
+
+    .pins.bad input {
+      border-color: var(--red);
+      animation: shake 0.35s;
+    }
+
+    @keyframes shake {
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .code-msg {
+      text-align: center;
+      font-size: 12px;
+      min-height: 1.4em;
+      color: var(--mute);
+    }
+    .code-msg.bad { color: var(--red); }
+
+
+    /* Bottom Navigation Bar (Navbar - Reference Concept) */
+    .client-bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 253, 248, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+      z-index: 50;
+      box-shadow: 0 -4px 20px rgba(18, 41, 74, 0.05);
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    /* Lock body scroll when modal is active without collapsing document scroll height */
+    body.has-modal {
+      overflow: hidden !important;
+      overscroll-behavior: none !important;
+    }
+    html:has(.video-modal-scrim),
+    body:has(.video-modal-scrim) {
+      overflow: hidden !important;
+      overscroll-behavior: none !important;
+      touch-action: none !important;
+      height: 100% !important;
+      height: 100dvh !important;
+    }
+
+    /* Unconditionally hide bottom navbar whenever ANY modal or scrim is active */
+    body.has-modal .client-bottom-nav,
+    body:has(.scrim) .client-bottom-nav,
+    .scrim ~ .client-bottom-nav,
+    .scrim ~ .app .client-bottom-nav {
+      display: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      transform: translateY(150px) !important;
+    }
+    .bnav-btn {
+      flex: 1;
+      max-width: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: none;
+      background: none;
+      color: var(--mute);
+      cursor: pointer;
+      padding: 4px 0;
+      border-radius: 12px;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .bnav-icon {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      color: currentColor;
+      transition: transform 0.15s ease;
+    }
+    .bnav-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: currentColor;
+      letter-spacing: 0.02em;
+    }
+    .bnav-btn.active {
+      color: var(--navy);
+    }
+    .bnav-btn.active .bnav-icon {
+      color: var(--gold, #B8935A);
+      transform: translateY(-2px);
+    }
+    .bnav-btn.active .bnav-label {
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    /* Ensure app scroll area has clearance above bottom navbar */
+    #app {
+      padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* Month Dropdown Popover */
+    .month-picker-scrim {
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 41, 74, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+    .month-picker-box {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 20px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 16px 40px rgba(18, 41, 74, 0.15);
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mp-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .mp-title h3 { font-size: 16px; font-weight: 700; color: var(--navy); margin: 0; }
+    .mp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .mp-btn {
+      padding: 10px 6px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .mp-btn small { font-size: 9.5px; color: var(--mute); font-weight: 500; }
+    .mp-btn:hover { border-color: var(--navy); background: #FFFFFF; }
+    .mp-btn.active { background: var(--navy); color: #FFFFFF; border-color: var(--navy); }
+    .mp-btn.active small { color: rgba(255, 255, 255, 0.85); }
+    
+
+    /* Floating Toast Notifications (Zero legacy alerts) */
+    .toast-container {
+      position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+      z-index: 999999 !important; display: flex; flex-direction: column; gap: 8px; pointer-events: none; width: 90%; max-width: 380px;
+    }
+    .toast {
+      padding: 12px 18px; border-radius: 999px; font-size: 13px; font-weight: 500; color: #fff;
+      display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+      animation: toastIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); pointer-events: auto; text-align: center;
+    }
+    @keyframes toastIn { from { transform: translateY(-20px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .toast.info { background: var(--navy); }
+    .toast.success { background: #16884D; }
+    .toast.error { background: #DC2626; }
+    .toast.amber { background: #D97706; }
+
+    /* Status Pill & Tabs */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; background: var(--soft); border: 1px solid var(--line); color: var(--ink);
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+    .status-dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .status-dot.offline { background: var(--red); }
+
+    .tabs { display: flex; background: var(--soft); border-radius: 12px; padding: 3px; gap: 4px; }
+    .tab-btn {
+      flex: 1; border: 0; background: none; padding: 8px; font-size: 12px; font-weight: 600;
+      border-radius: 10px; color: var(--mute);
+    }
+    .tab-btn.active { background: var(--card); color: var(--navy); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+
+    /* ==========================================================================
+       DESKTOP & PC OPTIMIZATIONS (@media min-width: 768px, 1024px & 1400px)
+       Maintains 100% integrity of Mobile CSS while elevating Desktop layout
+       ========================================================================== */
+
+    @media (min-width: 768px) {
+      /* 1. Main Application Container */
+      .app {
+        max-width: 1040px;
+        padding-inline: 36px;
+        padding-bottom: 120px;
+      }
+
+      /* 2. Top Header */
+      .top {
+        margin-inline: -36px;
+        padding: 16px 36px;
+        gap: 16px;
+        background: rgba(255, 253, 248, 0.96);
+      }
+      .top .title h1 {
+        font-size: 17px;
+      }
+      .top .title small {
+        font-size: 12px;
+      }
+      .top .back:hover {
+        background: var(--soft);
+        border-color: var(--navy);
+      }
+
+      /* 3. Page Header & Head */
+      .head {
+        padding-block: 16px 24px;
+        gap: 6px;
+      }
+      .head h2 {
+        font-size: 32px;
+        letter-spacing: -0.02em;
+      }
+      .head .clogo {
+        height: 44px;
+        max-width: 280px;
+        margin-bottom: 8px;
+      }
+
+      /* 9. Static Fixed Bottom Navigation (No floating dock, no expanding/shrinking) */
+      .client-bottom-nav {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 60px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: none !important;
+        border-radius: 0 !important;
+        background: rgba(255, 252, 246, 0.98) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border-top: 1px solid var(--line) !important;
+        display: flex !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        z-index: 100 !important;
+        box-shadow: 0 -4px 20px rgba(18, 41, 74, 0.06) !important;
+      }
+      .client-bottom-nav .bnav-btn {
+        flex: 1 1 20% !important;
+        width: 20% !important;
+        min-width: 20% !important;
+        max-width: 20% !important;
+        height: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        transform: none !important;
+        transition: color 0.15s ease !important;
+      }
+      .client-bottom-nav .bnav-btn:hover {
+        transform: none !important;
+        background: transparent !important;
+      }
+      .client-bottom-nav .bnav-btn.active {
+        transform: none !important;
+        background: transparent !important;
+      }
+
+      /* 10. Splash / Agency Landing Screen */
+      .splash, .dn-intro {
+        max-width: 760px;
+        margin: 0 auto;
+        padding-block: 80px 120px;
+      }
+      .splash .mark, .dn-intro .mark {
+        width: 92px;
+        height: 92px;
+      }
+      .splash h1, .dn-intro h1 {
+        font-size: 36px;
+      }
+      .splash .clist {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+        gap: 14px !important;
+        width: 100% !important;
+      }
+      .splash .citem {
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .splash .citem:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 26px rgba(18, 41, 74, 0.08);
+      }
+
+      /* 11. Client Dedicated PIN Screen */
+      .client-pin-card {
+        max-width: 440px;
+        margin: 40px auto 0;
+        padding: 34px 28px;
+      }
+      .keypad-key {
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .keypad-key:hover {
+        background: var(--soft);
+        border-color: var(--navy);
+      }
+
+      /* 12. Client Profile Screen */
+      .profile-card {
+        max-width: 720px;
+        margin: 24px auto 0;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 16px !important;
+      }
+
+      /* 13. Centered Desktop Modals */
+      .scrim:not(.video-modal-scrim):not(.share-modal-scrim) {
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 24px !important;
+      }
+      .scrim:not(.video-modal-scrim):not(.share-modal-scrim) .sheet {
+        border-radius: 26px !important;
+        max-width: 520px !important;
+        margin: auto !important;
+        animation: pop 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      }
+
+    /* Fluid & Smooth Global Transitions */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      scroll-behavior: smooth;
+    }
+    .app {
+      transition: opacity 0.22s ease;
+    }
+    .sheet {
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease !important;
+    }
+    .scrim {
+      transition: opacity 0.22s ease !important;
+    }
+    .bnav-btn, .preapp-status-btn, .preapp-phase-btn, .btn-primary, .btn-portal {
+      transition: transform 0.16s ease, background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease !important;
+    }

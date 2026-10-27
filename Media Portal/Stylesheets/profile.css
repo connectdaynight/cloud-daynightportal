@@ -1,0 +1,198 @@
+/* ==========================================================================
+   DAYNIGHT-MEDIA: USER PROFILE & ONBOARDING STYLESHEET
+   ========================================================================== */
+.dnm-profile-header {
+  padding: 18px 16px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-bottom: 1px solid var(--ig-border);
+}
+
+.dnm-profile-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.dnm-profile-avatar-large {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  padding: 2px;
+  background: var(--ig-gradient-ring);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.dnm-profile-avatar-large img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid var(--ig-bg);
+  object-fit: cover;
+  background: #222;
+}
+
+.dnm-profile-stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex: 1;
+}
+
+.dnm-stat-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.dnm-stat-number {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ig-text-primary);
+}
+
+.dnm-stat-label {
+  font-size: 11.5px;
+  color: var(--ig-text-secondary);
+}
+
+/* User Bio Section */
+.dnm-profile-bio-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dnm-profile-fullname {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ig-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dnm-profile-handle {
+  font-size: 12.5px;
+  color: var(--ig-accent);
+  font-weight: 600;
+}
+
+.dnm-profile-bio {
+  font-size: 13px;
+  color: var(--ig-text-primary);
+  line-height: 1.35;
+}
+
+.dnm-profile-actions-strip {
+  display: flex;
+  gap: 8px;
+}
+
+.dnm-profile-btn {
+  flex: 1;
+  background: var(--ig-surface);
+  border: 1px solid var(--ig-border);
+  color: var(--ig-text-primary);
+  border-radius: 8px;
+  padding: 7px 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s ease;
+}
+
+.dnm-profile-btn:hover {
+  background: var(--ig-border);
+}
+
+.dnm-profile-btn.primary {
+  background: var(--ig-accent);
+  border-color: var(--ig-accent);
+  color: #FFF;
+}
+
+/* Profile Segmented Tabs */
+.dnm-profile-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--ig-border);
+}
+
+.dnm-profile-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  color: var(--ig-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.dnm-profile-tab.active {
+  color: var(--ig-text-primary);
+  border-bottom-color: var(--ig-text-primary);
+}
+
+.dnm-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 2px 0;
+}
+
+/* 1-Step Onboarding Modal */
+.dnm-onboarding-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+
+.dnm-onboarding-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ig-text-primary);
+}
+
+.dnm-onboarding-sub {
+  font-size: 12.5px;
+  color: var(--ig-text-secondary);
+}
+
+.dnm-onboarding-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.dnm-onboarding-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ig-text-muted);
+  text-transform: uppercase;
+}
+
+.dnm-onboarding-input {
+  background: var(--ig-surface);
+  border: 1px solid var(--ig-border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--ig-text-primary);
+  font-size: 13.5px;
+  outline: none;
+}
+
+.dnm-onboarding-input:focus {
+  border-color: var(--ig-accent);
+}
