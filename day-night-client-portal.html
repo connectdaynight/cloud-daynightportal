@@ -6826,6 +6826,20 @@
       const bNav = document.querySelector('.client-bottom-nav');
       if (bNav) bNav.style.display = 'none';
 
+      // Silence & halt all background feed videos when any sheet/modal is created
+      if (feedAutoplayObserver) {
+        try { feedAutoplayObserver.disconnect(); } catch(_) {}
+        feedAutoplayObserver = null;
+      }
+      document.querySelectorAll('.dn-feed-video').forEach(v => {
+        try {
+          v.pause();
+          v.muted = true;
+        } catch(_) {}
+        const w = v.closest('.dn-feed-media-wrap');
+        if (w) w.classList.remove('is-playing');
+      });
+
       // Track modal in browser history for back button support
       try { window.history.pushState({ modalOpen: true, t: Date.now() }, ''); } catch(e) {}
       const origRemove = sc.remove.bind(sc);
@@ -6847,6 +6861,11 @@
           const nav = document.querySelector('.client-bottom-nav');
           if (nav && view.client && view.screen !== 'splash' && view.screen !== 'client-pin') {
             nav.style.display = '';
+          }
+          if (view.screen === 'genesis') {
+            setTimeout(() => {
+              try { initFeedAutoplay(); } catch(_) {}
+            }, 120);
           }
         }
         window.scrollTo({ top: savedScrollY, behavior: 'instant' });
@@ -7583,6 +7602,19 @@
       }
 
       feedAutoplayObserver = new IntersectionObserver((entries) => {
+        // If any modal, scrim, or reel player overlay is open, immediately halt and silence all feed videos
+        if (document.body.classList.contains('has-modal') || document.querySelector('.scrim') || document.querySelector('.video-modal-scrim') || document.querySelector('.ig-player-wrapper')) {
+          document.querySelectorAll('.dn-feed-video').forEach(v => {
+            try {
+              v.pause();
+              v.muted = true;
+            } catch(_) {}
+            const w = v.closest('.dn-feed-media-wrap');
+            if (w) w.classList.remove('is-playing');
+          });
+          return;
+        }
+
         entries.forEach(entry => {
           const wrap = entry.target;
           const vid = wrap.querySelector('.dn-feed-video');
@@ -7593,10 +7625,13 @@
           })();
 
           if (entry.isIntersecting && entry.intersectionRatio >= 0.45 && isStillEnabled) {
-            // Pause any other playing feed video so only ONE audio track plays
+            // Pause and mute any other playing feed video so only ONE audio track plays
             document.querySelectorAll('.dn-feed-video').forEach(otherVid => {
-              if (otherVid !== vid && !otherVid.paused) {
-                try { otherVid.pause(); } catch(_) {}
+              if (otherVid !== vid) {
+                try {
+                  otherVid.pause();
+                  otherVid.muted = true;
+                } catch(_) {}
                 const otherWrap = otherVid.closest('.dn-feed-media-wrap');
                 if (otherWrap) otherWrap.classList.remove('is-playing');
               }
@@ -7619,7 +7654,10 @@
               });
             }
           } else {
-            try { vid.pause(); } catch(_) {}
+            try {
+              vid.pause();
+              vid.muted = true;
+            } catch(_) {}
             wrap.classList.remove('is-playing');
           }
         });
@@ -10349,9 +10387,16 @@
         return;
       }
 
-      // Pause all playing background feed videos immediately
+      // Immediately disconnect feed observer and completely silence all background feed videos
+      if (feedAutoplayObserver) {
+        try { feedAutoplayObserver.disconnect(); } catch(_) {}
+        feedAutoplayObserver = null;
+      }
       document.querySelectorAll('.dn-feed-video').forEach(v => {
-        try { v.pause(); } catch(_) {}
+        try {
+          v.pause();
+          v.muted = true;
+        } catch(_) {}
         const w = v.closest('.dn-feed-media-wrap');
         if (w) w.classList.remove('is-playing');
       });
@@ -11533,9 +11578,16 @@
         return;
       }
 
-      // Pause all playing background feed videos immediately
+      // Immediately disconnect feed observer and completely silence all background feed videos
+      if (feedAutoplayObserver) {
+        try { feedAutoplayObserver.disconnect(); } catch(_) {}
+        feedAutoplayObserver = null;
+      }
       document.querySelectorAll('.dn-feed-video').forEach(v => {
-        try { v.pause(); } catch(_) {}
+        try {
+          v.pause();
+          v.muted = true;
+        } catch(_) {}
         const w = v.closest('.dn-feed-media-wrap');
         if (w) w.classList.remove('is-playing');
       });
@@ -13288,6 +13340,18 @@
       else if (a === 'feed-media-click' || a === 'open-reel-modal') {
         e.preventDefault();
         e.stopPropagation();
+        if (feedAutoplayObserver) {
+          try { feedAutoplayObserver.disconnect(); } catch(_) {}
+          feedAutoplayObserver = null;
+        }
+        document.querySelectorAll('.dn-feed-video').forEach(v => {
+          try {
+            v.pause();
+            v.muted = true;
+          } catch(_) {}
+          const w = v.closest('.dn-feed-media-wrap');
+          if (w) w.classList.remove('is-playing');
+        });
         const reelId = el.dataset.id || el.closest('[data-id]')?.dataset.id || el.closest('[data-reel-id]')?.dataset.reelId;
         const r = (DATA.reels || []).find(x => x.id === reelId);
         if (r) {
@@ -13299,6 +13363,18 @@
         }
       }
       else if (a === 'feed-comment') {
+        if (feedAutoplayObserver) {
+          try { feedAutoplayObserver.disconnect(); } catch(_) {}
+          feedAutoplayObserver = null;
+        }
+        document.querySelectorAll('.dn-feed-video').forEach(v => {
+          try {
+            v.pause();
+            v.muted = true;
+          } catch(_) {}
+          const w = v.closest('.dn-feed-media-wrap');
+          if (w) w.classList.remove('is-playing');
+        });
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
           const c = client() || { id: 'tcs' };
