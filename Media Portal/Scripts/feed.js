@@ -137,7 +137,7 @@
             ${item.type === 'photo' ? `
               <img class="dnm-media-photo" src="${item.mediaUrl || item.coverUrl}" alt="" loading="lazy">
             ` : `
-              <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" muted playsinline loop preload="auto" poster="${item.coverUrl || ''}"></video>
+              <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" muted playsinline loop preload="metadata" poster="${item.coverUrl || ''}"></video>
               <button type="button" class="dnm-sound-pill" data-action="toggle-sound" aria-label="Toggle sound">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="dnm-sound-icon">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>

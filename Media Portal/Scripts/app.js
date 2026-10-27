@@ -31,7 +31,7 @@
     setupGlobalSearch();
 
     // 5. Render Active Tab
-    switchTab('feed');
+    switchTab('feed', false);
 
     // 6. Smoothly Dismiss Signature App Loading Screen
     hideAppLoadingScreen();
@@ -43,6 +43,24 @@
       if (currentTab === 'settings') {
         const settingsView = document.querySelector('#dnm-tab-settings');
         if (settingsView && window.DNM_SETTINGS) window.DNM_SETTINGS.initSettingsPage(settingsView);
+      }
+    });
+
+    // 8. SPA Browser History integration (prevents back button / gesture from quitting website)
+    try {
+      if (!history.state || !history.state.dnmTab) {
+        history.replaceState({ dnmTab: 'feed' }, '');
+      }
+    } catch(_) {}
+
+    window.addEventListener('popstate', (e) => {
+      if (document.body.classList.contains('has-modal')) return;
+      if (e.state && e.state.dnmTab) {
+        activeBrandClient = e.state.brand || null;
+        switchTab(e.state.dnmTab, false);
+      } else {
+        activeBrandClient = null;
+        switchTab('feed', false);
       }
     });
 
@@ -137,6 +155,12 @@
         const tab = item.dataset.tab;
         if (tab === 'upload') {
           window.DNM_UPLOAD.openUploadModal();
+        } else if (tab === 'reels') {
+          // Launch immersive full-screen video playback directly!
+          const allReels = window.DNM_DATA.getAllApprovedReels();
+          if (allReels && allReels.length && window.DNM_PLAYER) {
+            window.DNM_PLAYER.openVideoPlaybackModal(allReels[0], allReels);
+          }
         } else {
           activeBrandClient = null;
           switchTab(tab);
@@ -145,8 +169,22 @@
     });
   }
 
-  function switchTab(tab) {
+  function switchTab(tab, shouldPushHistory = true) {
+    if (tab === 'reels') {
+      const allReels = window.DNM_DATA.getAllApprovedReels();
+      if (allReels && allReels.length && window.DNM_PLAYER) {
+        window.DNM_PLAYER.openVideoPlaybackModal(allReels[0], allReels);
+      }
+      return;
+    }
+
     currentTab = tab;
+
+    if (shouldPushHistory) {
+      try {
+        history.pushState({ dnmTab: tab, brand: activeBrandClient }, '');
+      } catch(_) {}
+    }
 
     // Update bottom nav active state
     document.querySelectorAll('.dnm-nav-item').forEach(item => {
@@ -167,8 +205,6 @@
 
       if (tab === 'feed') {
         window.DNM_FEED.initFeed(targetView);
-      } else if (tab === 'reels') {
-        window.DNM_REELS.initReelsTab(targetView.querySelector('#dnm-reels-feed-container'));
       } else if (tab === 'explore') {
         renderExploreGrid(targetView.querySelector('#dnm-explore-grid-wrap'));
       } else if (tab === 'settings') {
@@ -335,22 +371,42 @@
     const user = window.DNM_AUTH.getCurrentUser();
     if (!user) {
       wrap.innerHTML = `
-        <div style="padding:60px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;">
-          <div style="width:72px;height:72px;border-radius:50%;background:var(--ig-surface);display:flex;align-items:center;justify-content:center;">
+        <!-- Profile Top Bar with Dedicated Settings Button -->
+        <div class="dnm-profile-top-bar" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--ig-border);">
+          <span style="font-size:16px;font-weight:700;color:var(--ig-text-primary);">Profile</span>
+          <button type="button" class="dnm-profile-settings-btn" id="dnm-profile-settings-top-btn" aria-label="Settings" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:7px 14px;border-radius:10px;background:var(--ig-surface);border:1px solid var(--ig-border);color:var(--ig-text-primary);cursor:pointer;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+            <span>Settings</span>
+          </button>
+        </div>
+
+        <div style="padding:50px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px;">
+          <div style="width:72px;height:72px;border-radius:50%;background:var(--ig-surface);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.06);">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
           <div>
             <b style="font-size:18px;color:var(--ig-text-primary);display:block;margin-bottom:6px;">Create Your Profile</b>
-            <p style="font-size:13px;color:var(--ig-text-secondary);max-width:300px;">Sign in with your Google account to set your unique @username, upload videos and photos, and save reels.</p>
+            <p style="font-size:13px;color:var(--ig-text-secondary);max-width:300px;line-height:1.5;">Sign in with your Google account to set your unique @username, upload videos and photos, and save reels.</p>
           </div>
-          <button type="button" id="dnm-login-prompt-btn" class="dnm-profile-btn primary" style="width:auto;min-width:220px;padding:12px 28px;border-radius:12px;font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;">
+          <button type="button" id="dnm-login-prompt-btn" class="dnm-profile-btn primary" style="width:auto;min-width:220px;padding:12px 28px;border-radius:12px;font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:10px;">
             <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#FFF" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H8l4-5v4h3l-4 5z"/></svg>
             <span>Sign in with Google</span>
+          </button>
+
+          <button type="button" id="dnm-guest-settings-btn" class="dnm-profile-btn" style="width:auto;min-width:220px;padding:10px 24px;border-radius:12px;font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--ig-surface);border:1px solid var(--ig-border);color:var(--ig-text-primary);cursor:pointer;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+            <span>Platform Settings</span>
           </button>
         </div>
       `;
       wrap.querySelector('#dnm-login-prompt-btn')?.addEventListener('click', () => {
         window.DNM_AUTH.signInWithGoogle();
+      });
+      wrap.querySelector('#dnm-profile-settings-top-btn')?.addEventListener('click', () => {
+        switchTab('settings');
+      });
+      wrap.querySelector('#dnm-guest-settings-btn')?.addEventListener('click', () => {
+        switchTab('settings');
       });
       return;
     }
@@ -358,6 +414,15 @@
     const userPosts = window.DNM_DATA.getCommunityPosts().filter(p => p.authorId === user.uid);
 
     wrap.innerHTML = `
+      <!-- Profile Top Bar with Dedicated Settings Button -->
+      <div class="dnm-profile-top-bar" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--ig-border);">
+        <span style="font-size:16px;font-weight:700;color:var(--ig-text-primary);">@${user.username}</span>
+        <button type="button" class="dnm-profile-settings-btn" id="dnm-profile-settings-top-btn" aria-label="Settings" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:7px 14px;border-radius:10px;background:var(--ig-surface);border:1px solid var(--ig-border);color:var(--ig-text-primary);cursor:pointer;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          <span>Settings</span>
+        </button>
+      </div>
+
       <div class="dnm-profile-header">
         <div class="dnm-profile-top-row">
           <div class="dnm-profile-avatar-large">
@@ -419,6 +484,10 @@
     });
 
     wrap.querySelector('#dnm-settings-jump-btn')?.addEventListener('click', () => {
+      switchTab('settings');
+    });
+
+    wrap.querySelector('#dnm-profile-settings-top-btn')?.addEventListener('click', () => {
       switchTab('settings');
     });
   }

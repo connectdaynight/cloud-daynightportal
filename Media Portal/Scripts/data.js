@@ -18,10 +18,16 @@
       const res = await fetch('https://daynight-portal.pages.dev/api/token');
       if (res.ok) {
         const d = await res.json();
-        if (d && d.token) streamToken = d.token;
+        if (d && d.token) {
+          streamToken = d.token;
+          try { sessionStorage.setItem('dn_st', d.token); } catch(_) {}
+        }
       }
     } catch(_) {}
   }
+
+  // Refresh token periodically (every 25 minutes)
+  setInterval(fetchStreamToken, 25 * 60 * 1000);
 
   // Load community posts persisted locally
   try {
@@ -120,7 +126,8 @@
     if (!reel) return '';
     const fileId = reel.fileId || (reel.url ? (reel.url.match(/[-\w]{25,}/) || [])[0] : null);
     if (fileId) {
-      const tokParam = streamToken ? `&token=${encodeURIComponent(streamToken)}` : '';
+      const tok = streamToken || (function() { try { return sessionStorage.getItem('dn_st'); } catch(_) { return ''; } })();
+      const tokParam = tok ? `&token=${encodeURIComponent(tok)}` : '';
       return `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}${tokParam}&v=3`;
     }
     return reel.url || '';

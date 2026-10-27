@@ -212,3 +212,21 @@
 .dnm-onboarding-input:focus {
   border-color: var(--ig-accent);
 }
+
+.dnm-profile-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ig-border);
+  background: var(--ig-header-bg);
+  backdrop-filter: blur(16px);
+}
+
+.dnm-profile-settings-btn {
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.dnm-profile-settings-btn:active {
+  transform: scale(0.94);
+}

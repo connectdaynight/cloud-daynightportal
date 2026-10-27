@@ -1,6 +1,7 @@
 /**
  * Daynight-Media: Full-Screen Instagram-Grade Video Playback Modal
- * Directly adapted from Client Portal's openVideoModal engine
+ * High-performance, zero-stutter video streaming engine with ambient blur,
+ * gesture navigation, and SPA history integration.
  */
 (function(window) {
   'use strict';
@@ -11,9 +12,12 @@
   function openVideoPlaybackModal(reel, initialPlaylist) {
     if (!reel) return;
 
-    // Pause all background feed videos and audio
-    document.querySelectorAll('.dnm-feed-vid, .dnm-reel-video-element').forEach(v => {
-      try { v.pause(); v.muted = true; } catch(_) {}
+    // 1. Immediately pause and silence all background feed & reels videos
+    document.querySelectorAll('video').forEach(v => {
+      try {
+        v.pause();
+        v.muted = true;
+      } catch(_) {}
     });
 
     let playlist = initialPlaylist && initialPlaylist.length ? initialPlaylist : window.DNM_DATA.getAllApprovedReels();
@@ -27,22 +31,39 @@
 
     let currentReel = playlist[currentIndex];
 
-    // Remove existing modal if open
+    // Remove existing modal if already open
     if (activePlayerModal) {
-      activePlayerModal.remove();
+      try {
+        const oldVid = activePlayerModal.querySelector('video');
+        if (oldVid) { oldVid.pause(); oldVid.src = ''; }
+        activePlayerModal.remove();
+      } catch(_) {}
       activePlayerModal = null;
     }
+
+    // 2. SPA Browser History integration (prevents browser/mobile swipe from quitting the website)
+    try {
+      history.pushState({ dnmModal: 'video_player' }, '');
+    } catch(_) {}
 
     const modalSc = document.createElement('div');
     modalSc.className = 'scrim video-modal-scrim';
     modalSc.id = 'dnm-video-player-modal';
+    document.body.classList.add('has-modal');
+
+    function onPopState(e) {
+      if (activePlayerModal) {
+        closeModal(false); // Close without triggering history.back again
+      }
+    }
+    window.addEventListener('popstate', onPopState);
 
     function renderModalContent() {
       const isClient = !!currentReel.c;
       const clientObj = isClient ? window.DNM_DATA.getClient(currentReel.c) : null;
       const authorName = isClient ? (clientObj ? clientObj.name : 'Brand') : (currentReel.authorName || 'Creator');
       const authorHandle = isClient ? (clientObj ? clientObj.slug : 'brand') : (currentReel.authorUsername || 'creator');
-      const authorAvatar = isClient ? (clientObj ? clientObj.logo : './Logo/logo.png?v=2.2') : (currentReel.authorAvatar || './Logo/logo.png?v=2.2');
+      const authorAvatar = isClient ? (clientObj ? clientObj.logo : './Logo/logo.png?v=2.6') : (currentReel.authorAvatar || './Logo/logo.png?v=2.6');
       const streamUrl = window.DNM_DATA.getStreamUrl(currentReel);
       const likesSet = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
       const isLiked = likesSet.has(currentReel.id);
@@ -58,7 +79,7 @@
           <div class="ig-reels-container" id="ig-container" style="position:relative;width:100%;max-width:470px;height:100%;max-height:100dvh;display:flex;flex-direction:column;justify-content:space-between;background:#000;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,0.8);">
             
             <!-- Top Bar -->
-            <div class="ig-top-bar" style="position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top, 10px) + 10px) 16px 14px 16px;background:linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);">
+            <div class="ig-top-bar" style="position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top, 10px) + 12px) 16px 14px 16px;background:linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);">
               <button type="button" class="ig-top-btn" id="ig-btn-back" title="Close" aria-label="Close" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:flex;align-items:center;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
               </button>
@@ -76,8 +97,14 @@
 
             <!-- Video Player Wrap -->
             <div class="ig-video-wrap" id="ig-video-wrap" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline loop preload="auto" poster="${currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:cover;"></video>
-              <div class="video-loading-circle active" id="ig-loading-circle" style="position:absolute;inset:0;margin:auto;width:44px;height:44px;border:3px solid rgba(255,255,255,0.25);border-top-color:#0095F6;border-radius:50%;animation:dnmSpin 0.8s linear infinite;pointer-events:none;"></div>
+              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline webkit-playsinline loop preload="auto" poster="${currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:cover;"></video>
+              
+              <!-- Perfectly Centered Stable Buffering Spinner (No weird translation jumps) -->
+              <div class="video-loading-circle active" id="ig-loading-circle">
+                <svg class="v-spinner-svg" viewBox="0 0 50 50">
+                  <circle class="v-spinner-path" cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
+                </svg>
+              </div>
             </div>
 
             <!-- Central Play/Pause Flash -->
@@ -149,21 +176,29 @@
               <div class="ig-scrubber-fill" id="ig-scrubber-fill" style="width:0%;height:100%;background:#FFF;transition:width 0.1s linear;"></div>
             </div>
 
-            <!-- Prev / Next Reel Navigation Buttons (Desktop) -->
-            <div style="position:absolute;right:14px;top:45%;display:flex;flex-direction:column;gap:8px;z-index:25;">
-              <button type="button" id="ig-nav-up" title="Previous Reel" aria-label="Previous" style="background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:36px;height:36px;color:#FFF;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-              </button>
-              <button type="button" id="ig-nav-down" title="Next Reel" aria-label="Next" style="background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:36px;height:36px;color:#FFF;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-            </div>
-
           </div>
         </div>
       `;
 
       attachModalEvents();
+    }
+
+    function closeModal(shouldPopHistory = true) {
+      const vid = modalSc.querySelector('#ig-video');
+      if (vid) {
+        try {
+          vid.pause();
+          vid.src = '';
+        } catch(_) {}
+      }
+      window.removeEventListener('popstate', onPopState);
+      if (modalSc.parentNode) modalSc.remove();
+      activePlayerModal = null;
+      document.body.classList.remove('has-modal');
+
+      if (shouldPopHistory && history.state && history.state.dnmModal === 'video_player') {
+        try { history.back(); } catch(_) {}
+      }
     }
 
     function attachModalEvents() {
@@ -180,26 +215,38 @@
       const likeIcon = modalSc.querySelector('#ig-icon-like');
       const likeCount = modalSc.querySelector('#ig-count-like');
       const backBtn = modalSc.querySelector('#ig-btn-back');
-      const navUp = modalSc.querySelector('#ig-nav-up');
-      const navDown = modalSc.querySelector('#ig-nav-down');
       const commentBtn = modalSc.querySelector('#ig-btn-comment');
       const shareBtn = modalSc.querySelector('#ig-btn-share');
       const dlBtn = modalSc.querySelector('#ig-btn-player-dl');
       const videoWrap = modalSc.querySelector('#ig-video-wrap');
 
-      // Loader listeners
+      // Loader listeners (using class 'active' smoothly without jumping)
       if (vid && loader) {
-        vid.muted = isSoundMuted;
-        vid.addEventListener('waiting', () => loader.style.display = 'block');
-        vid.addEventListener('seeking', () => loader.style.display = 'block');
-        vid.addEventListener('canplay', () => loader.style.display = 'none');
-        vid.addEventListener('playing', () => loader.style.display = 'none');
+        loader.classList.add('active');
+        const hideLoader = () => loader.classList.remove('active');
+        const showLoader = () => loader.classList.add('active');
 
-        // Start playback immediately
-        vid.play().catch(() => {
-          vid.muted = true;
-          vid.play().catch(() => {});
-        });
+        vid.addEventListener('loadstart', showLoader);
+        vid.addEventListener('waiting', showLoader);
+        vid.addEventListener('seeking', showLoader);
+        vid.addEventListener('canplay', hideLoader);
+        vid.addEventListener('playing', hideLoader);
+        vid.addEventListener('seeked', hideLoader);
+
+        vid.muted = isSoundMuted;
+
+        // Auto play with seamless muted fallback for browsers
+        const p = vid.play();
+        if (p !== undefined) {
+          p.catch(() => {
+            vid.muted = true;
+            isSoundMuted = true;
+            if (soundIcon) {
+              soundIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+            }
+            vid.play().catch(() => {});
+          });
+        }
 
         // Live Scrubber Progress
         vid.addEventListener('timeupdate', () => {
@@ -221,15 +268,10 @@
         });
       }
 
-      // Close modal
-      function closeModal() {
-        if (vid) {
-          try { vid.pause(); } catch(_) {}
-        }
-        modalSc.remove();
-        activePlayerModal = null;
-      }
-      backBtn?.addEventListener('click', closeModal);
+      // Back Button inside modal
+      backBtn?.addEventListener('click', () => {
+        closeModal(true);
+      });
 
       // Sound toggle
       soundBtn?.addEventListener('click', e => {
@@ -334,7 +376,7 @@
         a.remove();
       });
 
-      // Navigation (Up / Down)
+      // Navigation: Swipe Up / Down or Keyboard
       function nextReel() {
         if (currentIndex < playlist.length - 1) {
           currentIndex++;
@@ -350,9 +392,6 @@
         }
       }
 
-      navUp?.addEventListener('click', e => { e.stopPropagation(); prevReel(); });
-      navDown?.addEventListener('click', e => { e.stopPropagation(); nextReel(); });
-
       // Touch swipe gestures
       let touchStartY = 0;
       modalSc.addEventListener('touchstart', e => {
@@ -363,9 +402,9 @@
         const touchEndY = e.changedTouches[0].clientY;
         const diff = touchStartY - touchEndY;
         if (diff > 55) {
-          nextReel(); // Swiped UP
+          nextReel(); // Swiped UP to next reel
         } else if (diff < -55) {
-          prevReel(); // Swiped DOWN
+          prevReel(); // Swiped DOWN to previous reel
         }
       }, { passive: true });
 
@@ -373,7 +412,7 @@
       const onKeyDown = (e) => {
         if (e.key === 'ArrowDown') { nextReel(); }
         else if (e.key === 'ArrowUp') { prevReel(); }
-        else if (e.key === 'Escape') { closeModal(); window.removeEventListener('keydown', onKeyDown); }
+        else if (e.key === 'Escape') { closeModal(true); }
       };
       window.addEventListener('keydown', onKeyDown);
     }
