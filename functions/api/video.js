@@ -86,7 +86,8 @@ export async function onRequestGet(context) {
 
     if (fileId) {
       // 1. Primary: High-speed Authenticated Google Drive API v3 stream
-      let token = await getStreamToken(gasUrl, request.url);
+      const clientToken = url.searchParams.get('token') || request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
+      let token = clientToken || await getStreamToken(gasUrl, request.url);
       if (token) {
         const driveApiUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
         const apiHeaders = {

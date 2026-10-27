@@ -7,6 +7,10 @@
 /Logo/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
+/api/token*
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=1800, s-maxage=1800
+
 /api/video*
   Accept-Ranges: bytes
   Access-Control-Allow-Origin: *

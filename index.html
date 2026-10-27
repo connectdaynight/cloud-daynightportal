@@ -6450,6 +6450,19 @@
       } catch(_) {}
     }
 
+    // Pre-warm authenticated video stream token for zero-buffer playback
+    try {
+      fetch('/api/token')
+        .then(r => r.json())
+        .then(d => {
+          if (d && d.token) {
+            window.__DN_STREAM_TOKEN__ = d.token;
+            try { sessionStorage.setItem('dn_st', d.token); } catch(_) {}
+          }
+        })
+        .catch(() => {});
+    } catch(_) {}
+
     const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
 
     const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -6606,7 +6619,8 @@
       const id = reel.fileId || driveId(reel.url);
       if (!id) return reel.url || '';
       if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
-        return `/api/video?id=${encodeURIComponent(id)}&v=3`;
+        const tok = window.__DN_STREAM_TOKEN__ || (function() { try { return sessionStorage.getItem('dn_st'); } catch(_) { return ''; } })();
+        return `/api/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}&v=3`;
       }
       return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
     }
@@ -10279,13 +10293,7 @@
       let isNavigating = false;
 
       function getStreamUrl(reel) {
-        if (!reel) return '';
-        const id = reel.fileId || driveId(reel.url);
-        if (!id) return reel.url || '';
-        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-          return `/api/video?id=${encodeURIComponent(id)}&v=3`;
-        }
-        return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
+        return window.getStreamUrl ? window.getStreamUrl(reel) : '';
       }
 
       sheet(`
