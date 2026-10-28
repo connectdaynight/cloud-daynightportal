@@ -1,13 +1,14 @@
 /**
  * Daynight-Media: Full-Screen Instagram-Grade Video Playback Modal
  * High-performance, zero-stutter video streaming engine with ambient blur,
- * gesture navigation, and SPA history integration.
+ * gesture navigation, SPA history integration, and HLS.js adaptive bitrate streaming.
  */
 (function(window) {
   'use strict';
 
   let activePlayerModal = null;
   let isSoundMuted = false;
+  let hlsInstance = null;
 
   function openVideoPlaybackModal(reel, initialPlaylist) {
     if (!reel) return;
@@ -61,7 +62,117 @@
     }
     window.addEventListener('popstate', onPopState);
 
-    function renderModalContent() {
+    // Initialize HLS.js if available
+    function initHls(videoElement, streamUrl) {
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
+
+      if (window.Hls && Hls.isSupported() && streamUrl && streamUrl.includes('.m3u8')) {
+        hlsInstance = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          maxBufferSize: 60 * 1000 * 1000,
+          maxBufferHole: 0.5,
+          highBufferWatchdogPeriod: 3,
+          nudgeOffset: 0.1,
+          nudgeMaxRetry: 3,
+          maxFragLookUpTolerance: 0.25,
+          liveSyncDurationCount: 3,
+          liveMaxLatencyDurationCount: Infinity,
+          liveDurationInfinity: true,
+          manifestLoadingTimeOut: 10000,
+          manifestLoadingMaxRetry: 3,
+          manifestLoadingRetryDelay: 1000,
+          levelLoadingTimeOut: 10000,
+          levelLoadingMaxRetry: 4,
+          levelLoadingRetryDelay: 1000,
+          fragLoadingTimeOut: 20000,
+          fragLoadingMaxRetry: 6,
+          fragLoadingRetryDelay: 1000,
+          fragLoadingLoopThreshold: 3,
+          startFragPrefetch: true,
+          appendErrorMaxRetry: 3,
+          progressive: true
+        });
+
+        hlsInstance.loadSource(streamUrl);
+        hlsInstance.attachMedia(videoElement);
+
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+          console.log('[HLS] Manifest parsed, available qualities:', data.levels.map(l => l.height + 'p'));
+          updateQualityOptions(data.levels);
+        });
+
+        hlsInstance.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+          console.log('[HLS] Quality switched to:', data.level);
+          markActiveQuality(data.level);
+        });
+
+        hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            console.error('[HLS] Fatal error:', data);
+            if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+              hlsInstance.recoverMediaError();
+            } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              hlsInstance.startLoad();
+            } else {
+              hlsInstance.destroy();
+              hlsInstance = null;
+              // Fallback to direct video playback
+              videoElement.src = streamUrl;
+              videoElement.load();
+              videoElement.play().catch(() => {});
+            }
+          }
+        });
+
+        return true;
+      }
+      return false;
+    }
+
+    function updateQualityOptions(levels) {
+      const sheet = document.querySelector('.dnm-bottom-sheet-scrim.active');
+      if (!sheet) return;
+
+      const options = sheet.querySelectorAll('.dnm-quality-option');
+      options.forEach(btn => {
+        const quality = btn.dataset.quality;
+        if (quality === 'auto') return;
+        const level = levels.find(l => l.height === parseInt(quality));
+        btn.style.display = level ? 'flex' : 'none';
+        if (level) {
+          btn.querySelector('span').textContent = `${quality}p (${Math.round(level.bitrate / 1000)} kbps)`;
+        }
+      });
+    }
+
+    function markActiveQuality(activeLevel) {
+      const sheet = document.querySelector('.dnm-bottom-sheet-scrim.active');
+      if (!sheet) return;
+
+      sheet.querySelectorAll('.dnm-quality-option').forEach(btn => {
+        if (btn.dataset.quality === 'auto') return;
+        const level = parseInt(btn.dataset.quality);
+        if (level === activeLevel) {
+          btn.classList.replace('dnm-btn-secondary', 'dnm-btn-primary');
+        } else {
+          btn.classList.replace('dnm-btn-primary', 'dnm-btn-secondary');
+        }
+      });
+    }
+
+    function switchQuality(levelIndex) {
+      if (hlsInstance && hlsInstance.levels) {
+        hlsInstance.currentLevel = levelIndex;
+      }
+    }
+
+    async function renderModalContent() {
       const author = window.DNM_DATA.getAuthorInfo(currentReel);
       const isClient = author.isClient;
       const authorName = author.name;
@@ -69,11 +180,19 @@
       const authorAvatar = author.avatar;
       const mediaSrc = window.DNM_DATA.getMediaUrl ? window.DNM_DATA.getMediaUrl(currentReel) : window.DNM_DATA.getStreamUrl(currentReel);
       const streamUrl = window.DNM_DATA.getStreamUrl(currentReel);
-      const likesSet = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
+
+      // Load liked/saved from StorageAdapter
+      let likedPosts = [];
+      let savedPosts = [];
+      try {
+        likedPosts = await window.DNM_STORAGE?.social?.get('liked_posts', []) || [];
+        savedPosts = await window.DNM_STORAGE?.social?.get('saved_posts', []) || [];
+      } catch (_) {}
+      const likesSet = new Set(likedPosts);
       const isLiked = likesSet.has(currentReel.id);
       const baseLikes = Number(currentReel.likes) || 0;
       const totalLikes = baseLikes + (isLiked ? 1 : 0);
-      const savedSet = new Set(JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]'));
+      const savedSet = new Set(savedPosts);
       const isSaved = savedSet.has(currentReel.id);
       const isPhoto = window.DNM_DATA.isPhoto(currentReel);
 
@@ -94,10 +213,13 @@
                 <span>${isPhoto ? 'Photo' : 'Reels'}</span>
               </div>
               <div style="display:flex;align-items:center;gap:8px;">
+                <button type="button" class="ig-top-btn" id="ig-btn-quality" title="Video Quality" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:${isPhoto ? 'none' : 'flex'};align-items:center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M10 17V11M14 17V11"/></svg>
+                </button>
                 <button type="button" class="ig-top-btn" id="ig-btn-sound" title="Toggle Sound" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:${isPhoto ? 'none' : 'flex'};align-items:center;">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="ig-sound-icon">
-                    ${isSoundMuted 
-                      ? '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>' 
+                    ${isSoundMuted
+                      ? '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>'
                       : '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>'}
                   </svg>
                 </button>
@@ -213,6 +335,11 @@
           vid.load();
         } catch(_) {}
       }
+      // Clean up HLS instance
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
       window.removeEventListener('popstate', onPopState);
       if (modalSc.parentNode) modalSc.remove();
       activePlayerModal = null;
@@ -258,7 +385,7 @@
       const topTitle = modalSc.querySelector('.ig-top-title span');
       const moreBtn = modalSc.querySelector('#ig-btn-more');
 
-      function syncReelUi() {
+      async function syncReelUi() {
         const clientObj = (currentReel.c && currentReel.c !== 'community') ? window.DNM_DATA.getClient(currentReel.c) : null;
         const isClient = !!clientObj;
         const authorName = isClient ? clientObj.name : (currentReel.authorName || (currentReel.authorUsername ? '@' + currentReel.authorUsername : 'Creator'));
@@ -275,7 +402,14 @@
         if (overlayCaption) overlayCaption.innerHTML = `<b>${currentReel.title || ''}</b>${currentReel.b && currentReel.b !== 'Community' ? ` &bull; ${currentReel.b}` : ''}`;
         if (topTitle) topTitle.textContent = isPhoto ? 'Photo' : 'Reels';
 
-        const likesSet = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
+        // Load liked/saved from StorageAdapter
+        let likedPosts = [];
+        let savedPosts = [];
+        try {
+          likedPosts = await window.DNM_STORAGE?.social?.get('liked_posts', []) || [];
+          savedPosts = await window.DNM_STORAGE?.social?.get('saved_posts', []) || [];
+        } catch (_) {}
+        const likesSet = new Set(likedPosts);
         const isLiked = likesSet.has(currentReel.id);
         const baseLikes = Number(currentReel.likes) || 0;
         if (likeIcon) {
@@ -284,7 +418,7 @@
         }
         if (likeCount) likeCount.textContent = baseLikes + (isLiked ? 1 : 0);
 
-        const savedSet = new Set(JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]'));
+        const savedSet = new Set(savedPosts);
         const isSaved = savedSet.has(currentReel.id);
         if (bookmarkIcon) {
           bookmarkIcon.setAttribute('fill', isSaved ? '#FFD700' : 'none');
@@ -302,6 +436,11 @@
           if (vid) {
             vid.style.display = 'none';
             try { vid.pause(); } catch(_) {}
+            // Clean up HLS instance for photo
+            if (hlsInstance) {
+              hlsInstance.destroy();
+              hlsInstance = null;
+            }
           }
           if (photoImg) {
             photoImg.style.display = 'block';
@@ -312,19 +451,31 @@
           if (vid) {
             vid.style.display = 'block';
             loader?.classList.add('active');
-            vid.src = streamUrl;
             vid.poster = currentReel.coverUrl || '';
             vid.muted = isSoundMuted;
-            const p = vid.play();
-            if (p !== undefined) {
-              p.catch(() => {
-                vid.muted = true;
-                isSoundMuted = true;
-                if (soundIcon) {
-                  soundIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
-                }
-                vid.play().catch(() => {});
-              });
+
+            // Reinitialize HLS for new reel
+            if (hlsInstance) {
+              hlsInstance.destroy();
+              hlsInstance = null;
+            }
+
+            const isHls = initHls(vid, streamUrl);
+            if (!isHls) {
+              // Fallback to direct video playback
+              vid.src = streamUrl;
+              vid.load();
+              const p = vid.play();
+              if (p !== undefined) {
+                p.catch(() => {
+                  vid.muted = true;
+                  isSoundMuted = true;
+                  if (soundIcon) {
+                    soundIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+                  }
+                  vid.play().catch(() => {});
+                });
+              }
             }
           }
         }
@@ -345,16 +496,27 @@
 
         vid.muted = isSoundMuted;
 
-        const p = vid.play();
-        if (p !== undefined) {
-          p.catch(() => {
-            vid.muted = true;
-            isSoundMuted = true;
-            if (soundIcon) {
-              soundIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
-            }
-            vid.play().catch(() => {});
-          });
+        // Try HLS.js for adaptive streaming
+        const streamUrl = window.DNM_DATA.getStreamUrl(currentReel);
+        const isHls = initHls(vid, streamUrl);
+
+        if (!isHls) {
+          // Fallback to direct video playback
+          vid.src = streamUrl;
+          const p = vid.play();
+          if (p !== undefined) {
+            p.catch(() => {
+              vid.muted = true;
+              isSoundMuted = true;
+              if (soundIcon) {
+                soundIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+              }
+              vid.play().catch(() => {});
+            });
+          }
+        } else {
+          // HLS.js initialized, play will be triggered by MANIFEST_PARSED
+          vid.muted = isSoundMuted;
         }
 
         // Resilient Stream Auto-Retry (Exact Client Portal logic)
@@ -364,9 +526,17 @@
           if (fileId && !streamRetryAttempted) {
             streamRetryAttempted = true;
             console.warn('Retrying video stream with fresh token and cache-bypass...');
-            vid.src = `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}&t=${Date.now()}`;
-            vid.load();
-            vid.play().catch(e => console.log('Autoplay retry:', e));
+            const retryUrl = `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}&t=${Date.now()}`;
+            if (hlsInstance) {
+              hlsInstance.destroy();
+              hlsInstance = null;
+            }
+            initHls(vid, retryUrl);
+            if (!hlsInstance) {
+              vid.src = retryUrl;
+              vid.load();
+              vid.play().catch(e => console.log('Autoplay retry:', e));
+            }
           }
         });
 
@@ -444,22 +614,32 @@
       });
 
       // Like toggle
-      likeBtn?.addEventListener('click', e => {
+      likeBtn?.addEventListener('click', async e => {
         e.stopPropagation();
-        const likesSet = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
-        const baseLikes = Number(currentReel.likes) || 0;
-        if (likesSet.has(currentReel.id)) {
-          likesSet.delete(currentReel.id);
-          likeIcon.setAttribute('fill', 'none');
-          likeIcon.setAttribute('stroke', '#FFFFFF');
-          likeCount.textContent = baseLikes;
-        } else {
-          likesSet.add(currentReel.id);
-          likeIcon.setAttribute('fill', '#FF3040');
-          likeIcon.setAttribute('stroke', '#FF3040');
-          likeCount.textContent = baseLikes + 1;
-        }
-        localStorage.setItem('dnm_liked_posts', JSON.stringify(Array.from(likesSet)));
+        // Load current state from StorageAdapter
+        try {
+          const likedPosts = await window.DNM_STORAGE?.social?.get('liked_posts', []);
+          const likesSet = new Set(likedPosts);
+          const baseLikes = Number(currentReel.likes) || 0;
+          if (likesSet.has(currentReel.id)) {
+            likesSet.delete(currentReel.id);
+            likeIcon.setAttribute('fill', 'none');
+            likeIcon.setAttribute('stroke', '#FFFFFF');
+            likeCount.textContent = baseLikes;
+          } else {
+            likesSet.add(currentReel.id);
+            likeIcon.setAttribute('fill', '#FF3040');
+            likeIcon.setAttribute('stroke', '#FF3040');
+            likeCount.textContent = baseLikes + 1;
+          }
+          // Persist to StorageAdapter & Cloud Firestore
+          try {
+            await window.DNM_STORAGE?.social?.set('liked_posts', Array.from(likesSet));
+          } catch (_) {}
+          if (window.DNM_FIREBASE && window.DNM_FIREBASE.incrementLike) {
+            window.DNM_FIREBASE.incrementLike(currentReel.id, 1).catch(() => {});
+          }
+        } catch (_) {}
       });
 
       // Comment
@@ -503,39 +683,55 @@
       });
 
       // Bookmark / Save toggle
-      bookmarkBtn?.addEventListener('click', e => {
+      bookmarkBtn?.addEventListener('click', async e => {
         e.stopPropagation();
-        const savedSet = new Set(JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]'));
-        const isSaved = savedSet.has(currentReel.id);
-        if (isSaved) {
-          savedSet.delete(currentReel.id);
-          if (bookmarkIcon) {
-            bookmarkIcon.setAttribute('fill', 'none');
-            bookmarkIcon.setAttribute('stroke', '#FFFFFF');
+        // Load current state from StorageAdapter
+        try {
+          const savedPosts = await window.DNM_STORAGE?.social?.get('saved_posts', []);
+          const savedSet = new Set(savedPosts);
+          const isSaved = savedSet.has(currentReel.id);
+          if (isSaved) {
+            savedSet.delete(currentReel.id);
+            if (bookmarkIcon) {
+              bookmarkIcon.setAttribute('fill', 'none');
+              bookmarkIcon.setAttribute('stroke', '#FFFFFF');
+            }
+            if (bookmarkLabel) bookmarkLabel.textContent = 'Save';
+            if (window.DNM_FEED && window.DNM_FEED.showToast) {
+              window.DNM_FEED.showToast('Removed from Saved');
+            }
+          } else {
+            savedSet.add(currentReel.id);
+            if (bookmarkIcon) {
+              bookmarkIcon.setAttribute('fill', '#FFD700');
+              bookmarkIcon.setAttribute('stroke', '#FFD700');
+            }
+            if (bookmarkLabel) bookmarkLabel.textContent = 'Saved';
+            if (window.DNM_FEED && window.DNM_FEED.showToast) {
+              window.DNM_FEED.showToast('Saved to your collection');
+            }
           }
-          if (bookmarkLabel) bookmarkLabel.textContent = 'Save';
-          if (window.DNM_FEED && window.DNM_FEED.showToast) {
-            window.DNM_FEED.showToast('Removed from Saved');
+          // Persist to StorageAdapter & Cloud Firestore
+          try {
+            await window.DNM_STORAGE?.social?.set('saved_posts', Array.from(savedSet));
+          } catch (_) {}
+          if (window.DNM_FIREBASE && window.DNM_FIREBASE.toggleSave) {
+            window.DNM_FIREBASE.toggleSave(currentReel.id, !isSaved).catch(() => {});
           }
-        } else {
-          savedSet.add(currentReel.id);
-          if (bookmarkIcon) {
-            bookmarkIcon.setAttribute('fill', '#FFD700');
-            bookmarkIcon.setAttribute('stroke', '#FFD700');
-          }
-          if (bookmarkLabel) bookmarkLabel.textContent = 'Saved';
-          if (window.DNM_FEED && window.DNM_FEED.showToast) {
-            window.DNM_FEED.showToast('Saved to your collection');
-          }
-        }
-        localStorage.setItem('dnm_saved_posts', JSON.stringify(Array.from(savedSet)));
+        } catch (_) {}
       });
 
       // Download Master File (MP4 or Image)
       dlBtn?.addEventListener('click', e => {
         e.stopPropagation();
         const isPhoto = currentReel.type === 'photo';
-        const downloadUrl = isPhoto ? (currentReel.coverUrl || currentReel.mediaUrl || currentReel.url) : window.DNM_DATA.getStreamUrl(currentReel);
+        let downloadUrl = isPhoto ? (currentReel.coverUrl || currentReel.mediaUrl || currentReel.url) : window.DNM_DATA.getStreamUrl(currentReel);
+        // For video, use API with dl=1 to get Content-Disposition: attachment
+        if (!isPhoto && downloadUrl.includes('/api/video')) {
+          const url = new URL(downloadUrl);
+          url.searchParams.set('dl', '1');
+          downloadUrl = url.toString();
+        }
         const ext = isPhoto ? 'jpg' : 'mp4';
         const a = document.createElement('a');
         a.href = downloadUrl;
@@ -543,6 +739,9 @@
         document.body.appendChild(a);
         a.click();
         a.remove();
+        if (window.DNM_FEED && window.DNM_FEED.showToast) {
+          window.DNM_FEED.showToast('Download started');
+        }
       });
 
       // Smooth Reel Navigation
@@ -576,6 +775,104 @@
           prevReel(); // Swiped DOWN to previous reel
         }
       }, { passive: true });
+
+      // Quality Selector Bottom Sheet
+      const qualityBtn = modalSc.querySelector('#ig-btn-quality');
+      if (qualityBtn) {
+        qualityBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          openQualitySheet();
+        });
+      }
+
+      function openQualitySheet() {
+        const scrim = document.createElement('div');
+        scrim.className = 'dnm-bottom-sheet-scrim active';
+        scrim.innerHTML = `
+          <div class="dnm-bottom-sheet">
+            <div class="dnm-bottom-sheet-handle"></div>
+            <div class="dnm-bottom-sheet-header">
+              <span class="dnm-bottom-sheet-title">Video Quality</span>
+              <button type="button" class="dnm-bottom-sheet-close" id="dnm-quality-close">&times;</button>
+            </div>
+            <div class="dnm-bottom-sheet-content">
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <button type="button" class="dnm-btn dnm-btn-secondary dnm-btn-lg dnm-quality-option" data-quality="auto" style="justify-content:space-between;">
+                  <span>Auto (Recommended)</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                </button>
+                <button type="button" class="dnm-btn dnm-btn-secondary dnm-btn-lg dnm-quality-option" data-quality="1080" style="justify-content:space-between;">
+                  <span>1080p (HD)</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                </button>
+                <button type="button" class="dnm-btn dnm-btn-secondary dnm-btn-lg dnm-quality-option" data-quality="720" style="justify-content:space-between;">
+                  <span>720p</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                </button>
+                <button type="button" class="dnm-btn dnm-btn-secondary dnm-btn-lg dnm-quality-option" data-quality="480" style="justify-content:space-between;">
+                  <span>480p</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                </button>
+                <button type="button" class="dnm-btn dnm-btn-secondary dnm-btn-lg dnm-quality-option" data-quality="360" style="justify-content:space-between;">
+                  <span>360p (Data Saver)</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(scrim);
+
+        const closeSheet = () => {
+          scrim.classList.remove('active');
+          setTimeout(() => scrim.remove(), 300);
+        };
+
+        scrim.addEventListener('click', e => { if (e.target === scrim) closeSheet(); });
+        scrim.querySelector('#dnm-quality-close')?.addEventListener('click', closeSheet);
+
+        // Load saved preference from StorageAdapter
+        let savedQuality = 'auto';
+        try {
+          savedQuality = window.DNM_STORAGE?.settings?.get('stream_quality') || 'auto';
+        } catch (_) {}
+
+        // Mark active
+        scrim.querySelectorAll('.dnm-quality-option').forEach(btn => {
+          if (btn.dataset.quality === savedQuality) {
+            btn.classList.replace('dnm-btn-secondary', 'dnm-btn-primary');
+          }
+          btn.addEventListener('click', async () => {
+            const quality = btn.dataset.quality;
+            try {
+              await window.DNM_STORAGE?.settings?.setItem('stream_quality', quality);
+            } catch (_) {}
+            // Apply quality to current video via HLS.js
+            if (quality === 'auto') {
+              if (hlsInstance) {
+                hlsInstance.currentLevel = -1; // Auto mode
+              }
+              if (window.DNM_FEED && window.DNM_FEED.showToast) {
+                window.DNM_FEED.showToast('Quality: Auto');
+              }
+            } else {
+              const levelIndex = hlsInstance?.levels?.findIndex(l => l.height === parseInt(quality));
+              if (levelIndex !== undefined && levelIndex >= 0 && hlsInstance) {
+                hlsInstance.currentLevel = levelIndex;
+                if (window.DNM_FEED && window.DNM_FEED.showToast) {
+                  window.DNM_FEED.showToast(`Quality: ${quality}p`);
+                }
+              }
+            }
+            // Update UI
+            scrim.querySelectorAll('.dnm-quality-option').forEach(b => {
+              b.classList.replace('dnm-btn-primary', 'dnm-btn-secondary');
+            });
+            btn.classList.replace('dnm-btn-secondary', 'dnm-btn-primary');
+            closeSheet();
+          });
+        });
+      }
 
       // Keyboard arrow keys
       const onKeyDown = (e) => {

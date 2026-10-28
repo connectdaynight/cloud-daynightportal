@@ -4,16 +4,26 @@
 (function(window) {
   'use strict';
 
-  function initSettingsPage(container) {
+  const settingsStorage = window.DNM_STORAGE_SETTINGS || (window.DNM_STORAGE_SETTINGS = new StorageAdapter({ namespace: 'settings' }));
+
+  async function initSettingsPage(container) {
     if (!container) return;
-    renderSettings(container);
+    await renderSettings(container);
   }
 
-  function renderSettings(container) {
+  async function renderSettings(container) {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const isAutoplay = localStorage.getItem('dnm_autoplay') !== 'false';
-    const isMutedDefault = localStorage.getItem('dnm_default_muted') !== 'false';
-    const streamQuality = localStorage.getItem('dnm_stream_quality') || 'hd';
+
+    // Load preferences from StorageAdapter (Memory & Server sync)
+    let isAutoplay = true;
+    let isMutedDefault = true;
+    let streamQuality = 'hd';
+    try {
+      isAutoplay = (await settingsStorage.getItem('autoplay')) !== false;
+      isMutedDefault = (await settingsStorage.getItem('default_muted')) !== false;
+      streamQuality = await settingsStorage.getItem('stream_quality') || 'hd';
+    } catch (_) {}
+
     const user = window.DNM_AUTH.getCurrentUser();
     const reelsCount = window.DNM_DATA.getAllApprovedReels().length;
     const clients = window.DNM_DATA.getClients ? window.DNM_DATA.getClients() : [];
@@ -93,16 +103,17 @@
             </label>
           </div>
 
-          <!-- Stream Quality -->
+          <!-- Stream Quality (Default Preference - Actual switching in Player) -->
           <div class="dnm-settings-row">
             <div class="dnm-settings-label-group">
-              <span class="dnm-settings-label">Stream Resolution</span>
-              <span class="dnm-settings-desc">High-bitrate Master vs Data Saver</span>
+              <span class="dnm-settings-label">Default Stream Quality</span>
+              <span class="dnm-settings-desc">Used when opening videos (Player has per-video override)</span>
             </div>
-            <div style="display:flex;gap:6px;">
-              <button type="button" class="dnm-settings-btn ${streamQuality === 'hd' ? 'primary' : ''}" id="dnm-quality-hd">HD 1080p</button>
-              <button type="button" class="dnm-settings-btn ${streamQuality === 'sd' ? 'primary' : ''}" id="dnm-quality-sd">720p</button>
-            </div>
+            <button type="button" class="dnm-settings-btn ${streamQuality === 'auto' ? 'primary' : ''}" id="dnm-quality-auto" style="flex:1;">Auto</button>
+            <button type="button" class="dnm-settings-btn ${streamQuality === '1080' ? 'primary' : ''}" id="dnm-quality-1080" style="flex:1;">1080p</button>
+            <button type="button" class="dnm-settings-btn ${streamQuality === '720' ? 'primary' : ''}" id="dnm-quality-720" style="flex:1;">720p</button>
+            <button type="button" class="dnm-settings-btn ${streamQuality === '480' ? 'primary' : ''}" id="dnm-quality-480" style="flex:1;">480p</button>
+            <button type="button" class="dnm-settings-btn ${streamQuality === '360' ? 'primary' : ''}" id="dnm-quality-360" style="flex:1;">360p</button>
           </div>
         </div>
 
@@ -142,49 +153,51 @@
     // 1. Dark Mode Theme Toggle
     const themeToggle = container.querySelector('#dnm-toggle-theme');
     if (themeToggle) {
-      themeToggle.addEventListener('change', e => {
+      themeToggle.addEventListener('change', async e => {
         const dark = e.target.checked;
         if (dark) {
           document.documentElement.setAttribute('data-theme', 'dark');
-          localStorage.setItem('dnm_theme', 'dark');
         } else {
           document.documentElement.removeAttribute('data-theme');
-          localStorage.setItem('dnm_theme', 'light');
         }
+        try {
+          await settingsStorage.setItem('theme', dark ? 'dark' : 'light');
+        } catch (_) {}
       });
     }
 
     // 2. Autoplay Toggle
     const autoToggle = container.querySelector('#dnm-toggle-autoplay');
     if (autoToggle) {
-      autoToggle.addEventListener('change', e => {
-        localStorage.setItem('dnm_autoplay', e.target.checked ? 'true' : 'false');
+      autoToggle.addEventListener('change', async e => {
+        try {
+          await settingsStorage.setItem('autoplay', e.target.checked);
+        } catch (_) {}
       });
     }
 
     // 3. Sound Toggle
     const soundToggle = container.querySelector('#dnm-toggle-sound');
     if (soundToggle) {
-      soundToggle.addEventListener('change', e => {
-        localStorage.setItem('dnm_default_muted', e.target.checked ? 'true' : 'false');
+      soundToggle.addEventListener('change', async e => {
+        try {
+          await settingsStorage.setItem('default_muted', e.target.checked);
+        } catch (_) {}
       });
     }
 
-    // 4. Stream Quality Buttons
-    const hdBtn = container.querySelector('#dnm-quality-hd');
-    const sdBtn = container.querySelector('#dnm-quality-sd');
-    if (hdBtn && sdBtn) {
-      hdBtn.addEventListener('click', () => {
-        localStorage.setItem('dnm_stream_quality', 'hd');
-        hdBtn.classList.add('primary');
-        sdBtn.classList.remove('primary');
+    // 4. Stream Quality Buttons (Auto, 1080p, 720p, 480p, 360p)
+    const qualityBtns = container.querySelectorAll('[id^="dnm-quality-"]');
+    qualityBtns.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const quality = btn.id.replace('dnm-quality-', '');
+        try {
+          await settingsStorage.setItem('stream_quality', quality);
+        } catch (_) {}
+        qualityBtns.forEach(b => b.classList.remove('primary'));
+        btn.classList.add('primary');
       });
-      sdBtn.addEventListener('click', () => {
-        localStorage.setItem('dnm_stream_quality', 'sd');
-        sdBtn.classList.add('primary');
-        hdBtn.classList.remove('primary');
-      });
-    }
+    });
 
     // 5. Sign In / Sign Out
     const signinBtn = container.querySelector('#dnm-btn-signin');
@@ -205,11 +218,20 @@
     // 7. Clear Cache
     const clearBtn = container.querySelector('#dnm-btn-clear-cache');
     if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
-        localStorage.removeItem('dnm_liked_posts');
-        localStorage.removeItem('dnm_saved_posts');
-        localStorage.removeItem('dnm_following_set');
-        alert('Local cache and playback history cleared successfully!');
+      clearBtn.addEventListener('click', async () => {
+        // Clear via StorageAdapter
+        try {
+          const feedStorage = window.DNM_STORAGE_FEED || (window.DNM_STORAGE_FEED = new StorageAdapter({ namespace: 'feed' }));
+          const reelsStorage = window.DNM_STORAGE_REELS || (window.DNM_STORAGE_REELS = new StorageAdapter({ namespace: 'reels' }));
+          await feedStorage.removeItem('liked_posts');
+          await feedStorage.removeItem('saved_posts');
+          await reelsStorage.removeItem('following_set');
+          await settingsStorage.removeItem('theme');
+          await settingsStorage.removeItem('autoplay');
+          await settingsStorage.removeItem('default_muted');
+          await settingsStorage.removeItem('stream_quality');
+        } catch (_) {}
+        alert('Cache cleared successfully!');
       });
     }
   }

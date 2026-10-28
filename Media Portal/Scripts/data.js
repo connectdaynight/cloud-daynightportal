@@ -12,24 +12,44 @@
   let firestorePostsList = [];
   let approvedReels = [];
   let communityPosts = [];
-  let streamToken = (function() { try { return sessionStorage.getItem('dn_st') || ''; } catch(_) { return ''; } })();
+  // Stream token - loaded from storage adapter
+  let streamToken = '';
 
   // Pre-warm authenticated video stream token for zero-buffer streaming
   async function fetchStreamToken() {
     try {
-      const res = await fetch('https://daynight-portal.pages.dev/api/token');
-      if (res.ok) {
-        const d = await res.json();
-        if (d && d.token) {
-          streamToken = d.token;
-          try { sessionStorage.setItem('dn_st', d.token); } catch(_) {}
+      const token = await window.DNM_STORAGE?.auth?.get('stream_token');
+      if (token) {
+        streamToken = token;
+      } else {
+        // Fallback to API call
+        const apiUrl = window.DNM_CONFIG_HELPERS?.getApiUrl?.('/token') || '/api/token';
+        const res = await fetch(apiUrl);
+        if (res.ok) {
+          const d = await res.json();
+          if (d && d.token) {
+            streamToken = d.token;
+            await window.DNM_STORAGE?.auth?.set('stream_token', d.token);
+          }
         }
       }
     } catch(_) {}
   }
 
-  // Refresh token periodically (every 25 minutes)
-  setInterval(fetchStreamToken, 25 * 60 * 1000);
+  // Refresh token periodically (every 25 minutes) - with cleanup
+  let tokenRefreshInterval = null;
+  function startTokenRefresh() {
+    if (tokenRefreshInterval) clearInterval(tokenRefreshInterval);
+    tokenRefreshInterval = setInterval(fetchStreamToken, 25 * 60 * 1000);
+  }
+  function stopTokenRefresh() {
+    if (tokenRefreshInterval) clearInterval(tokenRefreshInterval);
+    tokenRefreshInterval = null;
+  }
+  // Start on load
+  startTokenRefresh();
+  // Cleanup on unload
+  window.addEventListener('beforeunload', stopTokenRefresh);
 
   function mergeAllReels() {
     const existingMap = new Map();
@@ -201,7 +221,7 @@
     addUploadedPost(post);
   }
 
-  function addUploadedPost(post) {
+  async function addUploadedPost(post) {
     if (!post) return;
     const existingIdx = firestorePostsList.findIndex(p => p.id === post.id);
     if (existingIdx !== -1) {
@@ -212,13 +232,14 @@
     mergeAllReels();
 
     try {
-      const stored = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
+      const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new StorageAdapter({ namespace: 'data' }));
+      const stored = await dataStorage.getItem('uploaded_posts') || [];
       const sIdx = stored.findIndex(p => p.id === post.id);
       if (sIdx !== -1) stored[sIdx] = post;
       else stored.unshift(post);
-      localStorage.setItem('dnm_uploaded_posts', JSON.stringify(stored));
-      localStorage.setItem('dnm_community_posts', JSON.stringify(communityPosts));
-    } catch(_) {}
+      await dataStorage.setItem('uploaded_posts', stored);
+      await dataStorage.setItem('community_posts', communityPosts);
+    } catch (_) {}
 
     window.dispatchEvent(new CustomEvent('dnm-post-added', { detail: { post } }));
   }
@@ -236,7 +257,7 @@
     return false;
   }
 
-  function getAuthorInfo(item) {
+  async function getAuthorInfo(item) {
     if (!item) return { isClient: false, name: 'Creator', handle: 'creator', avatar: './Logo/logo.png', isVerified: false };
 
     const clientObj = (item.c && item.c !== 'community') ? getClient(item.c) : null;
@@ -251,15 +272,16 @@
     }
 
     const currentUser = (window.DNM_AUTH && window.DNM_AUTH.getCurrentUser) ? window.DNM_AUTH.getCurrentUser() : null;
-    
+
     let isCurrentUser = false;
     if (currentUser) {
       if (item.authorId && item.authorId === currentUser.uid) isCurrentUser = true;
       if (item.authorUsername && currentUser.username && item.authorUsername.toLowerCase() === currentUser.username.toLowerCase()) isCurrentUser = true;
       if (currentUser.displayName && item.authorName && item.authorName.toLowerCase() === currentUser.displayName.toLowerCase()) isCurrentUser = true;
-      
+
       try {
-        const stored = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
+        const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new StorageAdapter({ namespace: 'data' }));
+        const stored = await dataStorage.getItem('uploaded_posts') || [];
         if (stored.some(p => p.id === item.id || (p.fileId && p.fileId === item.fileId))) {
           isCurrentUser = true;
         }
@@ -300,11 +322,12 @@
     };
   }
 
-  function getUserPosts(user) {
+  async function getUserPosts(user) {
     if (!user) return [];
     let storedUploads = [];
     try {
-      storedUploads = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
+      const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new StorageAdapter({ namespace: 'data' }));
+      storedUploads = await dataStorage.getItem('uploaded_posts') || [];
     } catch(_) {}
 
     const localIds = new Set(storedUploads.map(p => p.id));
@@ -334,9 +357,14 @@
     return matched;
   }
 
-  function getSavedPosts() {
-    const savedIds = new Set(JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]'));
-    return approvedReels.filter(r => savedIds.has(r.id));
+  async function getSavedPosts() {
+    try {
+      const feedStorage = window.DNM_STORAGE_FEED || (window.DNM_STORAGE_FEED = new StorageAdapter({ namespace: 'feed' }));
+      const savedIds = new Set(await feedStorage.getItem('saved_posts') || []);
+      return approvedReels.filter(r => savedIds.has(r.id));
+    } catch (_) {
+      return [];
+    }
   }
 
   function extractDriveId(str) {
@@ -354,9 +382,13 @@
       ? reel.fileId
       : (extractDriveId(reel.url) || extractDriveId(reel.mediaUrl));
     if (fileId) {
-      const tok = streamToken || (function() { try { return sessionStorage.getItem('dn_st'); } catch(_) { return ''; } })();
+      const tok = streamToken;
       const tokParam = tok ? `&token=${encodeURIComponent(tok)}` : '';
-      return `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}${tokParam}&v=3`;
+      // Use config helper if available, fallback to hardcoded
+      const baseUrl = window.DNM_CONFIG_HELPERS?.getStreamUrl
+        ? window.DNM_CONFIG_HELPERS.getStreamUrl(fileId, tok)
+        : `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}${tokParam}&v=3`;
+      return baseUrl;
     }
     return reel.url || reel.mediaUrl || '';
   }
@@ -365,15 +397,18 @@
     if (!item) return '';
     if (typeof item.mediaUrl === 'string' && item.mediaUrl.startsWith('data:')) return item.mediaUrl;
     if (typeof item.coverUrl === 'string' && item.coverUrl.startsWith('data:')) return item.coverUrl;
-    
+
     const fileId = (item.fileId && !item.fileId.startsWith('drive_') && !item.fileId.startsWith('post_') && !item.fileId.startsWith('r'))
       ? item.fileId
       : (extractDriveId(item.mediaUrl) || extractDriveId(item.url) || extractDriveId(item.coverUrl));
 
     if (fileId) {
-      const tok = streamToken || (function() { try { return sessionStorage.getItem('dn_st'); } catch(_) { return ''; } })();
+      const tok = streamToken;
       const tokParam = tok ? `&token=${encodeURIComponent(tok)}` : '';
-      return `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}${tokParam}&v=3`;
+      const baseUrl = window.DNM_CONFIG_HELPERS?.getStreamUrl
+        ? window.DNM_CONFIG_HELPERS.getStreamUrl(fileId, tok)
+        : `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}${tokParam}&v=3`;
+      return baseUrl;
     }
 
     if (typeof item.mediaUrl === 'string' && !item.mediaUrl.includes('drive.google.com/file/d/')) {
@@ -393,14 +428,15 @@
     basePortalReels = basePortalReels.filter(r => String(r.id).trim() !== targetId);
     mergeAllReels();
 
+    // Use StorageAdapter for local storage
     try {
-      const stored = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
+      const stored = await window.DNM_STORAGE?.cache?.get('uploaded_posts', []);
       const filtered = stored.filter(p => String(p.id).trim() !== targetId);
-      localStorage.setItem('dnm_uploaded_posts', JSON.stringify(filtered));
-      localStorage.setItem('dnm_community_posts', JSON.stringify(communityPosts));
+      await window.DNM_STORAGE?.cache?.set('uploaded_posts', filtered);
+      await window.DNM_STORAGE?.cache?.set('community_posts', communityPosts);
 
-      const saved = JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]');
-      localStorage.setItem('dnm_saved_posts', JSON.stringify(saved.filter(id => id !== targetId)));
+      const saved = await window.DNM_STORAGE?.social?.get('saved_posts', []);
+      await window.DNM_STORAGE?.social?.set('saved_posts', saved.filter(id => id !== targetId));
     } catch(_) {}
 
     // Cloud Firestore Delete
@@ -408,8 +444,11 @@
       window.DNM_FIREBASE.deletePost(targetId).catch(e => console.warn('Firestore delete error:', e));
     }
 
-    if (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) {
-      fetch(window.DNM_CONFIG.gasUrl, {
+    // GAS Delete - use config helper
+    const gasUrl = window.DNM_CONFIG_HELPERS?.getGasUrl?.('deleteReel', { id: targetId }) ||
+      (window.DNM_CONFIG?.gasUrl ? `${window.DNM_CONFIG.gasUrl}?action=deleteReel&id=${targetId}` : '');
+    if (gasUrl) {
+      fetch(gasUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'deleteReel', id: targetId })
@@ -432,14 +471,15 @@
     }
     mergeAllReels();
 
+    // Use StorageAdapter for local storage
     try {
-      const stored = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
+      const stored = await window.DNM_STORAGE?.cache?.get('uploaded_posts', []);
       const sPost = stored.find(p => String(p.id).trim() === targetId);
       if (sPost) {
         sPost.hidden = currentHidden;
-        localStorage.setItem('dnm_uploaded_posts', JSON.stringify(stored));
+        await window.DNM_STORAGE?.cache?.set('uploaded_posts', stored);
       }
-      localStorage.setItem('dnm_community_posts', JSON.stringify(communityPosts));
+      await window.DNM_STORAGE?.cache?.set('community_posts', communityPosts);
     } catch(_) {}
 
     // Cloud Firestore Update
@@ -447,8 +487,11 @@
       window.DNM_FIREBASE.updatePost(targetId, { hidden: currentHidden }).catch(e => console.warn('Firestore updatePost error:', e));
     }
 
-    if (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) {
-      fetch(window.DNM_CONFIG.gasUrl, {
+    // GAS Update - use config helper
+    const gasUrl = window.DNM_CONFIG_HELPERS?.getGasUrl?.('toggleHideReel', { id: targetId }) ||
+      (window.DNM_CONFIG?.gasUrl ? `${window.DNM_CONFIG.gasUrl}?action=toggleHideReel&id=${targetId}` : '');
+    if (gasUrl) {
+      fetch(gasUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'toggleHideReel', id: targetId })
@@ -471,14 +514,15 @@
     }
     mergeAllReels();
 
+    // Use StorageAdapter for local storage
     try {
-      const stored = JSON.parse(localStorage.getItem('dnm_uploaded_posts') || '[]');
+      const stored = await window.DNM_STORAGE?.cache?.get('uploaded_posts', []);
       const sPost = stored.find(p => String(p.id).trim() === targetId);
       if (sPost) {
         Object.assign(sPost, updates);
-        localStorage.setItem('dnm_uploaded_posts', JSON.stringify(stored));
+        await window.DNM_STORAGE?.cache?.set('uploaded_posts', stored);
       }
-      localStorage.setItem('dnm_community_posts', JSON.stringify(communityPosts));
+      await window.DNM_STORAGE?.cache?.set('community_posts', communityPosts);
     } catch(_) {}
 
     // Cloud Firestore Update
@@ -486,8 +530,11 @@
       window.DNM_FIREBASE.updatePost(targetId, updates).catch(e => console.warn('Firestore updatePost error:', e));
     }
 
-    if (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) {
-      fetch(window.DNM_CONFIG.gasUrl, {
+    // GAS Update - use config helper
+    const gasUrl = window.DNM_CONFIG_HELPERS?.getGasUrl?.('modifyReel', { id: targetId, title: updates.title || updates.caption || '' }) ||
+      (window.DNM_CONFIG?.gasUrl ? `${window.DNM_CONFIG.gasUrl}?action=modifyReel&id=${targetId}&title=${encodeURIComponent(updates.title || updates.caption || '')}` : '');
+    if (gasUrl) {
+      fetch(gasUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({

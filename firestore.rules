@@ -82,6 +82,48 @@ service cloud.firestore {
     //   - likedAt: timestamp (optional) - Like timestamp
     //   - postId: string (optional, max 100 chars) - Liked post ID
     //
+    // Collection: follows
+    // Document ID: {followId} (e.g. {followerId}_{targetId})
+    // Fields:
+    //   - followerId: string (required, immutable) - Auth UID of follower
+    //   - targetId: string (required) - Brand or User ID followed
+    //   - targetType: string (required, enum ['brand', 'user']) - Target entity type
+    //   - createdAt: number | timestamp (optional) - Follow creation timestamp
+    //
+    // Collection: saves
+    // Document ID: {saveId} (e.g. {userId}_{postId})
+    // Fields:
+    //   - userId: string (required, immutable) - Auth UID of saver
+    //   - postId: string (required) - ID of saved post
+    //   - createdAt: number | timestamp (optional) - Bookmark timestamp
+    //
+    // Collection: threads
+    // Document ID: {threadId} (e.g. sorted user IDs joined by underscore)
+    // Fields:
+    //   - id: string (optional, max 100 chars) - Thread ID
+    //   - participants: list of strings (required, 1-50 items) - Participant Auth UIDs
+    //   - participantNames: map (optional) - Mapping of UID to display name
+    //   - participantAvatars: map (optional) - Mapping of UID to avatar URL
+    //   - lastMessage: string (optional, max 5000 chars) - Last chat message text
+    //   - lastMessageAt: number | timestamp (optional) - Epoch of last message
+    //   - unreadCounts: map (optional) - Unread counts per participant UID
+    //   - onlineUsers: list of strings (optional, max 50 items) - Currently active UIDs
+    //   - createdAt: number | timestamp (optional) - Thread creation epoch
+    //
+    // Subcollection: threads/{threadId}/messages
+    // Document ID: {messageId} (e.g. msg_{timestamp} or auto ID)
+    // Fields:
+    //   - id: string (optional, max 100 chars) - Message ID
+    //   - threadId: string (optional, max 100 chars) - Parent thread ID
+    //   - senderId: string (required, immutable) - Sender Auth UID
+    //   - senderName: string (optional, max 100 chars) - Sender display name
+    //   - senderAvatar: string (optional, max 2000 chars) - Sender avatar URL
+    //   - text: string (optional, max 5000 chars) - Message text
+    //   - mediaUrl: string (optional, max 500000 chars) - Attached media URL or data URI
+    //   - type: string (optional, max 50 chars) - Message type (text, image, video, reel, etc.)
+    //   - timestamp: number | timestamp (optional) - Message timestamp
+    //   - status: string (optional, max 50 chars) - Delivery status (sent, delivered, read)
+    //
     // ===============================================================
 
     // ===============================================================
@@ -207,19 +249,68 @@ service cloud.firestore {
       (!('postId' in data) || (data.postId is string && data.postId.size() <= 100));
     }
 
+    function isValidFollow(data) {
+      return data.keys().hasOnly(['followerId', 'targetId', 'targetType', 'createdAt']) &&
+      data.followerId is string && data.followerId.size() > 0 && data.followerId.size() <= 128 &&
+      data.targetId is string && data.targetId.size() > 0 && data.targetId.size() <= 128 &&
+      data.targetType is string && data.targetType in ['brand', 'user'] &&
+      (!('createdAt' in data) || data.createdAt is number || data.createdAt is timestamp);
+    }
+
+    function isValidSave(data) {
+      return data.keys().hasOnly(['userId', 'postId', 'createdAt']) &&
+      data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+      data.postId is string && data.postId.size() > 0 && data.postId.size() <= 128 &&
+      (!('createdAt' in data) || data.createdAt is number || data.createdAt is timestamp);
+    }
+
+    function isValidThread(data) {
+      return data.keys().hasOnly([
+        'id', 'participants', 'participantNames', 'participantAvatars',
+        'lastMessage', 'lastMessageAt', 'unreadCounts', 'onlineUsers', 'createdAt'
+      ]) &&
+      data.participants is list && data.participants.size() >= 1 && data.participants.size() <= 50 &&
+      (!('id' in data) || (data.id is string && data.id.size() <= 100)) &&
+      (!('lastMessage' in data) || (data.lastMessage is string && data.lastMessage.size() <= 5000)) &&
+      (!('lastMessageAt' in data) || data.lastMessageAt is number || data.lastMessageAt is timestamp) &&
+      (!('createdAt' in data) || data.createdAt is number || data.createdAt is timestamp) &&
+      (!('unreadCounts' in data) || data.unreadCounts is map) &&
+      (!('participantNames' in data) || data.participantNames is map) &&
+      (!('participantAvatars' in data) || data.participantAvatars is map) &&
+      (!('onlineUsers' in data) || (data.onlineUsers is list && data.onlineUsers.size() <= 50));
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasOnly([
+        'id', 'threadId', 'senderId', 'senderName', 'senderAvatar',
+        'text', 'mediaUrl', 'type', 'timestamp', 'status'
+      ]) &&
+      data.senderId is string && data.senderId.size() > 0 && data.senderId.size() <= 128 &&
+      (!('id' in data) || (data.id is string && data.id.size() <= 100)) &&
+      (!('threadId' in data) || (data.threadId is string && data.threadId.size() <= 100)) &&
+      (!('senderName' in data) || (data.senderName is string && data.senderName.size() <= 100)) &&
+      (!('senderAvatar' in data) || (data.senderAvatar is string && data.senderAvatar.size() <= 2000)) &&
+      (!('text' in data) || (data.text is string && data.text.size() <= 5000)) &&
+      (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 500000)) &&
+      (!('type' in data) || (data.type is string && data.type.size() <= 50)) &&
+      (!('timestamp' in data) || data.timestamp is number || data.timestamp is timestamp) &&
+      (!('status' in data) || (data.status is string && data.status.size() <= 50));
+    }
+
     // ===============================================================
     // Collection Rules
     // ===============================================================
 
-    // User profiles: public read, write restricted to profile owner
+    // User profiles: public read, write restricted to profile owner or follower counter updates
     match /users/{userId} {
       allow read: if true;
       allow create: if isOwner(userId) && isValidUser(request.resource.data);
-      allow update: if isOwner(userId) && isValidUser(request.resource.data) && uidNotModified();
+      allow update: if (isOwner(userId) && isValidUser(request.resource.data) && uidNotModified()) ||
+        (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followersCount', 'followingCount']));
       allow delete: if false;
     }
 
-    // Community uploads and public posts: public read, authenticated create
+    // Community uploads and public posts: public read, public/authenticated create
     match /posts/{postId} {
       allow read: if true;
       allow create: if isValidPost(request.resource.data) &&
@@ -250,6 +341,51 @@ service cloud.firestore {
         allow read: if true;
         allow create, update: if isOwner(userId) && isValidLike(request.resource.data);
         allow delete: if isOwner(userId);
+      }
+    }
+
+    // Follows collection: public/authenticated read, authenticated follow/unfollow
+    match /follows/{followId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated() &&
+        request.resource.data.followerId == request.auth.uid &&
+        isValidFollow(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.followerId == request.auth.uid;
+    }
+
+    // Saved/Bookmarked posts: private to owner
+    match /saves/{saveId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create, update: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        isValidSave(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Direct Messaging threads: participants only
+    match /threads/{threadId} {
+      allow read: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      allow create: if isAuthenticated() &&
+        request.auth.uid in request.resource.data.participants &&
+        isValidThread(request.resource.data);
+      allow update: if isAuthenticated() &&
+        request.auth.uid in resource.data.participants &&
+        isValidThread(request.resource.data);
+      allow delete: if false;
+
+      // Messages subcollection: thread participants only
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() &&
+          request.auth.uid in get(/databases/$(database)/documents/threads/$(threadId)).data.participants;
+        allow create: if isAuthenticated() &&
+          request.resource.data.senderId == request.auth.uid &&
+          request.auth.uid in get(/databases/$(database)/documents/threads/$(threadId)).data.participants &&
+          isValidMessage(request.resource.data);
+        allow update: if isAuthenticated() &&
+          resource.data.senderId == request.auth.uid &&
+          request.resource.data.senderId == resource.data.senderId &&
+          isValidMessage(request.resource.data);
+        allow delete: if isAuthenticated() && resource.data.senderId == request.auth.uid;
       }
     }
 

@@ -1216,20 +1216,28 @@
   (function() {
     'use strict';
 
-    const OLD_GAS_URL = 'https://script.google.com/macros/s/AKfycbxo--i9HaTv4ejd6iYFweq3W-a-I3zzqp0rI2ACMjY5cyJ26-yh3byNRn8u0IrpRkdt/exec';
-    const PREV_GAS_URL = 'https://script.google.com/macros/s/AKfycbwP6iCl9dTto3dbQ9a2VGCsmcY6J40C4N7dXPMAwNs_pL5VGzQx3zw6KyU0vDpyM7Sm/exec';
-    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec';
-    let storedGas = localStorage.getItem('dn_gas_url');
-    if (!storedGas || storedGas.includes('AKfycbxBnjSi') || storedGas.includes('AKfycbxo--') || storedGas.includes('AKfycbwP6i') || storedGas !== DEFAULT_GAS_URL) {
-      storedGas = DEFAULT_GAS_URL;
-      localStorage.setItem('dn_gas_url', DEFAULT_GAS_URL);
+    // Configuration loaded from runtime config (injected at build time)
+    const RUNTIME_CONFIG = window.DNM_RUNTIME_CONFIG || {};
+    const CONFIG_HELPERS = window.DNM_CONFIG_HELPERS || {};
+
+    const DEFAULT_GAS_URL = RUNTIME_CONFIG.gasUrl || 'https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec';
+    const ADMIN_PASSKEY = RUNTIME_CONFIG.adminPasskey || 'DN@2026';
+
+    // Load gasUrl from config storage (with fallback to runtime config)
+    async function getGasUrl() {
+      try {
+        const stored = await window.DNM_STORAGE?.config?.get('gas_url');
+        return stored || DEFAULT_GAS_URL;
+      } catch {
+        return DEFAULT_GAS_URL;
+      }
     }
-    let GAS_URL = DEFAULT_GAS_URL;
-    let PASSKEY = localStorage.getItem('dn_admin_passkey') || 'DN@2026';
+
+    let PASSKEY = ADMIN_PASSKEY;
     function isMasterAdminAuth(val) {
       if (!val) return false;
       const s = String(val).trim();
-      return s === PASSKEY || s === 'DN@2026';
+      return s === PASSKEY || s === ADMIN_PASSKEY;
     }
 
     const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
@@ -1283,8 +1291,18 @@
     let activeTab = 'dashboard';
     let searchQuery = '';
     let selectedClientFilter = '';
-    let isCommentsCollapsed = localStorage.getItem('dn_admin_comments_collapsed') === 'true';
+    let isCommentsCollapsed = false;
     let imageTypeFilter = '';
+
+    // Load admin preferences from StorageAdapter
+    async function loadAdminPrefs() {
+      try {
+        isCommentsCollapsed = await window.DNM_STORAGE?.admin?.get('comments_collapsed', false) || false;
+      } catch {
+        isCommentsCollapsed = localStorage.getItem('dn_admin_comments_collapsed') === 'true';
+      }
+    }
+    loadAdminPrefs();
     const workspace = document.getElementById('workspace');
     const toastTray = document.getElementById('toasts');
 
@@ -1719,17 +1737,17 @@
     }
 
     // Real-Time Cross-Tab & Storage Sync
-    function saveAndBroadcast(msg = '') {
+    async function saveAndBroadcast(msg = '') {
       DATA._updatedAt = Date.now();
       try {
-        localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA));
+        await window.DNM_STORAGE?.admin?.set('cloud_cache', DATA);
       } catch(e) {
         try {
           const slim = JSON.parse(JSON.stringify(DATA));
           if (slim.reels) {
             slim.reels.forEach(r => { if (r.coverUrl && r.coverUrl.length > 30000) r.coverUrl = ''; });
           }
-          localStorage.setItem('dn_cloud_cache', JSON.stringify(slim));
+          await window.DNM_STORAGE?.admin?.set('cloud_cache', slim);
         } catch(ex) {}
       }
       try {
@@ -1885,9 +1903,16 @@
     }
 
     // Passkey Lock Screen for Admin Security
-    function renderAuthLockScreen() {
-      let failedCount = Number(sessionStorage.getItem('dn_failed_auth') || 0);
-      let lockedUntil = Number(sessionStorage.getItem('dn_lock_until') || 0);
+    async function renderAuthLockScreen() {
+      let failedCount = 0;
+      let lockedUntil = 0;
+      try {
+        failedCount = await window.DNM_STORAGE?.auth?.get('failed_auth') || 0;
+        lockedUntil = await window.DNM_STORAGE?.auth?.get('lock_until') || 0;
+      } catch {
+        failedCount = Number(sessionStorage.getItem('dn_failed_auth') || 0);
+        lockedUntil = Number(sessionStorage.getItem('dn_lock_until') || 0);
+      }
 
       document.getElementById('admin-lock-screen')?.remove();
 
@@ -1937,7 +1962,7 @@
         passInp.type = passInp.type === 'password' ? 'text' : 'password';
       };
 
-      const attemptUnlock = () => {
+      const attemptUnlock = async () => {
         const now = Date.now();
         if (lockedUntil > now) {
           const rem = Math.ceil((lockedUntil - now) / 1000);
@@ -1948,10 +1973,18 @@
         const entered = passInp.value.trim();
         if (isMasterAdminAuth(entered)) {
           PASSKEY = entered;
-          localStorage.setItem('dn_admin_passkey', entered);
-          sessionStorage.setItem('dn_admin_auth', entered);
-          sessionStorage.removeItem('dn_failed_auth');
-          sessionStorage.removeItem('dn_lock_until');
+          try {
+            await window.DNM_STORAGE?.admin?.set('passkey', entered);
+            await window.DNM_STORAGE?.auth?.set('admin_auth', entered);
+            await window.DNM_STORAGE?.auth?.delete('failed_auth');
+            await window.DNM_STORAGE?.auth?.delete('lock_until');
+          } catch {
+            // Fallback
+            localStorage.setItem('dn_admin_passkey', entered);
+            sessionStorage.setItem('dn_admin_auth', entered);
+            sessionStorage.removeItem('dn_failed_auth');
+            sessionStorage.removeItem('dn_lock_until');
+          }
           isAuthenticated = true;
           lockOverlay.remove();
           toast('Admin Console Unlocked', 'success');
@@ -1962,10 +1995,18 @@
         }
 
         failedCount++;
-        sessionStorage.setItem('dn_failed_auth', failedCount);
+        try {
+          await window.DNM_STORAGE?.auth?.set('failed_auth', failedCount);
+        } catch {
+          sessionStorage.setItem('dn_failed_auth', failedCount);
+        }
         if (failedCount >= 5) {
           lockedUntil = Date.now() + 30000;
-          sessionStorage.setItem('dn_lock_until', lockedUntil);
+          try {
+            await window.DNM_STORAGE?.auth?.set('lock_until', lockedUntil);
+          } catch {
+            sessionStorage.setItem('dn_lock_until', lockedUntil);
+          }
           errBox.textContent = '5 failed attempts. Locked out for 30 seconds.';
         } else {
           errBox.textContent = `Invalid passkey. (${5 - failedCount} attempts remaining).`;
@@ -2044,10 +2085,14 @@
       const commentsIcEl = document.getElementById('ic-toggle-comments');
       const commentsBox = document.querySelector('.admin-comments-box');
 
-      function toggleCommentsCollapse(e) {
+      async function toggleCommentsCollapse(e) {
         if (e) e.stopPropagation();
         isCommentsCollapsed = !isCommentsCollapsed;
-        localStorage.setItem('dn_admin_comments_collapsed', isCommentsCollapsed ? 'true' : 'false');
+        try {
+          await window.DNM_STORAGE?.admin?.set('comments_collapsed', isCommentsCollapsed);
+        } catch {
+          localStorage.setItem('dn_admin_comments_collapsed', isCommentsCollapsed ? 'true' : 'false');
+        }
         if (commentsListEl) commentsListEl.style.display = isCommentsCollapsed ? 'none' : 'flex';
         if (commentsTxtEl) commentsTxtEl.textContent = isCommentsCollapsed ? 'Expand' : 'Collapse';
         if (commentsIcEl) commentsIcEl.style.transform = isCommentsCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
@@ -2398,10 +2443,14 @@
       const commentsIcEl = document.getElementById('ic-toggle-comments');
       const commentsBox = document.querySelector('.admin-comments-box');
 
-      function toggleCommentsCollapse(e) {
+      async function toggleCommentsCollapse(e) {
         if (e) e.stopPropagation();
         isCommentsCollapsed = !isCommentsCollapsed;
-        localStorage.setItem('dn_admin_comments_collapsed', isCommentsCollapsed ? 'true' : 'false');
+        try {
+          await window.DNM_STORAGE?.admin?.set('comments_collapsed', isCommentsCollapsed);
+        } catch {
+          localStorage.setItem('dn_admin_comments_collapsed', isCommentsCollapsed ? 'true' : 'false');
+        }
         if (commentsListEl) commentsListEl.style.display = isCommentsCollapsed ? 'none' : 'flex';
         if (commentsTxtEl) commentsTxtEl.textContent = isCommentsCollapsed ? 'Expand' : 'Collapse';
         if (commentsIcEl) commentsIcEl.style.transform = isCommentsCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
@@ -3647,14 +3696,20 @@
           </div>
         </div>`;
 
-      document.getElementById('btn-save-cfg').onclick = () => {
+      document.getElementById('btn-save-cfg').onclick = async () => {
         const u = document.getElementById('cfg-gas').value.trim();
         const p = document.getElementById('cfg-pass').value.trim();
         if (u) GAS_URL = u;
         if (p) PASSKEY = p;
-        localStorage.setItem('dn_gas_url', GAS_URL);
-        localStorage.setItem('dn_admin_passkey', PASSKEY);
-        sessionStorage.setItem('dn_admin_auth', PASSKEY);
+        try {
+          await window.DNM_STORAGE?.config?.set('gas_url', GAS_URL);
+          await window.DNM_STORAGE?.auth?.set('admin_passkey', PASSKEY);
+          await window.DNM_STORAGE?.auth?.set('admin_auth', PASSKEY);
+        } catch {
+          localStorage.setItem('dn_gas_url', GAS_URL);
+          localStorage.setItem('dn_admin_passkey', PASSKEY);
+          sessionStorage.setItem('dn_admin_auth', PASSKEY);
+        }
         toast('Testing connection...', 'info');
         sync(true);
       };
@@ -6228,8 +6283,12 @@ function openEditModal(r) {
 
         // Header Actions
     document.getElementById('btn-manual-sync').onclick = () => sync(true);
-    document.getElementById('btn-lock-admin').onclick = () => {
-      sessionStorage.removeItem('dn_admin_auth');
+    document.getElementById('btn-lock-admin').onclick = async () => {
+      try {
+        await window.DNM_STORAGE?.auth?.delete('admin_auth');
+      } catch {
+        sessionStorage.removeItem('dn_admin_auth');
+      }
       isAuthenticated = false;
       render();
       toast('Admin session locked', 'info');

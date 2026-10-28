@@ -289,9 +289,9 @@
 
         // 3. Upload directly to Google Drive via Google Apps Script backend
         statusText.textContent = 'Publishing to Google Drive & database...';
-        const gasUrl = (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) 
-          ? window.DNM_CONFIG.gasUrl 
-          : 'https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec';
+        const gasUrl = window.DNM_CONFIG_HELPERS?.getGasUrl?.('uploadVideo') ||
+          (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) ||
+          'https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec';
 
         const payload = {
           action: 'uploadVideo',
@@ -337,7 +337,7 @@
 
         const fileId = serverData?.fileId || serverData?.reel?.fileId || ('drive_' + Date.now());
         const driveUrl = serverData?.viewUrl || serverData?.reel?.url || (fileId ? `https://drive.google.com/file/d/${fileId}/view` : '');
-        const cloudProxyStream = fileId ? `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}&v=3` : '';
+        const cloudProxyStream = fileId ? (window.DNM_CONFIG_HELPERS?.getStreamUrl?.(fileId) || `https://daynight-portal.pages.dev/api/video?id=${encodeURIComponent(fileId)}&v=3`) : '';
         const finalMedia = isVideo ? (cloudProxyStream || driveUrl || rawBase64) : (rawBase64 || cloudProxyStream || driveUrl);
         const finalCover = isVideo ? (thumbUrl || rawBase64) : rawBase64;
 

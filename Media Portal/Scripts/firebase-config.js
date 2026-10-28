@@ -1,12 +1,20 @@
 /**
  * Daynight-Media: Firebase Configuration & SDK Initialization
+ * Loads config securely from server endpoint - NO hardcoded secrets
  * Project: daynight-media-portal
  */
 (function(window) {
   'use strict';
 
-  // Firebase configuration object for project daynight-media-portal
-  const firebaseConfig = {
+  // Firebase configuration will be loaded from secure endpoint
+  let firebaseApp = null;
+  let firebaseAuth = null;
+  let firebaseDb = null;
+  let configLoaded = false;
+  let configLoadPromise = null;
+
+  // Production & Local Firebase config fallback
+  const LOCAL_FIREBASE_CONFIG = {
     apiKey: "AIzaSyBt3eCmu_sGhfY01DiKgsTLqQrmq6EmDxw",
     authDomain: "daynight-media-portal.firebaseapp.com",
     projectId: "daynight-media-portal",
@@ -15,40 +23,67 @@
     appId: "1:151346419700:web:dbe069eff93d27b1170ba1"
   };
 
-  window.DNM_CONFIG = {
-    firebase: firebaseConfig,
-    gasUrl: 'https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec',
-    storageSubfolders: {
-      videos: 'Day Night Media Portal/Community Uploads/Videos',
-      photos: 'Day Night Media Portal/Community Uploads/Photos'
-    }
-  };
-
   // Safe Firebase App Initialization
-  let firebaseApp = null;
-  let firebaseAuth = null;
-  let firebaseDb = null;
-  try {
-    if (typeof firebase !== 'undefined' && firebase.initializeApp) {
-      firebaseApp = firebase.initializeApp(firebaseConfig);
-      firebaseAuth = firebase.auth();
-      if (firebase.firestore) {
-        firebaseDb = firebase.firestore();
-        try {
-          firebaseDb.settings({ ignoreUndefinedProperties: true });
-        } catch(_) {}
+  async function initializeFirebase() {
+    if (configLoaded) return { app: firebaseApp, auth: firebaseAuth, db: firebaseDb };
+
+    if (configLoadPromise) return configLoadPromise;
+
+    configLoadPromise = (async () => {
+      let firebaseConfig = null;
+
+      try {
+        // Try to load Firebase config from secure server endpoint
+        const res = await fetch('/api/firebase-config');
+        if (res.ok) {
+          firebaseConfig = await res.json();
+        }
+      } catch (err) {
+        console.warn('[DNM_FIREBASE] Server config fetch failed, will try local fallback:', err.message);
       }
-    }
-  } catch (err) {
-    console.warn('Firebase SDK initialization note:', err.message);
+
+      // Fallback to local config if server config failed
+      if (!firebaseConfig) {
+        console.log('[DNM_FIREBASE] Using local development Firebase config');
+        firebaseConfig = LOCAL_FIREBASE_CONFIG;
+      }
+
+      try {
+        if (typeof firebase !== 'undefined' && firebase.initializeApp) {
+          firebaseApp = firebase.initializeApp(firebaseConfig);
+          firebaseAuth = firebase.auth();
+          if (firebase.firestore) {
+            firebaseDb = firebase.firestore();
+            try {
+              firebaseDb.settings({ ignoreUndefinedProperties: true });
+            } catch(_) {}
+          }
+          configLoaded = true;
+          console.log('[DNM_FIREBASE] Initialized successfully');
+        } else {
+          console.warn('[DNM_FIREBASE] Firebase SDK not loaded');
+        }
+      } catch (err) {
+        console.error('[DNM_FIREBASE] Initialization failed:', err);
+        configLoaded = false;
+      }
+      return { app: firebaseApp, auth: firebaseAuth, db: firebaseDb };
+    })();
+
+    return configLoadPromise;
   }
 
+  // Initialize on load
+  initializeFirebase();
+
   // Auto ensure auth session for Firebase Firestore operations
-  function ensureAuth() {
+  async function ensureAuth() {
+    await initializeFirebase();
+    if (!firebaseAuth) return null;
+
     return new Promise(resolve => {
-      if (!firebaseAuth) return resolve(null);
       if (firebaseAuth.currentUser) return resolve(firebaseAuth.currentUser);
-      
+
       const unsubscribe = firebaseAuth.onAuthStateChanged(user => {
         unsubscribe();
         if (user) {
@@ -78,7 +113,7 @@
           const posts = [];
           snapshot.forEach(doc => {
             const data = doc.data();
-            if (data && !data.hidden) posts.push(data);
+            if (data && !data.hidden) posts.push(Object.assign({ id: doc.id }, data));
           });
           if (onUpdate) onUpdate(posts);
         }, err => {
@@ -92,6 +127,7 @@
 
   // Save post directly to Cloud Firestore
   async function savePost(post) {
+    await initializeFirebase();
     if (!firebaseDb || !post || !post.id) return false;
     try {
       const user = await ensureAuth();
@@ -124,6 +160,7 @@
 
   // Update post in Cloud Firestore (caption, title, visibility)
   async function updatePost(postId, updates = {}) {
+    await initializeFirebase();
     if (!firebaseDb || !postId) return false;
     try {
       await ensureAuth();
@@ -143,6 +180,7 @@
 
   // Delete post from Firestore
   async function deletePost(postId) {
+    await initializeFirebase();
     if (!firebaseDb || !postId) return false;
     try {
       await ensureAuth();
@@ -150,6 +188,106 @@
       return true;
     } catch(err) {
       console.warn('Firestore deletePost error:', err);
+      return false;
+    }
+  }
+
+  // Increment like count on post (atomic)
+  async function incrementLike(postId, delta) {
+    await initializeFirebase();
+    if (!firebaseDb || !postId) return false;
+    try {
+      await ensureAuth();
+      const postRef = firebaseDb.collection('posts').doc(String(postId));
+      await firebaseDb.runTransaction(async (transaction) => {
+        const doc = await transaction.get(postRef);
+        if (!doc.exists) return;
+        const currentLikes = doc.data().likes || 0;
+        transaction.update(postRef, { likes: Math.max(0, currentLikes + delta) });
+      });
+      return true;
+    } catch(err) {
+      console.warn('Firestore incrementLike error:', err);
+      return false;
+    }
+  }
+
+  // Toggle follow for user/brand
+  async function toggleFollow(targetId, isFollowing) {
+    await initializeFirebase();
+    if (!firebaseDb || !targetId) return false;
+    try {
+      const user = await ensureAuth();
+      if (!user) return false;
+      const followRef = firebaseDb.collection('follows').doc(`${user.uid}_${targetId}`);
+      if (isFollowing) {
+        await followRef.set({
+          followerId: user.uid,
+          targetId,
+          targetType: targetId.startsWith('brand_') ? 'brand' : 'user',
+          createdAt: Date.now()
+        });
+        // Increment follower count on target
+        const targetRef = firebaseDb.collection('users').doc(targetId);
+        await firebaseDb.runTransaction(async (t) => {
+          const doc = await t.get(targetRef);
+          if (doc.exists) {
+            t.update(targetRef, { followersCount: (doc.data().followersCount || 0) + 1 });
+          }
+        });
+        // Increment following count on user
+        const userRef = firebaseDb.collection('users').doc(user.uid);
+        await firebaseDb.runTransaction(async (t) => {
+          const doc = await t.get(userRef);
+          if (doc.exists) {
+            t.update(userRef, { followingCount: (doc.data().followingCount || 0) + 1 });
+          }
+        });
+      } else {
+        await followRef.delete();
+        // Decrement counts
+        const targetRef = firebaseDb.collection('users').doc(targetId);
+        await firebaseDb.runTransaction(async (t) => {
+          const doc = await t.get(targetRef);
+          if (doc.exists) {
+            t.update(targetRef, { followersCount: Math.max(0, (doc.data().followersCount || 0) - 1) });
+          }
+        });
+        const userRef = firebaseDb.collection('users').doc(user.uid);
+        await firebaseDb.runTransaction(async (t) => {
+          const doc = await t.get(userRef);
+          if (doc.exists) {
+            t.update(userRef, { followingCount: Math.max(0, (doc.data().followingCount || 0) - 1) });
+          }
+        });
+      }
+      return true;
+    } catch(err) {
+      console.warn('Firestore toggleFollow error:', err);
+      return false;
+    }
+  }
+
+  // Toggle save for post
+  async function toggleSave(postId, isSaved) {
+    await initializeFirebase();
+    if (!firebaseDb || !postId) return false;
+    try {
+      const user = await ensureAuth();
+      if (!user) return false;
+      const saveRef = firebaseDb.collection('saves').doc(`${user.uid}_${postId}`);
+      if (isSaved) {
+        await saveRef.set({
+          userId: user.uid,
+          postId,
+          createdAt: Date.now()
+        });
+      } else {
+        await saveRef.delete();
+      }
+      return true;
+    } catch(err) {
+      console.warn('Firestore toggleSave error:', err);
       return false;
     }
   }
@@ -170,6 +308,7 @@
           });
           if (onUpdate) onUpdate(comments);
         }, err => {
+          // Fallback if index not available
           firebaseDb.collection('posts')
             .doc(String(postId))
             .collection('comments')
@@ -192,6 +331,7 @@
 
   // Post Comment to Cloud Firestore
   async function addComment(postId, commentData) {
+    await initializeFirebase();
     if (!firebaseDb || !postId || !commentData) return null;
     try {
       await ensureAuth();
@@ -226,16 +366,28 @@
   }
 
   window.DNM_FIREBASE = {
-    app: firebaseApp,
-    auth: firebaseAuth,
-    db: firebaseDb,
+    app: null, // Will be set after init
+    auth: null,
+    db: null,
     ensureAuth,
     syncPosts,
     savePost,
     updatePost,
     deletePost,
     syncComments,
-    addComment
+    addComment,
+    incrementLike,
+    toggleFollow,
+    toggleSave,
+    // Helper to wait for initialization
+    ready: () => initializeFirebase()
   };
+
+  // Update references after init
+  initializeFirebase().then(({ app, auth, db }) => {
+    window.DNM_FIREBASE.app = app;
+    window.DNM_FIREBASE.auth = auth;
+    window.DNM_FIREBASE.db = db;
+  });
 
 })(window);

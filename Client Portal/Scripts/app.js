@@ -29,20 +29,27 @@
       deletedClientIds: []
     };
 
-    // Load cloud cache immediately for instant startup
-    try {
-      const cached = localStorage.getItem('dn_cloud_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed && typeof parsed === 'object') {
-          if (Array.isArray(parsed.clients)) DATA.clients = parsed.clients;
-          if (Array.isArray(parsed.reels)) DATA.reels = parsed.reels;
-          if (parsed.settings) DATA.settings = Object.assign(DATA.settings, parsed.settings);
-          if (Array.isArray(parsed.deletedReelIds)) DATA.deletedReelIds = parsed.deletedReelIds;
-          if (Array.isArray(parsed.deletedClientIds)) DATA.deletedClientIds = parsed.deletedClientIds;
+    // Load cloud cache immediately for instant startup (using StorageAdapter)
+    async function loadInitialCache() {
+      try {
+        // Wait for storage adapter to be ready
+        await new Promise(r => {
+          if (window.DNM_STORAGE) r();
+          else document.addEventListener('DOMContentLoaded', r, { once: true });
+        });
+        const cached = await window.DNM_STORAGE.cache.get('cloud_cache');
+        if (cached) {
+          if (Array.isArray(cached.clients)) DATA.clients = cached.clients;
+          if (Array.isArray(cached.reels)) DATA.reels = cached.reels;
+          if (cached.settings) DATA.settings = Object.assign(DATA.settings, cached.settings);
+          if (Array.isArray(cached.deletedReelIds)) DATA.deletedReelIds = cached.deletedReelIds;
+          if (Array.isArray(cached.deletedClientIds)) DATA.deletedClientIds = cached.deletedClientIds;
         }
+      } catch(e) {
+        console.warn('Initial cache load failed:', e);
       }
-    } catch(e) {}
+    }
+    loadInitialCache();
 
     // Immediate fallback if local cache is empty
     if (!DATA.clients || DATA.clients.length === 0) {
@@ -67,7 +74,10 @@
         .then(d => {
           if (d && d.token) {
             window.__DN_STREAM_TOKEN__ = d.token;
-            try { sessionStorage.setItem('dn_st', d.token); } catch(_) {}
+            try {
+              window.DNM_STORAGE?.auth?.set('stream_token', d.token);
+              sessionStorage.setItem('dn_st', d.token);
+            } catch(_) {}
           }
         })
         .catch(() => {});
@@ -84,28 +94,39 @@
     const app = document.getElementById('app');
     const toastContainer = document.getElementById('toasts');
 
-    const OLD_GAS_URL = 'https://script.google.com/macros/s/AKfycbxo--i9HaTv4ejd6iYFweq3W-a-I3zzqp0rI2ACMjY5cyJ26-yh3byNRn8u0IrpRkdt/exec';
-    const PREV_GAS_URL = 'https://script.google.com/macros/s/AKfycbwP6iCl9dTto3dbQ9a2VGCsmcY6J40C4N7dXPMAwNs_pL5VGzQx3zw6KyU0vDpyM7Sm/exec';
-    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec';
-    let activeGasUrl = localStorage.getItem('dn_gas_url');
-    if (!activeGasUrl || activeGasUrl !== DEFAULT_GAS_URL) {
-      activeGasUrl = DEFAULT_GAS_URL;
-      localStorage.setItem('dn_gas_url', DEFAULT_GAS_URL);
+    // Configuration loaded from runtime config (injected at build time)
+    const RUNTIME_CONFIG = window.DNM_RUNTIME_CONFIG || {};
+    const CONFIG_HELPERS = window.DNM_CONFIG_HELPERS || {};
+
+    const DEFAULT_GAS_URL = RUNTIME_CONFIG.gasUrl || 'https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec';
+    const ADMIN_PASSKEY = RUNTIME_CONFIG.adminPasskey || 'DN@2026';
+
+    // Load gasUrl from config storage (with fallback to runtime config)
+    async function getGasUrl() {
+      try {
+        const stored = await window.DNM_STORAGE?.config?.get('gas_url');
+        return stored || DEFAULT_GAS_URL;
+      } catch {
+        return DEFAULT_GAS_URL;
+      }
     }
+
     function isMasterAdminAuth(val) {
       if (!val) return false;
       const s = String(val).trim();
-      return s === 'DN@2026' || (typeof CONFIG !== 'undefined' && CONFIG.adminPasskey && s === CONFIG.adminPasskey);
+      return s === ADMIN_PASSKEY;
     }
+
     const CONFIG = {
-      gasUrl: DEFAULT_GAS_URL,
-      adminPasskey: 'DN@2026',
+      get gasUrl() { return getGasUrl(); },
+      adminPasskey: ADMIN_PASSKEY,
       // Admin features are strictly hidden from client portal unless URL explicitly has ?admin=1
       isAdmin: location.search.includes('admin=1')
     };
-    function activateAdminMode() {
+
+    async function activateAdminMode() {
       CONFIG.isAdmin = true;
-      sessionStorage.setItem('dn_admin_auth', 'DN@2026');
+      await window.DNM_STORAGE?.auth?.set('admin_auth', ADMIN_PASSKEY);
       toast('Admin Mode Active', 'success');
     }
 
@@ -229,8 +250,8 @@
       const id = reel.fileId || driveId(reel.url);
       if (!id) return reel.url || '';
       if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
-        const tok = window.__DN_STREAM_TOKEN__ || (function() { try { return sessionStorage.getItem('dn_st'); } catch(_) { return ''; } })();
-        return `/api/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}&v=3`;
+        const tok = window.__DN_STREAM_TOKEN__ || window.DNM_STORAGE?.auth?.get('stream_token') || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('dn_st') : '') || '';
+        return CONFIG_HELPERS.getApiUrl ? CONFIG_HELPERS.getApiUrl(`/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}&v=3`) : `/api/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}&v=3`;
       }
       return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
     }
@@ -293,21 +314,26 @@
         ${dnLogo('mini')}
       </div>`;
 
-    // Client Authentication Persistence (Session & Local)
+    // Client Authentication Persistence (Session & Local) - using StorageAdapter
     function isClientAuthenticated(cid) {
       if (!cid) return false;
-      return sessionStorage.getItem('dn_auth_' + cid) === 'true' ||
-             localStorage.getItem('dn_auth_' + cid) === 'true';
+      try {
+        const auth = window.DNM_STORAGE?.auth?.get('client_' + cid);
+        if (typeof auth === 'boolean') return auth;
+        return sessionStorage.getItem('dn_auth_' + cid) === 'true';
+      } catch {
+        return sessionStorage.getItem('dn_auth_' + cid) === 'true';
+      }
     }
     function setClientAuthenticated(cid) {
       if (!cid) return;
+      try { window.DNM_STORAGE?.auth?.set('client_' + cid, true); } catch(_) {}
       sessionStorage.setItem('dn_auth_' + cid, 'true');
-      localStorage.setItem('dn_auth_' + cid, 'true');
     }
     function clearClientAuthentication(cid) {
       if (!cid) return;
+      try { window.DNM_STORAGE?.auth?.delete('client_' + cid); } catch(_) {}
       sessionStorage.removeItem('dn_auth_' + cid);
-      localStorage.removeItem('dn_auth_' + cid);
     }
 
     let isClosingModalViaHistory = false;
@@ -580,11 +606,12 @@
 
     // Google Apps Script Engine API
     async function gasApi(action, payload = {}) {
-      if (!CONFIG.gasUrl) throw new Error('Backend URL not configured');
+      const gasUrl = await CONFIG.gasUrl;
+      if (!gasUrl) throw new Error('Backend URL not configured');
       payload.action = action;
       payload.passkey = CONFIG.adminPasskey;
 
-      const res = await fetch(CONFIG.gasUrl, {
+      const res = await fetch(gasUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(payload)
@@ -594,7 +621,8 @@
 
     // Network Upload via standard fetch with progress simulation (CORS preflight-safe)
     async function gasApiWithProgress(action, payload, onProgress) {
-      if (!CONFIG.gasUrl) throw new Error('Backend URL not configured');
+      const gasUrl = await CONFIG.gasUrl;
+      if (!gasUrl) throw new Error('Backend URL not configured');
       payload.action = action;
       payload.passkey = CONFIG.adminPasskey;
 
@@ -746,39 +774,65 @@
 
     // Real-Time Cross-Tab Event Listeners
     if (syncHub) {
-      syncHub.onmessage = e => {
+      syncHub.onmessage = async e => {
         if (e.data && e.data.type === 'REEL_DELETED' && e.data.id) {
-          const delIds = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
-          if (!delIds.includes(e.data.id)) {
-            delIds.push(e.data.id);
-            localStorage.setItem('dn_deleted_reel_ids', JSON.stringify(delIds));
+          try {
+            let delIds = await window.DNM_STORAGE?.cache?.get('deleted_reel_ids') || [];
+            if (!delIds.includes(e.data.id)) {
+              delIds.push(e.data.id);
+              await window.DNM_STORAGE?.cache?.set('deleted_reel_ids', delIds);
+            }
+          } catch (_) {
+            const delIds = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
+            if (!delIds.includes(e.data.id)) {
+              delIds.push(e.data.id);
+              localStorage.setItem('dn_deleted_reel_ids', JSON.stringify(delIds));
+            }
           }
           DATA.reels = (DATA.reels || []).filter(x => x.id !== e.data.id);
           render();
           return;
         }
         if (e.data && e.data.type === 'DATA_MUTATED' && e.data.data) {
-          const delIds = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
-          DATA = e.data.data;
-          DATA.deletedReelIds = delIds;
-          DATA.reels = (DATA.reels || []).filter(r => !delIds.includes(r.id));
-          localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA));
+          try {
+            const delIds = await window.DNM_STORAGE?.cache?.get('deleted_reel_ids') || [];
+            DATA = e.data.data;
+            DATA.deletedReelIds = delIds;
+            DATA.reels = (DATA.reels || []).filter(r => !delIds.includes(r.id));
+            await window.DNM_STORAGE?.cache?.set('cloud_cache', DATA);
+          } catch (_) {
+            const delIds = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
+            DATA = e.data.data;
+            DATA.deletedReelIds = delIds;
+            DATA.reels = (DATA.reels || []).filter(r => !delIds.includes(r.id));
+            localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA));
+          }
           render();
         }
       };
     }
 
-    window.addEventListener('storage', e => {
+    window.addEventListener('storage', async e => {
       if (e.key === 'dn_deleted_reel_ids') {
-        const delIds = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
-        DATA.reels = (DATA.reels || []).filter(r => !delIds.includes(r.id));
+        try {
+          const delIds = await window.DNM_STORAGE?.cache?.get('deleted_reel_ids') || [];
+          DATA.reels = (DATA.reels || []).filter(r => !delIds.includes(r.id));
+        } catch (_) {
+          const delIds = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
+          DATA.reels = (DATA.reels || []).filter(r => !delIds.includes(r.id));
+        }
         render();
       } else if (e.key === 'dn_cloud_cache' && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
           if (parsed && typeof parsed === 'object') {
-            const delIds = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
-            parsed.reels = (parsed.reels || []).filter(r => !delIds.includes(r.id));
+            try {
+              const delIds = await window.DNM_STORAGE?.cache?.get('deleted_reel_ids') || [];
+              parsed.reels = (parsed.reels || []).filter(r => !delIds.includes(r.id));
+            } catch (_) {
+              const delIds = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
+              parsed.reels = (parsed.reels || []).filter(r => !delIds.includes(r.id));
+            }
             if (!DATA._updatedAt || !parsed._updatedAt || parsed._updatedAt >= DATA._updatedAt) {
               DATA = parsed;
               render();
@@ -795,7 +849,11 @@
       if (liveDataPromise && !force) return liveDataPromise;
       if (!CONFIG.gasUrl || CONFIG.gasUrl === OLD_GAS_URL || CONFIG.gasUrl.includes('AKfycbxo')) {
         CONFIG.gasUrl = DEFAULT_GAS_URL;
-        localStorage.setItem('dn_gas_url', DEFAULT_GAS_URL);
+        try {
+          await window.DNM_STORAGE?.config?.set('gas_url', DEFAULT_GAS_URL);
+        } catch (_) {
+          localStorage.setItem('dn_gas_url', DEFAULT_GAS_URL);
+        }
       }
       isFetchingLiveData = true;
       liveDataPromise = (async () => {
@@ -813,11 +871,18 @@
             let deletedClientIds = Array.isArray(json.data.deletedClientIds) ? json.data.deletedClientIds : [];
 
             try {
-              const locReels = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
+              const locReels = await window.DNM_STORAGE?.cache?.get('deleted_reel_ids') || [];
               if (Array.isArray(locReels)) locReels.forEach(id => { if (!deletedReelIds.includes(id)) deletedReelIds.push(id); });
-              const locClients = JSON.parse(localStorage.getItem('dn_deleted_client_ids') || '[]');
+              const locClients = await window.DNM_STORAGE?.cache?.get('deleted_client_ids') || [];
               if (Array.isArray(locClients)) locClients.forEach(id => { if (!deletedClientIds.includes(id)) deletedClientIds.push(id); });
-            } catch(e) {}
+            } catch(e) {
+              try {
+                const locReels = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
+                if (Array.isArray(locReels)) locReels.forEach(id => { if (!deletedReelIds.includes(id)) deletedReelIds.push(id); });
+                const locClients = JSON.parse(localStorage.getItem('dn_deleted_client_ids') || '[]');
+                if (Array.isArray(locClients)) locClients.forEach(id => { if (!deletedClientIds.includes(id)) deletedClientIds.push(id); });
+              } catch(e) {}
+            }
 
             DATA.deletedReelIds = deletedReelIds;
             DATA.deletedClientIds = deletedClientIds;
@@ -830,14 +895,24 @@
 
             DATA._updatedAt = Date.now();
             try {
-              localStorage.setItem('dn_cloud_cache', JSON.stringify({
+              await window.DNM_STORAGE?.cache?.set('cloud_cache', {
                 clients: DATA.clients,
                 reels: DATA.reels,
                 settings: DATA.settings,
                 deletedReelIds: DATA.deletedReelIds,
                 deletedClientIds: DATA.deletedClientIds
-              }));
-            } catch(e) {}
+              });
+            } catch(e) {
+              try {
+                localStorage.setItem('dn_cloud_cache', JSON.stringify({
+                  clients: DATA.clients,
+                  reels: DATA.reels,
+                  settings: DATA.settings,
+                  deletedReelIds: DATA.deletedReelIds,
+                  deletedClientIds: DATA.deletedClientIds
+                }));
+              } catch(e) {}
+            }
 
             try {
               if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
@@ -885,7 +960,11 @@
     async function persist(msg) {
       document.querySelector('.scrim')?.remove();
       DATA._updatedAt = Date.now();
-      localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA));
+      try {
+        await window.DNM_STORAGE?.cache?.set('cloud_cache', DATA);
+      } catch (_) {
+        localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA));
+      }
       try {
         if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
       } catch(e) {}
@@ -924,10 +1003,12 @@
       }
     }
 
-    // Favorites persistence helpers
+    // Favorites persistence helpers (using StorageAdapter)
     function getFavorites(cid) {
       const clientKey = cid || (view.client || 'tcs');
       try {
+        const favs = window.DNM_STORAGE?.cache?.get('favs_' + clientKey);
+        if (Array.isArray(favs)) return favs;
         return JSON.parse(localStorage.getItem('dn_favs_' + clientKey) || '[]');
       } catch(e) {
         return [];
@@ -937,16 +1018,15 @@
     function isFavorited(id) {
       if (!view.client || !id) return false;
       try {
-        const favs = JSON.parse(localStorage.getItem('dn_favs_' + view.client) || '[]');
+        const favs = getFavorites(view.client);
         return favs.includes(id);
       } catch(e) { return false; }
     }
 
     function toggleFavorite(id) {
       if (!view.client || !id) return;
-      const key = 'dn_favs_' + view.client;
-      let favs = [];
-      try { favs = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+      const key = 'favs_' + view.client;
+      let favs = getFavorites(view.client);
       const pos = favs.indexOf(id);
       if (pos > -1) {
         favs.splice(pos, 1);
@@ -955,7 +1035,7 @@
         favs.push(id);
         toast('Saved to Favorites', 'success');
       }
-      localStorage.setItem(key, JSON.stringify(favs));
+      try { window.DNM_STORAGE?.cache?.set(key, favs); } catch(e) {}
       render();
     }
 
@@ -1021,11 +1101,18 @@
       saturation: 100
     };
     try {
-      const savedFilters = JSON.parse(localStorage.getItem('dn_video_filters') || '{}');
+      const savedFilters = window.DNM_STORAGE?.cache?.get('video_filters') || {};
       if (savedFilters && typeof savedFilters.brightness === 'number') {
         videoFilters = Object.assign(videoFilters, savedFilters);
       }
-    } catch(_) {}
+    } catch(_) {
+      try {
+        const savedFilters = JSON.parse(localStorage.getItem('dn_video_filters') || '{}');
+        if (savedFilters && typeof savedFilters.brightness === 'number') {
+          videoFilters = Object.assign(videoFilters, savedFilters);
+        }
+      } catch(_) {}
+    }
 
     function applyVideoFilters(videoEl) {
       if (!videoEl) return;
@@ -1053,20 +1140,23 @@
     function isLiked(id) {
       const c = client();
       try {
-        const liked = JSON.parse(localStorage.getItem('dn_likes_' + (c ? c.id : 'tcs')) || '[]');
-        return liked.includes(id);
+        const liked = window.DNM_STORAGE?.cache?.get('likes_' + (c ? c.id : 'tcs'));
+        if (Array.isArray(liked)) return liked.includes(id);
+        return (JSON.parse(localStorage.getItem('dn_likes_' + (c ? c.id : 'tcs')) || '[]')).includes(id);
       } catch(e) { return false; }
     }
 
     function toggleLike(id) {
       const c = client();
-      const key = 'dn_likes_' + (c ? c.id : 'tcs');
+      const key = 'likes_' + (c ? c.id : 'tcs');
       try {
-        let liked = JSON.parse(localStorage.getItem(key) || '[]');
+        let liked = window.DNM_STORAGE?.cache?.get(key);
+        if (!Array.isArray(liked)) liked = JSON.parse(localStorage.getItem('dn_likes_' + (c ? c.id : 'tcs')) || '[]');
         const idx = liked.indexOf(id);
         if (idx === -1) liked.push(id);
         else liked.splice(idx, 1);
-        localStorage.setItem(key, JSON.stringify(liked));
+        try { window.DNM_STORAGE?.cache?.set(key, liked); } catch(_) {}
+        try { localStorage.setItem('dn_likes_' + (c ? c.id : 'tcs'), JSON.stringify(liked)); } catch(_) {}
         return idx === -1;
       } catch(e) { return false; }
     }
@@ -1077,12 +1167,12 @@
       return formatViews(liked ? base + 1 : base);
     }
 
-    function recordWatchHistory(r) {
+    async function recordWatchHistory(r) {
       const c = client();
       if (!r || !c) return;
       try {
-        const key = 'dn_history_' + c.id;
-        let list = JSON.parse(localStorage.getItem(key) || '[]');
+        const key = 'history_' + c.id;
+        let list = await window.DNM_STORAGE?.cache?.get(key) || [];
         list = list.filter(x => x.id !== r.id);
         list.unshift({
           id: r.id,
@@ -1093,17 +1183,33 @@
           dur: r.dur || '',
           time: Date.now()
         });
-        localStorage.setItem(key, JSON.stringify(list.slice(0, 30)));
-      } catch(e) {}
+        await window.DNM_STORAGE?.cache?.set(key, list.slice(0, 30));
+      } catch(e) {
+        try {
+          const key = 'dn_history_' + c.id;
+          let list = JSON.parse(localStorage.getItem(key) || '[]');
+          list = list.filter(x => x.id !== r.id);
+          list.unshift({
+            id: r.id,
+            title: r.title,
+            b: r.b || r.album || '',
+            date: r.date,
+            coverUrl: r.coverUrl || '',
+            dur: r.dur || '',
+            time: Date.now()
+          });
+          localStorage.setItem(key, JSON.stringify(list.slice(0, 30)));
+        } catch(e) {}
+      }
     }
 
-    function setReelApprovalStatus(reelId, newStatus) {
+    async function setReelApprovalStatus(reelId, newStatus) {
       const savedScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
       const r = (DATA.reels || []).find(x => String(x.id).trim() === String(reelId).trim());
       if (!r) return;
       r.status = newStatus;
       DATA._updatedAt = Date.now();
-      try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(e) {}
+      try { window.DNM_STORAGE?.cache?.set('cloud_cache', DATA); } catch(e) { try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(e) {} }
       try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
       if (newStatus === 'review') {
         toast('Content status set to Under Review', 'info');
@@ -1139,7 +1245,7 @@
       };
       r.comments.push(newComment);
       DATA._updatedAt = Date.now();
-      try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(e) {}
+      try { window.DNM_STORAGE?.cache?.set('cloud_cache', DATA); } catch(e) { try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(e) {} }
       try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
       toast(parentId ? 'Reply posted in real time' : 'Suggestion sent to Day Night Media admin in real time', 'success');
       if (CONFIG.gasUrl) {
@@ -1153,10 +1259,11 @@
     // FEEDS TAB AUTOPLAY OBSERVER & CONTROLLER
     // --------------------------------------------------------------------------
     let feedAutoplayObserver = null;
-    let isFeedAudioMuted = (function() {
-      try { return localStorage.getItem('dn_feed_muted') !== 'false'; } catch(_) { return true; }
+    let isFeedAudioMuted = true;
+    (async () => {
+      try { isFeedAudioMuted = await window.DNM_STORAGE?.cache?.get('feed_muted') !== false; } catch (_) { try { isFeedAudioMuted = localStorage.getItem('dn_feed_muted') !== 'false'; } catch(_) { isFeedAudioMuted = true; } }
+      window.isFeedAudioMuted = isFeedAudioMuted;
     })();
-    window.isFeedAudioMuted = isFeedAudioMuted;
 
     function initFeedAutoplay() {
       if (feedAutoplayObserver) {
@@ -1164,9 +1271,8 @@
         feedAutoplayObserver = null;
       }
 
-      const isEnabled = (function() {
-        try { return localStorage.getItem('dn_feed_autoplay') !== 'false'; } catch(_) { return true; }
-      })();
+      let isEnabled = true;
+      try { isEnabled = window.DNM_STORAGE?.cache?.get('feed_autoplay') !== false; } catch (_) { isEnabled = true; }
 
       const btn = document.getElementById('feed-autoplay-toggle');
       if (btn) btn.classList.toggle('active', isEnabled);
@@ -1219,9 +1325,8 @@
           const vid = wrap.querySelector('.dn-feed-video');
           if (!vid) return;
 
-          const isStillEnabled = (function() {
-            try { return localStorage.getItem('dn_feed_autoplay') !== 'false'; } catch(_) { return true; }
-          })();
+          let isStillEnabled = true;
+          try { isStillEnabled = window.DNM_STORAGE?.cache?.get('feed_autoplay') !== false; } catch (_) { isStillEnabled = true; }
 
           if (entry.isIntersecting && entry.intersectionRatio >= 0.45 && isStillEnabled) {
             // Pause and mute any other playing feed video so only ONE audio track plays
@@ -1354,12 +1459,10 @@
       });
 
       const favs = getFavorites();
-      const isFeedAutoplayOn = (function() {
-        try { return localStorage.getItem('dn_feed_autoplay') !== 'false'; } catch(_) { return true; }
-      })();
-      const isFeedMuted = (function() {
-        try { return localStorage.getItem('dn_feed_muted') !== 'false'; } catch(_) { return true; }
-      })();
+      let isFeedAutoplayOn = true;
+      let isFeedMuted = true;
+      try { isFeedAutoplayOn = window.DNM_STORAGE?.cache?.get('feed_autoplay') !== false; } catch (_) { isFeedAutoplayOn = true; }
+      try { isFeedMuted = window.DNM_STORAGE?.cache?.get('feed_muted') !== false; } catch (_) { isFeedMuted = true; }
 
       return `
         <!-- Top Header: Client Logo on Left, Title, Day Night Logo on Right -->

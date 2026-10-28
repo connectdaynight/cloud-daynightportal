@@ -4,25 +4,27 @@
 (function(window) {
   'use strict';
 
-  const STORAGE_KEY = 'dnm_user_session';
+  const authStorage = window.DNM_STORAGE_AUTH || (window.DNM_STORAGE_AUTH = new StorageAdapter({ namespace: 'auth' }));
   let currentUser = null;
 
   // Load persisted real user session
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) currentUser = JSON.parse(raw);
-  } catch(_) {}
+  (async () => {
+    try {
+      const raw = await authStorage.getItem('user_session');
+      if (raw) currentUser = raw;
+    } catch (_) {}
+  })();
 
   function getCurrentUser() {
     return currentUser;
   }
 
-  function setCurrentUser(user) {
+  async function setCurrentUser(user) {
     currentUser = user;
     if (user) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(user)); } catch(_) {}
+      try { await authStorage.setItem('user_session', user); } catch(_) {}
     } else {
-      try { localStorage.removeItem(STORAGE_KEY); } catch(_) {}
+      try { await authStorage.removeItem('user_session'); } catch(_) {}
     }
     window.dispatchEvent(new CustomEvent('dnm-auth-changed', { detail: { user } }));
   }

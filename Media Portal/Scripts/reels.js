@@ -6,10 +6,20 @@
 
   let currentReelsList = [];
   let reelsObserver = null;
-  const followingSet = new Set(JSON.parse(localStorage.getItem('dnm_following_set') || '[]'));
+  const reelsStorage = window.DNM_STORAGE_REELS || (window.DNM_STORAGE_REELS = new StorageAdapter({ namespace: 'reels' }));
+  let followingSet = new Set();
 
-  function initReelsTab(container) {
+  async function initReelsTab(container) {
     if (!container) return;
+
+    // Initialize followingSet from StorageAdapter
+    try {
+      const saved = await reelsStorage.getItem('following_set');
+      followingSet = new Set(saved || []);
+    } catch (_) {
+      followingSet = new Set();
+    }
+
     currentReelsList = window.DNM_DATA.getAllApprovedReels();
     if (!currentReelsList.length) {
       container.innerHTML = `
@@ -82,10 +92,11 @@
 
   function attachReelsEvents(container) {
     container.querySelectorAll('.dnm-reel-follow-btn').forEach(btn => {
-      btn.addEventListener('click', e => {
+      btn.addEventListener('click', async e => {
         e.stopPropagation();
         const target = btn.dataset.target;
-        if (followingSet.has(target)) {
+        const isFollowing = followingSet.has(target);
+        if (isFollowing) {
           followingSet.delete(target);
           btn.classList.remove('following');
           btn.textContent = 'Follow';
@@ -94,7 +105,43 @@
           btn.classList.add('following');
           btn.textContent = 'Following';
         }
-        localStorage.setItem('dnm_following_set', JSON.stringify(Array.from(followingSet)));
+        // Persist to StorageAdapter & Cloud Firestore
+        try {
+          await reelsStorage.setItem('following_set', Array.from(followingSet));
+        } catch (_) {}
+        // Persist to Firestore
+        if (window.DNM_FIREBASE && window.DNM_AUTH.getCurrentUser()) {
+          try {
+            await window.DNM_FIREBASE.toggleFollow?.(target, !isFollowing);
+          } catch (_) {}
+        }
+      });
+    });
+
+    // Save button handler
+    container.querySelectorAll('[data-action="reel-save"]').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const reelId = btn.closest('.dnm-reel-viewport')?.dataset.reelId;
+        const isSaved = btn.classList.toggle('saved');
+        btn.querySelector('svg').setAttribute('fill', isSaved ? 'var(--ig-heart)' : 'none');
+        btn.style.transform = 'scale(1.3)';
+        setTimeout(() => btn.style.transform = 'scale(1)', 180);
+
+        // Persist locally
+        try {
+          const savedPosts = await window.DNM_STORAGE?.social?.get('saved_posts', []) || [];
+          const savedSet = new Set(savedPosts);
+          if (isSaved) savedSet.add(reelId); else savedSet.delete(reelId);
+          await window.DNM_STORAGE?.social?.set('saved_posts', Array.from(savedSet));
+        } catch (_) {}
+
+        // Persist to Firestore
+        if (reelId && window.DNM_FIREBASE && window.DNM_AUTH.getCurrentUser()) {
+          try {
+            await window.DNM_FIREBASE.toggleSave?.(reelId, isSaved);
+          } catch (_) {}
+        }
       });
     });
 
@@ -110,13 +157,32 @@
     });
 
     container.querySelectorAll('[data-action="reel-like"]').forEach(btn => {
-      btn.addEventListener('click', e => {
+      btn.addEventListener('click', async e => {
         e.stopPropagation();
-        btn.classList.toggle('liked');
-        const isLiked = btn.classList.contains('liked');
+        const reelId = btn.closest('.dnm-reel-viewport')?.dataset.reelId;
+        const isLiked = btn.classList.toggle('liked');
         btn.querySelector('svg').setAttribute('fill', isLiked ? 'var(--ig-heart)' : 'none');
         btn.style.transform = 'scale(1.3)';
         setTimeout(() => btn.style.transform = 'scale(1)', 180);
+
+        // Update count
+        const countEl = btn.querySelector('.dnm-reel-action-count');
+        const baseLikes = parseInt(btn.dataset.baseLikes) || 0;
+        if (countEl) countEl.textContent = (baseLikes + (isLiked ? 1 : 0)).toLocaleString();
+
+        // Persist to Firestore
+        if (reelId && window.DNM_FIREBASE) {
+          try {
+            await window.DNM_FIREBASE.incrementLike?.(reelId, isLiked ? 1 : -1);
+          } catch (_) {}
+        }
+        // Local fallback
+        try {
+          const likedPosts = await window.DNM_STORAGE?.social?.get('liked_posts', []) || [];
+          const likesSet = new Set(likedPosts);
+          if (isLiked) likesSet.add(reelId); else likesSet.delete(reelId);
+          await window.DNM_STORAGE?.social?.set('liked_posts', Array.from(likesSet));
+        } catch (_) {}
       });
     });
   }

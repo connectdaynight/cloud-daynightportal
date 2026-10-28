@@ -6,17 +6,20 @@
 
   let currentTab = 'feed'; // 'feed', 'explore', 'reels', 'settings', 'profile'
   let activeBrandClient = null;
+  const appStorage = window.DNM_STORAGE_APP || (window.DNM_STORAGE_APP = new StorageAdapter({ namespace: 'app' }));
 
   async function init() {
     console.log('Daynight-Media Initializing with Real Server Data...');
 
     // Apply saved theme (Default is light / pristine white)
-    const savedTheme = localStorage.getItem('dnm_theme');
-    if (savedTheme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
+    try {
+      const savedTheme = await appStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+    } catch (_) {}
     
     // 1. Load Data Layer
     await window.DNM_DATA.loadData();
@@ -83,22 +86,32 @@
       searchBtn.addEventListener('click', () => switchTab('explore'));
     }
 
-    const themeToggleBtn = document.querySelector('#dnm-btn-theme-toggle');
-    if (themeToggleBtn) {
-      themeToggleBtn.addEventListener('click', () => {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        if (isDark) {
-          document.documentElement.removeAttribute('data-theme');
-          localStorage.setItem('dnm_theme', 'light');
-        } else {
-          document.documentElement.setAttribute('data-theme', 'dark');
-          localStorage.setItem('dnm_theme', 'dark');
-        }
+    const messagesBtn = document.querySelector('#dnm-btn-messages-header');
+    if (messagesBtn) {
+      messagesBtn.addEventListener('click', () => {
+        if (window.DNM_MESSAGING) window.DNM_MESSAGING.openDMs();
       });
     }
 
+    /* Theme toggle moved to Settings tab only */
+    // const themeToggleBtn = document.querySelector('#dnm-btn-theme-toggle');
+    // if (themeToggleBtn) { ... }
+
     // Intelligent Smart Header Scroll Hide/Reveal
     initSmartHeaderScroll();
+  }
+
+  // Update messages badge count
+  function updateMessagesBadge(count) {
+    const badge = document.querySelector('#dnm-messages-badge');
+    if (badge) {
+      if (count > 0) {
+        badge.style.display = 'block';
+        badge.textContent = count > 99 ? '99+' : count;
+      } else {
+        badge.style.display = 'none';
+      }
+    }
   }
 
   function initSmartHeaderScroll() {
@@ -156,11 +169,9 @@
         if (tab === 'upload') {
           window.DNM_UPLOAD.openUploadModal();
         } else if (tab === 'reels') {
-          // Launch immersive full-screen video playback directly!
-          const allReels = window.DNM_DATA.getAllApprovedReels();
-          if (allReels && allReels.length && window.DNM_PLAYER) {
-            window.DNM_PLAYER.openVideoPlaybackModal(allReels[0], allReels);
-          }
+          // Reels tab now shows vertical feed grid (not auto-player)
+          activeBrandClient = null;
+          switchTab('reels');
         } else {
           activeBrandClient = null;
           switchTab(tab);
@@ -171,11 +182,8 @@
 
   function switchTab(tab, shouldPushHistory = true) {
     if (tab === 'reels') {
-      const allReels = window.DNM_DATA.getAllApprovedReels();
-      if (allReels && allReels.length && window.DNM_PLAYER) {
-        window.DNM_PLAYER.openVideoPlaybackModal(allReels[0], allReels);
-      }
-      return;
+      // Reels tab renders grid view; player opens on reel click
+      // Fall through to normal tab rendering
     }
 
     currentTab = tab;
@@ -211,6 +219,8 @@
         if (window.DNM_SETTINGS) window.DNM_SETTINGS.initSettingsPage(targetView);
       } else if (tab === 'profile') {
         renderProfileTab(targetView);
+      } else if (tab === 'reels') {
+        if (window.DNM_REELS) window.DNM_REELS.initReelsTab(targetView);
       }
     }
 
@@ -224,6 +234,8 @@
     const clearBtn = document.querySelector('#dnm-global-search-clear');
     if (!input || !dropdown) return;
 
+    // Debounced search (300ms)
+    let searchDebounceTimer = null;
     input.addEventListener('input', () => {
       const q = input.value.trim().toLowerCase();
       if (!q) {
@@ -233,7 +245,8 @@
       }
 
       if (clearBtn) clearBtn.style.display = 'flex';
-      executeSearch(q, dropdown);
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => executeSearch(q, dropdown), 300);
     });
 
     if (clearBtn) {
@@ -439,13 +452,13 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
               <span>Saved</span>
             </button>
+            <button type="button" class="dnm-slidebar-item" id="dnm-slidebar-messages-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              <span>Messages</span>
+            </button>
             <button type="button" class="dnm-slidebar-item" id="dnm-slidebar-settings-btn">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
               <span>Settings</span>
-            </button>
-            <button type="button" class="dnm-slidebar-item" id="dnm-slidebar-theme-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-              <span>Switch Theme</span>
             </button>
             <button type="button" class="dnm-slidebar-item" id="dnm-slidebar-logout-btn" style="color:var(--ig-error);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -616,24 +629,18 @@
       renderGridItems('saved');
     });
 
+    wrap.querySelector('#dnm-slidebar-messages-btn')?.addEventListener('click', () => {
+      closeSlidebar();
+      if (window.DNM_MESSAGING) window.DNM_MESSAGING.openDMs();
+    });
+
     wrap.querySelector('#dnm-slidebar-settings-btn')?.addEventListener('click', () => {
       closeSlidebar();
       switchTab('settings');
     });
 
-    wrap.querySelector('#dnm-slidebar-theme-btn')?.addEventListener('click', () => {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      if (isDark) {
-        document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem('dnm_theme', 'light');
-      } else {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        localStorage.setItem('dnm_theme', 'dark');
-      }
-      if (window.DNM_FEED && window.DNM_FEED.showToast) {
-        window.DNM_FEED.showToast(`Switched to ${isDark ? 'light' : 'dark'} mode`);
-      }
-    });
+    /* Theme toggle removed from slidebar - use Settings tab only */
+    // wrap.querySelector('#dnm-slidebar-theme-btn')?.addEventListener('click', ...);
 
     wrap.querySelector('#dnm-slidebar-logout-btn')?.addEventListener('click', () => {
       closeSlidebar();
@@ -788,7 +795,8 @@
   window.DNM_APP = {
     init,
     switchTab,
-    openBrandProfile
+    openBrandProfile,
+    updateMessagesBadge
   };
 
 })(window);

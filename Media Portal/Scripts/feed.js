@@ -7,17 +7,36 @@
 
   let feedObserver = null;
   let isGlobalMuted = true;
-  const likedPosts = new Set(JSON.parse(localStorage.getItem('dnm_liked_posts') || '[]'));
-  const savedPosts = new Set(JSON.parse(localStorage.getItem('dnm_saved_posts') || '[]'));
+  let likedPosts = new Set();
+  let savedPosts = new Set();
 
   // Real user comments in-memory cache (strictly 100% server-synced with Cloud Firestore)
   let inMemoryComments = {};
 
+  // Initialize liked/saved posts from StorageAdapter
+  async function initSocialState() {
+    try {
+      const liked = await window.DNM_STORAGE?.social?.get('liked_posts', []);
+      const saved = await window.DNM_STORAGE?.social?.get('saved_posts', []);
+      likedPosts = new Set(liked || []);
+      savedPosts = new Set(saved || []);
+    } catch {
+      likedPosts = new Set();
+      savedPosts = new Set();
+    }
+  }
+
   function initFeed(container) {
     if (!container) return;
-    renderStories(container.querySelector('#dnm-stories-tray'));
-    renderFeedCards(container.querySelector('#dnm-feed-cards-wrap'));
-    initFeedAutoplay();
+    initSocialState().then(async () => {
+      // Initialize stories system - stories.js handles rendering the tray
+      if (window.DNM_STORIES) {
+        await window.DNM_STORIES.initStories();
+      }
+      renderFeedCards(container.querySelector('#dnm-feed-cards-wrap'));
+      initFeedAutoplay();
+      initPullToRefresh(container.querySelector('#dnm-feed-cards-wrap'));
+    });
   }
 
   // Render Real Client Stories Tray
@@ -65,7 +84,7 @@
   }
 
   // Render Real Production Feed Cards
-  function renderFeedCards(wrapEl) {
+  function renderFeedCards(wrapEl, { append = false, showSkeleton = false } = {}) {
     if (!wrapEl) return;
     const allItems = window.DNM_DATA.getAllApprovedReels();
 
@@ -75,6 +94,38 @@
           <p>No posts available.</p>
         </div>
       `;
+      return;
+    }
+
+    // Show skeleton loaders if requested
+    if (showSkeleton && !append) {
+      wrapEl.innerHTML = Array.from({ length: 3 }).map(() => `
+        <article class="dnm-post-card dnm-skeleton-card">
+          <div class="dnm-card-header">
+            <div class="dnm-user-info">
+              <div class="dnm-avatar-wrap"><div class="dnm-skeleton dnm-skeleton-avatar"></div></div>
+              <div class="dnm-meta-text">
+                <div class="dnm-username-row"><div class="dnm-skeleton dnm-skeleton-text" style="width:100px;"></div></div>
+                <div class="dnm-skeleton dnm-skeleton-text-sm" style="width:80px;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="dnm-media-wrapper dnm-skeleton dnm-skeleton-reel"></div>
+          <div class="dnm-action-row">
+            <div class="dnm-left-actions">
+              <div class="dnm-skeleton" style="width:24px;height:24px;border-radius:50%;"></div>
+              <div class="dnm-skeleton" style="width:24px;height:24px;border-radius:50%;"></div>
+              <div class="dnm-skeleton" style="width:24px;height:24px;border-radius:50%;"></div>
+            </div>
+            <div class="dnm-skeleton" style="width:24px;height:24px;border-radius:50%;"></div>
+          </div>
+          <div class="dnm-post-details">
+            <div class="dnm-skeleton dnm-skeleton-text" style="width:120px;"></div>
+            <div class="dnm-skeleton dnm-skeleton-text" style="width:100%;"></div>
+            <div class="dnm-skeleton dnm-skeleton-text-sm" style="width:160px;"></div>
+          </div>
+        </article>
+      `).join('');
       return;
     }
 
@@ -189,7 +240,7 @@
   function attachFeedEvents(wrapEl) {
     // Like button
     wrapEl.querySelectorAll('[data-action="like-post"]').forEach(btn => {
-      btn.addEventListener('click', e => {
+      btn.addEventListener('click', async e => {
         e.stopPropagation();
         const card = btn.closest('.dnm-post-card');
         const id = card.dataset.postId;
@@ -210,7 +261,13 @@
           setTimeout(() => btn.style.transform = 'scale(1)', 180);
           if (likesCountEl) likesCountEl.textContent = formatLikes(baseLikes + 1);
         }
-        localStorage.setItem('dnm_liked_posts', JSON.stringify(Array.from(likedPosts)));
+        // Persist to StorageAdapter & Cloud Firestore
+        try {
+          await window.DNM_STORAGE?.social?.set('liked_posts', Array.from(likedPosts));
+        } catch (_) {}
+        if (window.DNM_FIREBASE && window.DNM_FIREBASE.incrementLike) {
+          window.DNM_FIREBASE.incrementLike(id, 1).catch(() => {});
+        }
       });
     });
 
@@ -261,7 +318,7 @@
 
     // Save post
     wrapEl.querySelectorAll('[data-action="save-post"]').forEach(btn => {
-      btn.addEventListener('click', e => {
+      btn.addEventListener('click', async e => {
         e.stopPropagation();
         const card = btn.closest('.dnm-post-card');
         const id = card.dataset.postId;
@@ -278,7 +335,13 @@
           setTimeout(() => btn.style.transform = 'scale(1)', 180);
           showToast('Saved to your collection');
         }
-        localStorage.setItem('dnm_saved_posts', JSON.stringify(Array.from(savedPosts)));
+        // Persist to StorageAdapter & Cloud Firestore
+        try {
+          await window.DNM_STORAGE?.social?.set('saved_posts', Array.from(savedPosts));
+        } catch (_) {}
+        if (window.DNM_FIREBASE && window.DNM_FIREBASE.toggleSave) {
+          window.DNM_FIREBASE.toggleSave(id, true).catch(() => {});
+        }
       });
     });
 
@@ -663,11 +726,65 @@
     });
   }
 
+  // Pull to Refresh for Feed
+  let pullRefreshActive = false;
+  let pullStartY = 0;
+  let pullCurrentY = 0;
+  const PULL_THRESHOLD = 80;
+
+  function initPullToRefresh(wrapEl) {
+    if (!wrapEl) return;
+    wrapEl.addEventListener('touchstart', e => {
+      if (window.scrollY === 0) {
+        pullStartY = e.touches[0].clientY;
+        pullRefreshActive = true;
+      }
+    }, { passive: true });
+
+    wrapEl.addEventListener('touchmove', e => {
+      if (!pullRefreshActive) return;
+      pullCurrentY = e.touches[0].clientY;
+      const delta = pullCurrentY - pullStartY;
+      if (delta > 0 && delta < PULL_THRESHOLD * 2) {
+        e.preventDefault();
+        wrapEl.style.transform = `translateY(${Math.min(delta * 0.5, PULL_THRESHOLD)}px)`;
+        wrapEl.style.transition = 'transform 0.1s linear';
+      }
+    }, { passive: false });
+
+    wrapEl.addEventListener('touchend', async () => {
+      if (!pullRefreshActive) return;
+      pullRefreshActive = false;
+      const delta = pullCurrentY - pullStartY;
+      if (delta >= PULL_THRESHOLD) {
+        // Trigger refresh
+        wrapEl.style.transition = 'transform 0.3s var(--ig-ease-out-expo)';
+        wrapEl.style.transform = 'translateY(0)';
+        // Show skeleton while loading
+        renderFeedCards(wrapEl, { showSkeleton: true });
+        // Reload data
+        await window.DNM_DATA.loadData();
+        // Re-render with actual data
+        renderFeedCards(wrapEl);
+        if (window.DNM_FEED && window.DNM_FEED.showToast) {
+          window.DNM_FEED.showToast('Feed refreshed');
+        }
+      } else {
+        wrapEl.style.transition = 'transform 0.3s var(--ig-ease-out-expo)';
+        wrapEl.style.transform = 'translateY(0)';
+      }
+      setTimeout(() => {
+        wrapEl.style.transition = '';
+        wrapEl.style.transform = '';
+      }, 350);
+    }, { passive: true });
+  }
+
   // Automatic Real-Time Server Sync Listeners: ensures fresh uploads immediately show and never disappear
   function handleFeedAutoUpdate() {
     const wrapEl = document.querySelector('#dnm-feed-cards-wrap');
     if (wrapEl && document.querySelector('#dnm-tab-feed')?.classList.contains('active')) {
-      renderFeedCards(wrapEl);
+      renderFeedCards(wrapEl, { append: false });
     }
   }
 
@@ -683,7 +800,8 @@
     renderStories,
     renderFeedCards,
     showToast,
-    openCommentsDrawer
+    openCommentsDrawer,
+    initPullToRefresh
   };
 
 })(window);
