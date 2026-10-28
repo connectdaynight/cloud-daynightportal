@@ -260,7 +260,7 @@
     return false;
   }
 
-  async function getAuthorInfo(item) {
+  function getAuthorInfo(item) {
     if (!item) return { isClient: false, name: 'Creator', handle: 'creator', avatar: './Logo/logo.png', isVerified: false };
 
     const clientObj = (item.c && item.c !== 'community') ? getClient(item.c) : null;
@@ -284,8 +284,8 @@
 
       try {
         const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'data' }));
-        const stored = await dataStorage.getItem('uploaded_posts') || [];
-        if (stored.some(p => p.id === item.id || (p.fileId && p.fileId === item.fileId))) {
+        const stored = dataStorage.get('uploaded_posts', []) || [];
+        if (Array.isArray(stored) && stored.some(p => p.id === item.id || (p.fileId && p.fileId === item.fileId))) {
           isCurrentUser = true;
         }
       } catch(_) {}

@@ -125,6 +125,46 @@
     });
   }
 
+  // Real-Time Upload with Progress via XMLHttpRequest
+  function uploadWithProgress(url, payload, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
+
+      if (xhr.upload && onProgress) {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable && e.total > 0) {
+            const percent = Math.min(98, Math.round((e.loaded / e.total) * 100));
+            const loadedMb = (e.loaded / (1024 * 1024)).toFixed(1);
+            const totalMb = (e.total / (1024 * 1024)).toFixed(1);
+            onProgress({ percent, loadedMb, totalMb, loaded: e.loaded, total: e.total });
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          let data = null;
+          try {
+            data = JSON.parse(xhr.responseText);
+          } catch(_) {
+            data = { success: true };
+          }
+          resolve(data);
+        } else {
+          reject(new Error(`Server returned HTTP ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.ontimeout = () => reject(new Error('Upload timed out'));
+      xhr.timeout = 180000; // 3 minutes timeout
+
+      xhr.send(JSON.stringify(payload));
+    });
+  }
+
   function openUploadModal() {
     const user = window.DNM_AUTH.getCurrentUser();
     if (!user) {
@@ -135,69 +175,111 @@
     const existing = document.querySelector('#dnm-upload-scrim');
     if (existing) existing.remove();
 
+    let selectedRatio = null;
+
     const scrim = document.createElement('div');
     scrim.className = 'dnm-scrim active';
     scrim.id = 'dnm-upload-scrim';
     scrim.innerHTML = `
-      <div class="dnm-modal-dialog dnm-upload-modal" style="max-width:440px;">
+      <div class="dnm-modal-dialog dnm-upload-modal">
+        <!-- Instagram Header -->
         <div class="dnm-upload-header">
-          <span class="dnm-upload-title">Create New Post</span>
-          <button type="button" id="dnm-upload-close-btn" style="background:none;border:none;color:var(--ig-text-primary);cursor:pointer;font-size:22px;">&times;</button>
+          <button type="button" id="dnm-upload-cancel-btn" style="background:none;border:none;color:var(--ig-text-primary);cursor:pointer;font-size:14px;font-weight:600;padding:4px 8px;">Cancel</button>
+          <span class="dnm-upload-title">Create new post</span>
+          <button type="button" id="dnm-upload-header-share" class="dnm-upload-nav-btn disabled" style="display:none;">Share</button>
+          <div id="dnm-upload-header-spacer" style="width:50px;"></div>
         </div>
 
-        <div class="dnm-upload-dropzone" id="dnm-dropzone">
-          <svg class="dnm-upload-icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <span class="dnm-upload-text">Drag videos or photos here</span>
-          <span class="dnm-upload-hint">Supports MP4, WebM, JPG, PNG up to 100MB</span>
-          <input type="file" id="dnm-file-input" accept="video/mp4,video/webm,image/jpeg,image/png,image/webp" style="display:none;">
-          <button type="button" id="dnm-select-file-btn" class="dnm-profile-btn primary" style="padding:7px 18px;border-radius:8px;font-size:13px;margin-top:6px;">
-            Select from Device
-          </button>
-        </div>
-
-        <div class="dnm-upload-preview-wrap" id="dnm-preview-wrap" style="display:none;">
-          <!-- Live Preview Element Injected Here -->
-        </div>
-
-        <div class="dnm-upload-fields" id="dnm-upload-fields" style="display:none;">
-          <textarea id="dnm-upload-caption" class="dnm-upload-caption-inp" placeholder="Write a caption, add #hashtags, or tag @clients..."></textarea>
-          
-          <select id="dnm-upload-client-tag" class="dnm-upload-tag-select">
-            <option value="">Tag a Brand Partner (Optional)</option>
-            <option value="tcs">The Chennai Silks</option>
-            <option value="shealin">Shealin Designers</option>
-            <option value="sarasaa">Sarasaa Saloon</option>
-            <option value="khalids">Khalids Cuisine</option>
-            <option value="vivaha">Vivaha Silks</option>
-          </select>
-
-          <div class="dnm-upload-progress-bar" id="dnm-upload-prog" style="display:none;margin:8px 0;height:4px;background:var(--ig-border);border-radius:2px;overflow:hidden;">
-            <div class="dnm-upload-progress-fill" id="dnm-prog-fill" style="width:0%;height:100%;background:var(--ig-accent);transition:width 0.2s ease;"></div>
+        <div class="dnm-upload-body">
+          <!-- Dropzone Step -->
+          <div class="dnm-upload-dropzone" id="dnm-dropzone">
+            <svg class="dnm-upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span class="dnm-upload-text">Drag photos and videos here</span>
+            <span class="dnm-upload-hint">Supports MP4, WebM, MOV, JPG, PNG up to 100MB</span>
+            <input type="file" id="dnm-file-input" accept="video/mp4,video/webm,video/quicktime,image/jpeg,image/png,image/webp" style="display:none;">
+            <button type="button" id="dnm-select-file-btn" class="dnm-profile-btn primary" style="padding:8px 20px;border-radius:8px;font-size:13.5px;font-weight:700;margin-top:6px;">
+              Select from computer / device
+            </button>
           </div>
-          <div id="dnm-upload-status-text" style="display:none;font-size:12px;color:var(--ig-text-secondary);text-align:center;margin-bottom:6px;">Publishing to Google Drive...</div>
 
-          <button type="button" id="dnm-publish-btn" class="dnm-upload-publish-btn">
-            <span>Share to Feed</span>
-          </button>
+          <!-- Preview & Editing Step -->
+          <div id="dnm-upload-editor" style="display:none;flex-direction:column;gap:12px;">
+            <div class="dnm-upload-preview-wrap" id="dnm-preview-wrap"></div>
+
+            <!-- Aspect Ratio Selector Toolbar -->
+            <div class="dnm-upload-ratio-bar">
+              <span style="font-size:11.5px;color:var(--ig-text-secondary);font-weight:600;margin-right:4px;">Ratio:</span>
+              <button type="button" class="dnm-ratio-btn active" data-ratio="original">Original</button>
+              <button type="button" class="dnm-ratio-btn" data-ratio="1:1">1:1 Square</button>
+              <button type="button" class="dnm-ratio-btn" data-ratio="4:5">4:5 Portrait</button>
+              <button type="button" class="dnm-ratio-btn" data-ratio="16:9">16:9 Reel</button>
+            </div>
+
+            <!-- Creator Profile Header -->
+            <div class="dnm-upload-author-row">
+              <img class="dnm-upload-author-avatar" src="${user.photoURL || './Logo/logo.png'}" alt="${user.displayName || 'Creator'}">
+              <div class="dnm-upload-author-info">
+                <span class="dnm-upload-author-name">${user.displayName || 'Creator'}</span>
+                <span class="dnm-upload-author-handle">@${user.username || 'creator'}</span>
+              </div>
+            </div>
+
+            <div class="dnm-upload-fields">
+              <textarea id="dnm-upload-caption" class="dnm-upload-caption-inp" placeholder="Write a caption, add #hashtags, or tag @clients..."></textarea>
+              
+              <select id="dnm-upload-client-tag" class="dnm-upload-tag-select">
+                <option value="">Tag a Brand Partner (Optional)</option>
+                <option value="tcs">The Chennai Silks</option>
+                <option value="shealin">Shealin Designers</option>
+                <option value="sarasaa">Sarasaa Saloon</option>
+                <option value="khalids">Khalids Cuisine</option>
+                <option value="vivaha">Vivaha Silks</option>
+              </select>
+
+              <input type="text" id="dnm-upload-location" class="dnm-upload-location-inp" placeholder="Add location (e.g. Velachery, T. Nagar)...">
+
+              <!-- Real-Time Progress Box (Hidden until Share is tapped) -->
+              <div class="dnm-upload-progress-box" id="dnm-upload-prog-box" style="display:none;">
+                <div class="dnm-upload-progress-row">
+                  <span id="dnm-prog-step-text">Uploading to Cloud Storage...</span>
+                  <span id="dnm-prog-percent-text">0%</span>
+                </div>
+                <div class="dnm-upload-progress-bar">
+                  <div class="dnm-upload-progress-fill" id="dnm-prog-fill"></div>
+                </div>
+                <div id="dnm-prog-bytes-text" style="font-size:11.5px;color:var(--ig-text-secondary);text-align:right;">0 MB / 0 MB</div>
+              </div>
+
+              <button type="button" id="dnm-publish-btn" class="dnm-upload-publish-btn" style="margin-top:6px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                <span>Share Post to Feed</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     `;
     document.body.appendChild(scrim);
 
-    const closeBtn = scrim.querySelector('#dnm-upload-close-btn');
+    const cancelBtn = scrim.querySelector('#dnm-upload-cancel-btn');
+    const headerShare = scrim.querySelector('#dnm-upload-header-share');
+    const headerSpacer = scrim.querySelector('#dnm-upload-header-spacer');
     const dropzone = scrim.querySelector('#dnm-dropzone');
     const fileInp = scrim.querySelector('#dnm-file-input');
     const selectBtn = scrim.querySelector('#dnm-select-file-btn');
+    const editorWrap = scrim.querySelector('#dnm-upload-editor');
     const previewWrap = scrim.querySelector('#dnm-preview-wrap');
-    const fieldsWrap = scrim.querySelector('#dnm-upload-fields');
     const publishBtn = scrim.querySelector('#dnm-publish-btn');
-    const progBar = scrim.querySelector('#dnm-upload-prog');
+    const progBox = scrim.querySelector('#dnm-upload-prog-box');
     const progFill = scrim.querySelector('#dnm-prog-fill');
-    const statusText = scrim.querySelector('#dnm-upload-status-text');
+    const stepText = scrim.querySelector('#dnm-prog-step-text');
+    const percentText = scrim.querySelector('#dnm-prog-percent-text');
+    const bytesText = scrim.querySelector('#dnm-prog-bytes-text');
     const captionInp = scrim.querySelector('#dnm-upload-caption');
     const clientSelect = scrim.querySelector('#dnm-upload-client-tag');
+    const locationInp = scrim.querySelector('#dnm-upload-location');
 
-    closeBtn.addEventListener('click', () => scrim.remove());
+    cancelBtn.addEventListener('click', () => scrim.remove());
     selectBtn.addEventListener('click', () => fileInp.click());
     dropzone.addEventListener('click', () => fileInp.click());
 
@@ -222,37 +304,55 @@
       }
     });
 
+    // Aspect Ratio button toggles
+    scrim.querySelectorAll('.dnm-ratio-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        scrim.querySelectorAll('.dnm-ratio-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const r = btn.dataset.ratio;
+        selectedRatio = r;
+        const mediaEl = previewWrap.querySelector('img, video');
+        if (mediaEl) {
+          if (r === '1:1') previewWrap.style.aspectRatio = '1 / 1';
+          else if (r === '4:5') previewWrap.style.aspectRatio = '4 / 5';
+          else if (r === '16:9') previewWrap.style.aspectRatio = '16 / 9';
+          else previewWrap.style.aspectRatio = '';
+        }
+      });
+    });
+
     function handleFileSelect(file) {
       selectedFile = file;
       dropzone.style.display = 'none';
-      previewWrap.style.display = 'flex';
-      fieldsWrap.style.display = 'flex';
+      editorWrap.style.display = 'flex';
+      headerShare.style.display = 'block';
+      headerShare.classList.remove('disabled');
+      if (headerSpacer) headerSpacer.style.display = 'none';
 
       const isPhoto = detectIsPhoto(file);
       const objUrl = URL.createObjectURL(file);
 
       if (isPhoto) {
-        previewWrap.innerHTML = `<img class="dnm-upload-preview-media" src="${objUrl}" alt="Preview" style="max-height:320px;max-width:100%;object-fit:contain;border-radius:10px;">`;
+        previewWrap.innerHTML = `<img class="dnm-upload-preview-media" src="${objUrl}" alt="Preview" style="max-height:300px;max-width:100%;object-fit:contain;border-radius:10px;">`;
       } else {
-        previewWrap.innerHTML = `<video class="dnm-upload-preview-media" src="${objUrl}" controls playsinline autoplay muted loop style="max-height:320px;max-width:100%;object-fit:contain;border-radius:10px;"></video>`;
+        previewWrap.innerHTML = `<video class="dnm-upload-preview-media" src="${objUrl}" controls playsinline autoplay muted loop style="max-height:300px;max-width:100%;object-fit:contain;border-radius:10px;"></video>`;
       }
     }
 
-    publishBtn.addEventListener('click', async () => {
+    async function startPublishing() {
       if (!selectedFile) return;
 
       publishBtn.classList.add('disabled');
       publishBtn.disabled = true;
-      publishBtn.innerHTML = '<span>Uploading to Google Drive...</span>';
-      progBar.style.display = 'block';
-      statusText.style.display = 'block';
-      statusText.textContent = 'Preparing media for upload...';
-      progFill.style.width = '15%';
+      headerShare.classList.add('disabled');
+      headerShare.disabled = true;
+      progBox.style.display = 'flex';
 
       const isPhoto = detectIsPhoto(selectedFile);
       const isVideo = !isPhoto;
       const caption = captionInp.value.trim() || (isPhoto ? 'New Community Photo #DaynightMedia' : 'New Community Reel #DaynightMedia');
       const taggedClient = clientSelect.value || '';
+      const customLocation = locationInp.value.trim() || (taggedClient ? 'Partner' : '');
 
       const user = window.DNM_AUTH.getCurrentUser();
       const effectiveHandle = (user && user.username && user.username !== 'creator')
@@ -270,25 +370,30 @@
         let thumbUrl = '';
         let durationStr = '';
 
+        stepText.textContent = isPhoto ? 'Analyzing image dimensions...' : 'Extracting video cover thumbnail...';
+        progFill.style.width = '10%';
+        percentText.textContent = '10%';
+
         if (isPhoto) {
-          statusText.textContent = 'Analyzing image aspect ratio...';
           mediaDims = await getImageDimensions(selectedFile);
         } else {
-          statusText.textContent = 'Generating video cover thumbnail...';
           const thumbRes = await generateVideoThumbnail(selectedFile);
           thumbUrl = thumbRes.coverUrl;
           durationStr = thumbRes.duration;
           mediaDims = { width: thumbRes.width || 720, height: thumbRes.height || 1280, aspectRatio: thumbRes.aspectRatio || 0.5625 };
         }
-        progFill.style.width = '35%';
 
-        // 2. Read full media as base64
-        statusText.textContent = 'Encoding media stream...';
+        // Apply chosen aspect ratio if custom selected
+        if (selectedRatio === '1:1') mediaDims.aspectRatio = 1;
+        else if (selectedRatio === '4:5') mediaDims.aspectRatio = 0.8;
+        else if (selectedRatio === '16:9') mediaDims.aspectRatio = 1.7778;
+
+        progFill.style.width = '25%';
+        percentText.textContent = '25%';
+        stepText.textContent = 'Encoding media payload...';
+
         const rawBase64 = await readFileAsBase64(selectedFile);
-        progFill.style.width = '55%';
 
-        // 3. Upload directly to Google Drive via Google Apps Script backend
-        statusText.textContent = 'Publishing to Google Drive & database...';
         const gasUrl = window.DNM_CONFIG_HELPERS?.getGasUrl?.('uploadVideo') ||
           (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) ||
           'https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec';
@@ -297,7 +402,8 @@
           action: 'uploadVideo',
           clientName: taggedClient ? (window.DNM_DATA.getClient(taggedClient)?.name || 'Brand') : '',
           clientId: taggedClient || '',
-          branch: taggedClient ? 'Partner' : '',
+          branch: customLocation || (taggedClient ? 'Partner' : ''),
+          location: customLocation,
           album: 'Uploads',
           title: caption,
           dur: isPhoto ? '' : durationStr,
@@ -316,24 +422,23 @@
           status: 'approved'
         };
 
-        const timer = setInterval(() => {
-          const cur = parseInt(progFill.style.width) || 55;
-          if (cur < 90) progFill.style.width = (cur + 5) + '%';
-        }, 300);
+        // Real-Time Upload Progress Tracker
+        stepText.textContent = 'Uploading to Google Drive cloud...';
 
-        const res = await fetch(gasUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
+        const serverData = await uploadWithProgress(gasUrl, payload, ({ percent, loadedMb, totalMb }) => {
+          // Progress from 25% to 95% is real upload stream
+          const displayPct = Math.round(25 + (percent * 0.7));
+          progFill.style.width = displayPct + '%';
+          percentText.textContent = displayPct + '%';
+          bytesText.textContent = `${loadedMb} MB / ${totalMb} MB uploaded`;
+          stepText.textContent = `Uploading media stream (${displayPct}%)...`;
         });
 
-        clearInterval(timer);
+        // Finished uploading bytes - registering post
         progFill.style.width = '100%';
-
-        let serverData = null;
-        try {
-          serverData = await res.json();
-        } catch(_) {}
+        percentText.textContent = '100%';
+        stepText.textContent = 'Publishing live to social feed...';
+        bytesText.textContent = 'Upload complete';
 
         const fileId = serverData?.fileId || serverData?.reel?.fileId || ('drive_' + Date.now());
         const driveUrl = serverData?.viewUrl || serverData?.reel?.url || (fileId ? `https://drive.google.com/file/d/${fileId}/view` : '');
@@ -344,7 +449,8 @@
         const newPost = {
           id: serverData?.reel?.id || ('r' + Date.now().toString(36)),
           c: taggedClient || '',
-          b: taggedClient ? 'Partner' : '',
+          b: customLocation || (taggedClient ? 'Partner' : ''),
+          location: customLocation,
           album: 'Uploads',
           type: isPhoto ? 'photo' : 'reel',
           title: caption,
@@ -373,25 +479,37 @@
         if (window.DNM_FIREBASE && window.DNM_FIREBASE.savePost) {
           window.DNM_FIREBASE.savePost(newPost).catch(e => console.warn('Firestore save post:', e));
         }
-        scrim.remove();
 
-        // Refresh active views
-        const feedWrap = document.querySelector('#dnm-feed-cards-wrap');
-        if (feedWrap && window.DNM_FEED) {
-          window.DNM_FEED.renderFeedCards(feedWrap);
-        }
-        if (window.DNM_FEED && window.DNM_FEED.showToast) {
-          window.DNM_FEED.showToast(`${isPhoto ? 'Photo' : 'Video'} uploaded to Google Drive and shared to feed!`);
-        }
+        setTimeout(() => {
+          scrim.remove();
+
+          // Refresh active views and switch to feed
+          const feedWrap = document.querySelector('#dnm-feed-cards-wrap');
+          if (feedWrap && window.DNM_FEED) {
+            window.DNM_FEED.renderFeedCards(feedWrap);
+          }
+          if (window.DNM_APP && window.DNM_APP.switchTab) {
+            window.DNM_APP.switchTab('feed');
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+
+          if (window.DNM_FEED && window.DNM_FEED.showToast) {
+            window.DNM_FEED.showToast(`${isPhoto ? 'Photo' : 'Reel'} published live to feed!`);
+          }
+        }, 400);
 
       } catch(err) {
         console.error('Upload to Drive error:', err);
-        statusText.textContent = 'Upload failed. Please check connection and retry.';
+        stepText.textContent = 'Upload failed. Please check connection and retry.';
         publishBtn.classList.remove('disabled');
         publishBtn.disabled = false;
-        publishBtn.innerHTML = '<span>Retry Upload</span>';
+        headerShare.classList.remove('disabled');
+        headerShare.disabled = false;
       }
-    });
+    }
+
+    publishBtn.addEventListener('click', startPublishing);
+    headerShare.addEventListener('click', startPublishing);
   }
 
   window.DNM_UPLOAD = {

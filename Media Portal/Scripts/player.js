@@ -342,6 +342,8 @@
       }
       window.removeEventListener('popstate', onPopState);
       if (modalSc.parentNode) modalSc.remove();
+      // Remove any lingering bottom sheets
+      document.querySelectorAll('.dnm-bottom-sheet-scrim').forEach(s => s.remove());
       activePlayerModal = null;
       document.body.classList.remove('has-modal');
 
@@ -771,8 +773,12 @@
         const diff = touchStartY - touchEndY;
         if (diff > 55) {
           nextReel(); // Swiped UP to next reel
-        } else if (diff < -55) {
-          prevReel(); // Swiped DOWN to previous reel
+        } else if (diff < -65) {
+          if (currentIndex === 0) {
+            closeModal(true); // Swiped DOWN on top reel dismisses video player
+          } else {
+            prevReel();
+          }
         }
       }, { passive: true });
 
@@ -796,26 +802,26 @@
               <button type="button" class="dnm-bottom-sheet-close" id="dnm-quality-close">&times;</button>
             </div>
             <div class="dnm-bottom-sheet-content">
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <button type="button" class="dnm-btn dnm-btn-secondary dnm-btn-lg dnm-quality-option" data-quality="auto" style="justify-content:space-between;">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <button type="button" class="dnm-btn dnm-btn-secondary dnm-quality-option" data-quality="auto" style="justify-content:space-between;">
                   <span>Auto (Recommended)</span>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
                 </button>
-                <button type="button" class="dnm-btn dnm-btn-secondary dnm-btn-lg dnm-quality-option" data-quality="1080" style="justify-content:space-between;">
+                <button type="button" class="dnm-btn dnm-btn-secondary dnm-quality-option" data-quality="1080" style="justify-content:space-between;">
                   <span>1080p (HD)</span>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
                 </button>
-                <button type="button" class="dnm-btn dnm-btn-secondary dnm-btn-lg dnm-quality-option" data-quality="720" style="justify-content:space-between;">
+                <button type="button" class="dnm-btn dnm-btn-secondary dnm-quality-option" data-quality="720" style="justify-content:space-between;">
                   <span>720p</span>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
                 </button>
-                <button type="button" class="dnm-btn dnm-btn-secondary dnm-btn-lg dnm-quality-option" data-quality="480" style="justify-content:space-between;">
+                <button type="button" class="dnm-btn dnm-btn-secondary dnm-quality-option" data-quality="480" style="justify-content:space-between;">
                   <span>480p</span>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
                 </button>
-                <button type="button" class="dnm-btn dnm-btn-secondary dnm-btn-lg dnm-quality-option" data-quality="360" style="justify-content:space-between;">
+                <button type="button" class="dnm-btn dnm-btn-secondary dnm-quality-option" data-quality="360" style="justify-content:space-between;">
                   <span>360p (Data Saver)</span>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
                 </button>
               </div>
             </div>

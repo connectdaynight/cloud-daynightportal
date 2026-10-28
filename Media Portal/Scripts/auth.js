@@ -7,13 +7,59 @@
   const authStorage = window.DNM_STORAGE_AUTH || (window.DNM_STORAGE_AUTH = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'auth' }));
   let currentUser = null;
 
-  // Load persisted real user session
-  (async () => {
+  // Load persisted real user session from Cloud Firestore & Firebase Auth
+  async function restoreUserSession() {
     try {
       const raw = await authStorage.getItem('user_session');
-      if (raw) currentUser = raw;
+      if (raw && !currentUser) {
+        currentUser = raw;
+        window.dispatchEvent(new CustomEvent('dnm-auth-changed', { detail: { user: currentUser } }));
+      }
     } catch (_) {}
-  })();
+
+    // Attach persistent Firebase Auth State listener
+    if (window.DNM_FIREBASE && window.DNM_FIREBASE.auth) {
+      window.DNM_FIREBASE.auth.onAuthStateChanged(async (fbUser) => {
+        if (fbUser) {
+          try {
+            let profile = null;
+            if (window.DNM_FIREBASE.db) {
+              const doc = await window.DNM_FIREBASE.db.collection('users').doc(fbUser.uid).get();
+              if (doc.exists) {
+                profile = doc.data();
+              }
+            }
+            if (!profile) {
+              profile = {
+                uid: fbUser.uid,
+                email: fbUser.email || '',
+                displayName: fbUser.displayName || 'Creator',
+                username: generateHandle(fbUser.displayName || fbUser.email || 'user'),
+                photoURL: fbUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(fbUser.displayName || 'U')}&background=0095F6&color=fff`,
+                bio: '',
+                followersCount: 0,
+                followingCount: 0,
+                provider: fbUser.providerData?.[0]?.providerId || 'google.com'
+              };
+              if (window.DNM_FIREBASE.db) {
+                await window.DNM_FIREBASE.db.collection('users').doc(fbUser.uid).set(profile, { merge: true });
+              }
+            }
+            currentUser = profile;
+            try { await authStorage.setItem('user_session', profile); } catch(_) {}
+            window.dispatchEvent(new CustomEvent('dnm-auth-changed', { detail: { user: profile } }));
+          } catch(err) {
+            console.warn('Firebase user restore note:', err);
+          }
+        }
+      });
+    } else {
+      setTimeout(restoreUserSession, 300);
+    }
+  }
+
+  // Initial trigger
+  restoreUserSession();
 
   function getCurrentUser() {
     return currentUser;
@@ -23,6 +69,12 @@
     currentUser = user;
     if (user) {
       try { await authStorage.setItem('user_session', user); } catch(_) {}
+      // Sync immediately to Cloud Firestore
+      try {
+        if (window.DNM_FIREBASE && window.DNM_FIREBASE.db && user.uid) {
+          await window.DNM_FIREBASE.db.collection('users').doc(user.uid).set(user, { merge: true });
+        }
+      } catch(_) {}
     } else {
       try { await authStorage.removeItem('user_session'); } catch(_) {}
     }

@@ -39,7 +39,8 @@
   --ig-radius-lg: 16px;
   --ig-radius-xl: 20px;
   --ig-radius-2xl: 28px;
-  --ig-radius-full: 50%;
+  --ig-radius-full: 9999px;
+  --ig-radius-circle: 50%;
 
   /* Shadow System */
   --ig-shadow-1: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
@@ -653,6 +654,31 @@ html, body {
   flex: 1;
   overflow-y: auto;
   padding: var(--ig-space-4);
+}
+
+.dnm-quality-option {
+  border-radius: 14px !important;
+  font-weight: 600;
+  padding: 13px 18px !important;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+.dnm-quality-option.dnm-btn-primary {
+  background: var(--ig-accent) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(0, 149, 246, 0.3) !important;
+}
+.dnm-quality-option.dnm-btn-secondary {
+  background: var(--ig-surface) !important;
+  color: var(--ig-text-primary) !important;
+  border: 1px solid var(--ig-border) !important;
+}
+.dnm-quality-check {
+  display: none;
+}
+.dnm-quality-option.dnm-btn-primary .dnm-quality-check {
+  display: block;
 }
 
 /* Button Base Styles - Instagram Pill Buttons */

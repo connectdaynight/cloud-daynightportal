@@ -1122,8 +1122,8 @@
     .poster.is-square { aspect-ratio: 1 / 1 !important; }
     .poster.is-story { aspect-ratio: 9 / 16 !important; }
 
-    /* Floating Toast Notifications (Zero legacy alerts) */
-
+    /* Tablet & Desktop Adjustments (768px and up) */
+    @media (min-width: 768px) {
       .head small {
         font-size: 13.5px;
       }
@@ -1213,19 +1213,19 @@
         padding: 14px 16px;
       }
 
-      /* 7. Reels / Media Grid (Desktop Multi-Column) */
+      /* 7. Reels / Media Grid (Respects exact user density selection) */
       .reels {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 20px;
       }
       .reels.grid-1col {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-template-columns: 1fr !important;
       }
       .reels.grid-2col {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
       }
       .reels.grid-3col {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
       }
       .reels.grid-3col .acts {
         display: grid !important;
@@ -1292,8 +1292,7 @@
         padding: 6px 12px;
         font-size: 12px;
       }
-
-      /* 9. Static Fixed Bottom Navigation (No floating dock, no expanding/shrinking) */
+    }
 
     /* Wide Desktop Screens (1024px and up) */
     @media (min-width: 1024px) {
@@ -1315,13 +1314,12 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 22px;
       }
-      /* 4 Columns for Reels Gallery */
-      .reels {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 24px;
+      /* Reels Gallery Density */
+      .reels.grid-2col {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
       }
       .reels.grid-3col {
-        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
       }
     }
 

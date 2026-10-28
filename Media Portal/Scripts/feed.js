@@ -671,9 +671,14 @@
       feedObserver = null;
     }
 
+    // Safety check: remove has-modal if no active modal exists in DOM
+    if (!document.querySelector('#dnm-video-player-modal') && !document.querySelector('.dnm-bottom-sheet-scrim.active')) {
+      document.body.classList.remove('has-modal');
+    }
+
     feedObserver = new IntersectionObserver((entries) => {
-      // If modal or reels player is active, pause background feed videos
-      if (document.body.classList.contains('has-modal') || document.querySelector('#dnm-video-player-modal')) {
+      // If full-screen modal player is active, pause background feed videos
+      if (document.querySelector('#dnm-video-player-modal')) {
         document.querySelectorAll('.dnm-feed-vid').forEach(v => {
           try {
             v.pause();
@@ -689,7 +694,11 @@
         const poster = wrap ? wrap.querySelector('.dnm-feed-poster') : null;
         if (!vid) return;
 
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.45) {
+        // Ensure iOS/Android mobile compatibility properties
+        vid.setAttribute('playsinline', '');
+        vid.setAttribute('webkit-playsinline', '');
+
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
           // Pause any other playing feed video so only ONE plays at a time
           document.querySelectorAll('.dnm-feed-vid').forEach(other => {
             if (other !== vid) {
@@ -700,12 +709,15 @@
             }
           });
 
+          vid.defaultMuted = true;
           vid.muted = isGlobalMuted;
-          const p = vid.play();
-          if (p !== undefined) {
-            p.then(() => {
+
+          const playPromise = vid.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
               if (poster) poster.style.opacity = '0';
             }).catch(() => {
+              // Browser policy fallback: play strictly muted
               vid.muted = true;
               vid.play().then(() => {
                 if (poster) poster.style.opacity = '0';
@@ -719,7 +731,7 @@
           } catch(_) {}
         }
       });
-    }, { threshold: [0, 0.45, 0.8] });
+    }, { threshold: [0, 0.25, 0.6] });
 
     document.querySelectorAll('.dnm-post-card').forEach(card => {
       feedObserver.observe(card);
