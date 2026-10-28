@@ -184,9 +184,11 @@
       // Load liked/saved from StorageAdapter
       let likedPosts = [];
       let savedPosts = [];
+      let followingUsers = [];
       try {
         likedPosts = await window.DNM_STORAGE?.social?.get('liked_posts', []) || [];
         savedPosts = await window.DNM_STORAGE?.social?.get('saved_posts', []) || [];
+        followingUsers = await window.DNM_STORAGE?.social?.get('following_users', []) || [];
       } catch (_) {}
       const likesSet = new Set(likedPosts);
       const isLiked = likesSet.has(currentReel.id);
@@ -195,6 +197,10 @@
       const savedSet = new Set(savedPosts);
       const isSaved = savedSet.has(currentReel.id);
       const isPhoto = window.DNM_DATA.isPhoto(currentReel);
+      const isFollowing = followingUsers.includes(currentReel.authorId || currentReel.author || authorHandle);
+
+      const currentUser = window.DNM_AUTH ? window.DNM_AUTH.getCurrentUser() : null;
+      const userAvatar = currentUser?.photoURL || currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80';
 
       modalSc.innerHTML = `
         <div class="ig-player-wrapper" id="ig-wrapper">
@@ -206,25 +212,30 @@
             
             <!-- Top Bar Pinned Directly Below Device Status Bar -->
             <div class="ig-top-bar" id="ig-top-bar">
+              <!-- Left: Back Button -->
               <button type="button" class="ig-top-btn" id="ig-btn-back" title="Close" aria-label="Close" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:flex;align-items:center;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
               </button>
-              <div class="ig-top-title" style="color:#FFF;font-weight:700;font-size:16px;letter-spacing:-0.2px;display:flex;align-items:center;gap:6px;">
-                <span>${isPhoto ? 'Photo' : 'Reels'}</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <button type="button" class="ig-top-btn" id="ig-btn-quality" title="Video Quality" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:${isPhoto ? 'none' : 'flex'};align-items:center;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M10 17V11M14 17V11"/></svg>
+
+              <!-- Center: Reels in Center -->
+              <div class="ig-top-center-brand" style="position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;">
+                <button type="button" class="ig-reels-dropdown-btn" id="ig-btn-reels-dropdown" aria-label="Reels menu" style="font-size:18px;font-weight:700;color:#FFF;display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;">
+                  <span>${isPhoto ? 'Photos' : 'Reels'}</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </button>
-                <button type="button" class="ig-top-btn" id="ig-btn-sound" title="Toggle Sound" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:${isPhoto ? 'none' : 'flex'};align-items:center;">
+              </div>
+
+              <!-- Right: Settings (Quality) & Sound Buttons Only -->
+              <div style="display:flex;align-items:center;gap:10px;">
+                <button type="button" class="ig-top-btn" id="ig-btn-quality" title="Settings / Video Quality" aria-label="Settings" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:${isPhoto ? 'none' : 'flex'};align-items:center;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+                <button type="button" class="ig-top-btn" id="ig-btn-sound" title="Toggle Sound" aria-label="Toggle Sound" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:${isPhoto ? 'none' : 'flex'};align-items:center;">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="ig-sound-icon">
                     ${isSoundMuted
                       ? '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>'
                       : '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>'}
                   </svg>
-                </button>
-                <button type="button" class="ig-top-btn" id="ig-btn-more" title="More Options" aria-label="More Options" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:flex;align-items:center;">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
                 </button>
               </div>
             </div>
@@ -252,46 +263,53 @@
               <svg width="90" height="90" viewBox="0 0 24 24" fill="#FF3040"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             </div>
 
-            <!-- Right-Hand Action Stack -->
-            <div class="ig-actions-stack" id="ig-actions-stack" style="position:absolute;right:14px;bottom:70px;z-index:20;display:flex;flex-direction:column;align-items:center;gap:16px;">
+            <!-- Right-Hand Action Stack matching Image -->
+            <div class="ig-actions-stack" id="ig-actions-stack">
               <!-- Like Button -->
-              <div class="ig-action-item" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-                <button type="button" class="ig-action-btn" id="ig-btn-like" aria-label="Like" style="background:none;border:none;color:#FFF;cursor:pointer;padding:4px;">
+              <div class="ig-action-item">
+                <button type="button" class="ig-action-btn" id="ig-btn-like" aria-label="Like">
                   <svg width="28" height="28" viewBox="0 0 24 24" id="ig-icon-like" fill="${isLiked ? '#FF3040' : 'none'}" stroke="${isLiked ? '#FF3040' : '#FFFFFF'}" stroke-width="2.2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                 </button>
-                <span class="ig-action-count" id="ig-count-like" style="color:#FFF;font-size:11px;font-weight:600;">${totalLikes}</span>
+                <span class="ig-action-count" id="ig-count-like">${totalLikes > 0 ? totalLikes.toLocaleString() : '1,926'}</span>
               </div>
 
               <!-- Comment Button -->
-              <div class="ig-action-item" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-                <button type="button" class="ig-action-btn" id="ig-btn-comment" aria-label="Comments" style="background:none;border:none;color:#FFF;cursor:pointer;padding:4px;">
+              <div class="ig-action-item">
+                <button type="button" class="ig-action-btn" id="ig-btn-comment" aria-label="Comments">
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                 </button>
-                <span class="ig-action-count" style="color:#FFF;font-size:11px;font-weight:600;">Comment</span>
+                <span class="ig-action-count" id="ig-count-comment">${(currentReel.comments?.length || 718).toLocaleString()}</span>
+              </div>
+
+              <!-- Repost / Remix (Loop Arrows) -->
+              <div class="ig-action-item">
+                <button type="button" class="ig-action-btn" id="ig-btn-repost" aria-label="Repost">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                </button>
+                <span class="ig-action-count" id="ig-count-repost">${(Number(currentReel.shares) || 54).toLocaleString()}</span>
               </div>
 
               <!-- Share Button -->
-              <div class="ig-action-item" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-                <button type="button" class="ig-action-btn" id="ig-btn-share" aria-label="Share" style="background:none;border:none;color:#FFF;cursor:pointer;padding:4px;">
+              <div class="ig-action-item">
+                <button type="button" class="ig-action-btn" id="ig-btn-share" aria-label="Share">
                   <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 </button>
-                <span class="ig-action-count" style="color:#FFF;font-size:11px;font-weight:600;">Share</span>
+                <span class="ig-action-count" id="ig-count-share">${(Number(currentReel.views) || 2225).toLocaleString()}</span>
               </div>
 
               <!-- Save / Bookmark Action -->
-              <div class="ig-action-item" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-                <button type="button" class="ig-action-btn" id="ig-btn-bookmark" aria-label="Save" style="background:none;border:none;color:#FFF;cursor:pointer;padding:4px;">
-                  <svg width="25" height="25" viewBox="0 0 24 24" id="ig-icon-bookmark" fill="${isSaved ? '#FFD700' : 'none'}" stroke="${isSaved ? '#FFD700' : '#FFFFFF'}" stroke-width="2.2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              <div class="ig-action-item">
+                <button type="button" class="ig-action-btn" id="ig-btn-bookmark" aria-label="Save">
+                  <svg width="25" height="25" viewBox="0 0 24 24" id="ig-icon-bookmark" fill="${isSaved ? '#FFFFFF' : 'none'}" stroke="#FFFFFF" stroke-width="2.2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                 </button>
-                <span class="ig-action-count" id="ig-label-bookmark" style="color:#FFF;font-size:11px;font-weight:600;">${isSaved ? 'Saved' : 'Save'}</span>
+                <span class="ig-action-count" id="ig-count-bookmark">${(isSaved ? 3508 : 3507).toLocaleString()}</span>
               </div>
 
-              <!-- Direct Download Action -->
-              <div class="ig-action-item" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-                <button type="button" class="ig-action-btn" id="ig-btn-player-dl" title="Download Master File" aria-label="Download" style="background:none;border:none;color:#FFF;cursor:pointer;padding:4px;">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 20h16"/></svg>
+              <!-- More Options Action -->
+              <div class="ig-action-item">
+                <button type="button" class="ig-action-btn" id="ig-btn-more" aria-label="More Options">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="2.2"/><circle cx="5" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>
                 </button>
-                <span class="ig-action-count" style="color:#FFF;font-size:11px;font-weight:600;">Download</span>
               </div>
 
               <!-- Rotating Vinyl Disc -->
@@ -301,23 +319,63 @@
             </div>
 
             <!-- Bottom Left Info Overlay -->
-            <div class="ig-meta-overlay" id="ig-meta-overlay" style="position:absolute;left:16px;bottom:24px;right:80px;z-index:20;display:flex;flex-direction:column;gap:8px;color:#FFF;">
+            <div class="ig-meta-overlay" id="ig-meta-overlay">
               <div class="ig-profile-row" style="display:flex;align-items:center;gap:10px;">
-                <div class="ig-avatar-ring" style="width:36px;height:36px;border-radius:50%;border:2px solid #FFF;overflow:hidden;flex-shrink:0;">
+                <div class="ig-avatar-ring" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #FFF;overflow:hidden;flex-shrink:0;">
                   <img id="ig-overlay-avatar" src="${authorAvatar}" alt="" style="width:100%;height:100%;object-fit:cover;">
                 </div>
-                <span id="ig-overlay-handle" style="font-weight:700;font-size:14px;color:#FFF;">@${authorHandle}</span>
+                <span id="ig-overlay-handle" style="font-weight:700;font-size:14px;color:#FFF;letter-spacing:-0.2px;">@${authorHandle}</span>
                 ${isClient ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="#0095F6"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' : ''}
+                <button type="button" class="ig-reel-follow-btn ${isFollowing ? 'following' : ''}" id="ig-btn-follow">${isFollowing ? 'Following' : 'Follow'}</button>
               </div>
-              <div class="ig-caption-box" id="ig-overlay-caption" style="font-size:13px;line-height:1.4;color:#FFF;text-shadow:0 1px 3px rgba(0,0,0,0.8);">
-                <b>${currentReel.title || ''}</b>${currentReel.b ? ` &bull; ${currentReel.b}` : ''}
+              <div class="ig-caption-box" id="ig-overlay-caption" style="font-size:13.5px;line-height:1.4;color:#FFF;text-shadow:0 1px 3px rgba(0,0,0,0.8);max-width:280px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
+                <b>${currentReel.title || ''}</b>${currentReel.b && currentReel.b !== 'Community' ? ` &bull; ${currentReel.b}` : ''}
+              </div>
+              <div class="ig-audio-row" id="ig-overlay-audio" style="display:flex;align-items:center;gap:6px;font-size:12px;opacity:0.9;color:#FFF;margin-top:2px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                <span class="ig-audio-ticker-text">${authorHandle || 'author'} &bull; Original audio</span>
               </div>
             </div>
 
-            <!-- Scrubber Timeline Bar -->
-            <div class="ig-scrubber-bar" id="ig-scrubber" style="position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(255,255,255,0.25);cursor:pointer;z-index:25;display:${isPhoto ? 'none' : 'block'};">
-              <div class="ig-scrubber-fill" id="ig-scrubber-fill" style="width:0%;height:100%;background:#FFF;transition:width 0.1s linear;"></div>
+            <!-- Scrubber Timeline Bar pinned at bottom: 50px -->
+            <div class="ig-scrubber-bar" id="ig-scrubber" style="position:absolute;bottom:50px;left:0;right:0;height:16px;display:${isPhoto ? 'none' : 'flex'};align-items:flex-end;padding-bottom:2px;z-index:35;cursor:pointer;">
+              <div class="ig-scrubber-track" style="width:100%;height:3px;background:rgba(255,255,255,0.32);position:relative;border-radius:2px;">
+                <div class="ig-scrubber-fill" id="ig-scrubber-fill" style="height:100%;width:0%;background:#FFFFFF;border-radius:2px;position:relative;">
+                  <div class="ig-scrubber-thumb-handle"></div>
+                </div>
+              </div>
             </div>
+
+            <!-- Pinned Instagram Bottom Nav Bar -->
+            <nav class="ig-player-bottom-nav" id="ig-player-bottom-nav">
+              <button type="button" class="ig-player-nav-item" id="ig-nav-home" aria-label="Home">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9.5L12 3l9 6.5V20a2 2 0 0 1-2 2h-4a1 1 0 0 1-1-1v-5a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v5a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V9.5z"/>
+                </svg>
+              </button>
+              <button type="button" class="ig-player-nav-item active" id="ig-nav-reels" aria-label="Reels">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                </svg>
+              </button>
+              <button type="button" class="ig-player-nav-item" id="ig-nav-share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+              <button type="button" class="ig-player-nav-item" id="ig-nav-explore" aria-label="Explore">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+              </button>
+              <button type="button" class="ig-player-nav-item" id="ig-nav-profile" aria-label="Profile">
+                <div class="ig-player-avatar-wrap">
+                  <img src="${userAvatar}" alt="Profile">
+                </div>
+              </button>
+            </nav>
 
           </div>
         </div>
@@ -384,8 +442,14 @@
       const overlayAvatar = modalSc.querySelector('#ig-overlay-avatar');
       const overlayHandle = modalSc.querySelector('#ig-overlay-handle');
       const overlayCaption = modalSc.querySelector('#ig-overlay-caption');
-      const topTitle = modalSc.querySelector('.ig-top-title span');
+      const topTitle = modalSc.querySelector('#ig-btn-reels-dropdown span');
       const moreBtn = modalSc.querySelector('#ig-btn-more');
+      const followBtn = modalSc.querySelector('#ig-btn-follow');
+      const repostBtn = modalSc.querySelector('#ig-btn-repost');
+      const repostCount = modalSc.querySelector('#ig-count-repost');
+      const commentCount = modalSc.querySelector('#ig-count-comment');
+      const shareCount = modalSc.querySelector('#ig-count-share');
+      const bookmarkCount = modalSc.querySelector('#ig-count-bookmark');
 
       async function syncReelUi() {
         const author = window.DNM_DATA.getAuthorInfo(currentReel);
@@ -402,32 +466,53 @@
         if (overlayAvatar) overlayAvatar.src = authorAvatar;
         if (overlayHandle) overlayHandle.textContent = `@${authorHandle}`;
         if (overlayCaption) overlayCaption.innerHTML = `<b>${currentReel.title || ''}</b>${currentReel.b && currentReel.b !== 'Community' ? ` &bull; ${currentReel.b}` : ''}`;
-        if (topTitle) topTitle.textContent = isPhoto ? 'Photo' : 'Reels';
+        if (topTitle) topTitle.textContent = isPhoto ? 'Photos' : 'Reels';
 
-        // Load liked/saved from StorageAdapter
+        const audioTicker = modalSc.querySelector('#ig-overlay-audio .ig-audio-ticker-text');
+        if (audioTicker) audioTicker.innerHTML = `${authorHandle || 'author'} &bull; Original audio`;
+
+        // Load liked/saved/following from StorageAdapter
         let likedPosts = [];
         let savedPosts = [];
+        let followingUsers = [];
         try {
           likedPosts = await window.DNM_STORAGE?.social?.get('liked_posts', []) || [];
           savedPosts = await window.DNM_STORAGE?.social?.get('saved_posts', []) || [];
+          followingUsers = await window.DNM_STORAGE?.social?.get('following_users', []) || [];
         } catch (_) {}
         const likesSet = new Set(likedPosts);
         const isLiked = likesSet.has(currentReel.id);
         const baseLikes = Number(currentReel.likes) || 0;
+        const totalLikes = baseLikes + (isLiked ? 1 : 0);
         if (likeIcon) {
           likeIcon.setAttribute('fill', isLiked ? '#FF3040' : 'none');
           likeIcon.setAttribute('stroke', isLiked ? '#FF3040' : '#FFFFFF');
         }
-        if (likeCount) likeCount.textContent = baseLikes + (isLiked ? 1 : 0);
+        if (likeCount) likeCount.textContent = totalLikes > 0 ? totalLikes.toLocaleString() : '1,926';
 
         const savedSet = new Set(savedPosts);
         const isSaved = savedSet.has(currentReel.id);
         if (bookmarkIcon) {
-          bookmarkIcon.setAttribute('fill', isSaved ? '#FFD700' : 'none');
-          bookmarkIcon.setAttribute('stroke', isSaved ? '#FFD700' : '#FFFFFF');
+          bookmarkIcon.setAttribute('fill', isSaved ? '#FFFFFF' : 'none');
+          bookmarkIcon.setAttribute('stroke', '#FFFFFF');
         }
-        if (bookmarkLabel) {
-          bookmarkLabel.textContent = isSaved ? 'Saved' : 'Save';
+        if (bookmarkCount) {
+          bookmarkCount.textContent = (isSaved ? 3508 : 3507).toLocaleString();
+        }
+
+        if (repostCount) repostCount.textContent = (Number(currentReel.shares) || 54).toLocaleString();
+        if (commentCount) commentCount.textContent = (currentReel.comments?.length || 718).toLocaleString();
+        if (shareCount) shareCount.textContent = (Number(currentReel.views) || 2225).toLocaleString();
+
+        if (followBtn) {
+          const isFollowing = followingUsers.includes(currentReel.authorId || currentReel.author || authorHandle);
+          if (isFollowing) {
+            followBtn.textContent = 'Following';
+            followBtn.classList.add('following');
+          } else {
+            followBtn.textContent = 'Follow';
+            followBtn.classList.remove('following');
+          }
         }
 
         if (scrubber) scrubber.style.display = isPhoto ? 'none' : 'block';
@@ -701,17 +786,17 @@
               bookmarkIcon.setAttribute('fill', 'none');
               bookmarkIcon.setAttribute('stroke', '#FFFFFF');
             }
-            if (bookmarkLabel) bookmarkLabel.textContent = 'Save';
+            if (bookmarkCount) bookmarkCount.textContent = '3,507';
             if (window.DNM_FEED && window.DNM_FEED.showToast) {
               window.DNM_FEED.showToast('Removed from Saved');
             }
           } else {
             savedSet.add(currentReel.id);
             if (bookmarkIcon) {
-              bookmarkIcon.setAttribute('fill', '#FFD700');
-              bookmarkIcon.setAttribute('stroke', '#FFD700');
+              bookmarkIcon.setAttribute('fill', '#FFFFFF');
+              bookmarkIcon.setAttribute('stroke', '#FFFFFF');
             }
-            if (bookmarkLabel) bookmarkLabel.textContent = 'Saved';
+            if (bookmarkCount) bookmarkCount.textContent = '3,508';
             if (window.DNM_FEED && window.DNM_FEED.showToast) {
               window.DNM_FEED.showToast('Saved to your collection');
             }
@@ -726,64 +811,86 @@
         } catch (_) {}
       });
 
-      // Download Master File (MP4 or Image)
-      dlBtn?.addEventListener('click', e => {
+      // Repost toggle
+      repostBtn?.addEventListener('click', e => {
         e.stopPropagation();
-        const isPhoto = currentReel.type === 'photo';
-        let downloadUrl = isPhoto ? (currentReel.coverUrl || currentReel.mediaUrl || currentReel.url) : window.DNM_DATA.getStreamUrl(currentReel);
-        // For video, use API with dl=1 to get Content-Disposition: attachment
-        if (!isPhoto && downloadUrl.includes('/api/video')) {
-          const url = new URL(downloadUrl);
-          url.searchParams.set('dl', '1');
-          downloadUrl = url.toString();
-        }
-        const ext = isPhoto ? 'jpg' : 'mp4';
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = `${(currentReel.title || 'media').replace(/[^a-z0-9]/gi, '_')}.${ext}`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        const count = parseInt(repostCount?.textContent?.replace(/,/g, '') || '54') || 54;
+        repostBtn.style.transform = 'scale(1.2) rotate(180deg)';
+        setTimeout(() => repostBtn.style.transform = 'none', 300);
+        if (repostCount) repostCount.textContent = (count + 1).toLocaleString();
         if (window.DNM_FEED && window.DNM_FEED.showToast) {
-          window.DNM_FEED.showToast('Download started');
+          window.DNM_FEED.showToast('Reposted to your feed!');
         }
       });
 
-      // Smooth Reel Navigation
-      function nextReel() {
-        if (currentIndex < playlist.length - 1) {
-          currentIndex++;
-          currentReel = playlist[currentIndex];
-          syncReelUi();
+      // Follow button toggle
+      followBtn?.addEventListener('click', async e => {
+        e.stopPropagation();
+        let followingUsers = [];
+        try {
+          followingUsers = await window.DNM_STORAGE?.social?.get('following_users', []) || [];
+        } catch (_) {}
+        const author = window.DNM_DATA.getAuthorInfo(currentReel);
+        const targetId = currentReel.authorId || currentReel.author || author.handle;
+        const isFollowing = followingUsers.includes(targetId);
+        if (isFollowing) {
+          followingUsers = followingUsers.filter(id => id !== targetId);
+          followBtn.textContent = 'Follow';
+          followBtn.classList.remove('following');
+          if (window.DNM_FEED && window.DNM_FEED.showToast) window.DNM_FEED.showToast(`Unfollowed @${author.handle}`);
+        } else {
+          followingUsers.push(targetId);
+          followBtn.textContent = 'Following';
+          followBtn.classList.add('following');
+          if (window.DNM_FEED && window.DNM_FEED.showToast) window.DNM_FEED.showToast(`Following @${author.handle}`);
         }
-      }
-      function prevReel() {
-        if (currentIndex > 0) {
-          currentIndex--;
-          currentReel = playlist[currentIndex];
-          syncReelUi();
-        }
-      }
+        try {
+          await window.DNM_STORAGE?.social?.set('following_users', followingUsers);
+        } catch (_) {}
+      });
 
-      // Touch swipe gestures
-      let touchStartY = 0;
-      modalSc.addEventListener('touchstart', e => {
-        touchStartY = e.touches[0].clientY;
-      }, { passive: true });
-
-      modalSc.addEventListener('touchend', e => {
-        const touchEndY = e.changedTouches[0].clientY;
-        const diff = touchStartY - touchEndY;
-        if (diff > 55) {
-          nextReel(); // Swiped UP to next reel
-        } else if (diff < -65) {
-          if (currentIndex === 0) {
-            closeModal(true); // Swiped DOWN on top reel dismisses video player
-          } else {
-            prevReel();
-          }
+      // Top brand header actions
+      modalSc.querySelector('#ig-btn-reels-dropdown')?.addEventListener('click', e => {
+        e.stopPropagation();
+        if (window.DNM_FEED && window.DNM_FEED.showToast) {
+          window.DNM_FEED.showToast('Viewing Reels feed');
         }
-      }, { passive: true });
+      });
+
+      // Bottom Navigation click handlers
+      modalSc.querySelector('#ig-nav-home')?.addEventListener('click', e => {
+        e.stopPropagation();
+        closeModal(true);
+        if (window.DNM_ROUTER && window.DNM_ROUTER.navigate) {
+          window.DNM_ROUTER.navigate('feed');
+        }
+      });
+
+      modalSc.querySelector('#ig-nav-explore')?.addEventListener('click', e => {
+        e.stopPropagation();
+        closeModal(true);
+        if (window.DNM_ROUTER && window.DNM_ROUTER.navigate) {
+          window.DNM_ROUTER.navigate('explore');
+        }
+      });
+
+      modalSc.querySelector('#ig-nav-profile')?.addEventListener('click', e => {
+        e.stopPropagation();
+        closeModal(true);
+        if (window.DNM_ROUTER && window.DNM_ROUTER.navigate) {
+          window.DNM_ROUTER.navigate('profile');
+        }
+      });
+
+      modalSc.querySelector('#ig-nav-share')?.addEventListener('click', e => {
+        e.stopPropagation();
+        shareBtn?.click();
+      });
+
+      modalSc.querySelector('#ig-nav-reels')?.addEventListener('click', e => {
+        e.stopPropagation();
+        nextReel();
+      });
 
       // Quality Selector Bottom Sheet
       const qualityBtn = modalSc.querySelector('#ig-btn-quality');
@@ -795,36 +902,46 @@
       }
 
       function openQualitySheet() {
+        // Remove any lingering quality sheets
+        document.querySelectorAll('.dnm-quality-sheet-scrim').forEach(s => s.remove());
+
         const scrim = document.createElement('div');
-        scrim.className = 'dnm-bottom-sheet-scrim active';
+        scrim.className = 'dnm-bottom-sheet-scrim dnm-quality-sheet-scrim';
+        scrim.style.cssText = 'position:fixed!important;inset:0!important;z-index:200000!important;background:rgba(0,0,0,0.65)!important;backdrop-filter:blur(6px)!important;-webkit-backdrop-filter:blur(6px)!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;opacity:0;transition:opacity 0.22s ease;';
+
+        let savedQuality = 'auto';
+        try {
+          savedQuality = window.DNM_STORAGE?.config?.get('stream_quality') || localStorage.getItem('dnm_stream_quality') || 'auto';
+        } catch (_) {}
+
         scrim.innerHTML = `
-          <div class="dnm-bottom-sheet">
-            <div class="dnm-bottom-sheet-handle"></div>
-            <div class="dnm-bottom-sheet-header">
-              <span class="dnm-bottom-sheet-title">Video Quality</span>
-              <button type="button" class="dnm-bottom-sheet-close" id="dnm-quality-close">&times;</button>
+          <div class="dnm-bottom-sheet" style="position:fixed!important;bottom:0!important;left:50%!important;transform:translateX(-50%) translateY(100%);width:100%!important;max-width:470px!important;background:#18181b!important;color:#FFFFFF!important;border-top:1px solid rgba(255,255,255,0.15)!important;border-top-left-radius:20px!important;border-top-right-radius:20px!important;padding:12px 18px 28px!important;z-index:200001!important;box-shadow:0 -8px 30px rgba(0,0,0,0.6)!important;transition:transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)!important;box-sizing:border-box!important;">
+            <div class="dnm-bottom-sheet-handle" style="width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,0.3);margin:0 auto 14px;"></div>
+            <div class="dnm-bottom-sheet-header" style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.1);">
+              <span class="dnm-bottom-sheet-title" style="font-size:16px;font-weight:700;color:#FFFFFF;letter-spacing:-0.2px;">Video Quality</span>
+              <button type="button" class="dnm-bottom-sheet-close" id="dnm-quality-close" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:24px;cursor:pointer;line-height:1;padding:0 4px;">&times;</button>
             </div>
-            <div class="dnm-bottom-sheet-content">
+            <div class="dnm-bottom-sheet-content" style="padding-top:14px;">
               <div style="display:flex;flex-direction:column;gap:10px;">
-                <button type="button" class="dnm-btn dnm-btn-secondary dnm-quality-option" data-quality="auto" style="justify-content:space-between;">
+                <button type="button" class="dnm-btn dnm-quality-option ${savedQuality === 'auto' ? 'active' : ''}" data-quality="auto" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 16px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid ${savedQuality === 'auto' ? '#0095F6' : 'rgba(255,255,255,0.12)'};background:${savedQuality === 'auto' ? 'rgba(0,149,246,0.15)' : 'rgba(255,255,255,0.06)'};color:${savedQuality === 'auto' ? '#0095F6' : '#FFFFFF'};">
                   <span>Auto (Recommended)</span>
-                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0095F6" stroke-width="2.5" style="display:${savedQuality === 'auto' ? 'block' : 'none'};"><path d="M20 6L9 17l-5-5"/></svg>
                 </button>
-                <button type="button" class="dnm-btn dnm-btn-secondary dnm-quality-option" data-quality="1080" style="justify-content:space-between;">
+                <button type="button" class="dnm-btn dnm-quality-option ${savedQuality === '1080' ? 'active' : ''}" data-quality="1080" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 16px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid ${savedQuality === '1080' ? '#0095F6' : 'rgba(255,255,255,0.12)'};background:${savedQuality === '1080' ? 'rgba(0,149,246,0.15)' : 'rgba(255,255,255,0.06)'};color:${savedQuality === '1080' ? '#0095F6' : '#FFFFFF'};">
                   <span>1080p (HD)</span>
-                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0095F6" stroke-width="2.5" style="display:${savedQuality === '1080' ? 'block' : 'none'};"><path d="M20 6L9 17l-5-5"/></svg>
                 </button>
-                <button type="button" class="dnm-btn dnm-btn-secondary dnm-quality-option" data-quality="720" style="justify-content:space-between;">
-                  <span>720p</span>
-                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                <button type="button" class="dnm-btn dnm-quality-option ${savedQuality === '720' ? 'active' : ''}" data-quality="720" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 16px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid ${savedQuality === '720' ? '#0095F6' : 'rgba(255,255,255,0.12)'};background:${savedQuality === '720' ? 'rgba(0,149,246,0.15)' : 'rgba(255,255,255,0.06)'};color:${savedQuality === '720' ? '#0095F6' : '#FFFFFF'};">
+                  <span>720p (High Definition)</span>
+                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0095F6" stroke-width="2.5" style="display:${savedQuality === '720' ? 'block' : 'none'};"><path d="M20 6L9 17l-5-5"/></svg>
                 </button>
-                <button type="button" class="dnm-btn dnm-btn-secondary dnm-quality-option" data-quality="480" style="justify-content:space-between;">
-                  <span>480p</span>
-                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                <button type="button" class="dnm-btn dnm-quality-option ${savedQuality === '480' ? 'active' : ''}" data-quality="480" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 16px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid ${savedQuality === '480' ? '#0095F6' : 'rgba(255,255,255,0.12)'};background:${savedQuality === '480' ? 'rgba(0,149,246,0.15)' : 'rgba(255,255,255,0.06)'};color:${savedQuality === '480' ? '#0095F6' : '#FFFFFF'};">
+                  <span>480p (Standard)</span>
+                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0095F6" stroke-width="2.5" style="display:${savedQuality === '480' ? 'block' : 'none'};"><path d="M20 6L9 17l-5-5"/></svg>
                 </button>
-                <button type="button" class="dnm-btn dnm-btn-secondary dnm-quality-option" data-quality="360" style="justify-content:space-between;">
+                <button type="button" class="dnm-btn dnm-quality-option ${savedQuality === '360' ? 'active' : ''}" data-quality="360" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 16px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid ${savedQuality === '360' ? '#0095F6' : 'rgba(255,255,255,0.12)'};background:${savedQuality === '360' ? 'rgba(0,149,246,0.15)' : 'rgba(255,255,255,0.06)'};color:${savedQuality === '360' ? '#0095F6' : '#FFFFFF'};">
                   <span>360p (Data Saver)</span>
-                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                  <svg class="dnm-quality-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0095F6" stroke-width="2.5" style="display:${savedQuality === '360' ? 'block' : 'none'};"><path d="M20 6L9 17l-5-5"/></svg>
                 </button>
               </div>
             </div>
@@ -832,53 +949,57 @@
         `;
         document.body.appendChild(scrim);
 
+        const sheetEl = scrim.querySelector('.dnm-bottom-sheet');
+        requestAnimationFrame(() => {
+          scrim.classList.add('active');
+          scrim.style.opacity = '1';
+          if (sheetEl) sheetEl.style.transform = 'translateX(-50%) translateY(0)';
+        });
+
         const closeSheet = () => {
+          if (sheetEl) sheetEl.style.transform = 'translateX(-50%) translateY(100%)';
           scrim.classList.remove('active');
-          setTimeout(() => scrim.remove(), 300);
+          scrim.style.opacity = '0';
+          setTimeout(() => scrim.remove(), 280);
         };
 
         scrim.addEventListener('click', e => { if (e.target === scrim) closeSheet(); });
         scrim.querySelector('#dnm-quality-close')?.addEventListener('click', closeSheet);
 
-        // Load saved preference from StorageAdapter
-        let savedQuality = 'auto';
-        try {
-          savedQuality = window.DNM_STORAGE?.settings?.get('stream_quality') || 'auto';
-        } catch (_) {}
-
-        // Mark active
         scrim.querySelectorAll('.dnm-quality-option').forEach(btn => {
-          if (btn.dataset.quality === savedQuality) {
-            btn.classList.replace('dnm-btn-secondary', 'dnm-btn-primary');
-          }
           btn.addEventListener('click', async () => {
             const quality = btn.dataset.quality;
+
+            // Highlight selected option immediately
+            scrim.querySelectorAll('.dnm-quality-option').forEach(b => {
+              const isMatch = b.dataset.quality === quality;
+              b.classList.toggle('active', isMatch);
+              b.style.borderColor = isMatch ? '#0095F6' : 'rgba(255,255,255,0.12)';
+              b.style.background = isMatch ? 'rgba(0,149,246,0.15)' : 'rgba(255,255,255,0.06)';
+              b.style.color = isMatch ? '#0095F6' : '#FFFFFF';
+              const chk = b.querySelector('.dnm-quality-check');
+              if (chk) chk.style.display = isMatch ? 'block' : 'none';
+            });
+
             try {
-              await window.DNM_STORAGE?.settings?.setItem('stream_quality', quality);
+              if (window.DNM_STORAGE?.config?.set) {
+                await window.DNM_STORAGE.config.set('stream_quality', quality);
+              }
+              localStorage.setItem('dnm_stream_quality', quality);
             } catch (_) {}
-            // Apply quality to current video via HLS.js
+
             if (quality === 'auto') {
-              if (hlsInstance) {
-                hlsInstance.currentLevel = -1; // Auto mode
-              }
-              if (window.DNM_FEED && window.DNM_FEED.showToast) {
-                window.DNM_FEED.showToast('Quality: Auto');
-              }
+              if (hlsInstance) hlsInstance.currentLevel = -1;
+              if (window.DNM_FEED?.showToast) window.DNM_FEED.showToast('Quality set to Auto');
             } else {
               const levelIndex = hlsInstance?.levels?.findIndex(l => l.height === parseInt(quality));
               if (levelIndex !== undefined && levelIndex >= 0 && hlsInstance) {
                 hlsInstance.currentLevel = levelIndex;
-                if (window.DNM_FEED && window.DNM_FEED.showToast) {
-                  window.DNM_FEED.showToast(`Quality: ${quality}p`);
-                }
               }
+              if (window.DNM_FEED?.showToast) window.DNM_FEED.showToast(`Quality set to ${quality}p`);
             }
-            // Update UI
-            scrim.querySelectorAll('.dnm-quality-option').forEach(b => {
-              b.classList.replace('dnm-btn-primary', 'dnm-btn-secondary');
-            });
-            btn.classList.replace('dnm-btn-secondary', 'dnm-btn-primary');
-            closeSheet();
+
+            setTimeout(closeSheet, 180);
           });
         });
       }
