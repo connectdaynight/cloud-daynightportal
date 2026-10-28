@@ -90,6 +90,17 @@
       searchBtn.addEventListener('click', () => switchTab('explore'));
     }
 
+    const createBtn = document.querySelector('#dnm-btn-create-header');
+    if (createBtn) {
+      createBtn.addEventListener('click', () => {
+        if (window.DNM_UPLOAD && window.DNM_UPLOAD.openCreateSheet) {
+          window.DNM_UPLOAD.openCreateSheet();
+        } else if (window.DNM_UPLOAD) {
+          window.DNM_UPLOAD.openUploadModal();
+        }
+      });
+    }
+
     const messagesBtn = document.querySelector('#dnm-btn-messages-header');
     if (messagesBtn) {
       messagesBtn.addEventListener('click', () => {
@@ -171,7 +182,11 @@
       item.addEventListener('click', () => {
         const tab = item.dataset.tab;
         if (tab === 'upload') {
-          window.DNM_UPLOAD.openUploadModal();
+          if (window.DNM_UPLOAD && window.DNM_UPLOAD.openCreateSheet) {
+            window.DNM_UPLOAD.openCreateSheet();
+          } else if (window.DNM_UPLOAD) {
+            window.DNM_UPLOAD.openUploadModal();
+          }
         } else if (tab === 'reels') {
           // Reels tab now shows vertical feed grid (not auto-player)
           activeBrandClient = null;

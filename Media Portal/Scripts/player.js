@@ -197,15 +197,15 @@
       const isPhoto = window.DNM_DATA.isPhoto(currentReel);
 
       modalSc.innerHTML = `
-        <div class="ig-player-wrapper" id="ig-wrapper" style="width:100%;height:100%;position:relative;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        <div class="ig-player-wrapper" id="ig-wrapper">
           <!-- Ambient blurred backdrop -->
           <div class="ig-ambient-backdrop" id="ig-ambient" style="position:absolute;inset:0;background-image:url('${mediaSrc || currentReel.coverUrl || ''}');background-size:cover;background-position:center;filter:blur(30px) brightness(0.4);transform:scale(1.1);pointer-events:none;"></div>
 
           <!-- Vertical 9:16 Instagram Reels Card -->
-          <div class="ig-reels-container" id="ig-container" style="position:relative;width:100%;max-width:470px;height:100%;max-height:100dvh;display:flex;flex-direction:column;justify-content:space-between;background:#000;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,0.8);">
+          <div class="ig-reels-container" id="ig-container">
             
-            <!-- Top Bar -->
-            <div class="ig-top-bar" style="position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top, 10px) + 12px) 16px 14px 16px;background:linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);">
+            <!-- Top Bar Pinned Directly Below Device Status Bar -->
+            <div class="ig-top-bar" id="ig-top-bar">
               <button type="button" class="ig-top-btn" id="ig-btn-back" title="Close" aria-label="Close" style="background:none;border:none;color:#FFF;cursor:pointer;padding:6px;display:flex;align-items:center;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
               </button>
@@ -388,11 +388,11 @@
       const moreBtn = modalSc.querySelector('#ig-btn-more');
 
       async function syncReelUi() {
-        const clientObj = (currentReel.c && currentReel.c !== 'community') ? window.DNM_DATA.getClient(currentReel.c) : null;
-        const isClient = !!clientObj;
-        const authorName = isClient ? clientObj.name : (currentReel.authorName || (currentReel.authorUsername ? '@' + currentReel.authorUsername : 'Creator'));
-        const authorHandle = isClient ? clientObj.slug : (currentReel.authorUsername || 'creator');
-        const authorAvatar = isClient ? (clientObj.logo || './Logo/logo.png?v=3.2') : (currentReel.authorAvatar || './Logo/logo.png?v=3.2');
+        const author = window.DNM_DATA.getAuthorInfo(currentReel);
+        const isClient = author.isClient;
+        const authorName = author.name;
+        const authorHandle = author.handle;
+        const authorAvatar = author.avatar;
         const isPhoto = currentReel.type === 'photo';
         const mediaSrc = window.DNM_DATA.getMediaUrl ? window.DNM_DATA.getMediaUrl(currentReel) : window.DNM_DATA.getStreamUrl(currentReel);
         const streamUrl = window.DNM_DATA.getStreamUrl(currentReel);
@@ -652,18 +652,21 @@
         }
       });
 
-      // More Options (Manage Post: Edit, Hide, Delete, Share)
+      // More Options - Official Instagram 3-Dot Bottom Sheet (Image 2)
       moreBtn?.addEventListener('click', e => {
         e.stopPropagation();
-        if (window.DNM_MODALS && window.DNM_MODALS.openPostManagementModal) {
+        if (window.DNM_UI && window.DNM_UI.openInstagramMoreMenu) {
+          window.DNM_UI.openInstagramMoreMenu(currentReel, {
+            onUpdate: (updatedPost) => {
+              if (updatedPost) syncReelUi();
+              else closeModal(true);
+            },
+            onDelete: () => closeModal(true)
+          });
+        } else if (window.DNM_MODALS && window.DNM_MODALS.openPostManagementModal) {
           window.DNM_MODALS.openPostManagementModal(currentReel, (updatedPost) => {
-            if (!updatedPost) {
-              // Post was deleted
-              closeModal(true);
-            } else {
-              // Post was updated or toggled
-              syncReelUi();
-            }
+            if (!updatedPost) closeModal(true);
+            else syncReelUi();
           });
         }
       });

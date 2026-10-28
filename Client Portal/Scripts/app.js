@@ -1222,7 +1222,15 @@
       r.status = newStatus;
       DATA._updatedAt = Date.now();
       try { window.DNM_STORAGE?.cache?.set('cloud_cache', DATA); } catch(e) { try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(e) {} }
-      try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
+      try { 
+        if (syncHub) {
+          syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
+          syncHub.postMessage({ type: 'REEL_APPROVED', id: r.id, reel: r, status: newStatus });
+        }
+        if (window.DNM_DATA && window.DNM_DATA.syncWithClientPortalData) {
+          window.DNM_DATA.syncWithClientPortalData(DATA);
+        }
+      } catch(e) {}
       if (newStatus === 'review') {
         toast('Content status set to Under Review', 'info');
       } else {
@@ -1258,7 +1266,15 @@
       r.comments.push(newComment);
       DATA._updatedAt = Date.now();
       try { window.DNM_STORAGE?.cache?.set('cloud_cache', DATA); } catch(e) { try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(e) {} }
-      try { if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt }); } catch(e) {}
+      try { 
+        if (syncHub) {
+          syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
+          syncHub.postMessage({ type: 'REEL_APPROVED', id: r.id, reel: r, status: newStatus });
+        }
+        if (window.DNM_DATA && window.DNM_DATA.syncWithClientPortalData) {
+          window.DNM_DATA.syncWithClientPortalData(DATA);
+        }
+      } catch(e) {}
       toast(parentId ? 'Reply posted in real time' : 'Suggestion sent to Day Night Media admin in real time', 'success');
       if (CONFIG.gasUrl) {
         gasApi('modifyReel', { reel: r })

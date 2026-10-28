@@ -1220,7 +1220,7 @@
       touch-action: pan-y;
     }
     @media (min-width: 600px) {
-      .ig-reels-container {
+      body:not(.dnm-native-app) .ig-reels-container {
         max-width: 440px;
         max-height: 92vh;
         aspect-ratio: 9/16;
@@ -1229,25 +1229,19 @@
         border: 1px solid rgba(255, 255, 255, 0.15);
       }
     }
-    @media (min-width: 600px) {
-      .ig-reels-container {
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-      }
-    }
 
-    /* Top Bar Overlay */
+    /* Top Bar Overlay - Intelligently Pinned to Top on Mobile & Native Apps */
     .ig-top-bar {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 30;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: calc(12px + env(safe-area-inset-top, 0px)) 14px 14px;
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.2) 65%, transparent 100%);
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 50 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: max(calc(12px + env(safe-area-inset-top, 0px)), 16px) 14px 14px !important;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.3) 65%, transparent 100%) !important;
       pointer-events: none;
     }
     .ig-top-bar * {
@@ -1296,14 +1290,17 @@
     .ig-video-player {
       width: 100% !important;
       height: 100% !important;
-      object-fit: cover !important;
+      object-fit: contain !important;
       background: #000000;
       display: block;
     }
+    .ig-video-player.fill-mode {
+      object-fit: cover !important;
+    }
 
     
-    /* True Instagram Reels UI - Full Bleed Edge-to-Edge Without Any Spaces Left */
-    @media (max-width: 599px) {
+    /* True Instagram Reels UI - Full Bleed Edge-to-Edge Without Floating Buttons or Excessive Zoom */
+    @media (max-width: 768px), (pointer: coarse) {
       .scrim.video-modal-scrim,
       .scrim.video-modal-scrim .sheet,
       .center.video-modal-scrim .sheet,
@@ -1325,6 +1322,17 @@
         bottom: 0 !important;
         box-shadow: none !important;
         background: #000000 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+      }
+      .dnm-native-app .ig-reels-container,
+      .dnm-android-native .ig-reels-container,
+      .dnm-capacitor-app .ig-reels-container {
+        width: 100vw !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        top: 0 !important;
       }
       .ig-video-wrap {
         position: absolute !important;
@@ -1339,7 +1347,17 @@
         width: 100vw !important;
         height: 100% !important;
         height: 100dvh !important;
+        object-fit: contain !important;
+      }
+      .ig-video-player.fill-mode {
         object-fit: cover !important;
+      }
+      .ig-top-bar {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        padding-top: max(env(safe-area-inset-top, 0px), 16px) !important;
       }
     }
 

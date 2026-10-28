@@ -51,6 +51,45 @@
   // Cleanup on unload
   window.addEventListener('beforeunload', stopTokenRefresh);
 
+  // Real-Time Cross-Portal Sync Hub (Synchronizes Client Portal Approvals & Media Portal Feeds)
+  const syncHub = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('daynight_live_sync') : null;
+  if (syncHub) {
+    syncHub.onmessage = (e) => {
+      if (e.data && e.data.type === 'DATA_MUTATED' && e.data.data) {
+        syncWithClientPortalData(e.data.data);
+      } else if (e.data && e.data.type === 'REEL_APPROVED' && e.data.reel) {
+        const r = e.data.reel;
+        r.status = 'approved';
+        const existing = basePortalReels.find(x => String(x.id) === String(r.id));
+        if (existing) {
+          Object.assign(existing, r);
+        } else {
+          basePortalReels.push(r);
+        }
+        mergeAllReels();
+      }
+    };
+  }
+
+  function syncWithClientPortalData(cloudData) {
+    if (!cloudData || !Array.isArray(cloudData.reels)) return;
+    const baseMap = new Map(basePortalReels.map(r => [String(r.id), r]));
+    cloudData.reels.forEach(r => {
+      if (r.status === 'approved' && !r.hidden && (!r.title || !r.title.trim().startsWith('.'))) {
+        if (baseMap.has(String(r.id))) {
+          Object.assign(baseMap.get(String(r.id)), r);
+        } else {
+          basePortalReels.push(r);
+          baseMap.set(String(r.id), r);
+        }
+      } else if (r.status !== 'approved' && baseMap.has(String(r.id))) {
+        const idx = basePortalReels.findIndex(x => String(x.id) === String(r.id));
+        if (idx !== -1) basePortalReels.splice(idx, 1);
+      }
+    });
+    mergeAllReels();
+  }
+
   function mergeAllReels() {
     const existingMap = new Map();
     const merged = [];
@@ -164,28 +203,36 @@
       );
     }
 
+    // 2.5. Sync latest approvals from Client Portal cloud_cache
+    try {
+      let cloudCache = null;
+      if (window.DNM_STORAGE?.cache) {
+        cloudCache = await window.DNM_STORAGE.cache.get('cloud_cache');
+      }
+      if (!cloudCache) {
+        const ls = localStorage.getItem('dn_cloud_cache');
+        if (ls) cloudCache = JSON.parse(ls);
+      }
+      if (cloudCache && Array.isArray(cloudCache.reels)) {
+        syncWithClientPortalData(cloudCache);
+      }
+    } catch(err) {
+      console.warn('Cross-portal cache sync note:', err);
+    }
+
     // 3. Merge live Firestore posts and brand reels
     mergeAllReels();
 
     // 4. Listen for real-time Firestore post updates continuously
     initFirestorePostsSync();
 
-    // 5. Background sync from GAS if needed
+    // 5. Background sync from GAS if needed (updates approval status across all reels)
     if (window.DNM_CONFIG && window.DNM_CONFIG.gasUrl) {
       fetch(window.DNM_CONFIG.gasUrl + '?action=getData&_cb=' + Date.now())
         .then(r => r.json())
         .then(json => {
-          if (json && json.success && json.data && Array.isArray(json.data.reels)) {
-            const existingMap = new Map(basePortalReels.map(r => [r.id, r]));
-            json.data.reels.forEach(r => {
-              if (r.status === 'approved' && !r.hidden && (!r.title || !r.title.trim().startsWith('.'))) {
-                if (!existingMap.has(r.id)) {
-                  basePortalReels.push(r);
-                  existingMap.set(r.id, r);
-                }
-              }
-            });
-            mergeAllReels();
+          if (json && json.success && json.data) {
+            syncWithClientPortalData(json.data);
           }
         })
         .catch(() => {});
@@ -762,7 +809,8 @@
     getMediaUrl,
     deletePost,
     toggleHidePost,
-    updatePost
+    updatePost,
+    syncWithClientPortalData
   };
 
 })(window);

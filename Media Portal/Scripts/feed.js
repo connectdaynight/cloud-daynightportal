@@ -566,6 +566,20 @@
     const all = window.DNM_DATA.getAllApprovedReels(true);
     const post = all.find(r => r.id === postId);
 
+    if (post && window.DNM_UI && window.DNM_UI.openInstagramMoreMenu) {
+      window.DNM_UI.openInstagramMoreMenu(post, {
+        onUpdate: () => {
+          const feedWrap = document.querySelector('#dnm-feed-cards-wrap');
+          if (feedWrap) renderFeedCards(feedWrap);
+        },
+        onDelete: () => {
+          const feedWrap = document.querySelector('#dnm-feed-cards-wrap');
+          if (feedWrap) renderFeedCards(feedWrap);
+        }
+      });
+      return;
+    }
+
     if (post && window.DNM_MODALS && window.DNM_MODALS.openPostManagementModal) {
       window.DNM_MODALS.openPostManagementModal(post, () => {
         const feedWrap = document.querySelector('#dnm-feed-cards-wrap');
@@ -573,17 +587,6 @@
       });
       return;
     }
-
-    const scrim = document.createElement('div');
-    scrim.className = 'dnm-scrim active';
-    scrim.innerHTML = `
-      <div class="dnm-modal-dialog" style="max-width:320px;padding:0;overflow:hidden;border-radius:14px;">
-        <button type="button" id="dnm-opt-share" style="width:100%;padding:14px;background:none;border:none;border-bottom:1px solid var(--ig-border);color:var(--ig-accent);font-weight:600;font-size:14px;cursor:pointer;">Share Post</button>
-        <button type="button" id="dnm-opt-copy" style="width:100%;padding:14px;background:none;border:none;border-bottom:1px solid var(--ig-border);color:var(--ig-text-primary);font-size:14px;cursor:pointer;">Copy Link</button>
-        <button type="button" id="dnm-opt-brand" style="width:100%;padding:14px;background:none;border:none;border-bottom:1px solid var(--ig-border);color:var(--ig-text-primary);font-size:14px;cursor:pointer;">View Brand Profile</button>
-        <button type="button" id="dnm-opt-cancel" style="width:100%;padding:14px;background:none;border:none;color:var(--ig-text-secondary);font-size:14px;cursor:pointer;">Cancel</button>
-      </div>
-    `;
     document.body.appendChild(scrim);
 
     function close() { scrim.remove(); }
