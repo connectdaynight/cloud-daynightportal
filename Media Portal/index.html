@@ -17,15 +17,15 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Grand+Hotel&display=swap">
 
   <!-- Modular Instagram-Grade Stylesheets -->
-  <link rel="stylesheet" href="./Stylesheets/instagram-core.css?v=4.6">
-  <link rel="stylesheet" href="./Stylesheets/feed.css?v=4.6">
-  <link rel="stylesheet" href="./Stylesheets/reels.css?v=4.6">
-  <link rel="stylesheet" href="./Stylesheets/explore.css?v=4.6">
-  <link rel="stylesheet" href="./Stylesheets/settings.css?v=4.6">
-  <link rel="stylesheet" href="./Stylesheets/profile.css?v=4.6">
-  <link rel="stylesheet" href="./Stylesheets/upload.css?v=4.6">
-  <link rel="stylesheet" href="./Stylesheets/player.css?v=4.6">
-  <link rel="stylesheet" href="./Stylesheets/instagram-menu.css?v=4.6">
+  <link rel="stylesheet" href="./Stylesheets/instagram-core.css?v=4.7">
+  <link rel="stylesheet" href="./Stylesheets/feed.css?v=4.7">
+  <link rel="stylesheet" href="./Stylesheets/reels.css?v=4.7">
+  <link rel="stylesheet" href="./Stylesheets/explore.css?v=4.7">
+  <link rel="stylesheet" href="./Stylesheets/settings.css?v=4.7">
+  <link rel="stylesheet" href="./Stylesheets/profile.css?v=4.7">
+  <link rel="stylesheet" href="./Stylesheets/upload.css?v=4.7">
+  <link rel="stylesheet" href="./Stylesheets/player.css?v=4.7">
+  <link rel="stylesheet" href="./Stylesheets/instagram-menu.css?v=4.7">
 
   <!-- Real Google Identity Services & Firebase Auth & Firestore SDKs -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -114,30 +114,30 @@
     <!-- Tab 5: Profile & Brand Hub Tab -->
     <main class="dnm-tab-view" id="dnm-tab-profile" style="display:none;"></main>
 
-    <!-- Bottom Navigation Bar (5 Classic Instagram Tabs - Modern SVG Suite) -->
-    <nav class="dnm-bottom-nav">
+    <!-- Bottom Navigation Bar (5 Classic Instagram Tabs: Home - Reels - DM - Search - Profile) -->
+    <nav class="dnm-bottom-nav" id="dnm-bottom-nav">
       <!-- 1. Home Feed -->
       <button type="button" class="dnm-nav-item active" data-tab="feed" aria-label="Home Feed">
         <svg class="dnm-nav-icon icon-outline" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M22 23h-6.001a1 1 0 0 1-1-1v-5.455a2.545 2.545 0 1 0-5.09 0V22a1 1 0 0 1-1 1H2.909A1.91 1.91 0 0 1 1 21.09V10.8a1.9 1.9 0 0 1 .687-1.465l8.636-7.198a2.5 2.5 0 0 1 3.204 0l8.786 7.323A1.9 1.9 0 0 1 23 10.925v10.166A1.91 1.91 0 0 1 22 23Zm-5.001-2h4v-10.075l-8.545-7.123a.5.5 0 0 0-.641 0L3.272 10.925V21h4v-4.455a4.545 4.545 0 1 1 9.09 0V21Z"/></svg>
         <svg class="dnm-nav-icon icon-filled" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M22 23h-6.001a1 1 0 0 1-1-1v-5.455a2.545 2.545 0 1 0-5.09 0V22a1 1 0 0 1-1 1H2.909A1.91 1.91 0 0 1 1 21.09V10.8a1.9 1.9 0 0 1 .687-1.465l8.636-7.198a2.5 2.5 0 0 1 3.204 0l8.786 7.323A1.9 1.9 0 0 1 23 10.925v10.166A1.91 1.91 0 0 1 22 23Z"/></svg>
       </button>
 
-      <!-- 2. Explore / Search -->
-      <button type="button" class="dnm-nav-item" data-tab="explore" aria-label="Explore and Search">
-        <svg class="dnm-nav-icon icon-outline" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <svg class="dnm-nav-icon icon-filled" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      </button>
-
-      <!-- 3. Upload Studio (+) -->
-      <button type="button" class="dnm-nav-item" data-tab="upload" aria-label="Upload Video or Photo">
-        <svg class="dnm-nav-icon icon-outline" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6C3.791 2 2 3.791 2 6v12c0 2.209 1.791 4 4 4h12c2.209 0 4-1.791 4-4V6c0-2.209-1.791-4-4-4Zm2 16c0 1.103-.897 2-2 2H6c-1.103 0-2-.897-2-2V6c0-1.103.897-2 2-2h12c1.103 0 2 .897 2 2v12Zm-7-11a1 1 0 0 0-2 0v4H7a1 1 0 0 0 0 2h4v4a1 1 0 0 0 2 0v-4h4a1 1 0 0 0 0-2h-4V7Z"/></svg>
-        <svg class="dnm-nav-icon icon-filled" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6C3.791 2 2 3.791 2 6v12c0 2.209 1.791 4 4 4h12c2.209 0 4-1.791 4-4V6c0-2.209-1.791-4-4-4Zm-5 15a1 1 0 0 1-2 0v-4H7a1 1 0 0 1 0-2h4V7a1 1 0 0 1 2 0v4h4a1 1 0 0 1 0 2h-4v4Z"/></svg>
-      </button>
-
-      <!-- 4. Reels Tab -->
+      <!-- 2. Reels Tab -->
       <button type="button" class="dnm-nav-item" data-tab="reels" aria-label="Video Reels">
         <svg class="dnm-nav-icon icon-outline" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 2H7.4C4.42 2 2 4.42 2 7.4v9.2C2 19.58 4.42 22 7.4 22h9.2c2.98 0 5.4-2.42 5.4-5.4V7.4C22 4.42 19.58 2 16.6 2ZM7.4 3.8h1.66l2.12 3.7H8.52L7.4 3.8Zm3.94 0h1.86l2.12 3.7h-2.66l-1.32-3.7Zm4.14 0h1.26c1.37 0 2.54.76 3.14 1.88l-1.9 3.32H16.8l-1.32-3.7ZM20.2 16.6c0 1.99-1.61 3.6-3.6 3.6H7.4c-1.99 0-3.6-1.61-3.6-3.6V9.3h16.4v7.3Zm-10.4-1.9 4.8-2.77-4.8-2.77v5.54Z"/></svg>
         <svg class="dnm-nav-icon icon-filled" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 2H7.4C4.42 2 2 4.42 2 7.4v9.2C2 19.58 4.42 22 7.4 22h9.2c2.98 0 5.4-2.42 5.4-5.4V7.4C22 4.42 19.58 2 16.6 2ZM7.4 3.8h1.66l2.12 3.7H8.52L7.4 3.8Zm3.94 0h1.86l2.12 3.7h-2.66l-1.32-3.7Zm4.14 0h1.26c1.37 0 2.54.76 3.14 1.88l-1.9 3.32H16.8l-1.32-3.7ZM20.2 16.6c0 1.99-1.61 3.6-3.6 3.6H7.4c-1.99 0-3.6-1.61-3.6-3.6V9.3h16.4v7.3Zm-10.4-1.9 4.8-2.77-4.8-2.77v5.54Z"/></svg>
+      </button>
+
+      <!-- 3. Direct Messages (DM) -->
+      <button type="button" class="dnm-nav-item" data-tab="dm" aria-label="Direct Messages">
+        <svg class="dnm-nav-icon icon-outline" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <svg class="dnm-nav-icon icon-filled" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M22.028 2.025a1.5 1.5 0 0 0-1.603-.311L2.44 9.69a1.5 1.5 0 0 0 .11 2.802l6.98 2.327 2.327 6.98a1.5 1.5 0 0 0 2.802.11l7.976-17.985a1.5 1.5 0 0 0-.607-1.899Z"/></svg>
+      </button>
+
+      <!-- 4. Search / Explore -->
+      <button type="button" class="dnm-nav-item" data-tab="explore" aria-label="Explore and Search">
+        <svg class="dnm-nav-icon icon-outline" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg class="dnm-nav-icon icon-filled" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 10.5A8.5 8.5 0 1 1 10.5 2a8.5 8.5 0 0 1 8.5 8.5Zm1.707 10.207-4.43-4.43a9.5 9.5 0 1 0-1.414 1.414l4.43 4.43a1 1 0 0 0 1.414-1.414Z"/></svg>
       </button>
 
       <!-- 5. Profile -->
@@ -155,20 +155,20 @@
   <div class="dnm-toast-container" id="dnm-toast-container"></div>
 
   <!-- Modular Scripts -->
-  <script src="./Scripts/runtime-config.js?v=4.6"></script>
-  <script src="./Scripts/native-bridge.js?v=4.6"></script>
-  <script src="./Scripts/storage-adapter.js?v=4.6"></script>
-  <script src="./Scripts/firebase-config.js?v=4.6"></script>
-  <script src="./Scripts/auth.js?v=4.6"></script>
-  <script src="./Scripts/data.js?v=4.6"></script>
-  <script src="./Scripts/instagram-menu.js?v=4.6"></script>
-  <script src="./Scripts/player.js?v=4.6"></script>
-  <script src="./Scripts/feed.js?v=4.6"></script>
-  <script src="./Scripts/reels.js?v=4.6"></script>
-  <script src="./Scripts/settings.js?v=4.6"></script>
-  <script src="./Scripts/upload.js?v=4.6"></script>
-  <script src="./Scripts/stories.js?v=4.6"></script>
-  <script src="./Scripts/messaging.js?v=4.6"></script>
-  <script src="./Scripts/app.js?v=4.6"></script>
+  <script src="./Scripts/runtime-config.js?v=4.7"></script>
+  <script src="./Scripts/native-bridge.js?v=4.7"></script>
+  <script src="./Scripts/storage-adapter.js?v=4.7"></script>
+  <script src="./Scripts/firebase-config.js?v=4.7"></script>
+  <script src="./Scripts/auth.js?v=4.7"></script>
+  <script src="./Scripts/data.js?v=4.7"></script>
+  <script src="./Scripts/instagram-menu.js?v=4.7"></script>
+  <script src="./Scripts/player.js?v=4.7"></script>
+  <script src="./Scripts/feed.js?v=4.7"></script>
+  <script src="./Scripts/reels.js?v=4.7"></script>
+  <script src="./Scripts/settings.js?v=4.7"></script>
+  <script src="./Scripts/upload.js?v=4.7"></script>
+  <script src="./Scripts/stories.js?v=4.7"></script>
+  <script src="./Scripts/messaging.js?v=4.7"></script>
+  <script src="./Scripts/app.js?v=4.7"></script>
 </body>
 </html>

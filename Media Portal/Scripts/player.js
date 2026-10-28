@@ -251,16 +251,16 @@
                   <circle class="v-spinner-path" cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
                 </svg>
               </div>
-            </div>
 
-            <!-- Central Play/Pause Flash -->
-            <div class="ig-play-flash" id="ig-play-flash" style="position:absolute;inset:0;margin:auto;width:64px;height:64px;border-radius:50%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s ease;">
-              <svg width="34" height="34" viewBox="0 0 24 24" fill="#FFFFFF" id="ig-flash-icon"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-            </div>
+              <!-- Central Play/Pause Flash (Centered in 9:16 Video Canvas) -->
+              <div class="ig-play-flash" id="ig-play-flash" aria-hidden="true">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="#FFFFFF" id="ig-flash-icon"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+              </div>
 
-            <!-- Double-Tap Heart Pop -->
-            <div class="ig-heart-pop" id="ig-heart-pop" style="position:absolute;inset:0;margin:auto;width:90px;height:90px;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(0.5);pointer-events:none;transition:all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-              <svg width="90" height="90" viewBox="0 0 24 24" fill="#FF3040"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              <!-- Double-Tap Heart Pop -->
+              <div class="ig-heart-pop" id="ig-heart-pop" aria-hidden="true">
+                <svg width="90" height="90" viewBox="0 0 24 24" fill="#FF3040"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              </div>
             </div>
 
             <!-- Right-Hand Action Stack matching Image -->
@@ -346,33 +346,36 @@
               </div>
             </div>
 
-            <!-- Pinned Instagram Bottom Nav Bar -->
+            <!-- Pinned Instagram Bottom Nav Bar (Home - Reels - DM - Search - Profile) -->
             <nav class="ig-player-bottom-nav" id="ig-player-bottom-nav">
-              <button type="button" class="ig-player-nav-item" id="ig-nav-home" aria-label="Home">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 9.5L12 3l9 6.5V20a2 2 0 0 1-2 2h-4a1 1 0 0 1-1-1v-5a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v5a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V9.5z"/>
-                </svg>
+              <!-- 1. Home Feed -->
+              <button type="button" class="ig-player-nav-item" id="ig-nav-home" data-tab="feed" aria-label="Home Feed">
+                <svg class="dnm-nav-icon icon-outline" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M22 23h-6.001a1 1 0 0 1-1-1v-5.455a2.545 2.545 0 1 0-5.09 0V22a1 1 0 0 1-1 1H2.909A1.91 1.91 0 0 1 1 21.09V10.8a1.9 1.9 0 0 1 .687-1.465l8.636-7.198a2.5 2.5 0 0 1 3.204 0l8.786 7.323A1.9 1.9 0 0 1 23 10.925v10.166A1.91 1.91 0 0 1 22 23Zm-5.001-2h4v-10.075l-8.545-7.123a.5.5 0 0 0-.641 0L3.272 10.925V21h4v-4.455a4.545 4.545 0 1 1 9.09 0V21Z"/></svg>
+                <svg class="dnm-nav-icon icon-filled" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M22 23h-6.001a1 1 0 0 1-1-1v-5.455a2.545 2.545 0 1 0-5.09 0V22a1 1 0 0 1-1 1H2.909A1.91 1.91 0 0 1 1 21.09V10.8a1.9 1.9 0 0 1 .687-1.465l8.636-7.198a2.5 2.5 0 0 1 3.204 0l8.786 7.323A1.9 1.9 0 0 1 23 10.925v10.166A1.91 1.91 0 0 1 22 23Z"/></svg>
               </button>
-              <button type="button" class="ig-player-nav-item active" id="ig-nav-reels" aria-label="Reels">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
-                </svg>
+
+              <!-- 2. Reels Tab -->
+              <button type="button" class="ig-player-nav-item active" id="ig-nav-reels" data-tab="reels" aria-label="Video Reels">
+                <svg class="dnm-nav-icon icon-outline" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 2H7.4C4.42 2 2 4.42 2 7.4v9.2C2 19.58 4.42 22 7.4 22h9.2c2.98 0 5.4-2.42 5.4-5.4V7.4C22 4.42 19.58 2 16.6 2ZM7.4 3.8h1.66l2.12 3.7H8.52L7.4 3.8Zm3.94 0h1.86l2.12 3.7h-2.66l-1.32-3.7Zm4.14 0h1.26c1.37 0 2.54.76 3.14 1.88l-1.9 3.32H16.8l-1.32-3.7ZM20.2 16.6c0 1.99-1.61 3.6-3.6 3.6H7.4c-1.99 0-3.6-1.61-3.6-3.6V9.3h16.4v7.3Zm-10.4-1.9 4.8-2.77-4.8-2.77v5.54Z"/></svg>
+                <svg class="dnm-nav-icon icon-filled" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 2H7.4C4.42 2 2 4.42 2 7.4v9.2C2 19.58 4.42 22 7.4 22h9.2c2.98 0 5.4-2.42 5.4-5.4V7.4C22 4.42 19.58 2 16.6 2ZM7.4 3.8h1.66l2.12 3.7H8.52L7.4 3.8Zm3.94 0h1.86l2.12 3.7h-2.66l-1.32-3.7Zm4.14 0h1.26c1.37 0 2.54.76 3.14 1.88l-1.9 3.32H16.8l-1.32-3.7ZM20.2 16.6c0 1.99-1.61 3.6-3.6 3.6H7.4c-1.99 0-3.6-1.61-3.6-3.6V9.3h16.4v7.3Zm-10.4-1.9 4.8-2.77-4.8-2.77v5.54Z"/></svg>
               </button>
-              <button type="button" class="ig-player-nav-item" id="ig-nav-share" aria-label="Share">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
+
+              <!-- 3. Direct Messages (DM) -->
+              <button type="button" class="ig-player-nav-item" id="ig-nav-dm" data-tab="dm" aria-label="Direct Messages">
+                <svg class="dnm-nav-icon icon-outline" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                <svg class="dnm-nav-icon icon-filled" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M22.028 2.025a1.5 1.5 0 0 0-1.603-.311L2.44 9.69a1.5 1.5 0 0 0 .11 2.802l6.98 2.327 2.327 6.98a1.5 1.5 0 0 0 2.802.11l7.976-17.985a1.5 1.5 0 0 0-.607-1.899Z"/></svg>
               </button>
-              <button type="button" class="ig-player-nav-item" id="ig-nav-explore" aria-label="Explore">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="11" cy="11" r="8"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
+
+              <!-- 4. Search / Explore -->
+              <button type="button" class="ig-player-nav-item" id="ig-nav-explore" data-tab="explore" aria-label="Search">
+                <svg class="dnm-nav-icon icon-outline" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg class="dnm-nav-icon icon-filled" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 10.5A8.5 8.5 0 1 1 10.5 2a8.5 8.5 0 0 1 8.5 8.5Zm1.707 10.207-4.43-4.43a9.5 9.5 0 1 0-1.414 1.414l4.43 4.43a1 1 0 0 0 1.414-1.414Z"/></svg>
               </button>
-              <button type="button" class="ig-player-nav-item" id="ig-nav-profile" aria-label="Profile">
+
+              <!-- 5. Profile -->
+              <button type="button" class="ig-player-nav-item" id="ig-nav-profile" data-tab="profile" aria-label="Profile">
                 <div class="ig-player-avatar-wrap">
-                  <img src="${userAvatar}" alt="Profile">
+                  ${userAvatar ? `<img src="${userAvatar}" alt="Profile">` : `<svg class="dnm-nav-avatar-fallback" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`}
                 </div>
               </button>
             </nav>
@@ -517,6 +520,10 @@
 
         if (scrubber) scrubber.style.display = isPhoto ? 'none' : 'block';
         if (soundBtn) soundBtn.style.display = isPhoto ? 'none' : 'flex';
+        if (playFlash) {
+          playFlash.style.display = isPhoto ? 'none' : 'flex';
+          playFlash.classList.remove('active', 'pop');
+        }
 
         if (isPhoto) {
           if (loader) loader.classList.remove('active');
@@ -662,6 +669,27 @@
           : '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>';
       });
 
+      // Video pause/play listeners for centered play icon
+      if (vid && playFlash) {
+        vid.addEventListener('pause', () => {
+          if (currentReel.type !== 'photo') {
+            flashIcon.innerHTML = '<polygon points="6 4 20 12 6 20 6 4"/>';
+            playFlash.classList.remove('pop');
+            playFlash.classList.add('active');
+          }
+        });
+
+        vid.addEventListener('play', () => {
+          if (currentReel.type !== 'photo') {
+            playFlash.classList.remove('active');
+            playFlash.classList.add('pop');
+            setTimeout(() => {
+              playFlash.classList.remove('pop');
+            }, 360);
+          }
+        });
+      }
+
       // Single tap play/pause & double tap heart pop
       let lastTap = 0;
       videoWrap?.addEventListener('click', () => {
@@ -669,31 +697,21 @@
         if (now - lastTap < 320) {
           // Double-tap heart
           if (heartPop) {
-            heartPop.style.opacity = '1';
-            heartPop.style.transform = 'scale(1.2)';
+            heartPop.classList.remove('active');
+            void heartPop.offsetWidth;
+            heartPop.classList.add('active');
             setTimeout(() => {
-              heartPop.style.opacity = '0';
-              heartPop.style.transform = 'scale(0.5)';
+              heartPop.classList.remove('active');
             }, 550);
           }
           if (likeBtn) likeBtn.click();
         } else {
           // Single tap play/pause
-          if (vid) {
+          if (vid && currentReel.type !== 'photo') {
             if (vid.paused) {
               vid.play().catch(() => {});
-              if (playFlash) {
-                flashIcon.innerHTML = '<polygon points="6 4 20 12 6 20 6 4"/>';
-                playFlash.style.opacity = '1';
-                setTimeout(() => playFlash.style.opacity = '0', 350);
-              }
             } else {
               vid.pause();
-              if (playFlash) {
-                flashIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-                playFlash.style.opacity = '1';
-                setTimeout(() => playFlash.style.opacity = '0', 350);
-              }
             }
           }
         }
@@ -857,19 +875,36 @@
         }
       });
 
-      // Bottom Navigation click handlers
+      // Bottom Navigation click handlers (Home - Reels - DM - Search - Profile)
       modalSc.querySelector('#ig-nav-home')?.addEventListener('click', e => {
         e.stopPropagation();
         closeModal(true);
-        if (window.DNM_ROUTER && window.DNM_ROUTER.navigate) {
+        if (window.DNM_APP && window.DNM_APP.switchTab) {
+          window.DNM_APP.switchTab('feed');
+        } else if (window.DNM_ROUTER && window.DNM_ROUTER.navigate) {
           window.DNM_ROUTER.navigate('feed');
+        }
+      });
+
+      modalSc.querySelector('#ig-nav-reels')?.addEventListener('click', e => {
+        e.stopPropagation();
+        nextReel();
+      });
+
+      modalSc.querySelector('#ig-nav-dm')?.addEventListener('click', e => {
+        e.stopPropagation();
+        closeModal(true);
+        if (window.DNM_MESSAGING && window.DNM_MESSAGING.openDMs) {
+          window.DNM_MESSAGING.openDMs();
         }
       });
 
       modalSc.querySelector('#ig-nav-explore')?.addEventListener('click', e => {
         e.stopPropagation();
         closeModal(true);
-        if (window.DNM_ROUTER && window.DNM_ROUTER.navigate) {
+        if (window.DNM_APP && window.DNM_APP.switchTab) {
+          window.DNM_APP.switchTab('explore');
+        } else if (window.DNM_ROUTER && window.DNM_ROUTER.navigate) {
           window.DNM_ROUTER.navigate('explore');
         }
       });
@@ -877,19 +912,11 @@
       modalSc.querySelector('#ig-nav-profile')?.addEventListener('click', e => {
         e.stopPropagation();
         closeModal(true);
-        if (window.DNM_ROUTER && window.DNM_ROUTER.navigate) {
+        if (window.DNM_APP && window.DNM_APP.switchTab) {
+          window.DNM_APP.switchTab('profile');
+        } else if (window.DNM_ROUTER && window.DNM_ROUTER.navigate) {
           window.DNM_ROUTER.navigate('profile');
         }
-      });
-
-      modalSc.querySelector('#ig-nav-share')?.addEventListener('click', e => {
-        e.stopPropagation();
-        shareBtn?.click();
-      });
-
-      modalSc.querySelector('#ig-nav-reels')?.addEventListener('click', e => {
-        e.stopPropagation();
-        nextReel();
       });
 
       // Quality Selector Bottom Sheet

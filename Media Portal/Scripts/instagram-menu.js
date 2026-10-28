@@ -8,6 +8,75 @@
 
   window.DNM_UI = window.DNM_UI || {};
 
+  async function triggerDirectDownload(item, directUrl) {
+    if (!item) return;
+    const isPhoto = item.type === 'photo';
+    const ext = isPhoto ? 'jpg' : 'mp4';
+    const cleanTitle = (item.title || item.caption || (isPhoto ? 'photo' : 'reel'))
+      .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+      .trim()
+      .replace(/\s+/g, '_')
+      .substring(0, 50);
+    const filename = `${cleanTitle || 'download'}.${ext}`;
+
+    if (window.DNM_FEED && window.DNM_FEED.showToast) {
+      window.DNM_FEED.showToast('Starting download...');
+    }
+
+    const fileId = item.fileId || (item.url ? (item.url.match(/[-\w]{25,}/) || [])[0] : null);
+    const mediaUrl = directUrl || (window.DNM_DATA?.getMediaUrl ? window.DNM_DATA.getMediaUrl(item) : null) || (window.DNM_DATA?.getStreamUrl ? window.DNM_DATA.getStreamUrl(item) : item.url);
+
+    let downloadEndpoint = '';
+    if (fileId) {
+      downloadEndpoint = `https://daynight-portal.pages.dev/api/download?id=${encodeURIComponent(fileId)}&name=${encodeURIComponent(filename)}`;
+    } else if (mediaUrl) {
+      downloadEndpoint = `https://daynight-portal.pages.dev/api/download?url=${encodeURIComponent(mediaUrl)}&name=${encodeURIComponent(filename)}`;
+    } else {
+      downloadEndpoint = directUrl;
+    }
+
+    // Method 1: Fetch as Blob and trigger browser download dialog without leaving or opening a tab
+    try {
+      const fetchTarget = downloadEndpoint || mediaUrl;
+      const res = await fetch(fetchTarget, { mode: 'cors' });
+      if (res.ok) {
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 25000);
+        if (window.DNM_FEED && window.DNM_FEED.showToast) {
+          window.DNM_FEED.showToast('Download started!');
+        }
+        return;
+      }
+    } catch (err) {
+      console.warn('Direct blob fetch failed, falling back to download attachment endpoint:', err);
+    }
+
+    // Method 2: Direct anchor to attachment endpoint (server responds with Content-Disposition: attachment)
+    try {
+      const a = document.createElement('a');
+      a.href = downloadEndpoint || mediaUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      if (window.DNM_FEED && window.DNM_FEED.showToast) {
+        window.DNM_FEED.showToast('Download started!');
+      }
+    } catch (err2) {
+      console.error('Download trigger failed:', err2);
+      if (window.DNM_FEED && window.DNM_FEED.showToast) {
+        window.DNM_FEED.showToast('Download failed. Please try again.');
+      }
+    }
+  }
+
   function openInstagramMoreMenu(item, { onUpdate, onDelete } = {}) {
     if (!item) return;
 
@@ -405,17 +474,11 @@
       alert(`Featured Brand: ${author.name}\nCheck out their latest collections on their official catalog.`);
     });
 
-    // Download video
+    // Download video or photo directly
     const downloadBtn = scrim.querySelector('#ig-menu-btn-download');
     downloadBtn?.addEventListener('click', () => {
       closeMenu();
-      const a = document.createElement('a');
-      a.href = streamUrl || mediaUrl;
-      a.download = `${(item.title || 'reel').replace(/[^a-z0-9]/gi, '_')}.mp4`;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      triggerDirectDownload(item, streamUrl || mediaUrl);
     });
 
     // Edit Post (Owner / Admin)
@@ -456,5 +519,6 @@
   }
 
   window.DNM_UI.openInstagramMoreMenu = openInstagramMoreMenu;
+  window.DNM_UI.triggerDirectDownload = triggerDirectDownload;
 
 })(window);

@@ -181,7 +181,11 @@
     navItems.forEach(item => {
       item.addEventListener('click', () => {
         const tab = item.dataset.tab;
-        if (tab === 'upload') {
+        if (tab === 'dm') {
+          if (window.DNM_MESSAGING && window.DNM_MESSAGING.openDMs) {
+            window.DNM_MESSAGING.openDMs();
+          }
+        } else if (tab === 'upload') {
           if (window.DNM_UPLOAD && window.DNM_UPLOAD.openCreateSheet) {
             window.DNM_UPLOAD.openCreateSheet();
           } else if (window.DNM_UPLOAD) {
