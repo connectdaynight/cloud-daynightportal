@@ -1431,12 +1431,12 @@
     .ig-video-player {
       width: 100% !important;
       height: 100% !important;
-      object-fit: contain !important;
+      object-fit: cover !important;
       background: #000000;
       display: block;
     }
-    .ig-video-player.fill-mode {
-      object-fit: cover !important;
+    .ig-video-player.fit-mode {
+      object-fit: contain !important;
     }
 
     
@@ -1488,10 +1488,10 @@
         width: 100vw !important;
         height: 100% !important;
         height: 100dvh !important;
-        object-fit: contain !important;
-      }
-      .ig-video-player.fill-mode {
         object-fit: cover !important;
+      }
+      .ig-video-player.fit-mode {
+        object-fit: contain !important;
       }
       .ig-top-bar {
         position: absolute !important;

@@ -242,8 +242,8 @@
 
             <!-- Video / Photo Player Wrap -->
             <div class="ig-video-wrap" id="ig-video-wrap" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline webkit-playsinline autoplay loop preload="auto" poster="${mediaSrc || currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:contain;display:${isPhoto ? 'none' : 'block'};"></video>
-              <img id="ig-photo" class="ig-photo-player" src="${mediaSrc}" alt="" style="width:100%;height:100%;object-fit:contain;background:transparent;display:${isPhoto ? 'block' : 'none'};">
+              <video id="ig-video" class="ig-video-player" src="${streamUrl}" playsinline webkit-playsinline autoplay loop preload="auto" poster="${mediaSrc || currentReel.coverUrl || ''}" style="width:100%;height:100%;object-fit:cover;display:${isPhoto ? 'none' : 'block'};"></video>
+              <img id="ig-photo" class="ig-photo-player" src="${mediaSrc}" alt="" style="width:100%;height:100%;object-fit:cover;background:transparent;display:${isPhoto ? 'block' : 'none'};">
               
               <!-- Perfectly Centered Stable Buffering Spinner -->
               <div class="video-loading-circle ${isPhoto ? '' : 'active'}" id="ig-loading-circle">
@@ -587,6 +587,17 @@
         vid.addEventListener('canplay', hideLoader);
         vid.addEventListener('playing', hideLoader);
         vid.addEventListener('seeked', hideLoader);
+
+        // Auto Edge-to-Edge Cover (Eliminates black space top/bottom on tall smartphone screens)
+        vid.addEventListener('loadedmetadata', () => {
+          if (vid.videoWidth && vid.videoHeight && (vid.videoWidth / vid.videoHeight > 1.2)) {
+            vid.classList.add('fit-mode');
+            vid.style.objectFit = 'contain';
+          } else {
+            vid.classList.remove('fit-mode');
+            vid.style.objectFit = 'cover';
+          }
+        });
 
         vid.muted = isSoundMuted;
 
