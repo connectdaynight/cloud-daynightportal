@@ -37,13 +37,14 @@
           if (window.DNM_STORAGE) r();
           else document.addEventListener('DOMContentLoaded', r, { once: true });
         });
-        const cached = await window.DNM_STORAGE.cache.get('cloud_cache');
+        const cached = window.DNM_STORAGE?.cache ? await window.DNM_STORAGE.cache.get('cloud_cache') : null;
         if (cached) {
           if (Array.isArray(cached.clients)) DATA.clients = cached.clients;
           if (Array.isArray(cached.reels)) DATA.reels = cached.reels;
           if (cached.settings) DATA.settings = Object.assign(DATA.settings, cached.settings);
           if (Array.isArray(cached.deletedReelIds)) DATA.deletedReelIds = cached.deletedReelIds;
           if (Array.isArray(cached.deletedClientIds)) DATA.deletedClientIds = cached.deletedClientIds;
+          render();
         }
       } catch(e) {
         console.warn('Initial cache load failed:', e);
@@ -99,16 +100,21 @@
     const CONFIG_HELPERS = window.DNM_CONFIG_HELPERS || {};
 
     const DEFAULT_GAS_URL = RUNTIME_CONFIG.gasUrl || 'https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec';
+    const OLD_GAS_URL = 'https://script.google.com/macros/s/AKfycbxo--i9HaTv4ejd6iYFweq3W-a-I3zzqp0rI2ACMjY5cyJ26-yh3byNRn8u0IrpRkdt/exec';
     const ADMIN_PASSKEY = RUNTIME_CONFIG.adminPasskey || 'DN@2026';
 
-    // Load gasUrl from config storage (with fallback to runtime config)
-    async function getGasUrl() {
-      try {
-        const stored = await window.DNM_STORAGE?.config?.get('gas_url');
-        return stored || DEFAULT_GAS_URL;
-      } catch {
-        return DEFAULT_GAS_URL;
+    let currentGasUrl = DEFAULT_GAS_URL;
+    try {
+      const stored = window.DNM_STORAGE?.config?.get('gas_url');
+      if (stored && typeof stored === 'string') currentGasUrl = stored;
+      else {
+        const ls = localStorage.getItem('dn_gas_url');
+        if (ls && typeof ls === 'string') currentGasUrl = ls;
       }
+    } catch (_) {}
+
+    function getGasUrl() {
+      return currentGasUrl;
     }
 
     function isMasterAdminAuth(val) {
@@ -118,7 +124,13 @@
     }
 
     const CONFIG = {
-      get gasUrl() { return getGasUrl(); },
+      get gasUrl() { return currentGasUrl; },
+      set gasUrl(val) {
+        if (!val) return;
+        currentGasUrl = String(val);
+        try { window.DNM_STORAGE?.config?.set('gas_url', currentGasUrl); } catch(_) {}
+        try { localStorage.setItem('dn_gas_url', currentGasUrl); } catch(_) {}
+      },
       adminPasskey: ADMIN_PASSKEY,
       // Admin features are strictly hidden from client portal unless URL explicitly has ?admin=1
       isAdmin: location.search.includes('admin=1')

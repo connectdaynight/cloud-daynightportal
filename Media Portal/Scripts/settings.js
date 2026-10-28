@@ -4,7 +4,7 @@
 (function(window) {
   'use strict';
 
-  const settingsStorage = window.DNM_STORAGE_SETTINGS || (window.DNM_STORAGE_SETTINGS = new StorageAdapter({ namespace: 'settings' }));
+  const settingsStorage = window.DNM_STORAGE_SETTINGS || (window.DNM_STORAGE_SETTINGS = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'settings' }));
 
   async function initSettingsPage(container) {
     if (!container) return;

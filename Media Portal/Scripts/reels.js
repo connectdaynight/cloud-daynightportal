@@ -6,7 +6,7 @@
 
   let currentReelsList = [];
   let reelsObserver = null;
-  const reelsStorage = window.DNM_STORAGE_REELS || (window.DNM_STORAGE_REELS = new StorageAdapter({ namespace: 'reels' }));
+  const reelsStorage = window.DNM_STORAGE_REELS || (window.DNM_STORAGE_REELS = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'reels' }));
   let followingSet = new Set();
 
   async function initReelsTab(container) {

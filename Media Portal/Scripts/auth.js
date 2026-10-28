@@ -4,7 +4,7 @@
 (function(window) {
   'use strict';
 
-  const authStorage = window.DNM_STORAGE_AUTH || (window.DNM_STORAGE_AUTH = new StorageAdapter({ namespace: 'auth' }));
+  const authStorage = window.DNM_STORAGE_AUTH || (window.DNM_STORAGE_AUTH = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'auth' }));
   let currentUser = null;
 
   // Load persisted real user session

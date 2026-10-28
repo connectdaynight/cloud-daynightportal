@@ -6,7 +6,7 @@
 
   let currentTab = 'feed'; // 'feed', 'explore', 'reels', 'settings', 'profile'
   let activeBrandClient = null;
-  const appStorage = window.DNM_STORAGE_APP || (window.DNM_STORAGE_APP = new StorageAdapter({ namespace: 'app' }));
+  const appStorage = window.DNM_STORAGE_APP || (window.DNM_STORAGE_APP = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'app' }));
 
   async function init() {
     console.log('Daynight-Media Initializing with Real Server Data...');
@@ -21,23 +21,27 @@
       }
     } catch (_) {}
     
-    // 1. Load Data Layer
-    await window.DNM_DATA.loadData();
+    try {
+      // 1. Load Data Layer
+      await window.DNM_DATA.loadData();
 
-    // 2. Setup Top Header
-    setupTopHeader();
+      // 2. Setup Top Header
+      setupTopHeader();
 
-    // 3. Setup Bottom Navigation
-    setupBottomNav();
+      // 3. Setup Bottom Navigation
+      setupBottomNav();
 
-    // 4. Setup Global Search Bar
-    setupGlobalSearch();
+      // 4. Setup Global Search Bar
+      setupGlobalSearch();
 
-    // 5. Render Active Tab
-    switchTab('feed', false);
-
-    // 6. Smoothly Dismiss Signature App Loading Screen
-    hideAppLoadingScreen();
+      // 5. Render Active Tab
+      switchTab('feed', false);
+    } catch (err) {
+      console.error('Daynight-Media init error:', err);
+    } finally {
+      // 6. Smoothly Dismiss Signature App Loading Screen
+      hideAppLoadingScreen();
+    }
 
     // 7. Listen for auth changes
     window.addEventListener('dnm-auth-changed', () => {

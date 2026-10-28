@@ -77,6 +77,9 @@
   }
 
   async function fetchFirestorePosts() {
+    if (window.DNM_FIREBASE && window.DNM_FIREBASE.ready) {
+      try { await window.DNM_FIREBASE.ready(); } catch(_) {}
+    }
     if (window.DNM_FIREBASE && window.DNM_FIREBASE.db) {
       try {
         const snap = await window.DNM_FIREBASE.db.collection('posts')
@@ -232,7 +235,7 @@
     mergeAllReels();
 
     try {
-      const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new StorageAdapter({ namespace: 'data' }));
+      const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'data' }));
       const stored = await dataStorage.getItem('uploaded_posts') || [];
       const sIdx = stored.findIndex(p => p.id === post.id);
       if (sIdx !== -1) stored[sIdx] = post;
@@ -280,7 +283,7 @@
       if (currentUser.displayName && item.authorName && item.authorName.toLowerCase() === currentUser.displayName.toLowerCase()) isCurrentUser = true;
 
       try {
-        const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new StorageAdapter({ namespace: 'data' }));
+        const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'data' }));
         const stored = await dataStorage.getItem('uploaded_posts') || [];
         if (stored.some(p => p.id === item.id || (p.fileId && p.fileId === item.fileId))) {
           isCurrentUser = true;
@@ -326,7 +329,7 @@
     if (!user) return [];
     let storedUploads = [];
     try {
-      const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new StorageAdapter({ namespace: 'data' }));
+      const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'data' }));
       storedUploads = await dataStorage.getItem('uploaded_posts') || [];
     } catch(_) {}
 

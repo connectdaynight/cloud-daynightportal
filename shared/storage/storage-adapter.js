@@ -323,7 +323,12 @@
       try {
         const val = localStorage.getItem(oldKey);
         if (val !== null) {
-          const parsed = JSON.parse(val);
+          let parsed;
+          try {
+            parsed = JSON.parse(val);
+          } catch (_) {
+            parsed = val;
+          }
           await adapter.set(key, parsed);
           // Keep old key for backward compatibility during transition
           migrated++;
@@ -340,7 +345,11 @@
     return migrated;
   }
 
-  // Export
+  // Global class export for modules that call `new StorageAdapter(...)`
+  window.StorageAdapter = StorageAdapter;
+  if (typeof globalThis !== 'undefined') globalThis.StorageAdapter = StorageAdapter;
+
+  // Export namespace
   window.DNM_STORAGE = {
     StorageAdapter,
     instances,
