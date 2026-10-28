@@ -220,6 +220,26 @@
       console.warn('Cross-portal cache sync note:', err);
     }
 
+    // 2.8. Preload locally uploaded user posts from StorageAdapter into firestorePostsList
+    try {
+      let storedUploads = [];
+      if (window.DNM_STORAGE?.cache) {
+        storedUploads = window.DNM_STORAGE.cache.get('uploaded_posts', []) || [];
+      }
+      if ((!storedUploads || !storedUploads.length) && window.DNM_STORAGE_DATA) {
+        storedUploads = window.DNM_STORAGE_DATA.get('uploaded_posts', []) || [];
+      }
+      if (Array.isArray(storedUploads) && storedUploads.length) {
+        const existingIds = new Set(firestorePostsList.map(p => String(p.id)));
+        storedUploads.forEach(up => {
+          if (up && up.id && !existingIds.has(String(up.id))) {
+            firestorePostsList.unshift(up);
+            existingIds.add(String(up.id));
+          }
+        });
+      }
+    } catch (_) {}
+
     // 3. Merge live Firestore posts and brand reels
     mergeAllReels();
 
@@ -283,12 +303,20 @@
 
     try {
       const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'data' }));
-      const stored = await dataStorage.getItem('uploaded_posts') || [];
+      const stored = dataStorage.get('uploaded_posts', []) || [];
       const sIdx = stored.findIndex(p => p.id === post.id);
       if (sIdx !== -1) stored[sIdx] = post;
       else stored.unshift(post);
       await dataStorage.setItem('uploaded_posts', stored);
       await dataStorage.setItem('community_posts', communityPosts);
+
+      if (window.DNM_STORAGE?.cache) {
+        const cStored = window.DNM_STORAGE.cache.get('uploaded_posts', []) || [];
+        const csIdx = cStored.findIndex(p => p.id === post.id);
+        if (csIdx !== -1) cStored[csIdx] = post;
+        else cStored.unshift(post);
+        await window.DNM_STORAGE.cache.set('uploaded_posts', cStored);
+      }
     } catch (_) {}
 
     window.dispatchEvent(new CustomEvent('dnm-post-added', { detail: { post } }));
@@ -372,46 +400,58 @@
     };
   }
 
-  async function getUserPosts(user) {
+  function getUserPosts(user) {
     if (!user) return [];
     let storedUploads = [];
     try {
-      const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'data' }));
-      storedUploads = await dataStorage.getItem('uploaded_posts') || [];
+      if (window.DNM_STORAGE?.cache) {
+        storedUploads = window.DNM_STORAGE.cache.get('uploaded_posts', []) || [];
+      }
+      if ((!storedUploads || !storedUploads.length) && window.DNM_STORAGE_DATA) {
+        storedUploads = window.DNM_STORAGE_DATA.get('uploaded_posts', []) || [];
+      }
     } catch(_) {}
+    if (!Array.isArray(storedUploads)) storedUploads = [];
 
-    const localIds = new Set(storedUploads.map(p => p.id));
+    const localIds = new Set(storedUploads.map(p => String(p.id)));
     const localFileIds = new Set(storedUploads.map(p => p.fileId).filter(Boolean));
     const uName = (user.username || '').toLowerCase();
     const dName = (user.displayName || '').toLowerCase();
-    const uid = user.uid;
+    const uid = user.uid ? String(user.uid) : '';
 
     const all = getAllApprovedReels(true);
     const matched = all.filter(p => {
-      if (localIds.has(p.id)) return true;
+      if (localIds.has(String(p.id))) return true;
       if (p.fileId && localFileIds.has(p.fileId)) return true;
-      if (uid && p.authorId === uid) return true;
+      if (uid && (String(p.authorId) === uid || String(p.authorUid) === uid)) return true;
       if (uName && p.authorUsername && p.authorUsername.toLowerCase() === uName) return true;
       if (dName && p.authorName && p.authorName.toLowerCase() === dName) return true;
       return false;
     });
 
-    const matchedIds = new Set(matched.map(p => p.id));
+    const matchedIds = new Set(matched.map(p => String(p.id)));
     storedUploads.forEach(p => {
-      if (!matchedIds.has(p.id)) {
+      if (p && p.id && !matchedIds.has(String(p.id))) {
         matched.unshift(p);
-        matchedIds.add(p.id);
+        matchedIds.add(String(p.id));
       }
     });
 
     return matched;
   }
 
-  async function getSavedPosts() {
+  function getSavedPosts() {
     try {
-      const feedStorage = window.DNM_STORAGE_FEED || (window.DNM_STORAGE_FEED = new StorageAdapter({ namespace: 'feed' }));
-      const savedIds = new Set(await feedStorage.getItem('saved_posts') || []);
-      return approvedReels.filter(r => savedIds.has(r.id));
+      let savedIdsArr = [];
+      if (window.DNM_STORAGE?.social) {
+        savedIdsArr = window.DNM_STORAGE.social.get('saved_posts', []) || [];
+      }
+      if (!savedIdsArr || !savedIdsArr.length) {
+        const feedStorage = window.DNM_STORAGE_FEED || (window.DNM_STORAGE_FEED = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'feed' }));
+        savedIdsArr = feedStorage.get('saved_posts', []) || [];
+      }
+      const savedIds = new Set((savedIdsArr || []).map(id => String(id)));
+      return approvedReels.filter(r => savedIds.has(String(r.id)));
     } catch (_) {
       return [];
     }

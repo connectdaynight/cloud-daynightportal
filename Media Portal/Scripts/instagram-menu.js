@@ -17,11 +17,23 @@
 
     const author = window.DNM_DATA ? window.DNM_DATA.getAuthorInfo(item) : { name: 'Day Night Media', handle: 'daynight', avatar: './Logo/logo.png' };
     const currentUser = window.DNM_AUTH ? window.DNM_AUTH.getCurrentUser() : null;
-    const isOwner = currentUser && (
-      (item.authorUid && item.authorUid === currentUser.uid) ||
-      (item.authorId && item.authorId === currentUser.uid) ||
-      (currentUser.role === 'admin' || currentUser.isAdmin)
-    );
+    let isOwner = false;
+    if (currentUser) {
+      const curUid = String(currentUser.uid || '');
+      const curUser = (currentUser.username || '').toLowerCase();
+      const authorUid = String(item.authorUid || item.authorId || item.userId || '');
+      const authorUser = (item.authorUsername || '').toLowerCase();
+      if (curUid && (curUid === authorUid)) isOwner = true;
+      if (curUser && authorUser && curUser === authorUser) isOwner = true;
+      if (currentUser.role === 'admin' || currentUser.isAdmin) isOwner = true;
+      try {
+        const dataStorage = window.DNM_STORAGE_DATA || (window.DNM_STORAGE_DATA = new (window.StorageAdapter || window.DNM_STORAGE?.StorageAdapter)({ namespace: 'data' }));
+        const stored = dataStorage.get('uploaded_posts', []) || [];
+        if (Array.isArray(stored) && stored.some(p => String(p.id) === String(item.id) || (p.fileId && p.fileId === item.fileId))) {
+          isOwner = true;
+        }
+      } catch(_) {}
+    }
 
     // Check saved state
     let isSaved = false;
@@ -111,55 +123,6 @@
               </div>
             </button>
 
-            <!-- Archive -->
-            <button type="button" class="ig-menu-item" id="ig-menu-btn-archive">
-              <div class="ig-menu-item-left">
-                <span class="ig-menu-item-icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                </span>
-                <span>Archive</span>
-              </div>
-            </button>
-
-            <!-- Hide like count to others -->
-            <div class="ig-menu-item" id="ig-menu-row-likes">
-              <div class="ig-menu-item-left">
-                <span class="ig-menu-item-icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
-                </span>
-                <span>Hide like count to others</span>
-              </div>
-              <div class="ig-menu-switch ${hideLikes ? 'active' : ''}" id="ig-switch-likes">
-                <div class="ig-menu-switch-thumb"></div>
-              </div>
-            </div>
-
-            <!-- Hide share count -->
-            <div class="ig-menu-item" id="ig-menu-row-shares">
-              <div class="ig-menu-item-left">
-                <span class="ig-menu-item-icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
-                </span>
-                <span>Hide share count</span>
-              </div>
-              <div class="ig-menu-switch ${hideShares ? 'active' : ''}" id="ig-switch-shares">
-                <div class="ig-menu-switch-thumb"></div>
-              </div>
-            </div>
-
-            <!-- Turn off commenting -->
-            <div class="ig-menu-item" id="ig-menu-row-comments">
-              <div class="ig-menu-item-left">
-                <span class="ig-menu-item-icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
-                </span>
-                <span>Turn off commenting</span>
-              </div>
-              <div class="ig-menu-switch ${commentsOff ? 'active' : ''}" id="ig-switch-comments">
-                <div class="ig-menu-switch-thumb"></div>
-              </div>
-            </div>
-
             <!-- Suggested products -->
             <button type="button" class="ig-menu-item" id="ig-menu-btn-products">
               <div class="ig-menu-item-left">
@@ -181,6 +144,55 @@
             </button>
 
             ${isOwner ? `
+              <!-- Archive (Owner / Admin) -->
+              <button type="button" class="ig-menu-item" id="ig-menu-btn-archive">
+                <div class="ig-menu-item-left">
+                  <span class="ig-menu-item-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </span>
+                  <span>Archive</span>
+                </div>
+              </button>
+
+              <!-- Hide like count to others (Owner / Admin) -->
+              <div class="ig-menu-item" id="ig-menu-row-likes">
+                <div class="ig-menu-item-left">
+                  <span class="ig-menu-item-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                  </span>
+                  <span>Hide like count to others</span>
+                </div>
+                <div class="ig-menu-switch ${hideLikes ? 'active' : ''}" id="ig-switch-likes">
+                  <div class="ig-menu-switch-thumb"></div>
+                </div>
+              </div>
+
+              <!-- Hide share count (Owner / Admin) -->
+              <div class="ig-menu-item" id="ig-menu-row-shares">
+                <div class="ig-menu-item-left">
+                  <span class="ig-menu-item-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                  </span>
+                  <span>Hide share count</span>
+                </div>
+                <div class="ig-menu-switch ${hideShares ? 'active' : ''}" id="ig-switch-shares">
+                  <div class="ig-menu-switch-thumb"></div>
+                </div>
+              </div>
+
+              <!-- Turn off commenting (Owner / Admin) -->
+              <div class="ig-menu-item" id="ig-menu-row-comments">
+                <div class="ig-menu-item-left">
+                  <span class="ig-menu-item-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                  </span>
+                  <span>Turn off commenting</span>
+                </div>
+                <div class="ig-menu-switch ${commentsOff ? 'active' : ''}" id="ig-switch-comments">
+                  <div class="ig-menu-switch-thumb"></div>
+                </div>
+              </div>
+
               <!-- Edit Post (Owner / Admin) -->
               <button type="button" class="ig-menu-item" id="ig-menu-btn-edit">
                 <div class="ig-menu-item-left">
@@ -201,7 +213,7 @@
                 </div>
               </button>
             ` : `
-              <!-- Not Interested / Report (Viewer) -->
+              <!-- Report Post (Viewer only) -->
               <button type="button" class="ig-menu-item ig-menu-item-danger" id="ig-menu-btn-report">
                 <div class="ig-menu-item-left">
                   <span class="ig-menu-item-icon">

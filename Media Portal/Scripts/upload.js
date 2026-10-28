@@ -169,28 +169,17 @@
             </div>
           </button>
 
-          <!-- 2. Edits -->
-          <button type="button" class="ig-create-item" id="ig-create-opt-edits">
-            <div class="ig-create-item-left">
-              <span class="ig-create-item-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-              </span>
-              <span>Edits</span>
-            </div>
-            <span class="ig-create-badge-new">New</span>
-          </button>
-
-          <!-- 3. Post -->
+          <!-- 2. Post -->
           <button type="button" class="ig-create-item" id="ig-create-opt-post">
             <div class="ig-create-item-left">
               <span class="ig-create-item-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               </span>
               <span>Post</span>
             </div>
           </button>
 
-          <!-- 4. Story -->
+          <!-- 3. Story -->
           <button type="button" class="ig-create-item" id="ig-create-opt-story">
             <div class="ig-create-item-left">
               <span class="ig-create-item-icon">
@@ -200,23 +189,13 @@
             </div>
           </button>
 
-          <!-- 5. Highlights -->
-          <button type="button" class="ig-create-item" id="ig-create-opt-highlights">
+          <!-- 4. GIFs -->
+          <button type="button" class="ig-create-item" id="ig-create-opt-gifs">
             <div class="ig-create-item-left">
-              <span class="ig-create-item-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16.5l-1-0.9C7.4 12.4 5 10.3 5 7.6 5 5.6 6.6 4 8.6 4c1.1 0 2.2.5 2.9 1.4C12.2 4.5 13.3 4 14.4 4 16.4 4 18 5.6 18 7.6c0 2.7-2.4 4.8-6 8l-1 0.9z"/></svg>
+              <span class="ig-create-item-icon" style="font-weight:900;font-size:11px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:flex;align-items:center;justify-content:center;letter-spacing:0.5px;">
+                GIF
               </span>
-              <span>Highlights</span>
-            </div>
-          </button>
-
-          <!-- 6. Live -->
-          <button type="button" class="ig-create-item" id="ig-create-opt-live">
-            <div class="ig-create-item-left">
-              <span class="ig-create-item-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.93 4.93a10 10 0 0 1 14.14 0"/><path d="M7.76 7.76a6 6 0 0 1 8.48 0"/><circle cx="12" cy="12" r="2"/></svg>
-              </span>
-              <span>Live</span>
+              <span>GIFs</span>
             </div>
           </button>
         </div>
@@ -233,7 +212,7 @@
 
     scrim.addEventListener('click', e => { if (e.target === scrim) closeSheet(); });
 
-    // Wire actions
+    // Wire actions - strictly 4 working Instagram options
     scrim.querySelector('#ig-create-opt-reel')?.addEventListener('click', () => {
       closeSheet();
       openInstagramStudio({ mode: 'reel' });
@@ -242,21 +221,13 @@
       closeSheet();
       openInstagramStudio({ mode: 'post' });
     });
-    scrim.querySelector('#ig-create-opt-edits')?.addEventListener('click', () => {
-      closeSheet();
-      openInstagramStudio({ mode: 'edits' });
-    });
     scrim.querySelector('#ig-create-opt-story')?.addEventListener('click', () => {
       closeSheet();
-      openInstagramStudio({ mode: 'story' });
+      openStoryCreator();
     });
-    scrim.querySelector('#ig-create-opt-highlights')?.addEventListener('click', () => {
+    scrim.querySelector('#ig-create-opt-gifs')?.addEventListener('click', () => {
       closeSheet();
-      alert('Select any of your archived reels from profile to add to your Highlights.');
-    });
-    scrim.querySelector('#ig-create-opt-live')?.addEventListener('click', () => {
-      closeSheet();
-      alert('Live broadcasting will begin once connected to RTMP stream server.');
+      openInstagramGifStudio();
     });
   }
 
@@ -289,14 +260,14 @@
         <button type="button" class="ig-studio-btn" id="ig-studio-btn-close" aria-label="Cancel">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
-        <span class="ig-studio-title" id="ig-studio-title-text">${remixItem ? 'Remix Reel' : 'New reel'}</span>
+        <span class="ig-studio-title" id="ig-studio-title-text">${remixItem ? 'Remix Reel' : (mode === 'post' ? 'New post' : 'New reel')}</span>
         <button type="button" class="ig-studio-btn" id="ig-studio-btn-camera" aria-label="Open Camera">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </button>
       </header>
 
       <!-- Hidden Real File Input -->
-      <input type="file" id="ig-hidden-file-input" accept="video/mp4,video/webm,video/quicktime,image/jpeg,image/png,image/webp" style="display:none;">
+      <input type="file" id="ig-hidden-file-input" accept="${mode === 'post' ? 'image/jpeg,image/png,image/webp,image/avif' : 'video/mp4,video/webm,video/quicktime,video/*'}" style="display:none;">
 
       <!-- SCREEN 1: Media Picker (Image 4) -->
       <div class="ig-picker-view" id="ig-view-picker">
@@ -508,7 +479,7 @@
         // Go back to picker
         viewDetails.style.display = 'none';
         viewPicker.style.display = 'flex';
-        titleText.textContent = 'New reel';
+        titleText.textContent = remixItem ? 'Remix Reel' : (mode === 'post' ? 'New post' : 'New reel');
         btnClose.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
       } else {
         closeStudio();
@@ -534,7 +505,7 @@
       // Transition to Screen 2 (Image 5)
       viewPicker.style.display = 'none';
       viewDetails.style.display = 'flex';
-      titleText.textContent = 'New reel';
+      titleText.textContent = remixItem ? 'Remix Reel' : (mode === 'post' ? 'New post' : 'New reel');
       btnClose.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>';
 
       if (isPhoto) {
@@ -671,7 +642,7 @@
           base64Data = await readFileAsBase64(selectedFile);
         }
 
-        const isPhoto = selectedFile ? detectIsPhoto(selectedFile) : false;
+        const isPhoto = selectedFile ? detectIsPhoto(selectedFile) : (mode === 'post');
         const caption = captionInp.value.trim() || 'Daynight official post';
         const partner = selectedPartner.toLowerCase().replace(/[^a-z0-9]/g, '') || 'tcs';
         const location = selectedLocation || 'Chennai';
@@ -679,8 +650,8 @@
         const payload = {
           action: 'uploadReel',
           fileData: base64Data,
-          fileName: selectedFile ? selectedFile.name : 'remix.mp4',
-          mimeType: selectedFile ? selectedFile.type : 'video/mp4',
+          fileName: selectedFile ? selectedFile.name : 'upload.mp4',
+          mimeType: selectedFile ? selectedFile.type : (isPhoto ? 'image/jpeg' : 'video/mp4'),
           title: caption,
           caption: caption,
           client: partner,
@@ -711,9 +682,11 @@
         // Create Real Firestore Record
         const newPost = {
           id: result.fileId || `post_${Date.now()}`,
+          fileId: result.fileId || '',
           title: caption,
           caption: caption,
           url: result.url || result.webContentLink || '',
+          mediaUrl: result.url || result.webContentLink || base64Data || '',
           coverUrl: customCoverDataUrl || result.thumbnailLink || './Logo/logo.png',
           type: isPhoto ? 'photo' : 'video',
           c: partner,
@@ -721,6 +694,7 @@
           likes: 0,
           views: 1,
           createdAt: Date.now(),
+          authorId: user.uid,
           authorUid: user.uid,
           authorName: user.displayName || 'Day Night Creator',
           authorUsername: user.username || 'creator',
@@ -753,11 +727,308 @@
     });
   }
 
+  // =========================================================================
+  // STAGE 3: Instagram Story Creator
+  // =========================================================================
+  function openStoryCreator() {
+    if (window.DNM_STORIES && window.DNM_STORIES.openStoryCamera) {
+      window.DNM_STORIES.openStoryCamera();
+      return;
+    }
+    openInstagramStudio({ mode: 'story' });
+  }
+
+  // =========================================================================
+  // STAGE 4: Instagram GIF Studio
+  // =========================================================================
+  function openInstagramGifStudio() {
+    const user = window.DNM_AUTH ? window.DNM_AUTH.getCurrentUser() : null;
+    if (!user) {
+      if (window.DNM_AUTH?.signInWithGoogle) window.DNM_AUTH.signInWithGoogle();
+      return;
+    }
+
+    const existing = document.querySelector('#dnm-gif-studio-scrim');
+    if (existing) existing.remove();
+
+    const gifList = [
+      { id: 'g1', title: 'Party Confetti', category: 'party', url: 'https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif' },
+      { id: 'g2', title: 'Celebration Fireworks', category: 'celebration', url: 'https://media.giphy.com/media/l41JRsph73VokN6ik/giphy.gif' },
+      { id: 'g3', title: 'Dance Vibes', category: 'dance', url: 'https://media.giphy.com/media/blSTtZehjAZ8I/giphy.gif' },
+      { id: 'g4', title: 'Thumbs Up Awesome', category: 'reactions', url: 'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif' },
+      { id: 'g5', title: 'Heart Sparkles', category: 'love', url: 'https://media.giphy.com/media/26BRv0ThflsHCqDrG/giphy.gif' },
+      { id: 'g6', title: 'Cinema Popcorn', category: 'cinema', url: 'https://media.giphy.com/media/t3q5u9W3N6Q80/giphy.gif' },
+      { id: 'g7', title: 'Laughing Cat', category: 'memes', url: 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif' },
+      { id: 'g8', title: 'Mind Blown', category: 'reactions', url: 'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif' },
+      { id: 'g9', title: 'Fashion Walk', category: 'trending', url: 'https://media.giphy.com/media/3o7TKMt1VVNkHV2PaE/giphy.gif' },
+      { id: 'g10', title: 'Victory Trophy', category: 'celebration', url: 'https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif' },
+      { id: 'g11', title: 'Happy Dance', category: 'dance', url: 'https://media.giphy.com/media/DhstvI3CH03DO/giphy.gif' },
+      { id: 'g12', title: 'Neon Day Night', category: 'trending', url: 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif' }
+    ];
+
+    let currentCategory = 'all';
+    let selectedGifUrl = null;
+    let selectedGifTitle = '';
+
+    const studio = document.createElement('div');
+    studio.className = 'ig-studio-scrim';
+    studio.id = 'dnm-gif-studio-scrim';
+
+    studio.innerHTML = `
+      <header class="ig-studio-header">
+        <button type="button" class="ig-studio-btn" id="ig-gif-btn-close" aria-label="Close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <span class="ig-studio-title" id="ig-gif-studio-title">GIF Studio</span>
+        <button type="button" class="ig-studio-btn" id="ig-gif-btn-upload-file" aria-label="Upload GIF File" title="Upload from Device">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+      </header>
+
+      <input type="file" id="ig-gif-device-file-inp" accept="image/gif" style="display:none;">
+
+      <!-- VIEW 1: GIF Browse & Search -->
+      <div class="ig-gif-studio-body" id="ig-gif-view-picker">
+        <div class="ig-gif-search-bar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="ig-gif-search-inp" id="ig-gif-search-inp" placeholder="Search animated GIFs on Daynight...">
+        </div>
+
+        <div class="ig-gif-categories-strip">
+          <button type="button" class="ig-gif-cat-chip active" data-cat="all">All GIFs</button>
+          <button type="button" class="ig-gif-cat-chip" data-cat="trending">Trending</button>
+          <button type="button" class="ig-gif-cat-chip" data-cat="reactions">Reactions</button>
+          <button type="button" class="ig-gif-cat-chip" data-cat="celebration">Celebration</button>
+          <button type="button" class="ig-gif-cat-chip" data-cat="memes">Memes</button>
+          <button type="button" class="ig-gif-cat-chip" data-cat="dance">Dance</button>
+          <button type="button" class="ig-gif-cat-chip" data-cat="love">Love</button>
+          <button type="button" class="ig-gif-cat-chip" data-cat="cinema">Cinema</button>
+        </div>
+
+        <div class="ig-gif-grid" id="ig-gif-grid-container"></div>
+      </div>
+
+      <!-- VIEW 2: GIF Details & Share -->
+      <div class="ig-details-view" id="ig-gif-view-details" style="display:none;">
+        <div class="ig-details-preview-card" style="aspect-ratio:1;">
+          <img id="ig-gif-details-preview-img" class="ig-details-preview-media" src="" alt="Selected GIF" style="object-fit:cover;">
+        </div>
+
+        <div class="ig-details-caption-wrap">
+          <textarea class="ig-details-caption-inp" id="ig-gif-caption-inp" placeholder="Write a caption for your GIF..."></textarea>
+        </div>
+
+        <div class="ig-details-chips-row">
+          <button type="button" class="ig-details-chip" data-gchip="#GIF"># GIF</button>
+          <button type="button" class="ig-details-chip" data-gchip="#Trending"># Trending</button>
+          <button type="button" class="ig-details-chip" data-gchip="#DayNight"># DayNight</button>
+          <button type="button" class="ig-details-chip" data-gchip="#Viral"># Viral</button>
+        </div>
+
+        <div class="ig-details-settings-list">
+          <div class="ig-details-row" id="ig-gif-row-partner">
+            <div class="ig-details-row-left">
+              <svg class="ig-details-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <div class="ig-details-row-content">
+                <span class="ig-details-row-title">Tag Brand Partner</span>
+                <span class="ig-details-row-subtext" id="ig-gif-partner-subtext">The Chennai Silks &bull; Daynight Partner</span>
+              </div>
+            </div>
+            <div class="ig-details-row-right">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <footer class="ig-details-sticky-footer">
+          <button type="button" class="ig-btn-draft" id="ig-gif-btn-cancel">Cancel</button>
+          <button type="button" class="ig-btn-next" id="ig-gif-btn-share">Share GIF</button>
+        </footer>
+      </div>
+    `;
+
+    document.body.appendChild(studio);
+
+    const btnClose = studio.querySelector('#ig-gif-btn-close');
+    const btnUploadFile = studio.querySelector('#ig-gif-btn-upload-file');
+    const fileInp = studio.querySelector('#ig-gif-device-file-inp');
+    const viewPicker = studio.querySelector('#ig-gif-view-picker');
+    const viewDetails = studio.querySelector('#ig-gif-view-details');
+    const titleText = studio.querySelector('#ig-gif-studio-title');
+    const searchInp = studio.querySelector('#ig-gif-search-inp');
+    const gridContainer = studio.querySelector('#ig-gif-grid-container');
+    const previewImg = studio.querySelector('#ig-gif-details-preview-img');
+    const captionInp = studio.querySelector('#ig-gif-caption-inp');
+    const btnCancel = studio.querySelector('#ig-gif-btn-cancel');
+    const btnShare = studio.querySelector('#ig-gif-btn-share');
+
+    let gifPartner = 'tcs';
+
+    function renderGifs(filterText = '') {
+      const q = filterText.toLowerCase().trim();
+      const filtered = gifList.filter(g => {
+        if (currentCategory !== 'all' && g.category !== currentCategory) return false;
+        if (q && !g.title.toLowerCase().includes(q) && !g.category.toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      if (!filtered.length) {
+        gridContainer.innerHTML = `
+          <div style="grid-column:span 2;padding:40px 10px;text-align:center;color:rgba(255,255,255,0.6);">
+            <p>No GIFs found. Tap the upload button in the top right to upload your own animated GIF!</p>
+          </div>
+        `;
+        return;
+      }
+
+      gridContainer.innerHTML = filtered.map(g => `
+        <div class="ig-gif-card" data-gif-url="${g.url}" data-gif-title="${g.title}">
+          <img class="ig-gif-thumb" src="${g.url}" alt="${g.title}" loading="lazy">
+          <span class="ig-gif-badge">GIF</span>
+        </div>
+      `).join('');
+
+      gridContainer.querySelectorAll('.ig-gif-card').forEach(card => {
+        card.addEventListener('click', () => {
+          selectedGifUrl = card.dataset.gifUrl;
+          selectedGifTitle = card.dataset.gifTitle;
+          selectGif(selectedGifUrl, selectedGifTitle);
+        });
+      });
+    }
+
+    function selectGif(url, title) {
+      viewPicker.style.display = 'none';
+      viewDetails.style.display = 'flex';
+      titleText.textContent = 'Share GIF';
+      btnClose.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>';
+      previewImg.src = url;
+      captionInp.value = `${title} #DayNight #GIF #Trending`;
+    }
+
+    renderGifs();
+
+    // Category filter chips
+    studio.querySelectorAll('.ig-gif-cat-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        studio.querySelectorAll('.ig-gif-cat-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentCategory = chip.dataset.cat;
+        renderGifs(searchInp.value);
+      });
+    });
+
+    searchInp.addEventListener('input', () => renderGifs(searchInp.value));
+
+    // Upload own GIF from device
+    btnUploadFile.addEventListener('click', () => fileInp.click());
+    fileInp.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+          selectedGifUrl = reader.result;
+          selectedGifTitle = file.name.replace(/\.gif$/i, '');
+          selectGif(selectedGifUrl, selectedGifTitle);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Back & Close
+    btnClose.addEventListener('click', () => {
+      if (viewDetails.style.display !== 'none') {
+        viewDetails.style.display = 'none';
+        viewPicker.style.display = 'flex';
+        titleText.textContent = 'GIF Studio';
+        btnClose.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      } else {
+        studio.remove();
+      }
+    });
+
+    btnCancel.addEventListener('click', () => {
+      viewDetails.style.display = 'none';
+      viewPicker.style.display = 'flex';
+      titleText.textContent = 'GIF Studio';
+      btnClose.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    });
+
+    // Tag chips
+    studio.querySelectorAll('.ig-details-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        captionInp.value += ` ${chip.dataset.gchip}`;
+        captionInp.focus();
+      });
+    });
+
+    // Partner tag
+    studio.querySelector('#ig-gif-row-partner')?.addEventListener('click', () => {
+      const chosen = prompt('Tag Brand Partner:', 'The Chennai Silks');
+      if (chosen) {
+        gifPartner = chosen.toLowerCase().replace(/[^a-z0-9]/g, '') || 'tcs';
+        studio.querySelector('#ig-gif-partner-subtext').textContent = chosen;
+      }
+    });
+
+    // Share GIF
+    btnShare.addEventListener('click', async () => {
+      if (!selectedGifUrl) return;
+      btnShare.disabled = true;
+      btnShare.textContent = 'Sharing...';
+
+      const caption = captionInp.value.trim() || 'Daynight animated GIF';
+      const newPost = {
+        id: `gif_${Date.now()}`,
+        title: caption,
+        caption: caption,
+        url: selectedGifUrl,
+        mediaUrl: selectedGifUrl,
+        coverUrl: selectedGifUrl,
+        type: 'photo',
+        mimeType: 'image/gif',
+        c: gifPartner,
+        b: 'Chennai',
+        likes: 0,
+        views: 1,
+        createdAt: Date.now(),
+        authorId: user.uid,
+        authorUid: user.uid,
+        authorName: user.displayName || 'Day Night Creator',
+        authorUsername: user.username || 'creator',
+        authorAvatar: user.photoURL || './Logo/logo.png',
+        status: 'approved',
+        hidden: false
+      };
+
+      try {
+        if (window.DNM_DATA && window.DNM_DATA.addUploadedPost) {
+          await window.DNM_DATA.addUploadedPost(newPost);
+        }
+        if (window.DNM_FIREBASE && window.DNM_FIREBASE.savePost) {
+          window.DNM_FIREBASE.savePost(newPost).catch(() => {});
+        }
+        if (typeof BroadcastChannel !== 'undefined') {
+          const syncHub = new BroadcastChannel('daynight_live_sync');
+          syncHub.postMessage({ type: 'DATA_MUTATED', post: newPost, time: Date.now() });
+        }
+        alert('GIF published to feed!');
+        studio.remove();
+        if (window.DNM_APP?.switchTab) window.DNM_APP.switchTab('feed');
+      } catch (err) {
+        console.error('GIF share failed:', err);
+        studio.remove();
+      }
+    });
+  }
+
   // Export to window
   window.DNM_UPLOAD = {
     openCreateSheet,
     openUploadModal: openCreateSheet, // Standard upload button opens the Instagram Create Sheet
-    openInstagramStudio
+    openInstagramStudio,
+    openStoryCreator,
+    openInstagramGifStudio
   };
 
 })(window);

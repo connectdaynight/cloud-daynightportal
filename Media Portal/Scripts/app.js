@@ -443,7 +443,8 @@
       return;
     }
 
-    const userPosts = window.DNM_DATA.getUserPosts(user);
+    let userPosts = window.DNM_DATA.getUserPosts(user);
+    if (!Array.isArray(userPosts)) userPosts = [];
 
     wrap.innerHTML = `
       <!-- Profile Top Bar with Menu Drawer Button -->
@@ -546,11 +547,13 @@
       const grid = wrap.querySelector('#dnm-profile-grid-items');
       if (!grid) return;
 
-      const currentOwn = window.DNM_DATA.getUserPosts(user);
+      let currentOwn = window.DNM_DATA.getUserPosts(user);
+      if (!Array.isArray(currentOwn)) currentOwn = [];
       const countEl = wrap.querySelector('#dnm-user-posts-count');
       if (countEl) countEl.textContent = currentOwn.length;
 
-      const items = tab === 'saved' ? window.DNM_DATA.getSavedPosts() : currentOwn;
+      let items = tab === 'saved' ? window.DNM_DATA.getSavedPosts() : currentOwn;
+      if (!Array.isArray(items)) items = [];
 
       if (!items.length) {
         grid.innerHTML = `
