@@ -19,6 +19,12 @@
     initStoryCamera();
   }
 
+  function cleanBrandName(name) {
+    if (!name) return 'Brand';
+    const clean = name.replace(/^the\s+/i, '').trim();
+    return clean;
+  }
+
   async function renderStoriesTray(trayEl) {
     const target = trayEl || document.querySelector('#dnm-stories-tray');
     if (!target) return;
@@ -54,7 +60,7 @@
           <div class="dnm-story-ring ${hasStories ? '' : 'seen'}">
             <img class="dnm-story-avatar" src="${realLogo}" alt="${c.name}">
           </div>
-          <span class="dnm-story-name">${c.name.split(' ')[0]}</span>
+          <span class="dnm-story-name" title="${c.name}">${cleanBrandName(c.name)}</span>
         </div>
       `;
     }

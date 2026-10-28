@@ -85,9 +85,30 @@
       `;
     });
 
-    container.innerHTML = reelsHtml;
-    attachReelsEvents(container);
-    setupReelsObserver(container);
+    container.innerHTML = `
+      <div class="dnm-reels-top-bar">
+        <span class="dnm-reels-top-title">Reels</span>
+        <button type="button" class="dnm-reels-top-cam" id="dnm-reels-cam-btn" aria-label="Create Reel">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </button>
+      </div>
+      <div class="dnm-reels-feed-container" id="dnm-reels-feed-container">
+        ${reelsHtml}
+      </div>
+    `;
+
+    const camBtn = container.querySelector('#dnm-reels-cam-btn');
+    if (camBtn) {
+      camBtn.addEventListener('click', () => {
+        if (window.DNM_UPLOAD && window.DNM_UPLOAD.openCreateSheet) {
+          window.DNM_UPLOAD.openCreateSheet();
+        }
+      });
+    }
+
+    const feedWrap = container.querySelector('#dnm-reels-feed-container') || container;
+    attachReelsEvents(feedWrap);
+    setupReelsObserver(feedWrap);
   }
 
   function attachReelsEvents(container) {

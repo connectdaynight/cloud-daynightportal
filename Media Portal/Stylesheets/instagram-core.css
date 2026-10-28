@@ -121,22 +121,32 @@ html, body {
 
 /* App Container */
 .dnm-app-container {
-  max-width: 470px;
+  max-width: 480px;
   min-height: 100vh;
   margin: 0 auto;
   background-color: var(--ig-bg);
   position: relative;
   display: flex;
   flex-direction: column;
-  padding-bottom: calc(var(--ig-nav-height) + 24px);
+  padding-bottom: var(--ig-nav-height, 50px);
   border-left: 1px solid var(--ig-border);
   border-right: 1px solid var(--ig-border);
 }
 
 @media (min-width: 768px) {
+  body {
+    background-color: var(--ig-elevated, #FAFAFA);
+  }
   .dnm-app-container {
-    max-width: 500px;
-    box-shadow: 0 0 30px rgba(0,0,0,0.4);
+    max-width: 480px;
+    box-shadow: 0 0 24px rgba(0,0,0,0.06);
+  }
+}
+
+@media (max-width: 480px) {
+  .dnm-app-container {
+    border-left: none;
+    border-right: none;
   }
 }
 
@@ -164,25 +174,20 @@ html, body {
 .dnm-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
   cursor: pointer;
   text-decoration: none;
   color: var(--ig-text-primary);
 }
 
 .dnm-official-header-logo {
-  height: 32px;
-  width: 32px;
-  border-radius: 8px;
-  object-fit: cover;
-  display: block;
+  display: none;
 }
 
 .dnm-header-brand-title {
-  font-family: var(--ig-font-title);
-  font-weight: 800;
-  font-size: 18px;
-  letter-spacing: -0.4px;
+  font-family: 'Grand Hotel', cursive, -apple-system, sans-serif;
+  font-weight: 400;
+  font-size: 32px;
+  letter-spacing: -0.5px;
   color: var(--ig-text-primary);
   line-height: 1;
 }
@@ -276,37 +281,46 @@ html, body {
   letter-spacing: -0.2px;
 }
 
-/* Floating Bottom Navigation Bar with empty bottom space */
+/* Instagram Flush Bottom Navigation Bar */
 .dnm-bottom-nav {
   position: fixed;
-  bottom: max(10px, env(safe-area-inset-bottom, 10px)); /* Leaves generous empty space below the floating dock */
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 20px);
-  max-width: 460px;
-  height: var(--ig-nav-height);
-  background: var(--ig-nav-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--ig-border);
-  border-radius: 24px;
+  width: 100%;
+  max-width: 480px;
+  height: 50px;
+  background: var(--ig-bg);
+  border-top: 1px solid var(--ig-border);
+  border-left: 1px solid var(--ig-border);
+  border-right: 1px solid var(--ig-border);
+  border-bottom: none;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: space-around;
   z-index: 200;
-  padding: 0 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  transition: transform 0.25s ease, background-color 0.2s ease;
+  padding: 0 10px max(env(safe-area-inset-bottom, 0px), 0px);
+  box-shadow: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 480px) {
   .dnm-bottom-nav {
-    max-width: 480px;
+    border-left: none;
+    border-right: none;
   }
 }
 
-[data-theme="dark"] .dnm-bottom-nav {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+.dnm-bottom-nav.reels-mode {
+  background: #000000;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border-left-color: rgba(255, 255, 255, 0.14);
+  border-right-color: rgba(255, 255, 255, 0.14);
+}
+
+.dnm-bottom-nav.reels-mode .dnm-nav-item {
+  color: #FFFFFF;
 }
 
 .dnm-nav-item {
@@ -337,10 +351,10 @@ html, body {
   stroke-width: 2.6;
 }
 
-/* Equalized Profile Avatar Icon (balanced visually with 24px SVGs) */
+/* Instagram Profile Avatar in Bottom Bar */
 .dnm-nav-avatar-wrap {
-  width: 45px;
-  height: 45px;
+  width: 25px;
+  height: 25px;
   border-radius: 50%;
   padding: 1px;
   border: 1.5px solid transparent;
@@ -349,6 +363,14 @@ html, body {
   justify-content: center;
   transition: border-color 0.15s ease;
   box-sizing: border-box;
+}
+
+.dnm-nav-item.active .dnm-nav-avatar-wrap {
+  border-color: var(--ig-text-primary);
+}
+
+.dnm-bottom-nav.reels-mode .dnm-nav-item.active .dnm-nav-avatar-wrap {
+  border-color: #FFFFFF;
 }
 
 .dnm-nav-avatar {

@@ -39,6 +39,12 @@
     });
   }
 
+  function cleanBrandName(name) {
+    if (!name) return 'Brand';
+    let clean = name.replace(/^the\s+/i, '').trim();
+    return clean;
+  }
+
   // Render Real Client Stories Tray
   function renderStories(trayEl) {
     if (!trayEl) return;
@@ -48,9 +54,9 @@
     let html = `
       <div class="dnm-story-item" data-action="story-user">
         <div class="dnm-story-ring ${user ? '' : 'seen'}">
-          <img class="dnm-story-avatar" src="${user ? user.photoURL : './Logo/logo.png?v=2.2'}" alt="Your Story">
+          <img class="dnm-story-avatar" src="${user && user.photoURL ? user.photoURL : './Logo/logo.png?v=2.2'}" alt="Your Story">
         </div>
-        <span class="dnm-story-name">${user ? (user.username || user.displayName || 'You') : 'Sign In'}</span>
+        <span class="dnm-story-name">${user ? (user.username || user.displayName || 'You') : 'Your Story'}</span>
       </div>
     `;
 
@@ -61,7 +67,7 @@
           <div class="dnm-story-ring">
             <img class="dnm-story-avatar" src="${realLogo}" alt="${c.name}">
           </div>
-          <span class="dnm-story-name">${c.name.split(' ')[0]}</span>
+          <span class="dnm-story-name" title="${c.name}">${cleanBrandName(c.name)}</span>
         </div>
       `;
     });
@@ -171,12 +177,12 @@
             </button>
           </div>
 
-          <!-- Media Container (Preserves exact native aspect ratio: 1:1, 4:5, 16:9, or 9:16) -->
-          <div class="dnm-media-wrapper ${isPhoto ? 'photo-mode' : ''}" data-action="media-click" ${item.aspectRatio ? `style="aspect-ratio:${item.aspectRatio};"` : ''}>
+          <!-- Media Container (Instagram Standard Feed Clamped Aspect Ratio: 4:5 to 1.91:1) -->
+          <div class="dnm-media-wrapper ${isPhoto ? 'photo-mode' : ''}" data-action="media-click" style="aspect-ratio: 4/5;">
             ${isPhoto ? `
-              <img class="dnm-media-photo" src="${mediaSrc}" alt="${item.title || ''}" loading="lazy" onload="if(this.naturalWidth && this.naturalHeight){const r = +(this.naturalWidth / this.naturalHeight).toFixed(4); this.parentElement.style.aspectRatio = r;}" onerror="if(this.src!=='${item.coverUrl}')this.src='${item.coverUrl}';">
+              <img class="dnm-media-photo" src="${mediaSrc}" alt="${item.title || ''}" loading="lazy" onload="if(this.naturalWidth && this.naturalHeight){const r = +(this.naturalWidth / this.naturalHeight).toFixed(4); if(r >= 0.8 && r <= 1.91) this.parentElement.style.aspectRatio = r;}" onerror="if(this.src!=='${item.coverUrl}')this.src='${item.coverUrl}';">
             ` : `
-              <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" muted playsinline loop preload="metadata" onloadedmetadata="if(this.videoWidth && this.videoHeight){const r = +(this.videoWidth / this.videoHeight).toFixed(4); this.parentElement.style.aspectRatio = r;}" poster="${item.coverUrl && item.coverUrl.startsWith('data:') ? item.coverUrl : (mediaSrc || item.coverUrl || '')}"></video>
+              <video class="dnm-media-video dnm-feed-vid" src="${videoSrc}" muted playsinline loop preload="metadata" onloadedmetadata="if(this.videoWidth && this.videoHeight){const r = +(this.videoWidth / this.videoHeight).toFixed(4); if(r >= 0.8 && r <= 1.91) this.parentElement.style.aspectRatio = r;}" poster="${item.coverUrl && item.coverUrl.startsWith('data:') ? item.coverUrl : (mediaSrc || item.coverUrl || '')}"></video>
               <img class="dnm-feed-poster" src="${item.coverUrl && item.coverUrl.startsWith('data:') ? item.coverUrl : (mediaSrc || item.coverUrl || '')}" alt="" loading="lazy">
               <button type="button" class="dnm-sound-pill" data-action="toggle-sound" aria-label="Toggle sound" style="z-index:5;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="dnm-sound-icon">

@@ -213,6 +213,19 @@
       } catch(_) {}
     }
 
+    // Header visibility: Only Home Feed displays the top brand logo header.
+    // Explore has its dedicated search bar, Reels has full-screen overlay, Profile has username bar.
+    const mainHeader = document.querySelector('#dnm-main-header');
+    if (mainHeader) {
+      mainHeader.style.display = (tab === 'feed') ? 'flex' : 'none';
+    }
+
+    // Bottom nav styling: dark mode for full-screen Reels tab
+    const bottomNav = document.querySelector('#dnm-bottom-nav');
+    if (bottomNav) {
+      bottomNav.classList.toggle('reels-mode', tab === 'reels');
+    }
+
     // Update bottom nav active state
     document.querySelectorAll('.dnm-nav-item').forEach(item => {
       item.classList.toggle('active', item.dataset.tab === tab);
@@ -791,7 +804,7 @@
     const user = window.DNM_AUTH.getCurrentUser();
     const avatarImg = document.querySelector('#dnm-nav-user-avatar');
     if (avatarImg) {
-      avatarImg.src = user ? user.photoURL : './Logo/logo.png?v=2.6';
+      avatarImg.src = user && user.photoURL ? user.photoURL : 'https://ui-avatars.com/api/?name=User&background=E5E5E5&color=737373&size=64&bold=true';
     }
   }
 

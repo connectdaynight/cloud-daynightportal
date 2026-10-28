@@ -1,9 +1,56 @@
 /* ==========================================================================
    DAYNIGHT-MEDIA: FULL-SCREEN REELS TAB STYLESHEET
    ========================================================================== */
+#dnm-tab-reels {
+  width: 100%;
+  height: calc(100vh - 50px);
+  overflow: hidden;
+  position: relative;
+  background: #000;
+}
+
+.dnm-reels-top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 25;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.65) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.dnm-reels-top-title {
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  pointer-events: auto;
+}
+
+.dnm-reels-top-cam {
+  background: none;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+  transition: transform 0.15s ease;
+}
+
+.dnm-reels-top-cam:active {
+  transform: scale(0.9);
+}
+
 .dnm-reels-feed-container {
   width: 100%;
-  height: calc(100vh - var(--ig-nav-height));
+  height: 100%;
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   -webkit-overflow-scrolling: touch;
