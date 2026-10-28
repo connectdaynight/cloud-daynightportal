@@ -801,10 +801,19 @@
   }
 
   function updateUserAvatars() {
-    const user = window.DNM_AUTH.getCurrentUser();
+    const user = window.DNM_AUTH ? window.DNM_AUTH.getCurrentUser() : null;
     const avatarImg = document.querySelector('#dnm-nav-user-avatar');
+    const fallbackSvg = document.querySelector('.dnm-nav-avatar-fallback');
     if (avatarImg) {
-      avatarImg.src = user && user.photoURL ? user.photoURL : 'https://ui-avatars.com/api/?name=User&background=E5E5E5&color=737373&size=64&bold=true';
+      if (user && user.photoURL) {
+        avatarImg.src = user.photoURL;
+        avatarImg.style.display = 'block';
+        if (fallbackSvg) fallbackSvg.style.display = 'none';
+      } else {
+        avatarImg.style.display = 'none';
+        avatarImg.src = '';
+        if (fallbackSvg) fallbackSvg.style.display = 'block';
+      }
     }
   }
 

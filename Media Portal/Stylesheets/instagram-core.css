@@ -347,14 +347,26 @@ html, body {
   display: block;
 }
 
-.dnm-nav-item.active svg {
-  stroke-width: 2.6;
+.dnm-nav-item .icon-filled {
+  display: none;
+}
+
+.dnm-nav-item .icon-outline {
+  display: block;
+}
+
+.dnm-nav-item.active .icon-filled {
+  display: block;
+}
+
+.dnm-nav-item.active .icon-outline {
+  display: none;
 }
 
 /* Instagram Profile Avatar in Bottom Bar */
 .dnm-nav-avatar-wrap {
-  width: 25px;
-  height: 25px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   padding: 1px;
   border: 1.5px solid transparent;
@@ -363,6 +375,18 @@ html, body {
   justify-content: center;
   transition: border-color 0.15s ease;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+.dnm-nav-avatar-fallback {
+  width: 20px;
+  height: 20px;
+  display: block;
+  color: var(--ig-text-primary);
+}
+
+.dnm-bottom-nav.reels-mode .dnm-nav-avatar-fallback {
+  color: #FFFFFF;
 }
 
 .dnm-nav-item.active .dnm-nav-avatar-wrap {

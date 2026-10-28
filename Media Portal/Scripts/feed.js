@@ -685,7 +685,10 @@
       document.body.classList.remove('has-modal');
     }
 
-    feedObserver = new IntersectionObserver((entries) => {
+    const cards = Array.from(document.querySelectorAll('.dnm-post-card'));
+    if (!cards.length) return;
+
+    function evaluateVisibleFeedVideo() {
       // If full-screen modal player is active, pause background feed videos
       if (document.querySelector('#dnm-video-player-modal')) {
         document.querySelectorAll('.dnm-feed-vid').forEach(v => {
@@ -697,27 +700,36 @@
         return;
       }
 
-      entries.forEach(entry => {
-        const wrap = entry.target.querySelector('.dnm-media-wrapper');
-        const vid = wrap ? wrap.querySelector('video') : null;
-        const poster = wrap ? wrap.querySelector('.dnm-feed-poster') : null;
+      const vHeight = window.innerHeight || document.documentElement.clientHeight;
+      let bestCard = null;
+      let minDistanceToCenter = Infinity;
+
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const visibleH = Math.max(0, Math.min(rect.bottom, vHeight) - Math.max(rect.top, 0));
+        const ratio = rect.height > 0 ? (visibleH / rect.height) : 0;
+
+        // Card must be at least 30% visible to qualify for autoplay
+        if (ratio >= 0.3) {
+          const cardCenterY = (rect.top + rect.bottom) / 2;
+          const dist = Math.abs(cardCenterY - (vHeight / 2));
+          if (dist < minDistanceToCenter) {
+            minDistanceToCenter = dist;
+            bestCard = card;
+          }
+        }
+      });
+
+      cards.forEach(card => {
+        const vid = card.querySelector('.dnm-feed-vid');
+        const poster = card.querySelector('.dnm-feed-poster');
         if (!vid) return;
 
         // Ensure iOS/Android mobile compatibility properties
         vid.setAttribute('playsinline', '');
         vid.setAttribute('webkit-playsinline', '');
 
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
-          // Pause any other playing feed video so only ONE plays at a time
-          document.querySelectorAll('.dnm-feed-vid').forEach(other => {
-            if (other !== vid) {
-              try {
-                other.pause();
-                other.muted = true;
-              } catch(_) {}
-            }
-          });
-
+        if (card === bestCard) {
           vid.defaultMuted = true;
           vid.muted = isGlobalMuted;
 
@@ -740,11 +752,18 @@
           } catch(_) {}
         }
       });
-    }, { threshold: [0, 0.25, 0.6] });
+    }
 
-    document.querySelectorAll('.dnm-post-card').forEach(card => {
+    feedObserver = new IntersectionObserver(() => {
+      evaluateVisibleFeedVideo();
+    }, { threshold: [0, 0.25, 0.5, 0.75, 1.0] });
+
+    cards.forEach(card => {
       feedObserver.observe(card);
     });
+
+    // Immediate evaluation to ensure the first visible video plays on initial load
+    setTimeout(evaluateVisibleFeedVideo, 50);
   }
 
   // Pull to Refresh for Feed
@@ -804,9 +823,21 @@
   // Automatic Real-Time Server Sync Listeners: ensures fresh uploads immediately show and never disappear
   function handleFeedAutoUpdate() {
     const wrapEl = document.querySelector('#dnm-feed-cards-wrap');
-    if (wrapEl && document.querySelector('#dnm-tab-feed')?.classList.contains('active')) {
-      renderFeedCards(wrapEl, { append: false });
+    if (!wrapEl || !document.querySelector('#dnm-tab-feed')?.classList.contains('active')) return;
+
+    // Check if feed item IDs have actually changed before wiping out playing videos
+    const currentCardIds = Array.from(wrapEl.querySelectorAll('.dnm-post-card')).map(c => c.dataset.postId);
+    const newItems = window.DNM_DATA.getAllApprovedReels();
+    const newIds = newItems.map(item => String(item.id));
+
+    if (currentCardIds.length === newIds.length && currentCardIds.every((id, idx) => id === newIds[idx])) {
+      // Data is identical: keep current playing video uninterrupted, ensure observer is alive
+      if (!feedObserver) initFeedAutoplay();
+      return;
     }
+
+    renderFeedCards(wrapEl, { append: false });
+    initFeedAutoplay();
   }
 
   window.addEventListener('dnm-data-synced', handleFeedAutoUpdate);
