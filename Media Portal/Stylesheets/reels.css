@@ -3,7 +3,7 @@
    ========================================================================== */
 #dnm-tab-reels {
   width: 100%;
-  height: calc(100vh - 50px);
+  height: calc(100vh - var(--ig-nav-height, 62px));
   overflow: hidden;
   position: relative;
   background: #000;

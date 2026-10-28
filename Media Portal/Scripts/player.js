@@ -337,8 +337,8 @@
               </div>
             </div>
 
-            <!-- Scrubber Timeline Bar pinned at bottom: 50px -->
-            <div class="ig-scrubber-bar" id="ig-scrubber" style="position:absolute;bottom:50px;left:0;right:0;height:16px;display:${isPhoto ? 'none' : 'flex'};align-items:flex-end;padding-bottom:2px;z-index:35;cursor:pointer;">
+            <!-- Scrubber Timeline Bar pinned directly above navbar -->
+            <div class="ig-scrubber-bar" id="ig-scrubber" style="display:${isPhoto ? 'none' : 'flex'};">
               <div class="ig-scrubber-track" style="width:100%;height:3px;background:rgba(255,255,255,0.32);position:relative;border-radius:2px;">
                 <div class="ig-scrubber-fill" id="ig-scrubber-fill" style="height:100%;width:0%;background:#FFFFFF;border-radius:2px;position:relative;">
                   <div class="ig-scrubber-thumb-handle"></div>
