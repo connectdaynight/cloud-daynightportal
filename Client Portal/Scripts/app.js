@@ -1955,14 +1955,14 @@
                         <!-- Action Buttons Row: Approve, Deny, Download, Share in Bottom-Right -->
                         <div class="preapp-list-actions">
                           ${r.status === 'approved' ? `
-                            <button type="button" class="preapp-status-badge approved list-mode" data-act="preapp-undo" data-id="${r.id}" title="Click to undo approval" aria-label="Your reels is approved. Click to undo.">
+                            <button type="button" class="preapp-status-badge approved list-mode" data-act="preapp-undo" data-id="${r.id}" title="Approved (Click to undo)" aria-label="Approved. Click to undo.">
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                              <span>Your reels is approved</span>
+                              <span>Approved</span>
                             </button>
                           ` : r.status === 'denied' ? `
-                            <button type="button" class="preapp-status-badge denied list-mode" data-act="preapp-undo" data-id="${r.id}" title="Click to undo rejection" aria-label="Your reels is rejected. Click to undo.">
+                            <button type="button" class="preapp-status-badge denied list-mode" data-act="preapp-undo" data-id="${r.id}" title="Rejected (Click to undo)" aria-label="Rejected. Click to undo.">
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                              <span>Your reels is rejected</span>
+                              <span>Rejected</span>
                             </button>
                           ` : `
                             <button type="button" class="preapp-act-btn approve" data-act="preapp-approve" data-id="${r.id}" title="Approve Reel" aria-label="Approve Reel">
@@ -2029,14 +2029,14 @@
                     <!-- Action Buttons Row (Single Confirmed Pill on Action, Dual Buttons when Pending) -->
                     <div class="preapp-actions-row">
                       ${r.status === 'approved' ? `
-                        <button type="button" class="preapp-status-badge approved" data-act="preapp-undo" data-id="${r.id}" title="Click to undo approval" aria-label="Your reels is approved. Click to undo.">
+                        <button type="button" class="preapp-status-badge approved" data-act="preapp-undo" data-id="${r.id}" title="Approved (Click to undo)" aria-label="Approved. Click to undo.">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                          <span>Your reels is approved</span>
+                          <span>Approved</span>
                         </button>
                       ` : r.status === 'denied' ? `
-                        <button type="button" class="preapp-status-badge denied" data-act="preapp-undo" data-id="${r.id}" title="Click to undo rejection" aria-label="Your reels is rejected. Click to undo.">
+                        <button type="button" class="preapp-status-badge denied" data-act="preapp-undo" data-id="${r.id}" title="Rejected (Click to undo)" aria-label="Rejected. Click to undo.">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          <span>Your reels is rejected</span>
+                          <span>Rejected</span>
                         </button>
                       ` : `
                         <button type="button" class="preapp-act-btn approve" data-act="preapp-approve" data-id="${r.id}" title="Approve Reel" aria-label="Approve Reel">
