@@ -1725,7 +1725,7 @@
 
     // Pre-Approval Screen Renderer (Replaces Home Page Buttons & Provides Pre-Approval Screen)
     function renderPreApprovalPage(c, isHome = false) {
-      const currentMonth = view.month != null ? view.month : 9; // October default (0-indexed 9)
+      const currentMonth = view.month != null ? view.month : TODAY.getMonth();
       const currentPhase = view.preappPhase || view.phase || 'all';
       view.phase = currentPhase;
       view.preappPhase = currentPhase;
@@ -1761,10 +1761,10 @@
       // Filter by Month
       if (currentMonth != null) {
         clientReels = clientReels.filter(r => {
-          if (r.m != null) return r.m === currentMonth;
+          if (r.m != null) return Number(r.m) === Number(currentMonth);
           if (r.date) {
             const d = new Date(r.date);
-            return !isNaN(d) && d.getMonth() === currentMonth;
+            return !isNaN(d) && d.getMonth() === Number(currentMonth);
           }
           return true;
         });
@@ -2050,14 +2050,34 @@
                   </div>`;
               }).join('')}
             </div>`
-        ) : `
-          <div class="empty" style="margin:40px 0;">
-            <div style="width:58px;height:58px;border-radius:50%;background:rgba(13,59,46,0.08);color:#0D3B2E;display:grid;place-items:center;margin:0 auto 10px;">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        ) : (function() {
+          const allClientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id));
+          const otherMonths = [];
+          allClientReels.forEach(r => {
+            const rm = r.m != null ? Number(r.m) : (r.date ? new Date(r.date).getMonth() : null);
+            if (rm != null && rm !== currentMonth && !otherMonths.includes(rm)) {
+              otherMonths.push(rm);
+            }
+          });
+          const mostRecentOtherMonth = otherMonths.length ? otherMonths[0] : null;
+          const otherCount = mostRecentOtherMonth != null ? allClientReels.filter(r => (r.m != null ? Number(r.m) : (r.date ? new Date(r.date).getMonth() : null)) === mostRecentOtherMonth).length : 0;
+
+          return `
+            <div class="empty" style="margin:40px 0;text-align:center;">
+              <div style="width:58px;height:58px;border-radius:50%;background:rgba(13,59,46,0.08);color:#0D3B2E;display:grid;place-items:center;margin:0 auto 10px;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <b style="font-size:16px;color:#0D3B2E;">No content for ${MONTHS[currentMonth]}</b>
+              <p style="font-size:12px;color:var(--mute);margin:6px auto 14px;max-width:320px;">Upload new videos in Admin Panel or switch filters above to review delivered reels.</p>
+              ${mostRecentOtherMonth != null ? `
+                <button type="button" class="btn primary" style="background:#0D3B2E;color:#FFFFFF;border-radius:999px;padding:8px 18px;font-size:13px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0 auto;" data-act="select-dropdown-month" data-m="${mostRecentOtherMonth}">
+                  <span>View ${MONTHS[mostRecentOtherMonth]} Delivered Reels (${otherCount})</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              ` : ''}
             </div>
-            <b style="font-size:16px;color:#0D3B2E;">No content in this selection</b>
-            <span style="font-size:12px;color:var(--mute);">Upload new videos in Admin Panel or switch filters above to review delivered reels.</span>
-          </div>`
+          `;
+        })()
         }
         ${renderBottomNav()}`;
     }
