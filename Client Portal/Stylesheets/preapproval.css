@@ -643,6 +643,201 @@
       box-shadow: 0 4px 14px rgba(239, 68, 68, 0.32);
     }
 
+    /* Single Confirmed Action Pill (Approve or Deny with Click-to-Undo) */
+    .preapp-status-badge {
+      width: 100%;
+      height: 38px;
+      border-radius: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.1px;
+      cursor: pointer;
+      outline: none;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      user-select: none;
+    }
+    .preapp-status-badge svg {
+      flex: none;
+      transition: transform 0.2s ease;
+      display: block;
+      pointer-events: none;
+    }
+    .preapp-status-badge span {
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .preapp-status-badge:hover svg {
+      transform: scale(1.15);
+    }
+    .preapp-status-badge:active {
+      transform: scale(0.96);
+    }
+
+    /* Approved Single Pill: Emerald Glass */
+    .preapp-status-badge.approved {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      color: #FFFFFF;
+      border: 1.2px solid #059669;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    }
+    .preapp-status-badge.approved:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      box-shadow: 0 5px 16px rgba(16, 185, 129, 0.45);
+    }
+
+    /* Denied Single Pill: Crimson Glass */
+    .preapp-status-badge.denied {
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      color: #FFFFFF;
+      border: 1.2px solid #DC2626;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.32);
+    }
+    .preapp-status-badge.denied:hover {
+      background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+      box-shadow: 0 5px 16px rgba(239, 68, 68, 0.42);
+    }
+
+    /* List View Single Pill */
+    .preapp-status-badge.list-mode {
+      width: auto;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 9px;
+      font-size: 12px;
+    }
+
+    /* Themed Confirmation Modal for Pre-Approval Actions & Undo */
+    .scrim.preapp-theme-scrim {
+      background: rgba(13, 59, 46, 0.45) !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      z-index: 9999 !important;
+      padding: 20px !important;
+    }
+    .scrim.preapp-theme-scrim .sheet {
+      background: #FFFDF8 !important;
+      border: 1.5px solid rgba(184, 147, 90, 0.38) !important;
+      border-radius: 24px !important;
+      box-shadow: 0 24px 60px rgba(13, 59, 46, 0.28) !important;
+      padding: 28px 24px 22px !important;
+      text-align: center !important;
+      width: 100% !important;
+      max-width: 400px !important;
+      margin: auto !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      box-sizing: border-box !important;
+      animation: pop 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    .preapp-modal-badge {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 12px;
+      flex: none;
+    }
+    .preapp-modal-badge.undo {
+      background: rgba(184, 147, 90, 0.14);
+      color: #926C27;
+      border: 1.5px solid rgba(184, 147, 90, 0.4);
+      box-shadow: 0 4px 14px rgba(184, 147, 90, 0.22);
+    }
+    .preapp-modal-badge.approve {
+      background: rgba(16, 185, 129, 0.12);
+      color: #059669;
+      border: 1.5px solid rgba(16, 185, 129, 0.35);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.22);
+    }
+    .preapp-modal-badge.denied {
+      background: rgba(239, 68, 68, 0.12);
+      color: #DC2626;
+      border: 1.5px solid rgba(239, 68, 68, 0.35);
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.22);
+    }
+    .preapp-modal-title {
+      font-family: var(--serif), 'Cormorant Garamond', Georgia, serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #0D3B2E;
+      margin: 0 0 8px;
+      line-height: 1.2;
+      letter-spacing: -0.2px;
+    }
+    .preapp-modal-msg {
+      font-size: 13.5px;
+      color: #4A5568;
+      line-height: 1.5;
+      margin: 0 0 22px;
+      max-width: 340px;
+    }
+    .preapp-modal-actions {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .preapp-modal-btn {
+      flex: 1;
+      height: 44px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      outline: none;
+      box-sizing: border-box;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1.2px solid transparent;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .preapp-modal-btn.primary {
+      background: linear-gradient(135deg, #0D3B2E 0%, #155E49 100%);
+      color: #FFFFFF;
+      border-color: #0D3B2E;
+      box-shadow: 0 4px 12px rgba(13, 59, 46, 0.25);
+    }
+    .preapp-modal-btn.primary:hover {
+      background: linear-gradient(135deg, #08261E 0%, #0D3B2E 100%);
+      transform: translateY(-1px);
+    }
+    .preapp-modal-btn.primary.danger {
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      color: #FFFFFF;
+      border-color: #DC2626;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+    }
+    .preapp-modal-btn.primary:active {
+      transform: scale(0.97);
+    }
+    .preapp-modal-btn.cancel {
+      background: #FFFFFF;
+      color: #0D3B2E;
+      border-color: rgba(18, 41, 74, 0.16);
+      box-shadow: 0 2px 6px rgba(18, 41, 74, 0.04);
+    }
+    .preapp-modal-btn.cancel:hover {
+      background: #F8F6F0;
+      border-color: rgba(18, 41, 74, 0.28);
+    }
+    .preapp-modal-btn.cancel:active {
+      transform: scale(0.97);
+    }
+
 
     }
 

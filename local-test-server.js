@@ -35,6 +35,52 @@ const server = http.createServer((req, res) => {
       return res.end();
     }
 
+    // Server-based API save endpoint for reel status and metadata
+    if (pathname === '/api/save' || pathname === '/api/updateReelStatus') {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Storage-Namespace');
+
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        return res.end();
+      }
+
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const payload = body ? JSON.parse(body) : {};
+          if (payload.reelId && payload.status) {
+            // Update local portal-data files if present
+            const pathsToUpdate = [
+              path.join(ROOT, 'portal-data.json'),
+              path.join(ROOT, 'Client Portal', 'DataDBs', 'portal-data.json')
+            ];
+            pathsToUpdate.forEach(fPath => {
+              try {
+                if (fs.existsSync(fPath)) {
+                  const db = JSON.parse(fs.readFileSync(fPath, 'utf8'));
+                  const reel = (db.reels || []).find(r => String(r.id).trim() === String(payload.reelId).trim());
+                  if (reel) {
+                    reel.status = payload.status;
+                    db._updatedAt = Date.now();
+                    fs.writeFileSync(fPath, JSON.stringify(db, null, 2), 'utf8');
+                  }
+                }
+              } catch(_) {}
+            });
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, savedAt: Date.now(), status: payload.status }));
+        } catch(err) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: err.message }));
+        }
+      });
+      return;
+    }
+
     const filePath = path.join(ROOT, pathname);
     if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });

@@ -593,6 +593,57 @@
       }, true);
     }
 
+    // Themed Confirmation Modal (Strictly matches the Client Portal aesthetic)
+    function confirmThemedModal({
+      title,
+      message,
+      confirmText = 'Confirm',
+      cancelText = 'Cancel',
+      type = 'undo', // 'undo' | 'approve' | 'denied'
+      onConfirm,
+      explicitScrollY = null
+    }) {
+      const savedScrollY = explicitScrollY != null ? explicitScrollY : (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0);
+
+      const iconSvg = type === 'undo'
+        ? `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>`
+        : type === 'approve'
+        ? `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+        : `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+      const modalHtml = `
+        <div class="preapp-modal-badge ${type}">
+          ${iconSvg}
+        </div>
+        <h4 class="preapp-modal-title">${esc(title)}</h4>
+        <p class="preapp-modal-msg">${esc(message)}</p>
+        <div class="preapp-modal-actions">
+          <button type="button" class="preapp-modal-btn cancel" data-close>${esc(cancelText)}</button>
+          <button type="button" class="preapp-modal-btn primary ${type === 'denied' ? 'danger' : ''}" id="preapp-c-yes">${esc(confirmText)}</button>
+        </div>
+      `;
+
+      sheet(modalHtml, sc => {
+        sc.querySelector('#preapp-c-yes').addEventListener('click', () => {
+          sc.remove();
+          onConfirm && onConfirm();
+          window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+          });
+        });
+        const cancelBtn = sc.querySelector('[data-close]');
+        if (cancelBtn) {
+          cancelBtn.addEventListener('click', () => {
+            window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+            requestAnimationFrame(() => {
+              window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+            });
+          });
+        }
+      }, true, 'preapp-theme-scrim');
+    }
+
     // Custom Prompt Dialog (No window.prompt)
     function promptModal(title, label, defaultValue, onSubmit, placeholder = '') {
       sheet(`
@@ -1219,10 +1270,60 @@
       const savedScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
       const r = (DATA.reels || []).find(x => String(x.id).trim() === String(reelId).trim());
       if (!r) return;
+      
+      const previousStatus = r.status;
       r.status = newStatus;
       DATA._updatedAt = Date.now();
-      try { window.DNM_STORAGE?.cache?.set('cloud_cache', DATA); } catch(e) { try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(e) {} }
-      try { 
+
+      // Show immediate feedback to user that server sync has initiated
+      if (newStatus === 'review') {
+        toast('Syncing status with server...', 'info');
+      } else {
+        toast(newStatus === 'approved' ? 'Saving approval to server...' : 'Saving edits request to server...', 'info');
+      }
+
+      // Optimistic render for ultra-fast visual responsiveness
+      render();
+      window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+
+      let serverSaved = false;
+
+      // 1. Primary Cloud Server Save via Google Apps Script Backend (Server-based)
+      if (CONFIG.gasUrl) {
+        try {
+          const res = await gasApi('updateReelStatus', { id: r.id, reelId: r.id, status: newStatus });
+          if (res && (res.success || res.status)) {
+            serverSaved = true;
+          }
+        } catch(e) {
+          console.warn('[ServerSync] updateReelStatus failed, attempting syncData fallback:', e.message);
+          try {
+            const fallbackRes = await gasApi('syncData', { data: DATA });
+            if (fallbackRes && fallbackRes.success) serverSaved = true;
+          } catch(e2) {
+            console.error('[ServerSync] Full syncData failed:', e2.message);
+          }
+        }
+      }
+
+      // 2. Secondary API endpoint save (/api/save or /api/updateReelStatus)
+      try {
+        const apiUrl = window.DNM_CONFIG_HELPERS?.getApiUrl?.('/save') || '/api/save';
+        const apiRes = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'updateReelStatus',
+            reelId: r.id,
+            status: newStatus,
+            updatedAt: DATA._updatedAt
+          })
+        });
+        if (apiRes.ok) serverSaved = true;
+      } catch(_) {}
+
+      // 3. Tab Sync & StorageAdapter Cache
+      try {
         if (syncHub) {
           syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
           syncHub.postMessage({ type: 'REEL_APPROVED', id: r.id, reel: r, status: newStatus });
@@ -1230,16 +1331,20 @@
         if (window.DNM_DATA && window.DNM_DATA.syncWithClientPortalData) {
           window.DNM_DATA.syncWithClientPortalData(DATA);
         }
+        window.DNM_STORAGE?.cache?.set('cloud_cache', DATA);
       } catch(e) {}
-      if (newStatus === 'review') {
-        toast('Content status set to Under Review', 'info');
+
+      // Server persistence feedback
+      if (serverSaved) {
+        toast(newStatus === 'review'
+          ? 'Saved to server: Reel is now Under Review'
+          : (newStatus === 'approved' ? 'Saved to server: Reel is Approved' : 'Saved to server: Edits requested'),
+          'success'
+        );
       } else {
-        toast(newStatus === 'approved' ? 'Content marked as Approved' : 'Content marked as Denied / Edits Requested', newStatus === 'approved' ? 'success' : 'amber');
+        toast('Status updated (Server offline - will sync on reconnect)', 'amber');
       }
-      if (CONFIG.gasUrl) {
-        gasApi('updateReelStatus', { id: r.id, reelId: r.id, status: newStatus })
-          .catch(() => gasApi('syncData', { data: DATA }).catch(() => {}));
-      }
+
       render();
       window.scrollTo({ top: savedScrollY, behavior: 'instant' });
       requestAnimationFrame(() => {
@@ -1849,12 +1954,24 @@
 
                         <!-- Action Buttons Row: Approve, Deny, Download, Share in Bottom-Right -->
                         <div class="preapp-list-actions">
-                          <button type="button" class="preapp-act-btn approve ${r.status === 'approved' ? 'active' : ''}" data-act="preapp-approve" data-id="${r.id}" title="Approve Reel" aria-label="Approve Reel">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                          </button>
-                          <button type="button" class="preapp-act-btn denied ${r.status === 'denied' ? 'active' : ''}" data-act="preapp-denied" data-id="${r.id}" title="Request Edits / Deny" aria-label="Request Edits / Deny">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
+                          ${r.status === 'approved' ? `
+                            <button type="button" class="preapp-status-badge approved list-mode" data-act="preapp-undo" data-id="${r.id}" title="Click to undo approval" aria-label="Your reels is approved. Click to undo.">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                              <span>Your reels is approved</span>
+                            </button>
+                          ` : r.status === 'denied' ? `
+                            <button type="button" class="preapp-status-badge denied list-mode" data-act="preapp-undo" data-id="${r.id}" title="Click to undo rejection" aria-label="Your reels is rejected. Click to undo.">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              <span>Your reels is rejected</span>
+                            </button>
+                          ` : `
+                            <button type="button" class="preapp-act-btn approve" data-act="preapp-approve" data-id="${r.id}" title="Approve Reel" aria-label="Approve Reel">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            </button>
+                            <button type="button" class="preapp-act-btn denied" data-act="preapp-denied" data-id="${r.id}" title="Request Edits / Deny" aria-label="Request Edits / Deny">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                          `}
                           <button type="button" class="preapp-act-btn dl" data-act="direct-dl" data-id="${r.id}" title="Download Master MP4" aria-label="Download Master MP4">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 20h16"/></svg>
                           </button>
@@ -1909,14 +2026,26 @@
                       </div>
                     </div>
 
-                    <!-- Action Buttons Row (Icons Only - Ultra Modern & Clean) -->
+                    <!-- Action Buttons Row (Single Confirmed Pill on Action, Dual Buttons when Pending) -->
                     <div class="preapp-actions-row">
-                      <button type="button" class="preapp-act-btn approve ${r.status === 'approved' ? 'active' : ''}" data-act="preapp-approve" data-id="${r.id}" title="Approve Reel" aria-label="Approve Reel">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                      </button>
-                      <button type="button" class="preapp-act-btn denied ${r.status === 'denied' ? 'active' : ''}" data-act="preapp-denied" data-id="${r.id}" title="Request Edits / Deny" aria-label="Request Edits / Deny">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      </button>
+                      ${r.status === 'approved' ? `
+                        <button type="button" class="preapp-status-badge approved" data-act="preapp-undo" data-id="${r.id}" title="Click to undo approval" aria-label="Your reels is approved. Click to undo.">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>Your reels is approved</span>
+                        </button>
+                      ` : r.status === 'denied' ? `
+                        <button type="button" class="preapp-status-badge denied" data-act="preapp-undo" data-id="${r.id}" title="Click to undo rejection" aria-label="Your reels is rejected. Click to undo.">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          <span>Your reels is rejected</span>
+                        </button>
+                      ` : `
+                        <button type="button" class="preapp-act-btn approve" data-act="preapp-approve" data-id="${r.id}" title="Approve Reel" aria-label="Approve Reel">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </button>
+                        <button type="button" class="preapp-act-btn denied" data-act="preapp-denied" data-id="${r.id}" title="Request Edits / Deny" aria-label="Request Edits / Deny">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      `}
                     </div>
                   </div>`;
               }).join('')}
@@ -7127,9 +7256,17 @@
         const savedScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         const title = r ? `"${r.title}"` : 'this reel';
-        confirmModal('Approve Reel', `Are you sure you want to approve ${title}? Once approved, it will be published to the client Reels gallery.`, () => {
-          setReelApprovalStatus(el.dataset.id, 'approved');
-        }, 'Approve Reel', false, savedScrollY);
+        confirmThemedModal({
+          title: 'Approve Reel',
+          message: `Are you sure you want to approve ${title}? Once confirmed, this approval will be saved to the server.`,
+          confirmText: 'Approve Reel',
+          cancelText: 'Cancel',
+          type: 'approve',
+          explicitScrollY: savedScrollY,
+          onConfirm: async () => {
+            await setReelApprovalStatus(el.dataset.id, 'approved');
+          }
+        });
       }
       else if (a === 'preapp-denied') {
         e.preventDefault();
@@ -7137,9 +7274,41 @@
         const savedScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         const title = r ? `"${r.title}"` : 'this reel';
-        confirmModal('Reject / Request Edits', `Are you sure you want to reject ${title} and request revisions?`, () => {
-          setReelApprovalStatus(el.dataset.id, 'denied');
-        }, 'Reject Reel', true, savedScrollY);
+        confirmThemedModal({
+          title: 'Request Edits / Reject',
+          message: `Are you sure you want to reject ${title} and request revisions on the server?`,
+          confirmText: 'Reject Reel',
+          cancelText: 'Cancel',
+          type: 'denied',
+          explicitScrollY: savedScrollY,
+          onConfirm: async () => {
+            await setReelApprovalStatus(el.dataset.id, 'denied');
+          }
+        });
+      }
+      else if (a === 'preapp-undo') {
+        e.preventDefault();
+        e.stopPropagation();
+        const savedScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
+        const title = r ? `"${r.title}"` : 'this reel';
+        const isApproved = r?.status === 'approved';
+        const actionTitle = isApproved ? 'Undo Reel Approval' : 'Undo Reel Rejection';
+        const actionDesc = isApproved
+          ? `Are you sure you want to undo approval for ${title}? This will return the reel to pending review on the server.`
+          : `Are you sure you want to undo rejection for ${title}? This will return the reel to pending review on the server.`;
+
+        confirmThemedModal({
+          title: actionTitle,
+          message: actionDesc,
+          confirmText: isApproved ? 'Yes, Undo Approval' : 'Yes, Undo Rejection',
+          cancelText: 'Keep Current Status',
+          type: 'undo',
+          explicitScrollY: savedScrollY,
+          onConfirm: async () => {
+            await setReelApprovalStatus(el.dataset.id, 'review');
+          }
+        });
       }
       else if (a === 'preapp-sug-focus') {
         e.stopPropagation();
