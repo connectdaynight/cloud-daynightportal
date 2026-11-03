@@ -40,18 +40,108 @@
   <link rel="stylesheet" href="Client%20Portal/Stylesheets/reels.css?v=7.0">
   <link rel="stylesheet" href="Client%20Portal/Stylesheets/preapproval.css?v=7.0">
   <link rel="stylesheet" href="Client%20Portal/Stylesheets/profile.css?v=7.0">
-  <link rel="stylesheet" href="Client%20Portal/Stylesheets/player.css?v=7.2">
-  <link rel="stylesheet" href="Client%20Portal/Stylesheets/classic-player.css?v=7.2">
+  <link rel="stylesheet" href="Client%20Portal/Stylesheets/player.css?v=7.3">
+  <link rel="stylesheet" href="Client%20Portal/Stylesheets/classic-player.css?v=7.3">
+
+  <!-- Initial Website Minimal Loading Screen Styles (Renders immediately at 0ms) -->
+  <style>
+    .site-portal-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: #FAF8F5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s;
+    }
+    .site-portal-loader.fade-out {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+    .site-loader-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 24px;
+      animation: loaderPop 0.4s ease-out;
+    }
+    .site-loader-mark {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 10px 28px rgba(18, 41, 74, 0.08);
+      border: 1px solid rgba(18, 41, 74, 0.06);
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+    }
+    .site-loader-mark img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      border-radius: 50%;
+    }
+    .site-loader-ring {
+      width: 22px;
+      height: 22px;
+      border: 2px solid rgba(13, 59, 46, 0.12);
+      border-top-color: #0D3B2E;
+      border-radius: 50%;
+      animation: loaderSpin 0.75s linear infinite;
+      margin-bottom: 14px;
+    }
+    .site-loader-name {
+      font-family: -apple-system, BlinkMacSystemFont, 'Poppins', sans-serif;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #12294A;
+      letter-spacing: 0.3px;
+    }
+    .site-loader-caption {
+      font-family: -apple-system, BlinkMacSystemFont, 'Poppins', sans-serif;
+      font-size: 11px;
+      font-weight: 400;
+      color: #8F9AA7;
+      letter-spacing: 0.2px;
+      margin-top: 3px;
+    }
+    @keyframes loaderSpin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes loaderPop {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
 </head>
 <body>
+  <!-- Initial Minimal Brand Loading Screen until completing render -->
+  <div id="site-portal-loader" class="site-portal-loader">
+    <div class="site-loader-box">
+      <div class="site-loader-mark">
+        <img src="/Logo/logo.png" alt="Day Night Media">
+      </div>
+      <div class="site-loader-ring"></div>
+      <div class="site-loader-name">Day Night Media</div>
+      <div class="site-loader-caption">Client Delivery Portal</div>
+    </div>
+  </div>
+
   <div class="toast-container" id="toasts"></div>
   <div class="app" id="app"></div>
 
   <!-- Shared Architecture Core -->
-  <script src="shared/config/runtime-config.js?v=7.2"></script>
-  <script src="shared/storage/storage-adapter.js?v=7.2"></script>
+  <script src="shared/config/runtime-config.js?v=7.3"></script>
+  <script src="shared/storage/storage-adapter.js?v=7.3"></script>
 
   <!-- Client Portal Modular Production Engine Script -->
-  <script src="Client%20Portal/Scripts/app.js?v=7.2"></script>
+  <script src="Client%20Portal/Scripts/app.js?v=7.3"></script>
 </body>
 </html>

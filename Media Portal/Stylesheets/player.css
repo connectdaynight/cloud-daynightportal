@@ -1565,11 +1565,11 @@
       opacity: 1 !important;
     }
 
-    /* Right-Hand Floating Actions Stack - Pulled down comfortably */
+    /* Right-Hand Floating Actions Stack - 20px space above scrubber */
     .ig-actions-stack {
       position: absolute !important;
       right: 10px !important;
-      bottom: 26px !important;
+      bottom: 52px !important;
       z-index: 36 !important;
       display: flex !important;
       flex-direction: column !important;
@@ -1673,11 +1673,11 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    /* Bottom-Left Information Overlay - Pulled down comfortably below video graphics */
+    /* Bottom-Left Information Overlay - 20px space above scrubber */
     .ig-meta-overlay {
       position: absolute !important;
       left: 12px !important;
-      bottom: 24px !important;
+      bottom: 50px !important;
       right: 70px !important;
       z-index: 36 !important;
       display: flex !important;

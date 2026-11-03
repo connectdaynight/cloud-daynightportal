@@ -136,7 +136,13 @@ export async function onRequestGet(context) {
       client = await env.DB.prepare("SELECT * FROM clients WHERE slug = ? OR id = ?").bind(slug.toLowerCase(), slug.toLowerCase()).first();
     }
     if (!client && code) {
-      client = await env.DB.prepare("SELECT * FROM clients WHERE code = ?").bind(code).first();
+      // Support dual PIN alias: both 1962 and 4821 authenticate The Chennai Silks (tcs)
+      if (code === '4821' || code === '1962') {
+        client = await env.DB.prepare("SELECT * FROM clients WHERE id = 'tcs' OR slug = 'thechennaisilks' OR code = ? OR code = '1962' OR code = '4821'").bind(code).first();
+      }
+      if (!client) {
+        client = await env.DB.prepare("SELECT * FROM clients WHERE code = ?").bind(code).first();
+      }
     }
 
     if (!client) {

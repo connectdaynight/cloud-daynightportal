@@ -1385,11 +1385,11 @@
       opacity: 1;
     }
 
-    /* Right-Hand Floating Actions Stack - Pulled down comfortably */
+    /* Right-Hand Floating Actions Stack - 20px space above scrubber */
     .ig-actions-stack {
       position: absolute;
       right: 10px;
-      bottom: 26px;
+      bottom: 52px;
       z-index: 28;
       display: flex;
       flex-direction: column;
@@ -1487,17 +1487,11 @@
       box-sizing: border-box;
       transition: opacity 0.2s ease, transform 0.2s ease;
     }
-    .site-global-loader.active { display: none !important; }
-    @keyframes siteLoaderPop {
-      from { transform: scale(0.6); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    /* Bottom-Left Information Overlay - Pulled down comfortably below video graphics */
+    /* Bottom-Left Information Overlay - 20px space above scrubber */
     .ig-meta-overlay {
       position: absolute;
       left: 12px;
-      bottom: 24px;
+      bottom: 50px;
       right: 70px;
       z-index: 25;
       display: flex;
@@ -1589,13 +1583,13 @@
         padding: 6px 0 !important;
       }
       .ig-meta-overlay {
-        bottom: 24px !important;
+        bottom: 50px !important;
         left: 12px !important;
         right: 70px !important;
         gap: 4px !important;
       }
       .ig-actions-stack {
-        bottom: 26px !important;
+        bottom: 52px !important;
         right: 10px !important;
         gap: 12px !important;
       }

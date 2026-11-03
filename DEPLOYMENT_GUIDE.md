@@ -76,7 +76,7 @@ npx wrangler pages deploy . --project-name daynight-portal
    * In the Admin panel, click **+ Add Reel**, choose **Upload to Drive**, select an MP4 file (up to 50MB), and watch the progress bar upload and register the reel directly to Google Drive.
    * Or switch to **Paste Link** to paste any existing Google Drive link.
 3. **Client PIN Isolation**:
-   * Client PIN `4821` authenticates The Chennai Silks.
+   * Client PIN `1962` (or `4821` alias) authenticates The Chennai Silks.
    * Master Admin PIN `0000` or `9999` instantly opens the Admin Panel.
 4. **100% Preserved Theme**:
    * Exact milk-white background, navy typography, colorful icons, canvas confetti burst, typewriter tagline animations, and zari-bordered reel posters.

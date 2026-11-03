@@ -760,14 +760,49 @@
       }, 2600);
     }
 
-    // Global Website Loading Indicator (Issue #7)
-    function showSiteLoader() {
-      const el = document.getElementById('site-global-loader');
-      if (el) el.classList.add('active');
+    // Global Website Loading Indicator (Neat & Minimal Client Portal Loader)
+    function dismissInitialLoader() {
+      const loader = document.getElementById('site-portal-loader');
+      if (loader && !loader.classList.contains('fade-out')) {
+        loader.classList.add('fade-out');
+        setTimeout(() => {
+          try { loader.remove(); } catch(_) {}
+        }, 360);
+      }
     }
+    window.dismissInitialLoader = dismissInitialLoader;
+
+    function showSiteLoader(title, subtitle) {
+      let el = document.getElementById('site-portal-loader');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'site-portal-loader';
+        el.className = 'site-portal-loader';
+        el.innerHTML = `
+          <div class="site-loader-box">
+            <div class="site-loader-mark">
+              <img src="/Logo/logo.png" alt="Day Night Media">
+            </div>
+            <div class="site-loader-ring"></div>
+            <div class="site-loader-name">${esc(title || 'Day Night Media')}</div>
+            <div class="site-loader-caption">${esc(subtitle || 'Client Delivery Portal')}</div>
+          </div>
+        `;
+        document.body.appendChild(el);
+      }
+      el.classList.remove('fade-out');
+      el.style.display = 'flex';
+    }
+
     function hideSiteLoader() {
-      const el = document.getElementById('site-global-loader');
-      if (el) el.classList.remove('active');
+      dismissInitialLoader();
+      const el = document.getElementById('site-portal-loader');
+      if (el) {
+        el.classList.add('fade-out');
+        setTimeout(() => {
+          try { el.remove(); } catch(_) {}
+        }, 360);
+      }
     }
 
     // Custom Modal Bottom / Center Sheet (Protected against accidental backdrop close)
@@ -1909,6 +1944,7 @@
       if (!c) return '';
       // Strictly show ONLY approved content in the feeds tab
       let clientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin) && r.status === 'approved');
+      let allClientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin));
 
       // Calculate last updated relative string
       let lastUpdatedStr = 'Just now';
@@ -2055,13 +2091,25 @@
                 </div>
               </article>
             `;
-          }).join('') : `
+          }).join('') : (allClientReels && allClientReels.length > 0 ? `
+            <div style="text-align:center;padding:48px 20px;color:var(--mute);">
+              <div style="width:60px;height:60px;border-radius:50%;background:rgba(18,41,74,0.06);display:grid;place-items:center;margin:0 auto 16px;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#12294A" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg>
+              </div>
+              <h3 style="margin:0 0 8px;color:var(--navy);font-size:17.5px;font-weight:700;">${allClientReels.length} Delivered Reels Awaiting Review</h3>
+              <p style="margin:0 auto 20px;font-size:13.5px;color:#6C7A89;line-height:1.5;max-width:320px;">Your delivered reels are available for review, comment, and download in the Pre-Approval tab.</p>
+              <button type="button" class="btn" data-act="bnav-preapproval" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:12px;background:#0D3B2E;color:#FFFFFF;font-weight:600;font-size:14px;border:none;box-shadow:0 6px 16px rgba(13,59,46,0.22);cursor:pointer;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                View Pre-Approval Reels (${allClientReels.length})
+              </button>
+            </div>
+          ` : `
             <div style="text-align:center;padding:40px 20px;color:var(--mute);">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;opacity:0.6;"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg>
               <h3 style="margin:0 0 6px;color:var(--navy);">No Feed Videos Yet</h3>
               <p style="margin:0;font-size:13px;">Delivered reels will appear here in your social feed.</p>
             </div>
-          `}
+          `)}
         </div>
 
         ${renderBottomNav()}
@@ -3547,6 +3595,7 @@
         document.body.classList.remove('is-intro-screen');
       }
       renderSocialDock();
+      dismissInitialLoader();
     }
 
     // --------------------------------------------------------------------------
@@ -4058,7 +4107,10 @@
           return;
         }
 
-        if (code === activeClient.code) {
+        const isTcs = (activeClient.id === 'tcs' || activeClient.slug === 'thechennaisilks' || (activeClient.name && activeClient.name.toLowerCase().includes('chennai silks')));
+        const isCodeValid = (code === String(activeClient.code || '').trim()) || (isTcs && (code === '1962' || code === '4821'));
+
+        if (isCodeValid) {
           clearTimers();
           if (raf) cancelAnimationFrame(raf);
           if (msg) {
@@ -4071,8 +4123,14 @@
           if (activeClient.slug) setClientAuthenticated(activeClient.slug);
           try { localStorage.setItem('dn_last_client', activeClient.id); } catch(_) {}
           setTimeout(() => {
-            view.targetScreen = 'genesis';
-            go({ screen: 'landing', client: activeClient.id });
+            const dest = (view.targetScreen && view.targetScreen !== 'splash' && view.targetScreen !== 'dn-intro' && view.targetScreen !== 'genesis')
+              ? view.targetScreen
+              : null;
+            if (dest) {
+              go({ screen: dest, client: activeClient.id });
+            } else {
+              go({ screen: 'landing', client: activeClient.id });
+            }
           }, 250);
         } else {
           pinsBox.classList.remove('bad');
@@ -4539,15 +4597,27 @@
           const cleanCode = String(code).trim();
           isChecking = true;
 
+          // Client Code Matching Helper (Supports both 1962 and 4821 for The Chennai Silks)
+          const isClientCodeMatch = (cObj, inputCode) => {
+            if (!cObj || !inputCode) return false;
+            const cCode = String(cObj.code || '').trim();
+            const clean = String(inputCode || '').trim();
+            if (cCode && cCode === clean) return true;
+            if ((cObj.id === 'tcs' || cObj.slug === 'thechennaisilks' || (cObj.name && cObj.name.toLowerCase().includes('chennai silks'))) && (clean === '1962' || clean === '4821')) {
+              return true;
+            }
+            return false;
+          };
+
           // 1. Direct match with target client (string & number safe)
           let matched = null;
-          if (targetClient && targetClient.code && String(targetClient.code).trim() === cleanCode) {
+          if (targetClient && isClientCodeMatch(targetClient, cleanCode)) {
             matched = targetClient;
           }
 
           // 2. Search local in-memory client list
           if (!matched && Array.isArray(DATA.clients)) {
-            const found = DATA.clients.find(x => x && x.code && String(x.code).trim() === cleanCode);
+            const found = DATA.clients.find(x => isClientCodeMatch(x, cleanCode));
             if (found) {
               matched = found;
             }
