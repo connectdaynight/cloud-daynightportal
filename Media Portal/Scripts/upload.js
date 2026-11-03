@@ -342,7 +342,7 @@
               <svg class="ig-details-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               <div class="ig-details-row-content">
                 <span class="ig-details-row-title">Tag people</span>
-                <span class="ig-details-row-subtext" id="ig-tag-subtext">The Chennai Silks &bull; Daynight Partner</span>
+                <span class="ig-details-row-subtext" id="ig-tag-subtext">Daynight Partner</span>
               </div>
             </div>
             <div class="ig-details-row-right">
@@ -540,7 +540,7 @@
       chip.addEventListener('click', () => {
         const tag = chip.dataset.chip;
         if (tag === '#Hashtags') {
-          captionInp.value += ' #chennaisilks #diwali #trending #reels';
+          captionInp.value += ' #trending #reels #daynight';
         } else if (tag === '▷ Link a reel') {
           captionInp.value += ' ▷ Link: Daynight Collections';
         } else if (tag === '≡ Poll') {
@@ -554,8 +554,9 @@
 
     // Tag people row
     studio.querySelector('#ig-row-tag-people')?.addEventListener('click', () => {
-      const partners = ['The Chennai Silks', 'Shealin Designers', 'Sarasaa Saloon', 'Khalids Cuisine', 'Vivaha Silks'];
-      const chosen = prompt(`Tag a Brand Partner:\n${partners.join('\n')}`, selectedPartner || 'The Chennai Silks');
+      const clientList = (window.DNM_DATA && window.DNM_DATA.getClients) ? window.DNM_DATA.getClients().map(c => c.name) : [];
+      const partners = clientList.length ? clientList : ['Daynight Partner'];
+      const chosen = prompt(`Tag a Brand Partner:\n${partners.join('\n')}`, selectedPartner || partners[0]);
       if (chosen) {
         selectedPartner = chosen;
         studio.querySelector('#ig-tag-subtext').textContent = chosen;
@@ -564,7 +565,7 @@
 
     // Location row
     studio.querySelector('#ig-row-location')?.addEventListener('click', () => {
-      const loc = prompt('Add Location (e.g. Velachery, T. Nagar, Chennai):', selectedLocation || 'Velachery, Chennai');
+      const loc = prompt('Add Location:', selectedLocation || 'Headquarters');
       if (loc) {
         selectedLocation = loc;
         studio.querySelector('#ig-loc-subtext').textContent = loc;
@@ -644,8 +645,8 @@
 
         const isPhoto = selectedFile ? detectIsPhoto(selectedFile) : (mode === 'post');
         const caption = captionInp.value.trim() || 'Daynight official post';
-        const partner = selectedPartner.toLowerCase().replace(/[^a-z0-9]/g, '') || 'tcs';
-        const location = selectedLocation || 'Chennai';
+        const partner = selectedPartner ? selectedPartner.toLowerCase().replace(/[^a-z0-9]/g, '') : 'brand';
+        const location = selectedLocation || 'General';
 
         const payload = {
           action: 'uploadReel',
@@ -831,7 +832,7 @@
               <svg class="ig-details-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               <div class="ig-details-row-content">
                 <span class="ig-details-row-title">Tag Brand Partner</span>
-                <span class="ig-details-row-subtext" id="ig-gif-partner-subtext">The Chennai Silks &bull; Daynight Partner</span>
+                <span class="ig-details-row-subtext" id="ig-gif-partner-subtext">Daynight Partner</span>
               </div>
             </div>
             <div class="ig-details-row-right">
@@ -862,7 +863,7 @@
     const btnCancel = studio.querySelector('#ig-gif-btn-cancel');
     const btnShare = studio.querySelector('#ig-gif-btn-share');
 
-    let gifPartner = 'tcs';
+    let gifPartner = 'brand';
 
     function renderGifs(filterText = '') {
       const q = filterText.toLowerCase().trim();
@@ -964,9 +965,11 @@
 
     // Partner tag
     studio.querySelector('#ig-gif-row-partner')?.addEventListener('click', () => {
-      const chosen = prompt('Tag Brand Partner:', 'The Chennai Silks');
+      const clientList = (window.DNM_DATA && window.DNM_DATA.getClients) ? window.DNM_DATA.getClients().map(c => c.name) : [];
+      const partners = clientList.length ? clientList : ['Daynight Partner'];
+      const chosen = prompt(`Tag Brand Partner:\n${partners.join('\n')}`, partners[0]);
       if (chosen) {
-        gifPartner = chosen.toLowerCase().replace(/[^a-z0-9]/g, '') || 'tcs';
+        gifPartner = chosen.toLowerCase().replace(/[^a-z0-9]/g, '') || 'brand';
         studio.querySelector('#ig-gif-partner-subtext').textContent = chosen;
       }
     });
@@ -988,7 +991,7 @@
         type: 'photo',
         mimeType: 'image/gif',
         c: gifPartner,
-        b: 'Chennai',
+        b: 'General',
         likes: 0,
         views: 1,
         createdAt: Date.now(),

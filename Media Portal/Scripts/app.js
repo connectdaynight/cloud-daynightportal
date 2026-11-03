@@ -348,7 +348,7 @@
             <img class="dnm-search-result-thumb square" src="${r.coverUrl || './Logo/logo.png'}" alt="">
             <div class="dnm-search-result-info">
               <span class="dnm-search-result-title">${r.title || 'Reel Video'}</span>
-              <span class="dnm-search-result-sub">${r.b || 'Chennai'} &bull; ${(r.likes || 12).toLocaleString()} likes</span>
+              <span class="dnm-search-result-sub">${r.b || r.album || 'Featured'} &bull; ${(r.likes || 12).toLocaleString()} likes</span>
             </div>
           </div>
         `;
@@ -702,12 +702,12 @@
   }
 
   function renderBrandProfilePage(wrap, clientId) {
-    const client = window.DNM_DATA.getClient(clientId) || {
-      id: 'tcs',
-      name: 'The Chennai Silks',
-      slug: 'thechennaisilks',
-      logo: '/Logo/tcs-logo.png',
-      tagline: 'Leading textile retailer with extensive bridal, silk and heritage collections'
+    const client = window.DNM_DATA.getClient(clientId) || (window.DNM_DATA.getClients && window.DNM_DATA.getClients()[0]) || {
+      id: 'brand',
+      name: 'Brand Partner',
+      slug: 'brand',
+      logo: '/Logo/logo.png',
+      tagline: 'Brand partner collection'
     };
     const brandReels = window.DNM_DATA.getClientReels(client.id);
 

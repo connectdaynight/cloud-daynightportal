@@ -2,6 +2,10 @@ name = "daynight-portal"
 compatibility_date = "2026-10-17"
 pages_build_output_dir = "."
 
+[vars]
+GAS_URL = "https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec"
+GOOGLE_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1O6i07d2NeWQUo22HTlg2DogkrJ6zLxCn"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "daynight-portal-db"

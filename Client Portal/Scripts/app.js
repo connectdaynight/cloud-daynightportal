@@ -79,6 +79,10 @@
             DATA.clients = res.clients;
             if (Array.isArray(res.reels) && res.reels.length > 0) DATA.reels = res.reels;
             if (res.settings) DATA.settings = Object.assign(DATA.settings || {}, res.settings);
+            if (res.env_config) {
+              if (res.env_config.gasUrl) CONFIG.gasUrl = res.env_config.gasUrl;
+              if (res.env_config.driveFolderUrl) CONFIG.driveFolderUrl = res.env_config.driveFolderUrl;
+            }
             try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(_) {}
             if (view.screen !== 'splash' && !document.querySelector('.ig-modal')) {
               render();
@@ -263,8 +267,12 @@
 
     function isClientMatch(rCid, targetCid) {
       if (!rCid || !targetCid) return false;
-      if (rCid === targetCid) return true;
-      if ((rCid === 'tcs' || rCid === 'cmvje2zfy') && (targetCid === 'tcs' || targetCid === 'cmvje2zfy')) return true;
+      const a = String(rCid).trim().toLowerCase();
+      const b = String(targetCid).trim().toLowerCase();
+      if (a === b) return true;
+      const matchedA = (DATA.clients || []).find(c => (c.id && c.id.toLowerCase() === a) || (c.slug && c.slug.toLowerCase() === a));
+      const matchedB = (DATA.clients || []).find(c => (c.id && c.id.toLowerCase() === b) || (c.slug && c.slug.toLowerCase() === b));
+      if (matchedA && matchedB && matchedA.id === matchedB.id) return true;
       return false;
     }
 
@@ -352,12 +360,25 @@
       }).join('');
     }
 
-    const topbar = (small, title) => `
+    const topbar = (small, title) => {
+      const c = client();
+      const logoSrc = (c && c.logo) ? c.logo : '/Logo/logo.png';
+      return `
       <div class="top">
         <button class="back" data-act="back" aria-label="Back">${ic.back}</button>
         <div class="crumb"><small>${esc(small)}</small><span>${esc(title)}</span></div>
-        ${dnLogo('mini')}
+        <div class="top-actions-right">
+          ${c ? `
+          <div class="preapp-code-chip" data-act="lock-portal" title="Portal Protected by Access PIN (Click to Lock Portal)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>PIN Secured</span>
+          </div>
+          <div class="top-profile-avatar" data-act="bnav-profile" title="Client Profile & Security">
+            <img src="${esc(logoSrc)}" alt="${esc(c.name || 'Client')}">
+          </div>` : dnLogo('mini')}
+        </div>
       </div>`;
+    };
 
     // Client Authentication Persistence (Local & Session with 14-day Minimum Expiry & Client Aliases)
     const AUTH_EXPIRY_MS = 14 * 24 * 60 * 60 * 1000; // 14 days minimum persistence
@@ -373,10 +394,6 @@
           if (found.slug) keys.add(found.slug.toLowerCase());
         }
       } catch(_) {}
-      if (raw === 'tcs' || raw === 'thechennaisilks') {
-        keys.add('tcs');
-        keys.add('thechennaisilks');
-      }
       return Array.from(keys);
     }
 
@@ -1098,6 +1115,10 @@
               if (cfData.settings && typeof cfData.settings === 'object') {
                 DATA.settings = Object.assign(DATA.settings || {}, cfData.settings);
               }
+              if (cfData.env_config) {
+                if (cfData.env_config.gasUrl) CONFIG.gasUrl = cfData.env_config.gasUrl;
+                if (cfData.env_config.driveFolderUrl) CONFIG.driveFolderUrl = cfData.env_config.driveFolderUrl;
+              }
 
               DATA._updatedAt = Date.now();
               connectionState = { status: 'online', message: 'Cloudflare D1 Connected' };
@@ -1127,7 +1148,7 @@
                 const matchedClient = (DATA.clients || []).find(c => c.slug === targetSlug || c.id === targetSlug);
                 if (matchedClient) {
                   view.client = matchedClient.id;
-                  const logo = (matchedClient.id === 'tcs' ? '/Logo/tcs-logo.png' : (matchedClient.logo || '/Logo/logo.png'));
+                  const logo = matchedClient.logo || '/Logo/logo.png';
                   setFavicon(logo);
                   document.title = matchedClient.name + ' | DAY NIGHT';
                   if (!view.screen || view.screen === 'splash') {
@@ -1206,13 +1227,13 @@
 
       let apple = document.getElementById('dynamic-apple-icon') || document.querySelector('link[rel="apple-touch-icon"]');
       if (apple) {
-        apple.href = href.startsWith('data:image/svg') ? (href.includes('tcs') ? '/Logo/tcs-logo.png' : '/Logo/logo.png') : href;
+        apple.href = href.startsWith('data:image/svg') ? '/Logo/logo.png' : href;
       }
     }
 
     // Favorites persistence helpers (using StorageAdapter)
     function getFavorites(cid) {
-      const clientKey = cid || (view.client || 'tcs');
+      const clientKey = cid || (view.client || 'client');
       try {
         const favs = window.DNM_STORAGE?.cache?.get('favs_' + clientKey);
         if (Array.isArray(favs)) return favs;
@@ -1346,24 +1367,26 @@
 
     function isLiked(id) {
       const c = client();
+      const cid = c ? c.id : 'client';
       try {
-        const liked = window.DNM_STORAGE?.cache?.get('likes_' + (c ? c.id : 'tcs'));
+        const liked = window.DNM_STORAGE?.cache?.get('likes_' + cid);
         if (Array.isArray(liked)) return liked.includes(id);
-        return (JSON.parse(localStorage.getItem('dn_likes_' + (c ? c.id : 'tcs')) || '[]')).includes(id);
+        return (JSON.parse(localStorage.getItem('dn_likes_' + cid) || '[]')).includes(id);
       } catch(e) { return false; }
     }
 
     function toggleLike(id) {
       const c = client();
-      const key = 'likes_' + (c ? c.id : 'tcs');
+      const cid = c ? c.id : 'client';
+      const key = 'likes_' + cid;
       try {
         let liked = window.DNM_STORAGE?.cache?.get(key);
-        if (!Array.isArray(liked)) liked = JSON.parse(localStorage.getItem('dn_likes_' + (c ? c.id : 'tcs')) || '[]');
+        if (!Array.isArray(liked)) liked = JSON.parse(localStorage.getItem('dn_likes_' + cid) || '[]');
         const idx = liked.indexOf(id);
         if (idx === -1) liked.push(id);
         else liked.splice(idx, 1);
         try { window.DNM_STORAGE?.cache?.set(key, liked); } catch(_) {}
-        try { localStorage.setItem('dn_likes_' + (c ? c.id : 'tcs'), JSON.stringify(liked)); } catch(_) {}
+        try { localStorage.setItem('dn_likes_' + cid, JSON.stringify(liked)); } catch(_) {}
         return idx === -1;
       } catch(e) { return false; }
     }
@@ -1707,12 +1730,6 @@
     // --------------------------------------------------------------------------
     function renderFeedsPage(c) {
       if (!c) return '';
-      function isClientMatch(rCid, targetCid) {
-        if (!rCid || !targetCid) return false;
-        if (rCid === targetCid) return true;
-        if ((rCid === 'tcs' || rCid === 'cmvje2zfy') && (targetCid === 'tcs' || targetCid === 'cmvje2zfy')) return true;
-        return false;
-      }
       // Strictly show ONLY approved content in the feeds tab
       let clientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin) && r.status === 'approved');
 
@@ -1743,10 +1760,10 @@
       try { isFeedMuted = window.DNM_STORAGE?.cache?.get('feed_muted') !== false; } catch (_) { isFeedMuted = true; }
 
       return `
-        <!-- Top Header: Client Logo on Left, Title, Day Night Logo on Right -->
+        <!-- Top Header: Client Logo on Left, Title, Actions & Profile on Right -->
         <div class="top client-feeds-top">
           <div class="top-brand-left">
-            <div class="top-client-avatar">
+            <div class="top-client-avatar" data-act="bnav-profile" title="Client Profile & Security">
               ${clientLogo(c, 'top-avatar-img')}
             </div>
             <div class="crumb">
@@ -1754,12 +1771,18 @@
               <span>Home</span>
             </div>
           </div>
-          <div class="top-brand-right">
+          <div class="top-brand-right top-actions-right">
             <button type="button" class="dn-ap-toggle-btn ${isFeedAutoplayOn ? 'active' : ''}" data-act="toggle-feed-autoplay" id="feed-autoplay-toggle" title="Autoplay videos on scroll (Default: ON)" aria-label="Toggle Autoplay">
               <span class="dn-ap-label">Autoplay</span>
               <span class="dn-ap-track"><span class="dn-ap-thumb"></span></span>
             </button>
-            ${dnLogo('mini')}
+            <div class="preapp-code-chip" data-act="lock-portal" title="Portal Protected by Access PIN (Click to Lock Portal)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>PIN Secured</span>
+            </div>
+            <div class="top-profile-avatar" data-act="bnav-profile" title="Client Profile & Security">
+              <img src="${esc(c.logo || '/Logo/logo.png')}" alt="${esc(c.name || 'Client')}">
+            </div>
           </div>
         </div>
 
@@ -1871,13 +1894,7 @@
     // Pre-Approval Screen Renderer (Replaces Home Page Buttons & Provides Pre-Approval Screen)
     function renderPreApprovalPage(c, isHome = false) {
       // Get real reels for this client (Strictly real data only, zero fakes)
-      function isClientMatch(rCid, targetCid) {
-        if (!rCid || !targetCid) return false;
-        if (rCid === targetCid) return true;
-        if ((rCid === 'tcs' || rCid === 'cmvje2zfy') && (targetCid === 'tcs' || targetCid === 'cmvje2zfy')) return true;
-        return false;
-      }
-      const allClientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) );
+      const allClientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id));
 
       // If user hasn't explicitly chosen a month, default to the month of the latest delivered reel, or current calendar month
       let defaultMonth = TODAY.getMonth();
@@ -1986,7 +2003,7 @@
 
       const activeBranch = (view.branch && view.branch !== 'all') ? (view.branch.toUpperCase() + ' BRANCH') : 'ALL BRANCHES';
       const bannerSrc = c.bannerUrl || c.heroBanner || c.banner || c.coverUrl || '';
-      const logoSrc = c.logo || (c.id === 'tcs' ? '/Logo/tcs-logo.png' : '/Logo/logo.png');
+      const logoSrc = c.logo || '/Logo/logo.png';
 
       return `
         <!-- Approval Portal Top Bar Header -->
@@ -1998,13 +2015,13 @@
             <span class="preapp-sub">${esc(c.name || 'Client Portal')}</span>
             <h1 class="preapp-heading">Pre-Approval</h1>
           </div>
-          <div class="preapp-top-right">
+          <div class="preapp-top-right top-actions-right">
             <div class="preapp-code-chip" data-act="lock-portal" title="Portal Protected by Access PIN (Click to Lock Portal)">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               <span>PIN Secured</span>
             </div>
-            <div class="preapp-brand-mark" data-act="bnav-profile" title="Client Profile & Security" style="background:#FFF;border:1px solid var(--line);overflow:hidden;box-shadow:0 2px 8px rgba(18,41,74,0.08);padding:2px;">
-              <img src="${esc(logoSrc)}" alt="${esc(c.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+            <div class="top-profile-avatar" data-act="bnav-profile" title="Client Profile & Security">
+              <img src="${esc(logoSrc)}" alt="${esc(c.name || 'Client')}">
             </div>
           </div>
         </div>
@@ -2430,7 +2447,7 @@
         setFavicon('/Logo/logo.png');
         document.title = (s.agency || 'Day Night Media') + ' | DAY NIGHT';
       } else {
-        const logo = (c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png'));
+        const logo = c.logo || '/Logo/logo.png';
         setFavicon(logo);
         document.title = `${c.name || 'Client'} | DAY NIGHT`;
       }
@@ -4706,9 +4723,9 @@
             <div class="ig-meta-overlay" id="ig-meta-overlay">
               <div class="ig-profile-row" id="ig-profile-row">
                 <div class="ig-avatar-ring">
-                  <img src="${c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png')}" alt="">
+                  <img src="${c.logo || '/Logo/logo.png'}" alt="">
                 </div>
-                <span class="ig-handle">@${c.id || 'client'}</span>
+                <span class="ig-handle">@${(c.slug || c.id || 'client').toLowerCase()}</span>
                 <span class="ig-branch-tag">${esc(currentReel.b || currentReel.album || 'General')}</span>
               </div>
               <div class="ig-caption-box" id="ig-caption">
@@ -4741,7 +4758,7 @@
                 <button type="button" id="ig-cancel-reply" class="ig-reply-cancel">&times;</button>
               </div>
               <form class="ig-comments-input-bar" id="ig-comments-form" onsubmit="return false;">
-                <img src="${c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png')}" class="ig-inp-avatar" alt="">
+                <img src="${c.logo || '/Logo/logo.png'}" class="ig-inp-avatar" alt="">
                 <input type="text" class="ig-drawer-inp" id="ig-drawer-inp" placeholder="Add a comment or feedback..." autocomplete="off">
                 <button type="submit" class="ig-drawer-post-btn" id="ig-drawer-post-btn">Post</button>
               </form>
@@ -5037,8 +5054,8 @@
               if (topTitle) topTitle.innerHTML = '<div style="display:flex;align-items:center;gap:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF0000"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg><span style="color:#FFF;font-size:15px;letter-spacing:-0.2px;font-weight:700;">Shorts</span></div>';
               if (profileRow) {
                 profileRow.innerHTML = `
-                  <div class="ig-avatar-ring" style="background:transparent;border:2px solid #FFF;"><img src="${c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png')}" alt=""></div>
-                  <span class="ig-handle" style="font-weight:700;font-size:14px;">@${(c.name || 'chennaisilks').toLowerCase().replace(/\s+/g, '')}</span>
+                  <div class="ig-avatar-ring" style="background:transparent;border:2px solid #FFF;"><img src="${c.logo || '/Logo/logo.png'}" alt=""></div>
+                  <span class="ig-handle" style="font-weight:700;font-size:14px;">@${(c.name || 'client').toLowerCase().replace(/\s+/g, '')}</span>
                   <button type="button" class="ig-sub-btn" style="background:#FF0000;color:#FFF;border:none;border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;margin-left:8px;cursor:pointer;">Subscribe</button>
                 `;
               }
@@ -5049,8 +5066,8 @@
               if (topTitle) topTitle.innerHTML = '<div style="display:flex;align-items:center;gap:6px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg><span style="color:#FFF;font-size:15px;font-weight:700;">Reels</span></div>';
               if (profileRow) {
                 profileRow.innerHTML = `
-                  <div class="ig-avatar-ring" style="background:#1877F2;padding:2px;"><img src="${c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png')}" alt=""></div>
-                  <span class="ig-handle" style="font-weight:700;font-size:13.5px;">${esc(c.name || 'The Chennai Silks')}</span>
+                  <div class="ig-avatar-ring" style="background:#1877F2;padding:2px;"><img src="${c.logo || '/Logo/logo.png'}" alt=""></div>
+                  <span class="ig-handle" style="font-weight:700;font-size:13.5px;">${esc(c.name || 'Client')}</span>
                   <button type="button" class="ig-fol-btn" style="background:#1877F2;color:#FFF;border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;margin-left:8px;cursor:pointer;">Follow</button>
                 `;
               }
@@ -5062,8 +5079,8 @@
               if (topTitle) topTitle.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg><span>Reels</span>';
               if (profileRow) {
                 profileRow.innerHTML = `
-                  <div class="ig-avatar-ring"><img src="${c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png')}" alt=""></div>
-                  <span class="ig-handle">@${c.id || 'thechennaisilks'}</span>
+                  <div class="ig-avatar-ring"><img src="${c.logo || '/Logo/logo.png'}" alt=""></div>
+                  <span class="ig-handle">@${(c.slug || c.id || 'client').toLowerCase()}</span>
                   <span class="ig-verified-badge" title="Verified Creator"><svg width="14" height="14" viewBox="0 0 24 24" fill="#20D5EC"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span>
                   <span class="ig-branch-tag">${esc(currentReel.b || currentReel.album || (c ? c.name : ''))}</span>
                 `;
@@ -5126,7 +5143,7 @@
             return `
               <div class="ig-comment-item" data-id="${item.id}">
                 <div class="ig-comment-avatar">
-                  <img src="${item.authorRole === 'admin' ? '/Logo/logo.png' : (c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png'))}" alt="">
+                  <img src="${item.authorRole === 'admin' ? '/Logo/logo.png' : (c.logo || '/Logo/logo.png')}" alt="">
                 </div>
                 <div class="ig-comment-body">
                   <div class="ig-comment-meta">
@@ -5147,7 +5164,7 @@
                       ${itemReplies.map(rep => `
                         <div class="ig-reply-item">
                           <div class="ig-reply-avatar">
-                            <img src="${rep.authorRole === 'admin' ? '/Logo/logo.png' : (c.id === 'tcs' ? '/Logo/tcs-logo.png' : (c.logo || '/Logo/logo.png'))}" alt="">
+                            <img src="${rep.authorRole === 'admin' ? '/Logo/logo.png' : (c.logo || '/Logo/logo.png')}" alt="">
                           </div>
                           <div class="ig-comment-body">
                             <div class="ig-comment-meta">
@@ -5717,7 +5734,7 @@
             const isSubbed = subBtn.textContent === 'Subscribed';
             subBtn.textContent = isSubbed ? 'Subscribe' : 'Subscribed';
             subBtn.style.background = isSubbed ? '#FF0000' : '#444';
-            toast(isSubbed ? 'Unsubscribed' : 'Subscribed to @' + (c.id || 'thechennaisilks'), 'success');
+            toast(isSubbed ? 'Unsubscribed' : 'Subscribed to @' + (c.slug || c.id || 'client'), 'success');
             return;
           }
           const folBtn = e.target.closest('.ig-fol-btn');
@@ -5726,7 +5743,7 @@
             const isFollowing = folBtn.textContent === 'Following';
             folBtn.textContent = isFollowing ? 'Follow' : 'Following';
             folBtn.style.background = isFollowing ? '#1877F2' : '#444';
-            toast(isFollowing ? 'Unfollowed' : 'Following @' + (c.id || 'thechennaisilks'), 'success');
+            toast(isFollowing ? 'Unfollowed' : 'Following @' + (c.slug || c.id || 'client'), 'success');
             return;
           }
         });
@@ -7997,7 +8014,7 @@
     });
 
     // Check for direct client routing via URL query or hash:
-    // e.g. /?client=tcs or /?client=tcs&screen=preapproval or /#tcs
+    // e.g. /?client=<slug> or /?client=<slug>&screen=preapproval or /#<slug>
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('admin') === '1' || urlParams.get('admin') === 'true') {
       window.location.href = '/admin';

@@ -29,7 +29,6 @@ export async function onRequest(context) {
 
   // Resolve client information dynamically from D1
   let clientInfo = null;
-  const isTcs = slug === 'tcs' || slug === 'thechennaisilks' || slug === 'cmvjreqkd';
 
   if (slug && env.DB) {
     try {
@@ -42,8 +41,6 @@ export async function onRequest(context) {
           } else {
             logoUrl = `/api/client-logo?client=${encodeURIComponent(row.slug || row.id)}`;
           }
-        } else if (isTcs) {
-          logoUrl = '/Logo/tcs-logo.png';
         }
         clientInfo = {
           name: row.name,
@@ -59,11 +56,11 @@ export async function onRequest(context) {
 
   // Fallback if parameter was provided but not matched in D1
   if (!clientInfo && rawParam) {
-    const formattedName = isTcs ? 'The Chennai Silks' : rawParam.replace(/[-_+]/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
+    const formattedName = rawParam.replace(/[-_+]/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
     clientInfo = {
       name: formattedName,
       slug: slug,
-      image: isTcs ? '/Logo/tcs-logo.png' : `/api/client-logo?client=${encodeURIComponent(slug)}`,
+      image: `/api/client-logo?client=${encodeURIComponent(slug)}`,
       desc: `${formattedName} · Private Client Delivery Portal`
     };
   }

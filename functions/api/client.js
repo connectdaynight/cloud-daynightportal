@@ -4,6 +4,9 @@
  * Backed by Cloudflare D1 SQLite database (daynight-portal-db).
  */
 
+const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec";
+const DEFAULT_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1O6i07d2NeWQUo22HTlg2DogkrJ6zLxCn";
+
 export async function onRequestGet(context) {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -16,6 +19,11 @@ export async function onRequestGet(context) {
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
     });
   }
+
+  const env_config = {
+    gasUrl: env.GAS_URL || DEFAULT_GAS_URL,
+    driveFolderUrl: env.GOOGLE_DRIVE_FOLDER_URL || DEFAULT_DRIVE_FOLDER_URL
+  };
 
   try {
     // 1. Fetch Global Portal Settings
@@ -98,7 +106,8 @@ export async function onRequestGet(context) {
         success: true,
         clients,
         reels,
-        settings
+        settings,
+        env_config
       }), {
         headers: {
           "Content-Type": "application/json",
@@ -170,7 +179,8 @@ export async function onRequestGet(context) {
       success: true,
       client,
       reels,
-      settings
+      settings,
+      env_config
     }), {
       headers: {
         "Content-Type": "application/json",

@@ -1226,6 +1226,7 @@
 
     const DEFAULT_GAS_URL = RUNTIME_CONFIG.gasUrl || 'https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-yfbh68gq4iJn1ThlQXoTY83Bc75tlPYcQrbz1lv_WWfDySu4CYaGE/exec';
     let GAS_URL = DEFAULT_GAS_URL;
+    let GOOGLE_DRIVE_FOLDER_URL = 'https://drive.google.com/drive/folders/1O6i07d2NeWQUo22HTlg2DogkrJ6zLxCn';
     try {
       const stored = window.DNM_STORAGE?.config?.get('gas_url');
       if (stored && typeof stored === 'string') GAS_URL = stored;
@@ -1857,6 +1858,10 @@
           }
           if (json.settings && typeof json.settings === 'object') {
             DATA.settings = Object.assign(DATA.settings || {}, json.settings);
+          }
+          if (json.env_config) {
+            if (json.env_config.gasUrl) GAS_URL = json.env_config.gasUrl;
+            if (json.env_config.driveFolderUrl) GOOGLE_DRIVE_FOLDER_URL = json.env_config.driveFolderUrl;
           }
 
           saveAndBroadcast('');
@@ -3768,7 +3773,7 @@
     function openMetaStudio() {
       document.getElementById('studio-fullscreen-root')?.remove();
 
-      let activeClient = DATA.clients && DATA.clients[0] ? DATA.clients[0] : { id: 'tcs', name: 'Client' };
+      let activeClient = DATA.clients && DATA.clients[0] ? DATA.clients[0] : { id: 'client', name: 'Client' };
       let queue = [];
       let activeItemIdx = 0;
 
@@ -5743,7 +5748,7 @@ function openEditModal(r) {
         <div class="form-row2">
           <div class="form-group">
             <label>Dedicated URL Slug</label>
-            <input id="cl-slug" value="${client.slug || ''}" placeholder="e.g. tcs">
+            <input id="cl-slug" value="${client.slug || ''}" placeholder="e.g. acme">
           </div>
           <div class="form-group">
             <label>Client Status</label>

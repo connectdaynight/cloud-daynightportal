@@ -8,8 +8,6 @@ export async function onRequestGet(context) {
   const url = new URL(request.url);
   const clientSlug = (url.searchParams.get('client') || url.searchParams.get('c') || url.searchParams.get('slug') || url.searchParams.get('id') || '').trim().toLowerCase();
 
-  const isTcs = clientSlug === 'tcs' || clientSlug === 'thechennaisilks' || clientSlug === 'cmvjreqkd';
-
   if (env.DB && clientSlug) {
     try {
       const client = await env.DB.prepare("SELECT logo FROM clients WHERE slug = ? OR id = ?").bind(clientSlug, clientSlug).first();
@@ -34,11 +32,6 @@ export async function onRequestGet(context) {
     } catch (e) {
       // ignore
     }
-  }
-
-  // Known client fallback
-  if (isTcs) {
-    return Response.redirect(`${url.origin}/Logo/tcs-logo.png`, 302);
   }
 
   // Default fallback to Day Night Media main logo

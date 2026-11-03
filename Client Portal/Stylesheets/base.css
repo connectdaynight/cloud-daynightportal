@@ -828,6 +828,60 @@
 
     .top .mini { width: 34px; height: 34px; flex: none; }
 
+    .top-actions-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      flex: none;
+    }
+    .top-actions-right .preapp-code-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #0D3B2E;
+      cursor: pointer;
+      flex: none;
+      box-shadow: 0 1px 3px rgba(18,41,74,0.06);
+      transition: all 0.15s ease;
+    }
+    .top-actions-right .preapp-code-chip:hover {
+      background: var(--soft);
+      border-color: #CBD5E1;
+    }
+    .top-actions-right .top-profile-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(18,41,74,0.08);
+      cursor: pointer;
+      flex: none;
+      display: grid;
+      place-items: center;
+      padding: 2px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .top-actions-right .top-profile-avatar:hover {
+      transform: scale(1.05);
+      box-shadow: 0 3px 12px rgba(18,41,74,0.15);
+    }
+    .top-actions-right .top-profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
 
     /* 4-Digit PIN Code Modal */
     .code-head {
