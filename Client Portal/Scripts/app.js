@@ -373,10 +373,9 @@
           if (found.slug) keys.add(found.slug.toLowerCase());
         }
       } catch(_) {}
-      if (raw === 'tcs' || raw === 'thechennaisilks' || raw === 'cmvje2zfy' || raw === '1962') {
+      if (raw === 'tcs' || raw === 'thechennaisilks') {
         keys.add('tcs');
         keys.add('thechennaisilks');
-        keys.add('1962');
       }
       return Array.from(keys);
     }
@@ -445,6 +444,12 @@
         try { sessionStorage.removeItem('dn_auth_' + key); } catch(_) {}
         try { window.DNM_STORAGE?.auth?.delete('client_' + key); } catch(_) {}
       });
+      // Purge any residual PIN/code-keyed or client tokens
+      try { localStorage.removeItem('dn_auth_1962'); } catch(_) {}
+      try { sessionStorage.removeItem('dn_auth_1962'); } catch(_) {}
+      try { window.DNM_STORAGE?.auth?.delete('client_1962'); } catch(_) {}
+      try { localStorage.removeItem('dn_last_client'); } catch(_) {}
+      try { sessionStorage.removeItem('dn_last_client'); } catch(_) {}
     }
 
     let isClosingModalViaHistory = false;
@@ -528,7 +533,7 @@
       }
       if (e.state && e.state.view) {
         // Protect client portal session from accidental unauthenticated history states
-        if (view.client && (e.state.view.screen === 'landing' || e.state.view.screen === 'splash' || !e.state.view.client)) {
+        if (view.client && isClientAuthenticated(view.client) && (e.state.view.screen === 'landing' || e.state.view.screen === 'splash' || !e.state.view.client)) {
           go({ screen: 'genesis', client: view.client }, true);
           return;
         }
@@ -581,7 +586,7 @@
     }
 
     // Custom Modal Bottom / Center Sheet (Protected against accidental backdrop close)
-    function sheet(html, onMount, center, customClass) {
+    function sheet(html, onMount, center, customClass, onClose) {
       const savedScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
       if (customClass !== 'share-modal-scrim') {
         document.querySelectorAll('.scrim:not(.share-modal-scrim)').forEach(el => el.remove());
@@ -652,6 +657,7 @@
           try { window.history.back(); } catch(e) {}
           setTimeout(() => { isProgrammaticHistoryBack = false; }, 350);
         }
+        try { if (typeof onClose === 'function') onClose(); } catch(_) {}
       };
 
       // Swiping down bottom sheets (like share modal) = closing it
@@ -1133,15 +1139,7 @@
                 }
               }
 
-              if (view.screen !== 'splash' && view.screen !== 'dn-intro' && view.screen !== 'landing') {
-                render();
-              } else if (view.screen === 'splash' || view.screen === 'dn-intro') {
-                const startBtn = document.getElementById('dn-start-btn');
-                if (startBtn) {
-                  const c = client();
-                  startBtn.innerHTML = c ? 'Access ' + esc(c.name) + ' ' + ic.arrow : 'Start ' + ic.arrow;
-                }
-              }
+              render();
             }
           }
         } catch(err) {
@@ -2505,10 +2503,32 @@
         }
       }
 
+      // 0C. Universal Client Screen PIN Security Guard
+      // STRICT CONFIDENTIALITY: Under no circumstances may client screens (reels, feeds, branches, collections, pre-approval, profile, landing)
+      // be viewed without entering the valid 4-digit PIN!
+      if (view.client && c && view.screen !== 'splash' && view.screen !== 'dn-intro' && view.screen !== 'client-pin') {
+        if (!isClientAuthenticated(c.id)) {
+          view.screen = 'splash';
+          later(() => openCode(c, 'genesis'), 60);
+        }
+      }
+
       // Screen 1: Day Night Signature Loading / Splash Animation (Home Screen)
       if (view.screen === 'splash' || view.screen === 'dn-intro' || !view.client || !c) {
         if (app.querySelector('.splash')) {
           // Splash screen is already active and running — do not wipe DOM or restart animation!
+          // Dynamically synchronize branding text and social dock in real time
+          const h1 = app.querySelector('.splash h1');
+          if (h1 && s.agency) h1.textContent = s.agency;
+          const sub = app.querySelector('.splash .sub');
+          if (sub && s.agencySub) sub.textContent = s.agencySub;
+          const slogan = app.querySelector('.splash .slogan');
+          if (slogan && s.slogan) slogan.textContent = s.slogan;
+          const startBtn = document.getElementById('dn-start-btn');
+          if (startBtn) {
+            startBtn.innerHTML = c ? 'Access ' + esc(c.name) + ' ' + ic.arrow : 'Start ' + ic.arrow;
+          }
+          renderSocialDock();
           return;
         }
         app.innerHTML = `
@@ -2571,7 +2591,11 @@
 
       // Screen 1L: Client Dedicated Landing Screen with Individual Custom Loading Animation
       else if (view.screen === 'landing' || view.screen === 'client-landing') {
-        if (!c) { go({ screen: 'splash', client: null }); return; }
+        if (!c || !isClientAuthenticated(c.id)) {
+          go({ screen: 'splash', client: c ? c.id : null });
+          if (c) later(() => openCode(c, 'genesis'), 60);
+          return;
+        }
         app.innerHTML = `
           <div class="top">
             <button class="back" data-act="back" aria-label="Back">${ic.back}</button>
@@ -2625,7 +2649,7 @@
 
         // Auto-navigate into client preapproval / genesis reels portal after animation completes (2.8s)
         later(() => {
-          if (view.screen === 'landing' || view.screen === 'client-landing') {
+          if ((view.screen === 'landing' || view.screen === 'client-landing') && isClientAuthenticated(c.id)) {
             go({ screen: 'genesis', client: c.id });
           }
         }, 2800);
@@ -2633,16 +2657,20 @@
 
       // Screen 2: Client Genesis Screen (Home / Feeds Tab)
       else if (view.screen === 'genesis') {
-        if (!c) { go({ screen: 'splash', client: null }); return; }
+        if (!c || !isClientAuthenticated(c.id)) {
+          go({ screen: 'splash', client: c ? c.id : null });
+          if (c) later(() => openCode(c, 'genesis'), 60);
+          return;
+        }
         app.innerHTML = renderFeedsPage(c);
         initFeedAutoplay();
       }
 
       // Screen 2A: Dedicated Client Approval Portal (Assigned Code Protected)
       else if (view.screen === 'preapproval') {
-        if (!c) { go({ screen: 'splash', client: null }); return; }
-        if (!isClientAuthenticated(c.id)) {
-          openCode(c, 'preapproval');
+        if (!c || !isClientAuthenticated(c.id)) {
+          go({ screen: 'splash', client: c ? c.id : null });
+          if (c) later(() => openCode(c, 'preapproval'), 60);
           return;
         }
         app.innerHTML = renderPreApprovalPage(c, false);
@@ -2651,7 +2679,11 @@
 
       // Screen 2B: Dedicated Store Branches Screen
       else if (view.screen === 'branches') {
-        if (!c) { go({ screen: 'splash', client: null }); return; }
+        if (!c || !isClientAuthenticated(c.id)) {
+          go({ screen: 'splash', client: c ? c.id : null });
+          if (c) later(() => openCode(c, 'branches'), 60);
+          return;
+        }
         const list = c.branches || [];
         const total = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin) && r.status === 'approved').length;
         app.innerHTML = `
@@ -2693,7 +2725,11 @@
 
       // Screen 2C: Dedicated Collections Screen
       else if (view.screen === 'collections' || view.screen === 'albums') {
-        if (!c) { go({ screen: 'splash', client: null }); return; }
+        if (!c || !isClientAuthenticated(c.id)) {
+          go({ screen: 'splash', client: c ? c.id : null });
+          if (c) later(() => openCode(c, 'collections'), 60);
+          return;
+        }
         const list = c.albums || [];
         const total = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin) && r.status === 'approved').length;
         app.innerHTML = `
@@ -2735,7 +2771,11 @@
 
       // Screen 3: Library Navigator (Months Calendar view if explicitly requested)
       else if (view.screen === 'months') {
-        if (!c) { go({ screen: 'splash', client: null }); return; }
+        if (!c || !isClientAuthenticated(c.id)) {
+          go({ screen: 'splash', client: c ? c.id : null });
+          if (c) later(() => openCode(c, 'months'), 60);
+          return;
+        }
         const y = view.year;
         const total = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (!r.hidden || CONFIG.isAdmin) && (CONFIG.isAdmin || r.status === 'approved')).length;
         const availableYears = Array.from(new Set([TODAY.getFullYear(), ...(DATA.reels || []).map(r => r.y)])).sort();
@@ -2842,7 +2882,11 @@
 
       // Screen 4: Reels Gallery & Content Hub (Reference Concept UI)
       else if (view.screen === 'reels') {
-        if (!c) { go({ screen: 'splash', client: null }); return; }
+        if (!c || !isClientAuthenticated(c.id)) {
+          go({ screen: 'splash', client: c ? c.id : null });
+          if (c) later(() => openCode(c, 'reels'), 60);
+          return;
+        }
         const { year: y, month: m, branch: b, album: alb } = view;
         const currentType = view.contentType || 'all';
         const allList = contentsFor(m != null ? y : null, m, b, alb);
@@ -3023,7 +3067,11 @@
 
       // Screen 5: Saved Favorites Page
       else if (view.screen === 'favorites') {
-        if (!c) { go({ screen: 'splash', client: null }); return; }
+        if (!c || !isClientAuthenticated(c.id)) {
+          go({ screen: 'splash', client: c ? c.id : null });
+          if (c) later(() => openCode(c, 'favorites'), 60);
+          return;
+        }
         const favIds = [];
         try { favIds.push(...JSON.parse(localStorage.getItem('dn_favs_' + c.id) || '[]')); } catch(e) {}
         const allFavs = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && favIds.includes(r.id) && (CONFIG.isAdmin || (!r.hidden && r.status === 'approved')));
@@ -3130,7 +3178,11 @@
 
       // Screen 6: Client Profile & Brand Security Page
       else if (view.screen === 'profile') {
-        if (!c) { go({ screen: 'splash', client: null }); return; }
+        if (!c || !isClientAuthenticated(c.id)) {
+          go({ screen: 'splash', client: c ? c.id : null });
+          if (c) later(() => openCode(c, 'profile'), 60);
+          return;
+        }
         const clientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (CONFIG.isAdmin || (!r.hidden && r.status === 'approved')));
         const storiesCount = clientReels.filter(r => r.type === 'story').length;
         const postersCount = clientReels.filter(r => r.type === 'poster').length;
@@ -4303,7 +4355,6 @@
             msg.textContent = 'Welcome ' + matched.name + ' · Opening portal...';
             setClientAuthenticated(matched.id);
             if (matched.slug) setClientAuthenticated(matched.slug);
-            if (matched.code) setClientAuthenticated(matched.code);
             try { localStorage.setItem('dn_last_client', matched.id); } catch(_) {}
             setTimeout(() => {
               sc.remove();
@@ -4339,7 +4390,13 @@
           });
         });
         setTimeout(() => ins[0].focus(), 120);
-      }, true);
+      }, true, 'pin-auth-modal', () => {
+        // If sheet is dismissed/cancelled and client is not authenticated, strictly lock back to splash
+        if (targetClient && !isClientAuthenticated(targetClient.id)) {
+          view.screen = 'splash';
+          render();
+        }
+      });
     }
 
     // --------------------------------------------------------------------------
@@ -7537,10 +7594,18 @@
         go({ screen: 'landing', client: view.client });
       }
       else if (a === 'lock-portal') {
-        if (view.client) {
-          clearClientAuthentication(view.client);
-          toast('Portal locked', 'info');
-          openCode(client());
+        const c = client();
+        clearClientAuthentication(view.client);
+        if (c) {
+          clearClientAuthentication(c.id);
+          clearClientAuthentication(c.slug);
+        }
+        document.querySelectorAll('.scrim').forEach(el => el.remove());
+        view.screen = 'splash';
+        render();
+        toast('Portal locked. PIN required to re-enter.', 'info');
+        if (c) {
+          later(() => openCode(c, 'genesis'), 100);
         }
       }
       else if (a === 'gear-click') verifyAdminAccess();
@@ -7959,25 +8024,42 @@
           view.screen = targetScreen;
         } else {
           view.screen = 'splash';
-          // Auto prompt PIN if a specific tab was requested
-          if (requestedScreen) {
-            setTimeout(() => {
-              if (!isClientAuthenticated(matchedClient.id) && !isClientAuthenticated(targetSlug)) {
-                openCode(matchedClient, targetScreen);
-              }
-            }, 200);
-          }
+          // Auto prompt PIN immediately so client PIN entry is required
+          setTimeout(() => {
+            if (!isClientAuthenticated(matchedClient.id) && !isClientAuthenticated(targetSlug)) {
+              openCode(matchedClient, targetScreen);
+            }
+          }, 200);
         }
       } else {
         // If server data is still in flight, check if client was already authenticated locally
         if (isClientAuthenticated(targetSlug)) {
           view.client = targetSlug;
           view.screen = requestedScreen || 'genesis';
+        } else {
+          view.screen = 'splash';
         }
       }
     }
 
     render();
     checkConnection();
+
+    // Real-Time Background Synchronization with Cloudflare D1
+    // Polls /api/client every 12 seconds so admin settings (branding, pause/block, social links, downloads)
+    // and new reels/comments take effect immediately in real time across all devices!
+    setInterval(() => {
+      fetchLiveData(true);
+    }, 12000);
+
+    // Sync immediately when user switches back to this tab
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        fetchLiveData(true);
+      }
+    });
+    window.addEventListener('focus', () => {
+      fetchLiveData(true);
+    });
 
   })();
