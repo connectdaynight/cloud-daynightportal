@@ -134,7 +134,8 @@ export async function onRequestGet(context) {
     let client = null;
     if (slug) {
       client = await env.DB.prepare("SELECT * FROM clients WHERE slug = ? OR id = ?").bind(slug.toLowerCase(), slug.toLowerCase()).first();
-    } else if (code) {
+    }
+    if (!client && code) {
       client = await env.DB.prepare("SELECT * FROM clients WHERE code = ?").bind(code).first();
     }
 

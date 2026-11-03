@@ -268,6 +268,54 @@
     let lastProbeLatency = null;
     let lastProbeTime = 0;
 
+    const KNOWN_SCREENS = ['preapproval', 'pre-approval', 'reels', 'branches', 'collections', 'albums', 'months', 'favorites', 'profile', 'genesis', 'home', 'feed'];
+    function normalizeScreenName(s) {
+      if (!s) return null;
+      const lower = String(s).trim().toLowerCase().replace(/^#[/]?/, '');
+      if (lower === 'home' || lower === 'feed') return 'genesis';
+      if (lower === 'pre-approval' || lower === 'pre_approval' || lower === 'preapproval') return 'preapproval';
+      if (lower === 'albums') return 'collections';
+      if (KNOWN_SCREENS.includes(lower)) return lower;
+      return null;
+    }
+
+    function parsePortalUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const rawHash = window.location.hash.replace(/^#[/]?/, '').trim();
+      let hashClient = null;
+      let hashScreen = null;
+
+      if (rawHash) {
+        if (rawHash.includes('/')) {
+          const parts = rawHash.split('/');
+          hashClient = parts[0].toLowerCase();
+          hashScreen = normalizeScreenName(parts[1]);
+        } else {
+          const asScreen = normalizeScreenName(rawHash);
+          if (asScreen) {
+            hashScreen = asScreen;
+          } else {
+            hashClient = rawHash.toLowerCase();
+          }
+        }
+      }
+
+      const explicitClient = urlParams.get('client') || urlParams.get('c') || hashClient;
+      const explicitScreen = normalizeScreenName(urlParams.get('screen') || urlParams.get('tab')) || hashScreen;
+      const explicitMonth = urlParams.get('month');
+      const explicitBranch = urlParams.get('branch');
+      const lastSavedClient = (function() { try { return localStorage.getItem('dn_last_client'); } catch(_) { return null; } })();
+
+      return {
+        clientSlug: explicitClient || lastSavedClient || 'thechennaisilks',
+        targetScreen: explicitScreen || null,
+        month: (explicitMonth != null && !isNaN(Number(explicitMonth))) ? Number(explicitMonth) : null,
+        branch: explicitBranch || null
+      };
+    }
+    window.parsePortalUrl = parsePortalUrl;
+    window.normalizeScreenName = normalizeScreenName;
+
     async function probeNetworkLatency() {
       const now = Date.now();
       if (lastProbeLatency !== null && (now - lastProbeTime) < 15000) {
@@ -328,6 +376,11 @@
       const effectiveType = conn && conn.effectiveType ? conn.effectiveType.toLowerCase() : null;
       const saveData = conn ? Boolean(conn.saveData) : false;
 
+      // Trigger background latency probe if not already probed
+      if (lastProbeLatency === null) {
+        probeNetworkLatency().catch(() => {});
+      }
+
       // Active edge RTT takes precedence if available
       const activeRtt = lastProbeLatency !== null ? lastProbeLatency : (connRtt !== null ? connRtt : null);
 
@@ -336,21 +389,21 @@
       let isSlow = false;
       let recommendedQuality = '1080';
 
-      // 1. Poor / Low Network: High latency (> 450ms), 2g/slow-2g, saveData active, or very low bandwidth (< 1.2 Mbps)
-      if (saveData || effectiveType === 'slow-2g' || effectiveType === '2g' || (downlink !== null && downlink < 1.2) || (activeRtt !== null && activeRtt > 450)) {
+      // 1. Poor / Low Network: High latency (> 280ms), 2g/slow-2g, saveData active, or very low bandwidth (< 2.5 Mbps)
+      if (saveData || effectiveType === 'slow-2g' || effectiveType === '2g' || (downlink !== null && downlink < 2.5) || (activeRtt !== null && activeRtt > 280)) {
         strengthLabel = 'Poor / Low Network';
         badgeText = (effectiveType === '2g' || effectiveType === 'slow-2g') ? '2G Low' : 'Low Speed';
         isSlow = true;
         recommendedQuality = '480';
       }
-      // 2. Moderate Network: Medium latency (200ms - 450ms), 3g, or downlink 1.2 - 3.5 Mbps
-      else if (effectiveType === '3g' || (downlink !== null && downlink < 3.5) || (activeRtt !== null && activeRtt > 200)) {
+      // 2. Moderate Network: Medium latency (140ms - 280ms), 3g, or downlink 2.5 - 6.0 Mbps
+      else if (effectiveType === '3g' || (downlink !== null && downlink < 6.0) || (activeRtt !== null && activeRtt > 140)) {
         strengthLabel = 'Moderate Network';
         badgeText = '3G Medium';
         isSlow = false;
         recommendedQuality = '720';
       }
-      // 3. High Speed Network: Low latency (<= 200ms), 4g/5g/wifi, downlink >= 3.5 Mbps
+      // 3. High Speed Network: Low latency (<= 140ms), 4g/5g/wifi, downlink >= 6.0 Mbps
       else {
         strengthLabel = 'High Speed Network';
         badgeText = (conn && conn.type === 'wifi') ? 'WiFi Fast' : '4G/5G Fast';
@@ -1214,11 +1267,15 @@
       liveDataPromise = (async () => {
         try {
           // Authoritative Cloudflare D1 Query (/api/client)
-          const urlParams = new URLSearchParams(window.location.search);
-          const targetSlug = urlParams.get('client') || urlParams.get('c') || window.location.hash.replace(/^#[/]?/, '').toLowerCase();
-          const apiUrl = targetSlug ? `/api/client?slug=${encodeURIComponent(targetSlug)}` : '/api/client';
+          const routeInfo = parsePortalUrl();
+          const targetSlug = routeInfo.clientSlug;
+          let apiUrl = targetSlug ? `/api/client?slug=${encodeURIComponent(targetSlug)}` : '/api/client';
 
-          const cfRes = await fetch(apiUrl);
+          let cfRes = await fetch(apiUrl);
+          if (!cfRes.ok && targetSlug) {
+            // If specific client slug returned 404, immediately fall back to fetching all clients & reels
+            cfRes = await fetch('/api/client');
+          }
           if (cfRes.ok) {
             const cfData = await cfRes.json();
             if (cfData.success) {
@@ -1266,16 +1323,15 @@
 
               // Update dynamic branding and routing
               if (targetSlug) {
-                const matchedClient = (DATA.clients || []).find(c => c.slug === targetSlug || c.id === targetSlug);
+                const matchedClient = (DATA.clients || []).find(c => (c.slug && c.slug.toLowerCase() === targetSlug.toLowerCase()) || (c.id && c.id.toLowerCase() === targetSlug.toLowerCase()));
                 if (matchedClient) {
                   view.client = matchedClient.id;
                   const logo = matchedClient.logo || '/Logo/logo.png';
                   setFavicon(logo);
                   document.title = matchedClient.name + ' | DAY NIGHT';
                   if (!view.screen || view.screen === 'splash') {
-                    const reqScreen = urlParams.get('screen') || urlParams.get('tab');
                     if (isClientAuthenticated(matchedClient.id)) {
-                      view.screen = reqScreen || 'genesis';
+                      view.screen = view.targetScreen || routeInfo.targetScreen || 'genesis';
                     }
                   }
                 }
@@ -4493,9 +4549,7 @@
           if (!matched && Array.isArray(DATA.clients)) {
             const found = DATA.clients.find(x => x && x.code && String(x.code).trim() === cleanCode);
             if (found) {
-              if (!targetClient || found.id === targetClient.id || found.slug === targetClient.slug || (targetClient.slug && found.slug && found.slug.toLowerCase() === targetClient.slug.toLowerCase())) {
-                matched = found;
-              }
+              matched = found;
             }
           }
 
@@ -4510,13 +4564,13 @@
               if (cfRes.ok) {
                 const cfData = await cfRes.json();
                 if (cfData && cfData.success && cfData.client) {
-                  const cl = cfData.client;
-                  if (!targetClient || cl.id === targetClient.id || cl.slug === targetClient.slug || (targetClient.slug && cl.slug && cl.slug.toLowerCase() === targetClient.slug.toLowerCase()) || (targetClient.id && cl.id && cl.id.toLowerCase() === targetClient.id.toLowerCase())) {
-                    matched = cl;
-                    if (!DATA.clients) DATA.clients = [];
-                    const idx = DATA.clients.findIndex(x => x.id === cl.id);
-                    if (idx >= 0) DATA.clients[idx] = cl;
-                    else DATA.clients.push(cl);
+                  matched = cfData.client;
+                  if (!DATA.clients) DATA.clients = [];
+                  const idx = DATA.clients.findIndex(x => x.id === cfData.client.id);
+                  if (idx >= 0) DATA.clients[idx] = cfData.client;
+                  else DATA.clients.push(cfData.client);
+                  if (Array.isArray(cfData.reels) && cfData.reels.length) {
+                    DATA.reels = cfData.reels;
                   }
                 }
               }
@@ -4562,13 +4616,14 @@
             view.client = matched.id;
             try { localStorage.setItem('dn_last_client', matched.id); } catch(_) {}
 
-            const destScreen = (effectiveScreen && effectiveScreen !== 'splash' && effectiveScreen !== 'dn-intro') ? effectiveScreen : (view.targetScreen || 'genesis');
-            view.targetScreen = destScreen;
+            const destScreen = (view.targetScreen && view.targetScreen !== 'splash' && view.targetScreen !== 'dn-intro' && view.targetScreen !== 'genesis')
+              ? view.targetScreen
+              : ((effectiveScreen && effectiveScreen !== 'splash' && effectiveScreen !== 'dn-intro' && effectiveScreen !== 'genesis') ? effectiveScreen : null);
 
             setTimeout(() => {
               sc.remove();
               // Direct tab link: go straight to the respective requested screen!
-              if (destScreen && destScreen !== 'genesis') {
+              if (destScreen) {
                 go({ screen: destScreen, client: matched.id });
               } else {
                 go({ screen: 'landing', client: matched.id });
@@ -5689,6 +5744,64 @@
           updateScrubberUi(targetTime, vid.duration);
         }
 
+        // Dedicated Touch Events with e.preventDefault() & { passive: false }
+        // Completely isolates drag gesture from Android navigation bar and iOS home swipe
+        scrubber.addEventListener('touchstart', e => {
+          if (e.touches && e.touches.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            isScrubbing = true;
+            scrubber.classList.add('is-scrubbing');
+            seekFromPointer(e.touches[0].clientX);
+          }
+        }, { passive: false });
+
+        scrubber.addEventListener('touchmove', e => {
+          if (isScrubbing && e.touches && e.touches.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            seekFromPointer(e.touches[0].clientX);
+          }
+        }, { passive: false });
+
+        const onTouchEnd = e => {
+          if (isScrubbing) {
+            e.preventDefault();
+            e.stopPropagation();
+            isScrubbing = false;
+            scrubber.classList.remove('is-scrubbing');
+          }
+        };
+        scrubber.addEventListener('touchend', onTouchEnd, { passive: false });
+        scrubber.addEventListener('touchcancel', onTouchEnd, { passive: false });
+
+        // Pointer Events with Pointer Capture
+        scrubber.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          isScrubbing = true;
+          scrubber.classList.add('is-scrubbing');
+          try { scrubber.setPointerCapture(e.pointerId); } catch (_) {}
+          seekFromPointer(e.clientX);
+          const onPointerMove = moveEvt => {
+            if (isScrubbing) {
+              moveEvt.preventDefault();
+              seekFromPointer(moveEvt.clientX);
+            }
+          };
+          const onPointerUp = upEvt => {
+            isScrubbing = false;
+            scrubber.classList.remove('is-scrubbing');
+            try { scrubber.releasePointerCapture(upEvt.pointerId); } catch (_) {}
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+            window.removeEventListener('pointercancel', onPointerUp);
+          };
+          window.addEventListener('pointermove', onPointerMove, { passive: false });
+          window.addEventListener('pointerup', onPointerUp);
+          window.addEventListener('pointercancel', onPointerUp);
+        });
+
         scrubber.addEventListener('pointermove', e => {
           if (!vid.duration) return;
           const rect = scrubber.getBoundingClientRect();
@@ -5698,24 +5811,6 @@
             scrubberTime.textContent = `${fmtSec(hoverTime)} / ${fmtSec(vid.duration)}`;
             scrubberTime.style.left = `${pos * 100}%`;
           }
-        });
-
-        scrubber.addEventListener('pointerdown', e => {
-          e.stopPropagation();
-          isScrubbing = true;
-          scrubber.classList.add('is-scrubbing');
-          seekFromPointer(e.clientX);
-          const onPointerMove = moveEvt => {
-            if (isScrubbing) seekFromPointer(moveEvt.clientX);
-          };
-          const onPointerUp = () => {
-            isScrubbing = false;
-            scrubber.classList.remove('is-scrubbing');
-            window.removeEventListener('pointermove', onPointerMove);
-            window.removeEventListener('pointerup', onPointerUp);
-          };
-          window.addEventListener('pointermove', onPointerMove);
-          window.addEventListener('pointerup', onPointerUp);
         });
 
         // Instant synchronous play / resume on center button
@@ -8369,19 +8464,17 @@
     });
 
     // Check for direct client routing via URL query or hash:
-    // e.g. /?client=<slug> or /?client=<slug>&screen=preapproval or /#<slug>
+    // e.g. /?client=<slug> or /?client=<slug>&screen=preapproval or /#<slug> or /#preapproval
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('admin') === '1' || urlParams.get('admin') === 'true') {
       window.location.href = '/admin';
       return;
     }
-    const lastSavedClient = (function() { try { return localStorage.getItem('dn_last_client'); } catch(_) { return null; } })();
-    const targetSlug = urlParams.get('client') || urlParams.get('c') || window.location.hash.replace(/^#[/]?/, '').toLowerCase() || lastSavedClient;
-    const requestedScreen = urlParams.get('screen') || urlParams.get('tab');
-    const requestedMonth = urlParams.get('month');
-    const requestedBranch = urlParams.get('branch');
-    if (requestedMonth != null && !isNaN(Number(requestedMonth))) view.month = Number(requestedMonth);
-    if (requestedBranch) view.branch = requestedBranch;
+    const routeInfo = parsePortalUrl();
+    const targetSlug = routeInfo.clientSlug;
+    const requestedScreen = routeInfo.targetScreen;
+    if (routeInfo.month != null) view.month = routeInfo.month;
+    if (routeInfo.branch) view.branch = routeInfo.branch;
     if (requestedScreen) view.targetScreen = requestedScreen;
 
     if (targetSlug) {

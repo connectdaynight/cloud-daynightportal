@@ -654,14 +654,68 @@
         });
       }
 
-      // Scrubber Seek
+      // Scrubber Drag & Seek with Touch & Pointer Isolation
       if (scrubber && vid) {
-        scrubber.addEventListener('click', e => {
+        let isScrubbingMedia = false;
+        function seekMedia(clientX) {
+          if (!vid || !vid.duration) return;
           const rect = scrubber.getBoundingClientRect();
-          const pos = (e.clientX - rect.left) / rect.width;
-          if (vid.duration) {
-            vid.currentTime = pos * vid.duration;
+          const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+          vid.currentTime = pos * vid.duration;
+          if (scrubberFill) scrubberFill.style.width = (pos * 100) + '%';
+        }
+
+        scrubber.addEventListener('touchstart', e => {
+          if (e.touches && e.touches.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            isScrubbingMedia = true;
+            seekMedia(e.touches[0].clientX);
           }
+        }, { passive: false });
+
+        scrubber.addEventListener('touchmove', e => {
+          if (isScrubbingMedia && e.touches && e.touches.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            seekMedia(e.touches[0].clientX);
+          }
+        }, { passive: false });
+
+        const endMediaTouch = e => {
+          if (isScrubbingMedia) {
+            e.preventDefault();
+            e.stopPropagation();
+            isScrubbingMedia = false;
+          }
+        };
+        scrubber.addEventListener('touchend', endMediaTouch, { passive: false });
+        scrubber.addEventListener('touchcancel', endMediaTouch, { passive: false });
+
+        scrubber.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          isScrubbingMedia = true;
+          try { scrubber.setPointerCapture(e.pointerId); } catch (_) {}
+          seekMedia(e.clientX);
+          const onMove = ev => {
+            if (isScrubbingMedia) {
+              ev.preventDefault();
+              seekMedia(ev.clientX);
+            }
+          };
+          const onUp = ev => {
+            isScrubbingMedia = false;
+            try { scrubber.releasePointerCapture(ev.pointerId); } catch (_) {}
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+          };
+          window.addEventListener('pointermove', onMove, { passive: false });
+          window.addEventListener('pointerup', onUp);
+        });
+
+        scrubber.addEventListener('click', e => {
+          seekMedia(e.clientX);
         });
       }
 

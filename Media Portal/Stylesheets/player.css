@@ -1565,11 +1565,11 @@
       opacity: 1 !important;
     }
 
-    /* Right-Hand Floating Actions Stack */
+    /* Right-Hand Floating Actions Stack - Elevated safely above scrubber */
     .ig-actions-stack {
       position: absolute !important;
-      right: 10px !important;
-      bottom: 28px !important;
+      right: 12px !important;
+      bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
       z-index: 36 !important;
       display: flex !important;
       flex-direction: column !important;
@@ -1673,12 +1673,12 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    /* Bottom-Left Information Overlay */
+    /* Bottom-Left Information Overlay - Elevated comfortably above scrubber */
     .ig-meta-overlay {
       position: absolute !important;
-      left: 12px !important;
-      bottom: 22px !important;
-      right: 70px !important;
+      left: 14px !important;
+      bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+      right: 76px !important;
       z-index: 36 !important;
       display: flex !important;
       flex-direction: column !important;
@@ -1739,31 +1739,34 @@
       text-overflow: ellipsis;
     }
 
-    /* Scrubber Progress Bar with Real-Time Seconds Tooltip Bubble */
+    /* Scrubber Progress Bar - Elevated above mobile gesture navigation bar */
     .ig-scrubber-bar {
       position: absolute !important;
-      bottom: 0px !important;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
       left: 0 !important;
       right: 0 !important;
-      height: 14px !important;
+      height: 38px !important;
       display: flex !important;
-      align-items: flex-end !important;
-      padding-bottom: 2px !important;
-      z-index: 35 !important;
+      align-items: center !important;
+      padding: 10px 0 !important;
+      box-sizing: border-box !important;
+      z-index: 38 !important;
       cursor: pointer !important;
       touch-action: none !important;
+      -webkit-user-select: none !important;
+      user-select: none !important;
     }
     .ig-scrubber-track {
       width: 100%;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.32);
+      height: 4px;
+      background: rgba(255, 255, 255, 0.35);
       position: relative;
       border-radius: 2px;
       transition: height 0.15s ease;
     }
     .ig-scrubber-bar:hover .ig-scrubber-track,
     .ig-scrubber-bar.is-scrubbing .ig-scrubber-track {
-      height: 5px;
+      height: 6px;
     }
     .ig-scrubber-fill {
       height: 100%;
@@ -1774,24 +1777,25 @@
       transition: width 0.04s linear;
     }
     .ig-scrubber-thumb-handle {
-      position: absolute;
-      right: -5px;
-      top: 50%;
-      transform: translateY(-50%) scale(0);
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-      background: #FFFFFF;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+      position: absolute !important;
+      right: -7px !important;
+      top: 50% !important;
+      transform: translateY(-50%) scale(1) !important;
+      width: 14px !important;
+      height: 14px !important;
+      border-radius: 50% !important;
+      background: #FFFFFF !important;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255, 255, 255, 0.35) !important;
+      pointer-events: none !important;
       transition: transform 0.15s ease;
     }
     .ig-scrubber-bar:hover .ig-scrubber-thumb-handle,
     .ig-scrubber-bar.is-scrubbing .ig-scrubber-thumb-handle {
-      transform: translateY(-50%) scale(1);
+      transform: translateY(-50%) scale(1.2) !important;
     }
     .ig-scrubber-time-tooltip {
       position: absolute;
-      bottom: 22px;
+      bottom: 26px;
       left: 0;
       transform: translateX(-50%);
       background: rgba(18, 41, 74, 0.94);
