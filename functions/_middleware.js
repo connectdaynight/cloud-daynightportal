@@ -29,15 +29,26 @@ export async function onRequest(context) {
 
   // Resolve client information dynamically from D1
   let clientInfo = null;
+  const isTcs = slug === 'tcs' || slug === 'thechennaisilks' || slug === 'cmvjreqkd';
 
   if (slug && env.DB) {
     try {
       const row = await env.DB.prepare("SELECT * FROM clients WHERE slug = ? OR id = ?").bind(slug, slug).first();
       if (row) {
+        let logoUrl = '/Logo/logo.png';
+        if (row.logo) {
+          if (row.logo.startsWith('http') || row.logo.startsWith('/')) {
+            logoUrl = row.logo;
+          } else {
+            logoUrl = `/api/client-logo?client=${encodeURIComponent(row.slug || row.id)}`;
+          }
+        } else if (isTcs) {
+          logoUrl = '/Logo/tcs-logo.png';
+        }
         clientInfo = {
           name: row.name,
           slug: row.slug || row.id,
-          image: (row.logo && !row.logo.startsWith('data:') ? row.logo : '/Logo/logo.png'),
+          image: logoUrl,
           desc: `${row.name} · Private Client Delivery Portal`
         };
       }
@@ -48,11 +59,11 @@ export async function onRequest(context) {
 
   // Fallback if parameter was provided but not matched in D1
   if (!clientInfo && rawParam) {
-    const formattedName = rawParam.replace(/[-_+]/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
+    const formattedName = isTcs ? 'The Chennai Silks' : rawParam.replace(/[-_+]/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
     clientInfo = {
       name: formattedName,
       slug: slug,
-      image: '/Logo/logo.png',
+      image: isTcs ? '/Logo/tcs-logo.png' : `/api/client-logo?client=${encodeURIComponent(slug)}`,
       desc: `${formattedName} · Private Client Delivery Portal`
     };
   }

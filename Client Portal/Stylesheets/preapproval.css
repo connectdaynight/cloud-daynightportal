@@ -116,6 +116,23 @@
       align-items: center;
       border: 1.2px solid rgba(184, 147, 90, 0.35);
     }
+    @media (max-width: 640px) {
+      .preapp-hero-banner {
+        min-height: 140px;
+        margin: 10px 0 14px;
+        border-radius: 16px;
+      }
+      .preapp-banner-bg {
+        width: 65% !important;
+      }
+      .preapp-banner-content {
+        max-width: 72% !important;
+        padding: 12px 14px !important;
+      }
+      .preapp-banner-title {
+        font-size: 17px !important;
+      }
+    }
     .preapp-banner-bg {
       position: absolute;
       top: 0;

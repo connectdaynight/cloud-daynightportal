@@ -5693,8 +5693,14 @@ function openEditModal(r) {
 
         if (delBtn) {
           delBtn.onclick = async () => {
-            if (isBanner) client.bannerUrl = '';
-            else delete client[coverProp][name];
+            if (isBanner) {
+              client.bannerUrl = '';
+              client.banner = '';
+              client.heroBanner = '';
+              client.coverUrl = '';
+            } else {
+              delete client[coverProp][name];
+            }
 
             saveAndBroadcast(`Cover removed for ${name || 'Hero Banner'}`);
             try { await api('saveClient', { client }); } catch(e) {}
@@ -5706,8 +5712,14 @@ function openEditModal(r) {
 
         saveBtn.onclick = async () => {
           if (currentCover) {
-            if (isBanner) client.bannerUrl = currentCover;
-            else client[coverProp][name] = currentCover;
+            if (isBanner) {
+              client.bannerUrl = currentCover;
+              client.banner = currentCover;
+              client.heroBanner = currentCover;
+              client.coverUrl = currentCover;
+            } else {
+              client[coverProp][name] = currentCover;
+            }
 
             saveAndBroadcast(`Cover saved for ${name || 'Hero Banner'}!`);
             try { await api('saveClient', { client }); } catch(e) {}

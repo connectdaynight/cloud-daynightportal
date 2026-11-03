@@ -963,10 +963,15 @@
       transition: transform 0.15s ease;
     }
     .bnav-label {
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 600;
       color: currentColor;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      text-align: center;
     }
     .bnav-btn.active {
       color: var(--navy);

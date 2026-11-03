@@ -257,13 +257,14 @@
       return id ? `https://drive.google.com/uc?export=download&id=${id}` : u;
     };
 
-    function getStreamUrl(reel) {
+    function getStreamUrl(reel, quality = 'auto') {
       if (!reel) return '';
       const id = reel.fileId || driveId(reel.url);
       if (!id) return reel.url || '';
+      const qParam = quality && quality !== 'auto' ? `&q=${quality}` : '';
       if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
         const tok = window.__DN_STREAM_TOKEN__ || window.DNM_STORAGE?.auth?.get('stream_token') || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('dn_st') : '') || '';
-        return CONFIG_HELPERS.getApiUrl ? CONFIG_HELPERS.getApiUrl(`/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}&v=3`) : `/api/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}&v=3`;
+        return CONFIG_HELPERS.getApiUrl ? CONFIG_HELPERS.getApiUrl(`/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}${qParam}&v=3`) : `/api/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}${qParam}&v=3`;
       }
       return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
     }
@@ -326,35 +327,138 @@
         ${dnLogo('mini')}
       </div>`;
 
-    // Client Authentication Persistence (Session & Local) - using StorageAdapter
+    // Client Authentication Persistence (Local & Session with 14-day Minimum Expiry & Client Aliases)
+    const AUTH_EXPIRY_MS = 14 * 24 * 60 * 60 * 1000; // 14 days minimum persistence
+
+    function getClientAuthAliases(cid) {
+      if (!cid) return [];
+      const raw = String(cid).trim().toLowerCase();
+      const keys = new Set([raw]);
+      try {
+        const found = (DATA.clients || []).find(c => (c.id && c.id.toLowerCase() === raw) || (c.slug && c.slug.toLowerCase() === raw));
+        if (found) {
+          if (found.id) keys.add(found.id.toLowerCase());
+          if (found.slug) keys.add(found.slug.toLowerCase());
+        }
+      } catch(_) {}
+      if (raw === 'tcs' || raw === 'thechennaisilks' || raw === 'cmvje2zfy') {
+        keys.add('tcs');
+        keys.add('thechennaisilks');
+        keys.add('cmvje2zfy');
+      }
+      return Array.from(keys);
+    }
+
     function isClientAuthenticated(cid) {
       if (!cid) return false;
-      try {
-        const auth = window.DNM_STORAGE?.auth?.get('client_' + cid);
-        if (typeof auth === 'boolean') return auth;
-        return sessionStorage.getItem('dn_auth_' + cid) === 'true';
-      } catch {
-        return sessionStorage.getItem('dn_auth_' + cid) === 'true';
+      const aliases = getClientAuthAliases(cid);
+      const now = Date.now();
+
+      for (const key of aliases) {
+        // 1. Check persistent localStorage with 14-day window
+        try {
+          const raw = localStorage.getItem('dn_auth_' + key);
+          if (raw) {
+            if (raw === 'true') {
+              // Upgrade legacy boolean to full 14-day timestamp
+              const payload = JSON.stringify({ auth: true, expiresAt: now + AUTH_EXPIRY_MS, time: now });
+              try { localStorage.setItem('dn_auth_' + key, payload); } catch(_) {}
+              return true;
+            }
+            try {
+              const parsed = JSON.parse(raw);
+              if (parsed && parsed.auth) {
+                if (!parsed.expiresAt || parsed.expiresAt > now) {
+                  return true;
+                }
+              }
+            } catch(_) {}
+          }
+        } catch(_) {}
+
+        // 2. Check StorageAdapter
+        try {
+          const auth = window.DNM_STORAGE?.auth?.get('client_' + key);
+          if (auth === true) return true;
+        } catch(_) {}
+
+        // 3. Fallback to active session
+        try {
+          if (sessionStorage.getItem('dn_auth_' + key) === 'true') {
+            return true;
+          }
+        } catch(_) {}
       }
+      return false;
     }
+
     function setClientAuthenticated(cid) {
       if (!cid) return;
-      try { window.DNM_STORAGE?.auth?.set('client_' + cid, true); } catch(_) {}
-      sessionStorage.setItem('dn_auth_' + cid, 'true');
+      const aliases = getClientAuthAliases(cid);
+      const now = Date.now();
+      const payload = JSON.stringify({ auth: true, expiresAt: now + AUTH_EXPIRY_MS, time: now });
+
+      aliases.forEach(key => {
+        try { localStorage.setItem('dn_auth_' + key, payload); } catch(_) {}
+        try { sessionStorage.setItem('dn_auth_' + key, 'true'); } catch(_) {}
+        try { window.DNM_STORAGE?.auth?.set('client_' + key, true); } catch(_) {}
+      });
     }
+
     function clearClientAuthentication(cid) {
       if (!cid) return;
-      try { window.DNM_STORAGE?.auth?.delete('client_' + cid); } catch(_) {}
-      sessionStorage.removeItem('dn_auth_' + cid);
+      const aliases = getClientAuthAliases(cid);
+      aliases.forEach(key => {
+        try { localStorage.removeItem('dn_auth_' + key); } catch(_) {}
+        try { sessionStorage.removeItem('dn_auth_' + key); } catch(_) {}
+        try { window.DNM_STORAGE?.auth?.delete('client_' + key); } catch(_) {}
+      });
     }
 
     let isClosingModalViaHistory = false;
     let isProgrammaticHistoryBack = false;
 
+    function getCanonicalUrl(v = view) {
+      try {
+        const url = new URL(window.location.href);
+        const c = v.client ? ((DATA.clients || []).find(x => x.id === v.client) || { id: v.client, slug: v.client }) : null;
+        if (c) {
+          url.searchParams.set('client', c.slug || c.id);
+        }
+        url.searchParams.delete('c');
+
+        if (v.screen && v.screen !== 'genesis' && v.screen !== 'landing' && v.screen !== 'splash') {
+          url.searchParams.set('screen', v.screen);
+        } else if (v.screen === 'genesis') {
+          url.searchParams.delete('screen');
+        }
+        url.searchParams.delete('tab');
+
+        if (v.month != null) {
+          url.searchParams.set('month', v.month);
+        } else {
+          url.searchParams.delete('month');
+        }
+
+        if (v.branch && v.branch !== 'all') {
+          url.searchParams.set('branch', v.branch);
+        } else {
+          url.searchParams.delete('branch');
+        }
+
+        return url.pathname + url.search + url.hash;
+      } catch(_) {
+        return window.location.pathname + window.location.search;
+      }
+    }
+
     function go(p, isBack = false) {
       Object.assign(view, p);
+      const nextUrl = getCanonicalUrl(view);
       if (!isBack) {
-        try { window.history.pushState({ view: { ...view } }, ''); } catch(e) {}
+        try { window.history.pushState({ view: { ...view } }, '', nextUrl); } catch(e) {}
+      } else {
+        try { window.history.replaceState({ view: { ...view } }, '', nextUrl); } catch(e) {}
       }
       render();
       window.scrollTo(0, 0);
@@ -990,15 +1094,19 @@
                 const logo = (matchedClient.id === 'tcs' ? '/Logo/tcs-logo.png' : (matchedClient.logo || '/Logo/logo.png'));
                 setFavicon(logo);
                 document.title = matchedClient.name + ' | DAY NIGHT';
-                if (isClientAuthenticated(matchedClient.id)) {
-                  view.screen = 'landing';
+                // Only route screen if user has not yet entered a screen (prevents double-reloading)
+                if (!view.screen || view.screen === 'splash') {
+                  const reqScreen = urlParams.get('screen') || urlParams.get('tab');
+                  if (isClientAuthenticated(matchedClient.id)) {
+                    view.screen = reqScreen || 'genesis';
+                  }
                 }
               }
             }
 
-            if (view.screen !== 'splash' && view.screen !== 'dn-intro') {
+            if (view.screen !== 'splash' && view.screen !== 'dn-intro' && view.screen !== 'landing') {
               render();
-            } else {
+            } else if (view.screen === 'splash' || view.screen === 'dn-intro') {
               const startBtn = document.getElementById('dn-start-btn');
               if (startBtn) {
                 const c = client();
@@ -1059,6 +1167,12 @@
       }
       link.type = href.startsWith('data:image/svg') ? 'image/svg+xml' : 'image/png';
       link.href = href;
+
+      let shortcut = document.querySelector('link[rel="shortcut icon"]');
+      if (shortcut) {
+        shortcut.type = link.type;
+        shortcut.href = href;
+      }
 
       let apple = document.getElementById('dynamic-apple-icon') || document.querySelector('link[rel="apple-touch-icon"]');
       if (apple) {
@@ -1824,8 +1938,11 @@
         return 0;
       });
 
+      // Strictly isolate current pre-approval playlist for the video player
+      window.__currentPreAppList = clientReels;
+
       const activeBranch = (view.branch && view.branch !== 'all') ? (view.branch.toUpperCase() + ' BRANCH') : 'ALL BRANCHES';
-      const bannerSrc = c.banner || c.heroBanner || c.bannerUrl || '';
+      const bannerSrc = c.bannerUrl || c.heroBanner || c.banner || c.coverUrl || '';
       const logoSrc = c.logo || (c.id === 'tcs' ? '/Logo/tcs-logo.png' : '/Logo/logo.png');
 
       return `
@@ -1843,8 +1960,8 @@
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               <span>PIN Secured</span>
             </div>
-            <div class="preapp-brand-mark" data-act="bnav-profile" title="Client Profile & Security">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div class="preapp-brand-mark" data-act="bnav-profile" title="Client Profile & Security" style="background:#FFF;border:1px solid var(--line);overflow:hidden;box-shadow:0 2px 8px rgba(18,41,74,0.08);padding:2px;">
+              <img src="${esc(logoSrc)}" alt="${esc(c.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
             </div>
           </div>
         </div>
@@ -2689,8 +2806,8 @@
         const postersList = contentsFor(m != null ? y : null, m, b, alb, 'posters');
         const gridCols = view.gridCols || 2;
 
-        // Banner Image (Only use client's real configured bannerUrl; otherwise use luxury gradient)
-        const heroBanner = c.banner || c.heroBanner || c.bannerUrl || '';
+        // Banner Image (Prioritize custom uploaded/set bannerUrl over defaults)
+        const heroBanner = c.bannerUrl || c.heroBanner || c.banner || c.coverUrl || '';
 
         // Unified Gallery View for Reels, Stories, and Posters (Reference Concept Card Listing)
         let displayList = currentType === 'all'
@@ -3639,7 +3756,7 @@
           pinsBox.classList.remove('bad');
           setClientAuthenticated(activeClient.id);
           setTimeout(() => {
-            go({ screen: 'landing', client: activeClient.id });
+            go({ screen: 'genesis', client: activeClient.id });
           }, 250);
         } else {
           pinsBox.classList.remove('bad');
@@ -4136,11 +4253,12 @@
             }
 
             msg.className = 'code-msg';
-            msg.textContent = 'Welcome ' + matched.name + ' · Redirecting...';
-            const targetUrl = '/?client=' + encodeURIComponent(matched.slug || matched.id);
-            try { history.pushState({ client: matched.id }, '', targetUrl); } catch (_) {}
+            msg.textContent = 'Welcome ' + matched.name + ' · Opening portal...';
             setClientAuthenticated(matched.id);
-            setTimeout(() => { sc.remove(); go({ screen: targetScreen, client: matched.id }); }, 250);
+            setTimeout(() => {
+              sc.remove();
+              go({ screen: targetScreen || 'genesis', client: matched.id });
+            }, 250);
           } else {
             pins.classList.remove('bad');
             void pins.offsetWidth;
@@ -4308,8 +4426,51 @@
       let isSettingsOpen = false;
       let isNavigating = false;
 
-      function getStreamUrl(reel) {
-        return window.getStreamUrl ? window.getStreamUrl(reel) : '';
+      // Video Quality & Network Adaptive Playback Engine
+      let selectedQuality = (function() {
+        try { return localStorage.getItem('dn_video_quality') || 'auto'; } catch(_) { return 'auto'; }
+      })();
+
+      let wifiToastTimer = null;
+      function showWifiNotice() {
+        let el = document.getElementById('dn-wifi-quality-toast');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'dn-wifi-quality-toast';
+          el.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(0);background:rgba(13,59,46,0.95);color:#FFFFFF;padding:8px 16px;border-radius:999px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,0.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:100000;transition:opacity 0.3s ease,transform 0.3s ease;pointer-events:none;';
+          el.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg><span>Use Wifi Network for Better Quality</span>';
+          document.body.appendChild(el);
+        }
+        el.style.display = 'flex';
+        el.style.opacity = '1';
+        el.style.transform = 'translateX(-50%) translateY(0)';
+        if (wifiToastTimer) clearTimeout(wifiToastTimer);
+        wifiToastTimer = setTimeout(() => {
+          if (el) {
+            el.style.opacity = '0';
+            el.style.transform = 'translateX(-50%) translateY(-10px)';
+            setTimeout(() => { if (el) el.style.display = 'none'; }, 300);
+          }
+        }, 4000);
+      }
+
+      function getNetworkInfo() {
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (!conn) return { isSlow: false, label: 'Fast' };
+        const isSlow = conn.saveData || conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g' || conn.effectiveType === '3g' || (conn.downlink && conn.downlink < 2.5);
+        let label = 'Fast';
+        if (conn.type === 'wifi') label = 'WiFi';
+        else if (conn.effectiveType) label = conn.effectiveType.toUpperCase();
+        return { isSlow, label };
+      }
+
+      const net = getNetworkInfo();
+      if (selectedQuality === '480' || selectedQuality === '720' || (selectedQuality === 'auto' && net.isSlow)) {
+        setTimeout(() => showWifiNotice(), 1200);
+      }
+
+      function getStreamUrl(reel, q = selectedQuality) {
+        return window.getStreamUrl ? window.getStreamUrl(reel, q) : '';
       }
 
       sheet(`
@@ -4489,17 +4650,38 @@
                 </div>
               </div>
 
-              <!-- Pre-Approval Status Action -->
+              <!-- 6. Quality Selection Buttons with Current Selected Effect -->
               <div style="margin-bottom:14px;">
-                <small style="font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">Pre-Approval Status</small>
-                <div style="display:flex;gap:8px;">
-                  <button type="button" id="ig-set-approve" style="flex:1;padding:8px 0;border-radius:10px;border:1.2px solid #1FAF64;background:rgba(31,175,100,0.1);color:#1FAF64;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Approve
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <small style="font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:0.5px;">Video Quality &amp; Speed</small>
+                  <span style="font-size:10.5px;font-weight:600;color:var(--mute);display:inline-flex;align-items:center;gap:4px;">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+                    <span id="ig-net-indicator">${net.label}</span>
+                  </span>
+                </div>
+                <div class="ig-quality-pills" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+                  <button type="button" class="ig-quality-btn ${selectedQuality === 'auto' ? 'active' : ''}" data-q="auto" style="padding:7px 4px;border-radius:8px;border:1px solid ${selectedQuality === 'auto' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === 'auto' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === 'auto' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === 'auto' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
+                    Auto
                   </button>
-                  <button type="button" id="ig-set-denied" style="flex:1;padding:8px 0;border-radius:10px;border:1.2px solid #E53225;background:rgba(229,50,37,0.1);color:#E53225;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Denied
+                  <button type="button" class="ig-quality-btn ${selectedQuality === '1080' ? 'active' : ''}" data-q="1080" style="padding:7px 4px;border-radius:8px;border:1px solid ${selectedQuality === '1080' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === '1080' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === '1080' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === '1080' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
+                    1080p HD
+                  </button>
+                  <button type="button" class="ig-quality-btn ${selectedQuality === '720' ? 'active' : ''}" data-q="720" style="padding:7px 4px;border-radius:8px;border:1px solid ${selectedQuality === '720' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === '720' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === '720' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === '720' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
+                    720p
+                  </button>
+                  <button type="button" class="ig-quality-btn ${selectedQuality === '480' ? 'active' : ''}" data-q="480" style="padding:7px 4px;border-radius:8px;border:1px solid ${selectedQuality === '480' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === '480' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === '480' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === '480' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
+                    480p Fast
                   </button>
                 </div>
+              </div>
+
+              <!-- 5. Pre-Approval Status Action with Live Status Display Above -->
+              <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <small style="font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:0.5px;">Pre-Approval Status</small>
+                  <span id="ig-live-status-pill" style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;"></span>
+                </div>
+                <div id="ig-status-action-row" style="display:flex;gap:8px;"></div>
               </div>
 
               <!-- Color Calibration & Filters (Brightness, Contrast, Saturation) -->
@@ -4935,7 +5117,7 @@
                 currentReel = playlist[currentIndex];
                 recordWatchHistory(currentReel);
 
-                vid.src = getStreamUrl(currentReel);
+                vid.src = getStreamUrl(currentReel, selectedQuality);
                 vid.poster = currentReel.coverUrl || '';
                 if (ambient) ambient.style.backgroundImage = `url('${esc(currentReel.coverUrl || '')}')`;
 
@@ -4953,6 +5135,7 @@
                 renderCommentsList();
                 applyPlatformOverlay(socialPlatform);
                 applyVideoFilters(vid);
+                if (typeof updateLiveStatusUI === 'function') updateLiveStatusUI();
 
                 if (commentsDrawer) commentsDrawer.style.display = 'none';
                 if (settingsModal) settingsModal.style.display = 'none';
@@ -5165,21 +5348,105 @@
           isSettingsOpen = false;
         });
 
-        // Settings Modal Actions (With User Confirmation)
-        modalSc.querySelector('#ig-set-approve')?.addEventListener('click', () => {
-          confirmModal('Approve Reel', `Are you sure you want to approve "${currentReel.title}"? Once approved, it will be published to the client Reels gallery.`, () => {
-            setReelApprovalStatus(currentReel.id, 'approved');
-            settingsModal.style.display = 'none';
-            isSettingsOpen = false;
-          }, 'Approve Reel', false);
-        });
+        // 5. Live Status UI & Server Synchronization
+        function updateLiveStatusUI() {
+          const pill = modalSc.querySelector('#ig-live-status-pill');
+          const row = modalSc.querySelector('#ig-status-action-row');
+          if (!pill || !row) return;
 
-        modalSc.querySelector('#ig-set-denied')?.addEventListener('click', () => {
-          confirmModal('Reject / Request Edits', `Are you sure you want to reject "${currentReel.title}" and request revisions?`, () => {
-            setReelApprovalStatus(currentReel.id, 'denied');
-            settingsModal.style.display = 'none';
-            isSettingsOpen = false;
-          }, 'Reject Reel', true);
+          const st = currentReel.status;
+          if (st === 'approved') {
+            pill.style.background = 'rgba(31,175,100,0.15)';
+            pill.style.color = '#1FAF64';
+            pill.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#1FAF64;display:inline-block;"></span> Live: Approved';
+
+            row.innerHTML = `
+              <button type="button" id="ig-btn-undo-status" style="width:100%;padding:9px 0;border-radius:10px;border:1.5px solid #1FAF64;background:rgba(31,175,100,0.1);color:#1FAF64;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>✓ Approved (Click to Undo)</span>
+              </button>
+            `;
+          } else if (st === 'denied') {
+            pill.style.background = 'rgba(229,50,37,0.15)';
+            pill.style.color = '#E53225';
+            pill.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#E53225;display:inline-block;"></span> Live: Rejected';
+
+            row.innerHTML = `
+              <button type="button" id="ig-btn-undo-status" style="width:100%;padding:9px 0;border-radius:10px;border:1.5px solid #E53225;background:rgba(229,50,37,0.1);color:#E53225;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <span>✕ Rejected (Click to Undo)</span>
+              </button>
+            `;
+          } else {
+            pill.style.background = 'rgba(217,119,6,0.15)';
+            pill.style.color = '#D97706';
+            pill.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#D97706;display:inline-block;"></span> Live: Under Review';
+
+            row.innerHTML = `
+              <button type="button" id="ig-set-approve" style="flex:1;padding:8px 0;border-radius:10px;border:1.2px solid #1FAF64;background:rgba(31,175,100,0.1);color:#1FAF64;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Approve
+              </button>
+              <button type="button" id="ig-set-denied" style="flex:1;padding:8px 0;border-radius:10px;border:1.2px solid #E53225;background:rgba(229,50,37,0.1);color:#E53225;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Denied
+              </button>
+            `;
+          }
+
+          row.querySelector('#ig-set-approve')?.addEventListener('click', () => {
+            confirmThemedModal('Approve Reel', `Are you sure you want to approve "${currentReel.title}"?`, async () => {
+              await setReelApprovalStatus(currentReel.id, 'approved');
+              currentReel.status = 'approved';
+              updateLiveStatusUI();
+            }, 'Approve Reel', false);
+          });
+
+          row.querySelector('#ig-set-denied')?.addEventListener('click', () => {
+            confirmThemedModal('Reject Reel', `Are you sure you want to reject "${currentReel.title}" and request revisions?`, async () => {
+              await setReelApprovalStatus(currentReel.id, 'denied');
+              currentReel.status = 'denied';
+              updateLiveStatusUI();
+            }, 'Reject Reel', true);
+          });
+
+          row.querySelector('#ig-btn-undo-status')?.addEventListener('click', () => {
+            confirmThemedModal('Undo Status', `Revert "${currentReel.title}" back to Under Review?`, async () => {
+              await setReelApprovalStatus(currentReel.id, 'review');
+              currentReel.status = 'review';
+              updateLiveStatusUI();
+            }, 'Yes, Revert Status', true);
+          });
+        }
+        updateLiveStatusUI();
+
+        // 6. Quality Selection Buttons with Current Selected Effect
+        modalSc.querySelectorAll('.ig-quality-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const q = btn.dataset.q;
+            selectedQuality = q;
+            try { localStorage.setItem('dn_video_quality', q); } catch(_) {}
+
+            modalSc.querySelectorAll('.ig-quality-btn').forEach(b => {
+              const isActive = b.dataset.q === q;
+              b.classList.toggle('active', isActive);
+              b.style.border = isActive ? '1px solid #0D3B2E' : '1px solid var(--line)';
+              b.style.background = isActive ? '#0D3B2E' : 'var(--card)';
+              b.style.color = isActive ? '#FFFFFF' : 'var(--ink)';
+              b.style.fontWeight = isActive ? '700' : '600';
+            });
+
+            const netCheck = getNetworkInfo();
+            if (q === '480' || q === '720' || (q === 'auto' && netCheck.isSlow)) {
+              showWifiNotice();
+            } else {
+              toast(`Quality switched to ${q === 'auto' ? 'Auto Adaptive' : q + 'p HD'}`, 'info');
+            }
+
+            const curTime = vid.currentTime || 0;
+            const wasPaused = vid.paused;
+            vid.src = getStreamUrl(currentReel, q);
+            vid.currentTime = curTime;
+            if (!wasPaused) vid.play().catch(() => {});
+          });
         });
 
         // Wire Color Calibration (Brightness, Contrast, Saturation) in Instagram Player
@@ -7235,9 +7502,14 @@
         const r = (DATA.reels || []).find(x => x.id === reelId);
         if (r) {
           const c = client() || { id: 'tcs' };
-          const activeList = !CONFIG.isAdmin
-            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && !x.hidden && x.status === 'approved')
-            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id));
+          let activeList;
+          if (view.screen === 'preapproval' && window.__currentPreAppList && window.__currentPreAppList.length) {
+            activeList = window.__currentPreAppList;
+          } else if (!CONFIG.isAdmin) {
+            activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && !x.hidden && x.status === 'approved');
+          } else {
+            activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id));
+          }
           openVideoModal(r, activeList.length ? activeList : [r]);
         }
       }
@@ -7355,9 +7627,14 @@
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
           const c = client() || { id: 'tcs' };
-          const activeList = !CONFIG.isAdmin
-            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && !x.hidden && x.status === 'approved')
-            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id));
+          let activeList;
+          if (view.screen === 'preapproval' && window.__currentPreAppList && window.__currentPreAppList.length) {
+            activeList = window.__currentPreAppList;
+          } else if (!CONFIG.isAdmin) {
+            activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && !x.hidden && x.status === 'approved');
+          } else {
+            activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id));
+          }
           openVideoModal(r, activeList);
         }
       }
@@ -7468,9 +7745,14 @@
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
           const c = client() || { id: 'tcs' };
-          const activeList = !CONFIG.isAdmin
-            ? (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && !x.hidden && x.status === 'approved')
-            : (DATA.reels || []).filter(x => isClientMatch(x.c, c.id));
+          let activeList;
+          if (view.screen === 'preapproval' && window.__currentPreAppList && window.__currentPreAppList.length) {
+            activeList = window.__currentPreAppList;
+          } else if (!CONFIG.isAdmin) {
+            activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && !x.hidden && x.status === 'approved');
+          } else {
+            activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id));
+          }
           const pref = (function() { try { return localStorage.getItem('dn_player_mode'); } catch(_) { return null; } })();
           if (pref === 'legacy') openClassicPlayer(r, activeList);
           else openVideoModal(r, activeList);
@@ -7530,13 +7812,18 @@
     });
 
     // Check for direct client routing via URL query or hash:
-    // e.g. /?client=tcs or /?c=tcs or /#tcs
+    // e.g. /?client=tcs or /?client=tcs&screen=preapproval or /#tcs
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('admin') === '1' || urlParams.get('admin') === 'true') {
       window.location.href = '/admin';
       return;
     }
     const targetSlug = urlParams.get('client') || urlParams.get('c') || window.location.hash.replace(/^#[/]?/, '').toLowerCase();
+    const requestedScreen = urlParams.get('screen') || urlParams.get('tab');
+    const requestedMonth = urlParams.get('month');
+    const requestedBranch = urlParams.get('branch');
+    if (requestedMonth != null && !isNaN(Number(requestedMonth))) view.month = Number(requestedMonth);
+    if (requestedBranch) view.branch = requestedBranch;
 
     if (targetSlug) {
       const matchedClient = (DATA.clients || []).find(c => c.slug === targetSlug || c.id === targetSlug);
@@ -7546,11 +7833,20 @@
         setFavicon(logo);
         document.title = `${matchedClient.name} | DAY NIGHT`;
 
-        // Persisted PIN check: if already authenticated, go to landing screen to showcase brand intro & animation!
+        const targetScreen = requestedScreen || 'genesis';
+        // Persisted PIN check: if authenticated, go directly to requested tab or home
         if (isClientAuthenticated(matchedClient.id)) {
-          view.screen = 'landing';
+          view.screen = targetScreen;
         } else {
           view.screen = 'splash';
+          // Auto prompt PIN if a specific tab was requested
+          if (requestedScreen) {
+            setTimeout(() => {
+              if (!isClientAuthenticated(matchedClient.id)) {
+                openCode(matchedClient, targetScreen);
+              }
+            }, 300);
+          }
         }
       }
     }
