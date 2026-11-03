@@ -13,48 +13,78 @@ const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxTaYOdXlJ8Sy-y
 let memoryToken = null;
 let memoryExpiry = 0;
 
-async function getStreamToken(gasUrl, reqUrl, forceRefresh = false) {
+// Persistent 24-Hour (1 Day) Google Stream Token Cache (D1 + Edge Cache + Memory)
+async function getStreamToken(gasUrl, reqUrl, env = null, forceRefresh = false) {
   const now = Date.now();
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
   if (!forceRefresh && memoryToken && now < memoryExpiry) {
     return memoryToken;
   }
 
-  const origin = reqUrl ? new URL(reqUrl).origin : "https://daynight-portal.pages.dev";
-  const cacheReq = new Request(`${origin}/__internal_edge_token_v3__`);
-
-  // Check Edge Cache (shared across all Cloudflare isolates at this PoP)
-  if (!forceRefresh) {
+  // 1. Check Cloudflare D1 Database Persistent Settings
+  if (!forceRefresh && env && env.DB) {
     try {
-      const cache = caches.default;
-      const cached = await cache.match(cacheReq);
-      if (cached) {
-        const data = await cached.json();
-        if (data && data.token) {
-          memoryToken = data.token;
-          memoryExpiry = now + 40 * 60 * 1000;
+      const row = await env.DB.prepare("SELECT value FROM settings WHERE key = 'google_stream_token'").first();
+      if (row && row.value) {
+        const parsed = JSON.parse(row.value);
+        if (parsed.token && (now - (parsed.savedAt || 0)) < ONE_DAY_MS) {
+          memoryToken = parsed.token;
+          memoryExpiry = (parsed.savedAt || now) + ONE_DAY_MS;
           return memoryToken;
         }
       }
     } catch (_) {}
   }
 
-  // Fetch fresh token from Apps Script
+  const origin = reqUrl ? new URL(reqUrl).origin : "https://daynight-portal.pages.dev";
+  const cacheReq = new Request(`${origin}/__internal_edge_token_v3__`);
+
+  // 2. Check Edge Cache (shared across all Cloudflare isolates at this PoP)
+  if (!forceRefresh) {
+    try {
+      const cache = caches.default;
+      const cached = await cache.match(cacheReq);
+      if (cached) {
+        const data = await cached.json();
+        if (data && data.token && (now - (data.savedAt || 0)) < ONE_DAY_MS) {
+          memoryToken = data.token;
+          memoryExpiry = (data.savedAt || now) + ONE_DAY_MS;
+          return memoryToken;
+        }
+      }
+    } catch (_) {}
+  }
+
+  // 3. Fetch fresh token from Apps Script when expired or on forceRefresh
   try {
     const res = await fetch(`${gasUrl}?action=getStreamToken`, { redirect: "follow" });
     if (res.ok) {
       const data = await res.json();
       if (data && data.success && data.token) {
         memoryToken = data.token;
-        memoryExpiry = now + 40 * 60 * 1000;
+        memoryExpiry = now + ONE_DAY_MS;
+
+        // Persist token in Cloudflare D1 for 24 hours
+        if (env && env.DB) {
+          try {
+            await env.DB.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('google_stream_token', ?)").bind(
+              JSON.stringify({ token: data.token, savedAt: now })
+            ).run();
+          } catch (_) {}
+        }
+
+        // Persist token in Edge Cache for 24 hours
         try {
           const cache = caches.default;
-          await cache.put(cacheReq, new Response(JSON.stringify({ token: data.token }), {
+          await cache.put(cacheReq, new Response(JSON.stringify({ token: data.token, savedAt: now }), {
             headers: {
               "Content-Type": "application/json",
-              "Cache-Control": "public, max-age=2400"
+              "Cache-Control": "public, max-age=86400"
             }
           }));
         } catch (_) {}
+
         return memoryToken;
       }
     }
@@ -85,24 +115,36 @@ export async function onRequestGet(context) {
     }
 
     if (fileId) {
-      // 1. Primary: High-speed Authenticated Google Drive API v3 stream
+      // 1. Primary: High-speed Authenticated Google Drive API v3 stream with Cloudflare Edge Caching
       const clientToken = url.searchParams.get('token') || request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
-      let token = clientToken || await getStreamToken(gasUrl, request.url);
+      let token = clientToken || await getStreamToken(gasUrl, request.url, env);
       if (token) {
         const driveApiUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
         const apiHeaders = {
           "Authorization": `Bearer ${token}`,
           ...fetchHeaders
         };
-        let apiRes = await fetch(driveApiUrl, { headers: apiHeaders });
+        let apiRes = await fetch(driveApiUrl, {
+          headers: apiHeaders,
+          cf: {
+            cacheEverything: true,
+            cacheTtlByStatus: { "200-299": 86400, "404": 60, "500-599": 0 }
+          }
+        });
 
         // If token was rejected (401), immediately fetch a fresh token and retry once
         if (apiRes.status === 401) {
           memoryToken = null;
-          token = await getStreamToken(gasUrl, request.url, true);
+          token = await getStreamToken(gasUrl, request.url, env, true);
           if (token) {
             apiHeaders["Authorization"] = `Bearer ${token}`;
-            apiRes = await fetch(driveApiUrl, { headers: apiHeaders });
+            apiRes = await fetch(driveApiUrl, {
+              headers: apiHeaders,
+              cf: {
+                cacheEverything: true,
+                cacheTtlByStatus: { "200-299": 86400, "404": 60, "500-599": 0 }
+              }
+            });
           }
         }
 

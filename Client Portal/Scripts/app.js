@@ -533,6 +533,11 @@
       const scrims = document.querySelectorAll('.scrim');
       if (scrims.length > 0) {
         isClosingModalViaHistory = true;
+        try {
+          if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+          }
+        } catch(_) {}
         scrims.forEach(s => {
           s.querySelectorAll('video').forEach(v => { try { v.pause(); v.src = ''; } catch(_) {} });
           s.remove();
@@ -541,6 +546,7 @@
         document.documentElement.classList.remove('has-modal');
         const bNav = document.querySelector('.client-bottom-nav');
         if (bNav) bNav.style.display = '';
+        render();
         isClosingModalViaHistory = false;
         return;
       }
@@ -559,6 +565,18 @@
         window.scrollTo(0, 0);
       } else if (BACK[view.screen]) {
         go(BACK[view.screen], true);
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        const bNav = document.querySelector('.client-bottom-nav');
+        if (bNav) bNav.style.display = '';
+        if (!document.querySelector('.scrim')) {
+          document.body.classList.remove('has-modal');
+          document.documentElement.classList.remove('has-modal');
+          render();
+        }
       }
     });
 
@@ -653,10 +671,16 @@
         if (!document.querySelector('.scrim')) {
           document.body.classList.remove('has-modal');
           document.documentElement.classList.remove('has-modal');
+          try {
+            if (document.fullscreenElement) {
+              document.exitFullscreen().catch(() => {});
+            }
+          } catch(_) {}
           const nav = document.querySelector('.client-bottom-nav');
           if (nav && view.client && view.screen !== 'splash' && view.screen !== 'client-pin') {
             nav.style.display = '';
           }
+          render();
           if (view.screen === 'genesis') {
             setTimeout(() => {
               try { initFeedAutoplay(); } catch(_) {}
@@ -2261,7 +2285,7 @@
 
     function renderBottomNav() {
       document.getElementById('dn-social-dock')?.remove();
-      if (!view.client || view.screen === 'splash' || view.screen === 'client-pin' || view.screen === 'landing' || view.screen === 'client-landing' || document.querySelector('.scrim')) return '';
+      if (!view.client || view.screen === 'splash' || view.screen === 'client-pin' || view.screen === 'landing' || view.screen === 'client-landing') return '';
       const isHome = view.screen === 'genesis';
       const isReels = view.screen === 'reels';
       const isBranches = view.screen === 'branches';
@@ -4326,9 +4350,10 @@
     // 4-DIGIT PIN AUTHENTICATION
     // --------------------------------------------------------------------------
     function openCode(preselectedClient, targetScreen) {
-      const urlP = new URLSearchParams(window.location.search);
-      const effectiveScreen = targetScreen || urlP.get('screen') || urlP.get('tab') || 'genesis';
       const targetClient = preselectedClient || client();
+      const isAlreadyAuth = targetClient && isClientAuthenticated(targetClient.id);
+      // Strictly direct unauthenticated users to Home tab only (genesis)
+      const effectiveScreen = isAlreadyAuth ? (targetScreen || 'genesis') : 'genesis';
       sheet(`
         <div class="code-head">
           <span class="key">${ic.key}</span>
@@ -4617,6 +4642,20 @@
 
       function getStreamUrl(reel, q = selectedQuality) {
         return window.getStreamUrl ? window.getStreamUrl(reel, q) : '';
+      }
+
+      function preloadReelVideo(reel) {
+        if (!reel) return;
+        const u = getStreamUrl(reel);
+        if (!u || u.includes('/preview')) return;
+        try {
+          fetch(u, { headers: { 'Range': 'bytes=0-1048575' }, mode: 'cors' }).catch(() => {});
+        } catch(_) {}
+      }
+
+      // Preload next reel in playlist for 0ms buffer transition
+      if (playlist && playlist[currentIndex + 1]) {
+        setTimeout(() => preloadReelVideo(playlist[currentIndex + 1]), 800);
       }
 
       sheet(`
@@ -5292,6 +5331,11 @@
                 vid.poster = currentReel.coverUrl || '';
                 if (ambient) ambient.style.backgroundImage = `url('${esc(currentReel.coverUrl || '')}')`;
 
+                // Smart zero-buffer next reel preloading
+                if (playlist && playlist[currentIndex + 1]) {
+                  preloadReelVideo(playlist[currentIndex + 1]);
+                }
+
                 const capEl = modalSc.querySelector('#ig-caption');
                 if (capEl) capEl.innerHTML = `<b>${esc(currentReel.title)}</b> · #${esc((c ? c.name : 'reels').toLowerCase().replace(/\s+/g, ''))} #reels`;
 
@@ -5789,14 +5833,17 @@
               m.load();
             } catch(_) {}
           });
+          try {
+            if (document.fullscreenElement) {
+              document.exitFullscreen().catch(() => {});
+            }
+          } catch(_) {}
           window.removeEventListener('keydown', handleKey);
           modalSc.remove();
+          document.querySelectorAll('.video-modal-scrim, .scrim').forEach(s => s.remove());
           document.body.classList.remove('has-modal');
           document.documentElement.classList.remove('has-modal');
-          const bNav = document.querySelector('.client-bottom-nav');
-          if (bNav && view.client && view.screen !== 'splash' && view.screen !== 'client-pin') {
-            bNav.style.display = '';
-          }
+          render();
           window.scrollTo({ top: savedPageScrollY, behavior: 'instant' });
           requestAnimationFrame(() => {
             window.scrollTo({ top: savedPageScrollY, behavior: 'instant' });
@@ -7180,6 +7227,13 @@
                     if (!DATA.reels) DATA.reels = [];
                     DATA.reels.unshift(publishedReel);
                     persist('Video published to Google Drive!');
+                    try {
+                      await fetch('/api/client', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'addReel', reel: publishedReel })
+                      });
+                    } catch(_) {}
                     setTimeout(() => sc.remove(), 600);
                     return;
                   }
@@ -7298,6 +7352,13 @@
                 if (!DATA.reels) DATA.reels = [];
                 DATA.reels.unshift(publishedReel);
                 persist('Video published to Google Drive!');
+                try {
+                  await fetch('/api/client', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'addReel', reel: publishedReel })
+                  });
+                } catch(_) {}
                 setTimeout(() => sc.remove(), 600);
               } catch (err) {
                 if (aborted) return;
@@ -8063,16 +8124,24 @@
         setFavicon(logo);
         document.title = `${matchedClient.name} | DAY NIGHT`;
 
-        const targetScreen = requestedScreen || 'genesis';
-        // Persisted PIN check: if authenticated, go directly to requested tab or home without showing intro
+        // Persisted PIN check: if authenticated, go directly to requested tab or home
         if (isClientAuthenticated(matchedClient.id) || isClientAuthenticated(targetSlug)) {
-          view.screen = targetScreen;
+          view.screen = requestedScreen || 'genesis';
         } else {
+          // Unauthenticated visitors: strictly direct to Home tab only
           view.screen = 'splash';
-          // Auto prompt PIN immediately so client PIN entry is required
+          try {
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete('screen');
+            cleanUrl.searchParams.delete('tab');
+            cleanUrl.searchParams.delete('month');
+            cleanUrl.searchParams.delete('branch');
+            window.history.replaceState({ view: { screen: 'splash', client: matchedClient.id } }, '', cleanUrl.pathname + cleanUrl.search);
+          } catch(_) {}
+          // Auto prompt PIN immediately so client PIN entry is required, leading strictly to Home
           setTimeout(() => {
             if (!isClientAuthenticated(matchedClient.id) && !isClientAuthenticated(targetSlug)) {
-              openCode(matchedClient, targetScreen);
+              openCode(matchedClient, 'genesis');
             }
           }, 200);
         }
@@ -8083,6 +8152,14 @@
           view.screen = requestedScreen || 'genesis';
         } else {
           view.screen = 'splash';
+          try {
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete('screen');
+            cleanUrl.searchParams.delete('tab');
+            cleanUrl.searchParams.delete('month');
+            cleanUrl.searchParams.delete('branch');
+            window.history.replaceState({ view: { screen: 'splash' } }, '', cleanUrl.pathname + cleanUrl.search);
+          } catch(_) {}
         }
       }
     }

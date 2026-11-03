@@ -1691,9 +1691,7 @@
           status: meta.status || 'review'
         });
 
-        if (finRes && finRes.reel) return finRes.reel;
-
-        return {
+        const publishedReel = (finRes && finRes.reel) ? finRes.reel : {
           id: reelId,
           c: meta.clientId,
           type: 'reel',
@@ -1713,6 +1711,14 @@
           views: 0,
           downloads: 0
         };
+
+        try {
+          await api('addReel', { reel: publishedReel });
+        } catch(e) {
+          console.warn('Auto D1 save failed:', e);
+        }
+
+        return publishedReel;
       }
 
       // Fallback: For videos <= 25MB, upload via direct base64 if resumable is not ready
@@ -1753,6 +1759,9 @@
         });
 
         if (fallbackRes && fallbackRes.success && fallbackRes.reel) {
+          try {
+            await api('addReel', { reel: fallbackRes.reel });
+          } catch(e) {}
           return fallbackRes.reel;
         }
       }
@@ -4322,6 +4331,9 @@
               }
 
               if (finalReel) {
+                try {
+                  await api('addReel', { reel: finalReel });
+                } catch(e) {}
                 if (!DATA.reels) DATA.reels = [];
                 const exIdx = DATA.reels.findIndex(x => x.id === finalReel.id || (finalReel.fileId && x.fileId === finalReel.fileId));
                 if (exIdx !== -1) {
@@ -4978,7 +4990,12 @@
 
                   if (!DATA.reels) DATA.reels = [];
                   DATA.reels.unshift(publishedReel);
-                  saveAndBroadcast('Video published to Google Drive!');
+                  saveAndBroadcast('Video published to Google Drive & Pre-Approval!');
+                  try {
+                    await api('addReel', { reel: publishedReel });
+                    toast('Reel saved to Cloudflare D1 and published to Pre-Approval!', 'success');
+                  } catch(e) {}
+                  renderReels();
                   setTimeout(() => sc.remove(), 600);
                   return;
                 }
@@ -5096,7 +5113,12 @@
 
               if (!DATA.reels) DATA.reels = [];
               DATA.reels.unshift(publishedReel);
-              saveAndBroadcast('Video published to Google Drive!');
+              saveAndBroadcast('Video published to Google Drive & Pre-Approval!');
+              try {
+                await api('addReel', { reel: publishedReel });
+                toast('Reel saved to Cloudflare D1 and published to Pre-Approval!', 'success');
+              } catch(e) {}
+              renderReels();
               setTimeout(() => sc.remove(), 600);
             } catch (err) {
               if (aborted) return;
