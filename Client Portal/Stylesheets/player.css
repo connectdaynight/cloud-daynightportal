@@ -1385,16 +1385,16 @@
       opacity: 1;
     }
 
-    /* Right-Hand Floating Actions Stack - Elevated safely above scrubber */
+    /* Right-Hand Floating Actions Stack - Pulled down comfortably */
     .ig-actions-stack {
       position: absolute;
-      right: 12px;
-      bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+      right: 10px;
+      bottom: 26px;
       z-index: 28;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
     .ig-action-item {
       display: flex;
@@ -1493,16 +1493,16 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    /* Bottom-Left Information Overlay - Elevated comfortably above scrubber */
+    /* Bottom-Left Information Overlay - Pulled down comfortably below video graphics */
     .ig-meta-overlay {
       position: absolute;
-      left: 14px;
-      bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-      right: 76px;
+      left: 12px;
+      bottom: 24px;
+      right: 70px;
       z-index: 25;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
       color: #FFFFFF;
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
       pointer-events: none;
@@ -1559,16 +1559,16 @@
       text-overflow: ellipsis;
     }
 
-    /* Scrubber Progress Bar - Elevated above mobile gesture navigation bar */
+    /* Scrubber Progress Bar - Natural baseline leaving a small comfortable margin */
     .ig-scrubber-bar {
       position: absolute !important;
-      bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+      bottom: 8px !important;
       left: 0 !important;
       right: 0 !important;
-      height: 38px !important;
+      height: 24px !important;
       display: flex !important;
       align-items: center !important;
-      padding: 10px 0 !important;
+      padding: 6px 0 !important;
       box-sizing: border-box !important;
       z-index: 38 !important;
       cursor: pointer !important;
@@ -1578,25 +1578,25 @@
     }
     @media (max-width: 640px) {
       .ig-scrubber-bar {
-        bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
-        height: 38px !important;
-        padding: 10px 0 !important;
+        bottom: 8px !important;
+        height: 24px !important;
+        padding: 6px 0 !important;
       }
       .ig-meta-overlay {
-        bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: 24px !important;
         left: 12px !important;
-        right: 72px !important;
-        gap: 5px !important;
+        right: 70px !important;
+        gap: 4px !important;
       }
       .ig-actions-stack {
-        bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: 26px !important;
         right: 10px !important;
-        gap: 14px !important;
+        gap: 12px !important;
       }
     }
     .ig-scrubber-track {
       width: 100%;
-      height: 4px;
+      height: 3.5px;
       background: rgba(255, 255, 255, 0.35);
       position: relative;
       border-radius: 2px;
@@ -1604,7 +1604,7 @@
     }
     .ig-scrubber-bar:hover .ig-scrubber-track,
     .ig-scrubber-bar.is-scrubbing .ig-scrubber-track {
-      height: 6px;
+      height: 5.5px;
     }
     .ig-scrubber-fill {
       height: 100%;
@@ -1616,14 +1616,14 @@
     }
     .ig-scrubber-thumb-handle {
       position: absolute !important;
-      right: -7px !important;
+      right: -6px !important;
       top: 50% !important;
       transform: translateY(-50%) scale(1) !important;
-      width: 14px !important;
-      height: 14px !important;
+      width: 12px !important;
+      height: 12px !important;
       border-radius: 50% !important;
       background: #FFFFFF !important;
-      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255, 255, 255, 0.35) !important;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255, 255, 255, 0.35) !important;
       pointer-events: none !important;
       transition: transform 0.15s ease;
     }
@@ -1633,7 +1633,7 @@
     }
     .ig-scrubber-time-tooltip {
       position: absolute;
-      bottom: 26px;
+      bottom: 22px;
       left: 0;
       transform: translateX(-50%);
       background: rgba(18, 41, 74, 0.94);
