@@ -1568,13 +1568,13 @@
     /* Right-Hand Floating Actions Stack */
     .ig-actions-stack {
       position: absolute !important;
-      right: 12px !important;
-      bottom: calc(62px + env(safe-area-inset-bottom, 0px) + 20px) !important;
+      right: 8px !important;
+      bottom: 12px !important;
       z-index: 36 !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
-      gap: 14px !important;
+      gap: 12px !important;
     }
     .ig-action-item {
       display: flex;
@@ -1676,13 +1676,13 @@
     /* Bottom-Left Information Overlay */
     .ig-meta-overlay {
       position: absolute !important;
-      left: 14px !important;
-      bottom: calc(62px + env(safe-area-inset-bottom, 0px) + 20px) !important;
-      right: 76px !important;
+      left: 12px !important;
+      bottom: 8px !important;
+      right: 68px !important;
       z-index: 36 !important;
       display: flex !important;
       flex-direction: column !important;
-      gap: 6px !important;
+      gap: 4px !important;
       color: #FFFFFF !important;
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85) !important;
       pointer-events: none !important;
@@ -1742,13 +1742,13 @@
     /* Scrubber Progress Bar with Real-Time Seconds Tooltip Bubble */
     .ig-scrubber-bar {
       position: absolute !important;
-      bottom: calc(62px + env(safe-area-inset-bottom, 0px)) !important;
+      bottom: 0px !important;
       left: 0 !important;
       right: 0 !important;
-      height: 16px !important;
+      height: 12px !important;
       display: flex !important;
       align-items: flex-end !important;
-      padding-bottom: 2px !important;
+      padding-bottom: 0px !important;
       z-index: 35 !important;
       cursor: pointer !important;
       touch-action: none !important;

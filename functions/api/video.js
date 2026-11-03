@@ -96,6 +96,19 @@ async function getStreamToken(gasUrl, reqUrl, env = null, forceRefresh = false) 
 export async function onRequestGet(context) {
   const { request, env } = context;
   const url = new URL(request.url);
+
+  // Fast RTT Edge Latency Probe
+  if (url.searchParams.get('probe') === '1') {
+    return new Response("pong", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain",
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "no-store, no-cache, must-revalidate"
+      }
+    });
+  }
+
   const fileId = url.searchParams.get('id');
   const directUrl = url.searchParams.get('url');
   const quality = url.searchParams.get('q') || '1080';

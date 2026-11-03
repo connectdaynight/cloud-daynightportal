@@ -263,7 +263,28 @@
       return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
     }
 
-    const client = () => (DATA.clients || []).find(c => c.id === view.client) || null;
+    const client = () => (DATA.clients || []).find(c => c.id === view.client || (c.slug && c.slug.toLowerCase() === (view.client || '').toLowerCase())) || null;
+
+    let lastProbeLatency = null;
+    let lastProbeTime = 0;
+
+    async function probeNetworkLatency() {
+      const now = Date.now();
+      if (lastProbeLatency !== null && (now - lastProbeTime) < 15000) {
+        return lastProbeLatency;
+      }
+      try {
+        const t0 = performance.now();
+        const res = await fetch('/api/client?probe=1&_t=' + now, { cache: 'no-store' });
+        if (res.ok) {
+          lastProbeLatency = Math.round(performance.now() - t0);
+          lastProbeTime = now;
+          return lastProbeLatency;
+        }
+      } catch (_) {}
+      return lastProbeLatency;
+    }
+    window.probeNetworkLatency = probeNetworkLatency;
 
     function isClientMatch(rCid, targetCid) {
       if (!rCid || !targetCid) return false;
@@ -303,38 +324,46 @@
     function getNetworkMetrics() {
       const conn = typeof navigator !== 'undefined' ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
       const downlink = conn && typeof conn.downlink === 'number' ? conn.downlink : null;
-      const rtt = conn && typeof conn.rtt === 'number' ? conn.rtt : null;
+      const connRtt = conn && typeof conn.rtt === 'number' ? conn.rtt : null;
       const effectiveType = conn && conn.effectiveType ? conn.effectiveType.toLowerCase() : null;
       const saveData = conn ? Boolean(conn.saveData) : false;
+
+      // Active edge RTT takes precedence if available
+      const activeRtt = lastProbeLatency !== null ? lastProbeLatency : (connRtt !== null ? connRtt : null);
 
       let strengthLabel = 'Optimal';
       let badgeText = (conn && conn.type === 'wifi') ? 'WiFi' : (effectiveType ? effectiveType.toUpperCase() : '4G');
       let isSlow = false;
       let recommendedQuality = '1080';
 
-      if (saveData || effectiveType === 'slow-2g' || effectiveType === '2g' || (downlink !== null && downlink < 1.8) || (rtt !== null && rtt > 350)) {
-        strengthLabel = 'Low Bandwidth';
-        badgeText = effectiveType ? effectiveType.toUpperCase() : '2G';
+      // 1. Poor / Low Network: High latency (> 400ms), 2g/slow-2g, or saveData active
+      if (saveData || effectiveType === 'slow-2g' || effectiveType === '2g' || (downlink !== null && downlink < 1.8) || (activeRtt !== null && activeRtt > 400)) {
+        strengthLabel = 'Poor / Low Network';
+        badgeText = (activeRtt ? `${activeRtt}ms` : 'Low') + ' · 2G/3G';
         isSlow = true;
         recommendedQuality = '480';
-      } else if (effectiveType === '3g' || (downlink !== null && downlink < 4.5) || (rtt !== null && rtt > 180)) {
-        strengthLabel = 'Moderate';
-        badgeText = '3G';
+      }
+      // 2. Moderate Network: Medium latency (180ms - 400ms), 3g, or downlink 1.8 - 4.5 Mbps
+      else if (effectiveType === '3g' || (downlink !== null && downlink < 4.5) || (activeRtt !== null && activeRtt > 180)) {
+        strengthLabel = 'Moderate Network';
+        badgeText = (activeRtt ? `${activeRtt}ms` : 'Med') + ' · 3G/4G';
         isSlow = false;
         recommendedQuality = '720';
-      } else {
-        strengthLabel = 'High Speed';
-        badgeText = (conn && conn.type === 'wifi') ? 'WiFi' : (effectiveType ? effectiveType.toUpperCase() : '4G');
+      }
+      // 3. High Speed Network: Low latency (<= 180ms), 4g/5g/wifi, downlink >= 4.5 Mbps
+      else {
+        strengthLabel = 'High Speed Network';
+        badgeText = (conn && conn.type === 'wifi') ? 'WiFi Fast' : ((activeRtt ? `${activeRtt}ms` : 'Fast') + ' · 4G/5G');
         isSlow = false;
         recommendedQuality = '1080';
       }
 
-      const speedDesc = downlink ? `${downlink >= 10 ? Math.round(downlink) : downlink.toFixed(1)} Mbps` : (effectiveType ? effectiveType.toUpperCase() : 'Adaptive');
+      const speedDesc = activeRtt !== null ? `${activeRtt}ms latency` : (downlink ? `${downlink >= 10 ? Math.round(downlink) : downlink.toFixed(1)} Mbps` : 'Adaptive');
 
       return {
         conn,
         downlink,
-        rtt,
+        rtt: activeRtt,
         effectiveType,
         saveData,
         strengthLabel,
@@ -4425,9 +4454,12 @@
     // --------------------------------------------------------------------------
     function openCode(preselectedClient, targetScreen) {
       const targetClient = preselectedClient || client() || (DATA.clients || []).find(c => (c.slug && c.slug.toLowerCase() === (view.client || '').toLowerCase()) || (c.id && c.id.toLowerCase() === (view.client || '').toLowerCase()));
+      if (targetClient && targetClient.id) view.client = targetClient.id;
       // Respective linked page: route directly to requested tab upon successful PIN verification
       const effectiveScreen = targetScreen || view.targetScreen || 'genesis';
-      view.targetScreen = effectiveScreen;
+      if (effectiveScreen && effectiveScreen !== 'splash' && effectiveScreen !== 'dn-intro') {
+        view.targetScreen = effectiveScreen;
+      }
       sheet(`
         <div class="code-head">
           <span class="key">${ic.key}</span>
@@ -4442,11 +4474,14 @@
         const ins = [...sc.querySelectorAll('.pins input')];
         const pins = sc.querySelector('#pins');
         const msg = sc.querySelector('#code-msg');
+        let isChecking = false;
 
         const check = async () => {
+          if (isChecking) return;
           const code = ins.map(i => i.value).join('');
           if (code.length < 4) return;
           const cleanCode = String(code).trim();
+          isChecking = true;
 
           // 1. Direct match with target client (string & number safe)
           let matched = null;
@@ -4497,6 +4532,7 @@
           }
 
           if (matched) {
+            isChecking = false;
             if (matched.status === 'blocked') {
               pins.classList.remove('bad');
               void pins.offsetWidth;
@@ -4525,24 +4561,44 @@
             if (matched.slug) setClientAuthenticated(matched.slug);
             view.client = matched.id;
             try { localStorage.setItem('dn_last_client', matched.id); } catch(_) {}
+
+            const destScreen = (effectiveScreen && effectiveScreen !== 'splash' && effectiveScreen !== 'dn-intro') ? effectiveScreen : (view.targetScreen || 'genesis');
+            view.targetScreen = destScreen;
+
             setTimeout(() => {
               sc.remove();
-              view.targetScreen = effectiveScreen && effectiveScreen !== 'splash' && effectiveScreen !== 'dn-intro' ? effectiveScreen : 'genesis';
-              go({ screen: 'landing', client: matched.id });
-            }, 250);
+              // Direct tab link: go straight to the respective requested screen!
+              if (destScreen && destScreen !== 'genesis') {
+                go({ screen: destScreen, client: matched.id });
+              } else {
+                go({ screen: 'landing', client: matched.id });
+              }
+            }, 220);
           } else {
+            isChecking = false;
             pins.classList.remove('bad');
             void pins.offsetWidth;
             pins.classList.add('bad');
             msg.className = 'code-msg bad';
             msg.textContent = 'That code does not match. Please check with Day Night Media.';
-            setTimeout(() => { ins.forEach(i => i.value = ''); ins[0].focus(); }, 400);
+            setTimeout(() => { ins.forEach(i => i.value = ''); ins[0].focus(); isChecking = false; }, 400);
           }
         };
 
         ins.forEach((inp, i) => {
           inp.addEventListener('input', () => {
-            inp.value = inp.value.replace(/\D/g, '').slice(-1);
+            const rawVal = inp.value.replace(/\D/g, '');
+            if (rawVal.length > 1) {
+              const digits = rawVal.split('');
+              digits.forEach((d, k) => {
+                if (ins[i + k]) ins[i + k].value = d;
+              });
+              const nextIdx = Math.min(3, i + digits.length);
+              ins[nextIdx].focus();
+              check();
+              return;
+            }
+            inp.value = rawVal.slice(-1);
             msg.className = 'code-msg'; msg.innerHTML = '&nbsp;';
             if (inp.value && i < 3) ins[i + 1].focus();
             check();
@@ -5163,14 +5219,57 @@
           vid.addEventListener('seeked', hideLoader);
         }
 
-        // Dynamically populate real video resolution
+        // Dynamically populate real video resolution & quality tier specs
+        function updateResolutionSpec(q) {
+          const resEl = modalSc.querySelector('#ig-spec-res');
+          if (!resEl) return;
+          const qStr = String(q || '1080');
+          if (qStr === '480') {
+            resEl.innerHTML = '<span style="color:#F2994A;font-weight:700;">480 × 854 SD</span> · Data Saver (Fast Buffer)';
+          } else if (qStr === '720') {
+            resEl.innerHTML = '<span style="color:#2F7DF6;font-weight:700;">720 × 1280 HD</span> · Balanced Mobile Stream';
+          } else {
+            resEl.innerHTML = '<span style="color:#0D3B2E;font-weight:700;">1080 × 1920 Full HD</span> · Master Native Stream';
+          }
+          if (vid) vid.setAttribute('data-q', qStr);
+        }
+
         if (vid) {
           vid.addEventListener('loadedmetadata', () => {
-            const resEl = modalSc.querySelector('#ig-spec-res');
-            if (resEl && vid.videoWidth && vid.videoHeight) {
-              resEl.textContent = `${vid.videoWidth} × ${vid.videoHeight} HD`;
-            }
+            const curQ = resolveVideoQuality(selectedQuality).applied;
+            updateResolutionSpec(curQ);
           });
+
+          // Buffer stall detection: auto step-down from 1080p to 480p on congested/poor networks
+          let stallDowngraded = false;
+          let stallTimer = null;
+          const handleStall = () => {
+            if (selectedQuality === 'auto' && !stallDowngraded) {
+              clearTimeout(stallTimer);
+              stallTimer = setTimeout(() => {
+                if (vid.readyState < 3 && !vid.paused && !stallDowngraded) {
+                  stallDowngraded = true;
+                  selectedQuality = '480';
+                  try { localStorage.setItem('dn_video_quality', '480'); } catch(_) {}
+                  const res = resolveVideoQuality('480');
+                  updateQualityModalUI(res);
+                  updateResolutionSpec('480');
+                  showWifiNotice('Slow network detected · Auto-switched to 480p Fast to prevent buffering');
+                  const curTime = vid.currentTime || 0;
+                  const newSrc = getStreamUrl(currentReel, '480');
+                  if (vid.src !== newSrc) {
+                    vid.src = newSrc;
+                    vid.currentTime = curTime;
+                    vid.play().catch(() => {});
+                  }
+                }
+              }, 2000);
+            }
+          };
+          vid.addEventListener('waiting', handleStall);
+          vid.addEventListener('stalled', handleStall);
+          vid.addEventListener('playing', () => clearTimeout(stallTimer));
+
           let streamRetryAttempted = false;
           vid.addEventListener('error', () => {
             const id = currentReel.fileId || driveId(currentReel.url);
@@ -5183,6 +5282,13 @@
             }
           });
         }
+
+        // Active edge latency probe for immediate network differentiation
+        probeNetworkLatency().then(() => {
+          const freshRes = resolveVideoQuality(selectedQuality);
+          updateQualityModalUI(freshRes);
+          updateResolutionSpec(freshRes.applied);
+        });
 
         // Platform Switcher Handler with Full Visual Fidelity & Clean Master Exit
         function applyPlatformOverlay(platform) {
@@ -5816,6 +5922,7 @@
 
             const res = resolveVideoQuality(q);
             updateQualityModalUI(res);
+            updateResolutionSpec(res.applied);
 
             modalSc.querySelectorAll('.ig-quality-btn').forEach(b => {
               const isActive = b.dataset.q === q;
@@ -5854,11 +5961,14 @@
                   vid.play().catch(() => {});
                 }
                 if (spinner) spinner.classList.remove('active');
+                updateResolutionSpec(res.applied);
               };
               vid.addEventListener('loadedmetadata', onMeta);
               vid.addEventListener('canplay', onMeta);
               vid.src = newSrc;
               vid.load();
+            } else {
+              updateResolutionSpec(res.applied);
             }
           });
         });
@@ -7825,9 +7935,10 @@
         if (sp) sp.classList.add('ready');
         const cl = view.client ? client() : null;
         if (cl && isClientAuthenticated(cl.id)) {
-          go({ screen: 'landing', client: cl.id });
+          const dest = (view.targetScreen && view.targetScreen !== 'splash' && view.targetScreen !== 'dn-intro') ? view.targetScreen : 'landing';
+          go({ screen: dest, client: cl.id });
         } else {
-          openCode(cl, 'genesis');
+          openCode(cl, view.targetScreen || 'genesis');
         }
       }
       else if (a === 'go-client') {
@@ -7837,9 +7948,10 @@
           if (matched) {
             view.client = matched.id;
             if (isClientAuthenticated(matched.id)) {
-              go({ screen: 'landing', client: matched.id });
+              const dest = (view.targetScreen && view.targetScreen !== 'splash' && view.targetScreen !== 'dn-intro') ? view.targetScreen : 'landing';
+              go({ screen: dest, client: matched.id });
             } else {
-              openCode(matched);
+              openCode(matched, view.targetScreen || 'genesis');
             }
           }
         }
@@ -7847,7 +7959,7 @@
       else if (a === 'enter-client-portal') {
         clearTimers();
         if (raf) cancelAnimationFrame(raf);
-        const dest = view.targetScreen || 'genesis';
+        const dest = (view.targetScreen && view.targetScreen !== 'splash' && view.targetScreen !== 'dn-intro') ? view.targetScreen : 'genesis';
         go({ screen: dest, client: view.client });
       }
       else if (a === 'replay-intro') {
@@ -8263,7 +8375,8 @@
       window.location.href = '/admin';
       return;
     }
-    const targetSlug = urlParams.get('client') || urlParams.get('c') || window.location.hash.replace(/^#[/]?/, '').toLowerCase();
+    const lastSavedClient = (function() { try { return localStorage.getItem('dn_last_client'); } catch(_) { return null; } })();
+    const targetSlug = urlParams.get('client') || urlParams.get('c') || window.location.hash.replace(/^#[/]?/, '').toLowerCase() || lastSavedClient;
     const requestedScreen = urlParams.get('screen') || urlParams.get('tab');
     const requestedMonth = urlParams.get('month');
     const requestedBranch = urlParams.get('branch');

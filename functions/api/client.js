@@ -10,6 +10,19 @@ const DEFAULT_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1O6i07d
 export async function onRequestGet(context) {
   const { request, env } = context;
   const url = new URL(request.url);
+
+  // Fast RTT Edge Latency Probe (< 5ms response)
+  if (url.searchParams.get('probe') === '1') {
+    return new Response(JSON.stringify({ pong: 1, ts: Date.now() }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "no-store, no-cache, must-revalidate"
+      }
+    });
+  }
+
   const slug = url.searchParams.get('slug') || url.searchParams.get('c');
   const code = url.searchParams.get('code');
 
