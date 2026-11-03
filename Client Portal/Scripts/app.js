@@ -2533,6 +2533,8 @@
       // Screen 1: Day Night Signature Loading / Splash Animation (Home Screen)
       if (view.screen === 'splash' || view.screen === 'dn-intro' || !view.client || !c) {
         if (app.querySelector('.splash')) {
+          const sp = app.querySelector('.splash');
+          if (sp) sp.classList.add('ready');
           // Splash screen is already active and running — do not wipe DOM or restart animation!
           // Dynamically synchronize branding text and social dock in real time
           const h1 = app.querySelector('.splash h1');
@@ -2667,7 +2669,8 @@
         // Auto-navigate into client preapproval / genesis reels portal after animation completes (2.8s)
         later(() => {
           if ((view.screen === 'landing' || view.screen === 'client-landing') && isClientAuthenticated(c.id)) {
-            go({ screen: 'genesis', client: c.id });
+            const dest = view.targetScreen || 'genesis';
+            go({ screen: dest, client: c.id });
           }
         }, 2800);
       }
@@ -3794,12 +3797,18 @@
           clearTimers();
           if (raf) cancelAnimationFrame(raf);
           revealControls();
-          openCode(view.client ? client() : null);
+          const cl = view.client ? client() : null;
+          if (cl && isClientAuthenticated(cl.id)) {
+            go({ screen: 'landing', client: cl.id });
+          } else {
+            openCode(cl, 'genesis');
+          }
         };
       }
 
-      // Reveal Start button and animate in social media dock at 3500ms (as scribble drawing completes)
-      later(revealControls, 3500);
+      // Reveal Start button and animate in social media dock swiftly so visitors are never waiting
+      revealControls();
+      later(revealControls, 250);
 
       later(finish, durationMs);
     }
@@ -3869,8 +3878,11 @@
           }
           pinsBox.classList.remove('bad');
           setClientAuthenticated(activeClient.id);
+          if (activeClient.slug) setClientAuthenticated(activeClient.slug);
+          try { localStorage.setItem('dn_last_client', activeClient.id); } catch(_) {}
           setTimeout(() => {
-            go({ screen: 'genesis', client: activeClient.id });
+            view.targetScreen = 'genesis';
+            go({ screen: 'landing', client: activeClient.id });
           }, 250);
         } else {
           pinsBox.classList.remove('bad');
@@ -4375,7 +4387,8 @@
             try { localStorage.setItem('dn_last_client', matched.id); } catch(_) {}
             setTimeout(() => {
               sc.remove();
-              go({ screen: effectiveScreen, client: matched.id });
+              view.targetScreen = effectiveScreen && effectiveScreen !== 'splash' && effectiveScreen !== 'dn-intro' ? effectiveScreen : 'genesis';
+              go({ screen: 'landing', client: matched.id });
             }, 250);
           } else {
             pins.classList.remove('bad');
@@ -7586,7 +7599,12 @@
         if (raf) cancelAnimationFrame(raf);
         const sp = app.querySelector('.splash');
         if (sp) sp.classList.add('ready');
-        openCode(view.client ? client() : null);
+        const cl = view.client ? client() : null;
+        if (cl && isClientAuthenticated(cl.id)) {
+          go({ screen: 'landing', client: cl.id });
+        } else {
+          openCode(cl, 'genesis');
+        }
       }
       else if (a === 'go-client') {
         const cid = el.dataset.cid;
@@ -7605,7 +7623,8 @@
       else if (a === 'enter-client-portal') {
         clearTimers();
         if (raf) cancelAnimationFrame(raf);
-        go({ screen: 'genesis', client: view.client });
+        const dest = view.targetScreen || 'genesis';
+        go({ screen: dest, client: view.client });
       }
       else if (a === 'replay-intro') {
         go({ screen: 'landing', client: view.client });

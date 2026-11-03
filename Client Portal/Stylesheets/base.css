@@ -161,9 +161,10 @@
       bottom: calc(88px + env(safe-area-inset-bottom, 0px));
       left: 50%;
       transform: translateX(-50%) !important;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      animation: rise 0.5s 0.2s ease-out both;
+      transition: opacity 0.3s ease, transform 0.2s ease !important;
       z-index: 90;
       padding: 14px 34px;
       font-size: 15px;
@@ -347,6 +348,8 @@
         bottom: calc(74px + env(safe-area-inset-bottom, 0px));
         padding: 13px 30px;
         font-size: 14px;
+        opacity: 1 !important;
+        pointer-events: auto !important;
       }
       .dn-social-dock {
         bottom: calc(16px + env(safe-area-inset-bottom, 0px));
