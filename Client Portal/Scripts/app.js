@@ -29,6 +29,21 @@
       deletedClientIds: []
     };
 
+    // Synchronous Cache Preload: Immediately hydrate DATA from persistent cloud cache before routing
+    try {
+      const syncCache = localStorage.getItem('dn_cloud_cache');
+      if (syncCache) {
+        const parsed = JSON.parse(syncCache);
+        if (parsed) {
+          if (Array.isArray(parsed.clients) && parsed.clients.length > 0) DATA.clients = parsed.clients;
+          if (Array.isArray(parsed.reels) && parsed.reels.length > 0) DATA.reels = parsed.reels;
+          if (parsed.settings) DATA.settings = Object.assign(DATA.settings, parsed.settings);
+          if (Array.isArray(parsed.deletedReelIds)) DATA.deletedReelIds = parsed.deletedReelIds;
+          if (Array.isArray(parsed.deletedClientIds)) DATA.deletedClientIds = parsed.deletedClientIds;
+        }
+      }
+    } catch (_) {}
+
     // Load cloud cache immediately for instant startup (using StorageAdapter)
     async function loadInitialCache() {
       try {
@@ -39,12 +54,15 @@
         });
         const cached = window.DNM_STORAGE?.cache ? await window.DNM_STORAGE.cache.get('cloud_cache') : null;
         if (cached) {
-          if (Array.isArray(cached.clients)) DATA.clients = cached.clients;
-          if (Array.isArray(cached.reels)) DATA.reels = cached.reels;
+          if (Array.isArray(cached.clients) && cached.clients.length > 0) DATA.clients = cached.clients;
+          if (Array.isArray(cached.reels) && cached.reels.length > 0) DATA.reels = cached.reels;
           if (cached.settings) DATA.settings = Object.assign(DATA.settings, cached.settings);
           if (Array.isArray(cached.deletedReelIds)) DATA.deletedReelIds = cached.deletedReelIds;
           if (Array.isArray(cached.deletedClientIds)) DATA.deletedClientIds = cached.deletedClientIds;
-          render();
+          // Only re-render if not in an active player modal
+          if (!document.querySelector('.ig-modal') && view.screen !== 'splash') {
+            render();
+          }
         }
       } catch(e) {
         console.warn('Initial cache load failed:', e);
@@ -52,21 +70,34 @@
     }
     loadInitialCache();
 
-    // Immediate fallback if local cache is empty
-    if (!DATA.clients || DATA.clients.length === 0) {
-      try {
-        fetch('/portal-data.json')
-          .then(r => r.json())
-          .then(snap => {
-            if (snap && Array.isArray(snap.clients) && (!DATA.clients || DATA.clients.length === 0)) {
-              DATA.clients = snap.clients;
-              if (Array.isArray(snap.reels) && (!DATA.reels || DATA.reels.length === 0)) DATA.reels = snap.reels;
-              if (snap.settings && !DATA.settings) DATA.settings = snap.settings;
+    // Load live data from Cloudflare D1 (/api/client) with static snapshot fallback (/portal-data.json)
+    try {
+      fetch('/api/client')
+        .then(r => r.json())
+        .then(res => {
+          if (res && res.success && Array.isArray(res.clients) && res.clients.length > 0) {
+            DATA.clients = res.clients;
+            if (res.settings) DATA.settings = Object.assign(DATA.settings || {}, res.settings);
+            try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(_) {}
+            if (view.screen !== 'splash' && !document.querySelector('.ig-modal')) {
+              render();
             }
-          })
-          .catch(() => {});
-      } catch(_) {}
-    }
+          }
+        })
+        .catch(() => {
+          fetch('/portal-data.json')
+            .then(r => r.json())
+            .then(snap => {
+              if (snap && Array.isArray(snap.clients) && snap.clients.length > 0) {
+                DATA.clients = snap.clients;
+                if (Array.isArray(snap.reels) && snap.reels.length > 0) DATA.reels = snap.reels;
+                if (snap.settings && !DATA.settings) DATA.settings = snap.settings;
+                try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(_) {}
+              }
+            })
+            .catch(() => {});
+        });
+    } catch(_) {}
 
     // Pre-warm authenticated video stream token for zero-buffer playback
     try {
@@ -341,10 +372,10 @@
           if (found.slug) keys.add(found.slug.toLowerCase());
         }
       } catch(_) {}
-      if (raw === 'tcs' || raw === 'thechennaisilks' || raw === 'cmvje2zfy') {
+      if (raw === 'tcs' || raw === 'thechennaisilks' || raw === 'cmvje2zfy' || raw === '1962') {
         keys.add('tcs');
         keys.add('thechennaisilks');
-        keys.add('cmvje2zfy');
+        keys.add('1962');
       }
       return Array.from(keys);
     }
@@ -1025,6 +1056,19 @@
       isFetchingLiveData = true;
       liveDataPromise = (async () => {
         try {
+          // 1. Primary fast query to Cloudflare D1 (/api/client)
+          try {
+            const cfRes = await fetch('/api/client');
+            if (cfRes.ok) {
+              const cfData = await cfRes.json();
+              if (cfData.success && Array.isArray(cfData.clients) && cfData.clients.length > 0) {
+                DATA.clients = cfData.clients;
+                if (cfData.settings) DATA.settings = Object.assign(DATA.settings || {}, cfData.settings);
+                connectionState = { status: 'online', message: 'Cloudflare Connected' };
+              }
+            }
+          } catch (_) {}
+
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 20000);
           const cb = '&_cb=' + Date.now();
@@ -4192,7 +4236,9 @@
     // --------------------------------------------------------------------------
     // 4-DIGIT PIN AUTHENTICATION
     // --------------------------------------------------------------------------
-    function openCode(preselectedClient, targetScreen = 'landing') {
+    function openCode(preselectedClient, targetScreen) {
+      const urlP = new URLSearchParams(window.location.search);
+      const effectiveScreen = targetScreen || urlP.get('screen') || urlP.get('tab') || 'genesis';
       const targetClient = preselectedClient || client();
       sheet(`
         <div class="code-head">
@@ -4255,9 +4301,12 @@
             msg.className = 'code-msg';
             msg.textContent = 'Welcome ' + matched.name + ' · Opening portal...';
             setClientAuthenticated(matched.id);
+            if (matched.slug) setClientAuthenticated(matched.slug);
+            if (matched.code) setClientAuthenticated(matched.code);
+            try { localStorage.setItem('dn_last_client', matched.id); } catch(_) {}
             setTimeout(() => {
               sc.remove();
-              go({ screen: targetScreen || 'genesis', client: matched.id });
+              go({ screen: effectiveScreen, client: matched.id });
             }, 250);
           } else {
             pins.classList.remove('bad');
@@ -4508,6 +4557,31 @@
                   <circle class="v-spinner-path" cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
                 </svg>
               </div>
+            </div>
+
+            <!-- Central Controls Cluster: Play/Pause with 10s Backward & Forward Skip -->
+            <div class="ig-center-controls" id="ig-center-controls">
+              <button type="button" class="ig-skip-btn" id="ig-btn-skip-back" title="Rewind 10 Seconds" aria-label="Rewind 10 Seconds">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 4v6h6"/>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                </svg>
+                <span class="ig-skip-label">10</span>
+              </button>
+
+              <button type="button" class="ig-center-play-btn" id="ig-center-play" title="Play or Pause Video" aria-label="Play or Pause Video">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="#FFFFFF" id="ig-center-play-icon">
+                  <polygon points="6 4 20 12 6 20 6 4"/>
+                </svg>
+              </button>
+
+              <button type="button" class="ig-skip-btn" id="ig-btn-skip-fwd" title="Forward 10 Seconds" aria-label="Forward 10 Seconds">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 4v6h-6"/>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                <span class="ig-skip-label">10</span>
+              </button>
             </div>
 
             <!-- Central Play/Pause Flash -->
@@ -5166,7 +5240,6 @@
 
         // Video Progress Scrubber & Interactive Drag Seeking with Live Seconds
         let isScrubbing = false;
-        const centerPlay = modalSc.querySelector('#ig-center-play');
 
         function fmtSec(sec) {
           if (isNaN(sec) || sec < 0) sec = 0;
@@ -5191,13 +5264,59 @@
           }
         });
 
+        // Center Controls Cluster: Play/Pause with 10s Rewind and 10s Forward
+        const centerControls = modalSc.querySelector('#ig-center-controls');
+        const centerPlay = modalSc.querySelector('#ig-center-play');
+        const centerPlayIcon = modalSc.querySelector('#ig-center-play-icon');
+        const btnSkipBack = modalSc.querySelector('#ig-btn-skip-back');
+        const btnSkipFwd = modalSc.querySelector('#ig-btn-skip-fwd');
+
+        function updatePlayPauseIcons(isPaused) {
+          if (centerControls) {
+            centerControls.classList.toggle('active', isPaused);
+          }
+          if (centerPlayIcon) {
+            if (isPaused) {
+              centerPlayIcon.innerHTML = '<polygon points="6 4 20 12 6 20 6 4"/>';
+            } else {
+              centerPlayIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+            }
+          }
+        }
+
         vid.addEventListener('play', () => {
-          if (centerPlay) centerPlay.style.display = 'none';
+          updatePlayPauseIcons(false);
         });
 
         vid.addEventListener('pause', () => {
-          if (centerPlay) centerPlay.style.display = 'grid';
+          updatePlayPauseIcons(true);
         });
+
+        // 10-Second Backward Rewind Action
+        if (btnSkipBack) {
+          btnSkipBack.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!vid.duration) return;
+            const newT = Math.max(0, (vid.currentTime || 0) - 10);
+            vid.currentTime = newT;
+            updateScrubberUi(newT, vid.duration);
+            triggerFlash(true);
+            toast('Rewound 10s', 'info');
+          });
+        }
+
+        // 10-Second Forward Fast-Forward Action
+        if (btnSkipFwd) {
+          btnSkipFwd.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!vid.duration) return;
+            const newT = Math.min(vid.duration, (vid.currentTime || 0) + 10);
+            vid.currentTime = newT;
+            updateScrubberUi(newT, vid.duration);
+            triggerFlash(false);
+            toast('Skipped ahead 10s', 'info');
+          });
+        }
 
         function seekFromPointer(clientX) {
           if (!vid.duration) return;
@@ -5257,11 +5376,11 @@
               });
             }
             triggerFlash(false);
-            if (centerPlay) centerPlay.style.display = 'none';
+            updatePlayPauseIcons(false);
           } else {
             vid.pause();
             triggerFlash(true);
-            if (centerPlay) centerPlay.style.display = 'grid';
+            updatePlayPauseIcons(true);
           }
         }
 
@@ -7501,7 +7620,7 @@
         const reelId = el.dataset.id || el.closest('[data-id]')?.dataset.id || el.closest('[data-reel-id]')?.dataset.reelId;
         const r = (DATA.reels || []).find(x => x.id === reelId);
         if (r) {
-          const c = client() || { id: 'tcs' };
+          const c = client() || { id: view.client || '' };
           let activeList;
           if (view.screen === 'preapproval' && window.__currentPreAppList && window.__currentPreAppList.length) {
             activeList = window.__currentPreAppList;
@@ -7528,7 +7647,7 @@
         });
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
-          const c = client() || { id: 'tcs' };
+          const c = client() || { id: view.client || '' };
           const activeList = (DATA.reels || []).filter(x => isClientMatch(x.c, c.id) && (x.status === 'approved' || r.id === x.id));
           openVideoModal(r, activeList.length ? activeList : [r]);
         }
@@ -7626,7 +7745,7 @@
         e.stopPropagation();
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
-          const c = client() || { id: 'tcs' };
+          const c = client() || { id: view.client || '' };
           let activeList;
           if (view.screen === 'preapproval' && window.__currentPreAppList && window.__currentPreAppList.length) {
             activeList = window.__currentPreAppList;
@@ -7744,7 +7863,7 @@
       else if (a === 'play-video') {
         const r = (DATA.reels || []).find(x => x.id === el.dataset.id);
         if (r) {
-          const c = client() || { id: 'tcs' };
+          const c = client() || { id: view.client || '' };
           let activeList;
           if (view.screen === 'preapproval' && window.__currentPreAppList && window.__currentPreAppList.length) {
             activeList = window.__currentPreAppList;
@@ -7826,27 +7945,33 @@
     if (requestedBranch) view.branch = requestedBranch;
 
     if (targetSlug) {
-      const matchedClient = (DATA.clients || []).find(c => c.slug === targetSlug || c.id === targetSlug);
+      const matchedClient = (DATA.clients || []).find(c => (c.slug && c.slug.toLowerCase() === targetSlug.toLowerCase()) || (c.id && c.id.toLowerCase() === targetSlug.toLowerCase()));
       if (matchedClient) {
         view.client = matchedClient.id;
-        const logo = (matchedClient.id === 'tcs' ? '/Logo/tcs-logo.png' : (matchedClient.logo || '/Logo/logo.png'));
+        const logo = matchedClient.logo || '/Logo/logo.png';
         setFavicon(logo);
         document.title = `${matchedClient.name} | DAY NIGHT`;
 
         const targetScreen = requestedScreen || 'genesis';
-        // Persisted PIN check: if authenticated, go directly to requested tab or home
-        if (isClientAuthenticated(matchedClient.id)) {
+        // Persisted PIN check: if authenticated, go directly to requested tab or home without showing intro
+        if (isClientAuthenticated(matchedClient.id) || isClientAuthenticated(targetSlug)) {
           view.screen = targetScreen;
         } else {
           view.screen = 'splash';
           // Auto prompt PIN if a specific tab was requested
           if (requestedScreen) {
             setTimeout(() => {
-              if (!isClientAuthenticated(matchedClient.id)) {
+              if (!isClientAuthenticated(matchedClient.id) && !isClientAuthenticated(targetSlug)) {
                 openCode(matchedClient, targetScreen);
               }
-            }, 300);
+            }, 200);
           }
+        }
+      } else {
+        // If server data is still in flight, check if client was already authenticated locally
+        if (isClientAuthenticated(targetSlug)) {
+          view.client = targetSlug;
+          view.screen = requestedScreen || 'genesis';
         }
       }
     }

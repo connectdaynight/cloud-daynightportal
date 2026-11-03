@@ -103,52 +103,69 @@
       box-shadow: 0 2px 8px rgba(185, 28, 28, 0.25);
     }
 
-    /* Hero Banner matching image */
+    /* Hero Banner matching 16:9 ratio across all devices */
     .preapp-hero-banner {
       position: relative;
-      border-radius: 20px;
+      border-radius: 18px;
       overflow: hidden;
       margin: 12px 0 16px;
       box-shadow: 0 8px 24px rgba(18, 41, 74, 0.08);
-      background: #FFFFFF;
-      min-height: 175px;
+      background: #12294A;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      height: auto;
+      min-height: unset;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       border: 1.2px solid rgba(184, 147, 90, 0.35);
     }
     @media (max-width: 640px) {
       .preapp-hero-banner {
-        min-height: 140px;
+        aspect-ratio: 16 / 9;
+        width: 100%;
+        height: auto;
+        min-height: unset;
         margin: 10px 0 14px;
-        border-radius: 16px;
+        border-radius: 14px;
       }
       .preapp-banner-bg {
-        width: 65% !important;
+        width: 100% !important;
+        height: 100% !important;
       }
       .preapp-banner-content {
-        max-width: 72% !important;
+        max-width: 90% !important;
         padding: 12px 14px !important;
       }
       .preapp-banner-title {
-        font-size: 17px !important;
+        font-size: 16px !important;
+      }
+      .preapp-banner-sub {
+        font-size: 11px !important;
+        margin: 2px 0 6px !important;
+      }
+      .preapp-banner-logo-wrap {
+        height: 24px !important;
+        margin-bottom: 2px !important;
       }
     }
     .preapp-banner-bg {
       position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: 58%;
-      height: 100%;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
       object-fit: cover;
-      object-position: center right;
-      filter: saturate(1.15) brightness(1.02);
+      object-position: center;
+      filter: saturate(1.08) brightness(1.02);
+      display: block;
     }
     .preapp-banner-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(90deg, #FFFDF8 0%, #FFFDF8 42%, rgba(255, 253, 248, 0.88) 52%, rgba(255, 253, 248, 0.2) 75%, transparent 100%);
+      background: linear-gradient(to top, rgba(13, 59, 46, 0.94) 0%, rgba(13, 59, 46, 0.45) 45%, rgba(0, 0, 0, 0.04) 100%);
       z-index: 1;
+    }
+    .preapp-hero-banner.has-gradient-bg {
+      background: linear-gradient(135deg, #0D3B2E 0%, #175443 50%, #B8935A 100%);
     }
     .preapp-banner-content {
       position: relative;
@@ -158,7 +175,7 @@
       align-items: flex-start;
       text-align: left;
       padding: 16px 20px;
-      max-width: 62%;
+      max-width: 78%;
     }
     .preapp-banner-logo-wrap {
       max-width: 170px;
@@ -176,16 +193,18 @@
       font-family: var(--serif);
       font-size: 21px;
       font-weight: 700;
-      color: #0D3B2E;
+      color: #FFFFFF;
       margin: 0;
       line-height: 1.15;
       letter-spacing: -0.2px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
     }
     .preapp-banner-sub {
       font-size: 11.5px;
       font-weight: 500;
-      color: #4A5568;
-      margin: 2px 0 8px;
+      color: rgba(255, 255, 255, 0.9);
+      margin: 3px 0 8px;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
     }
     .preapp-branch-pill {
       display: inline-flex;

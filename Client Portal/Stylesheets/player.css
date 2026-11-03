@@ -1559,19 +1559,32 @@
       text-overflow: ellipsis;
     }
 
-    /* Scrubber Progress Bar with Real-Time Seconds Tooltip Bubble */
+    /* Scrubber Progress Bar Elevated Above Mobile System Gesture Bar */
     .ig-scrubber-bar {
       position: absolute;
-      bottom: 0;
+      bottom: calc(18px + env(safe-area-inset-bottom, 0px));
       left: 0;
       right: 0;
-      height: 16px;
+      height: 24px;
       display: flex;
       align-items: flex-end;
-      padding-bottom: 2px;
+      padding-bottom: 4px;
       z-index: 35;
       cursor: pointer;
       touch-action: none;
+    }
+    @media (max-width: 640px) {
+      .ig-scrubber-bar {
+        bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
+        height: 28px;
+        padding-bottom: 6px;
+      }
+      .ig-meta-overlay {
+        bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      .ig-actions-stack {
+        bottom: calc(62px + env(safe-area-inset-bottom, 0px)) !important;
+      }
     }
     .ig-scrubber-track {
       width: 100%;
@@ -1611,7 +1624,7 @@
     }
     .ig-scrubber-time-tooltip {
       position: absolute;
-      bottom: 22px;
+      bottom: 28px;
       left: 0;
       transform: translateX(-50%);
       background: rgba(18, 41, 74, 0.94);
@@ -1633,28 +1646,72 @@
     }
 
 
-    /* Central Persistent Play/Resume Button when Paused */
-    .ig-center-play-btn {
+    /* Center Controls Cluster: Play/Pause with 10s Rewind & Forward */
+    .ig-center-controls {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 68px;
-      height: 68px;
-      border-radius: 50%;
-      background: rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1.5px solid rgba(255, 255, 255, 0.25);
       display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      z-index: 28;
+      pointer-events: auto;
+      transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+    .ig-center-controls.active {
+      display: flex;
+    }
+    .ig-center-play-btn {
+      position: relative;
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1.6px solid rgba(255, 255, 255, 0.35);
+      display: grid;
       place-items: center;
       color: #FFFFFF;
-      z-index: 26;
       cursor: pointer;
-      transition: transform 0.18s ease, opacity 0.18s ease;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      transition: transform 0.15s ease, background 0.15s ease;
     }
     .ig-center-play-btn:active {
-      transform: translate(-50%, -50%) scale(0.92);
+      transform: scale(0.92);
+      background: rgba(0, 0, 0, 0.75);
+    }
+    .ig-skip-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1.2px solid rgba(255, 255, 255, 0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      transition: transform 0.15s ease, background 0.15s ease;
+      position: relative;
+    }
+    .ig-skip-btn:active {
+      transform: scale(0.9);
+      background: rgba(0, 0, 0, 0.65);
+    }
+    .ig-skip-label {
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+      margin-top: -3px;
+      line-height: 1;
+      color: #FFFFFF;
     }
 
     /* Desktop Side Navigation Chevrons */

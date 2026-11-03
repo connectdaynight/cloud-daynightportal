@@ -290,16 +290,29 @@
     .month.now { border-color: var(--c); border-width: 2px; }
 
 
-    /* Client Hero Banner & Top Header Card (Reference Concept) */
+    /* Client Hero Banner & Top Header Card (16:9 Ratio across all devices) */
     .client-hero-banner {
-      width: calc(100% + 40px);
-      margin: 0 -20px 0 -20px;
-      height: 180px;
+      width: 100%;
+      margin: 0 0 16px 0;
+      aspect-ratio: 16 / 9;
+      height: auto;
+      min-height: unset;
       position: relative;
+      border-radius: 18px;
       overflow: hidden;
       background: linear-gradient(135deg, #12294A 0%, #1c3860 100%);
       display: flex;
       align-items: flex-end;
+    }
+    @media (max-width: 640px) {
+      .client-hero-banner {
+        aspect-ratio: 16 / 9;
+        width: 100%;
+        height: auto;
+        min-height: unset;
+        margin: 0 0 12px 0;
+        border-radius: 14px;
+      }
     }
     .hero-banner-img {
       position: absolute;
@@ -307,7 +320,9 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      opacity: 0.88;
+      object-position: center;
+      opacity: 0.95;
+      display: block;
     }
     .hero-banner-overlay {
       position: relative;

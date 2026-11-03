@@ -16,18 +16,28 @@ export async function onRequestGet(context) {
   }
 
   try {
-    // If no specific client requested, return list of active clients
+    // If no specific client requested, return list of active clients and portal settings
     if (!slug && !code) {
       const allClients = await env.DB.prepare("SELECT id, slug, name, tagline, accent, anim_style, logo, banner_url FROM clients ORDER BY name ASC").all();
+      const settingsRows = await env.DB.prepare("SELECT key, value FROM settings").all();
+      const settings = {};
+      (settingsRows.results || []).forEach(s => {
+        try {
+          settings[s.key] = JSON.parse(s.value);
+        } catch(_) {
+          settings[s.key] = s.value;
+        }
+      });
       return new Response(JSON.stringify({
         success: true,
         clients: (allClients.results || []).map(c => ({
           ...c,
           animStyle: c.anim_style,
           banner: c.banner_url
-        }))
+        })),
+        settings
       }), {
-        headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=60" }
+        headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=30" }
       });
     }
 
@@ -50,6 +60,16 @@ export async function onRequestGet(context) {
     client.albums = JSON.parse(client.albums || "[]");
 
     const reelsQuery = await env.DB.prepare("SELECT * FROM reels WHERE client_id = ? AND hidden = 0 ORDER BY date DESC").bind(client.id).all();
+    const settingsRows = await env.DB.prepare("SELECT key, value FROM settings").all();
+    const settings = {};
+    (settingsRows.results || []).forEach(s => {
+      try {
+        settings[s.key] = JSON.parse(s.value);
+      } catch(_) {
+        settings[s.key] = s.value;
+      }
+    });
+
     const reels = (reelsQuery.results || []).map(r => ({
       id: r.id,
       c: r.client_id,
@@ -73,9 +93,10 @@ export async function onRequestGet(context) {
     return new Response(JSON.stringify({
       success: true,
       client,
-      reels
+      reels,
+      settings
     }), {
-      headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=60" }
+      headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=30" }
     });
   } catch (err) {
     return new Response(JSON.stringify({ success: false, error: err.message }), {
@@ -186,6 +207,50 @@ export async function onRequestPost(context) {
       }
       await env.DB.prepare("DELETE FROM clients WHERE id = ?").bind(clientId).run();
       return new Response(JSON.stringify({ success: true, message: "Client deleted from D1" }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    if (action === "updateReelStatus" || action === "updateStatus") {
+      const reelId = payload.reelId || payload.id;
+      const status = payload.status;
+      if (!reelId || !status) {
+        return new Response(JSON.stringify({ success: false, error: "Missing reelId or status" }), { status: 400 });
+      }
+      await env.DB.prepare("UPDATE reels SET status = ? WHERE id = ?").bind(status, reelId).run();
+      return new Response(JSON.stringify({ success: true, message: `Reel status updated to ${status} in D1` }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    if (action === "saveSettings") {
+      const settings = payload.settings;
+      if (!settings || typeof settings !== 'object') {
+        return new Response(JSON.stringify({ success: false, error: "Missing settings object" }), { status: 400 });
+      }
+      for (const [key, val] of Object.entries(settings)) {
+        const strVal = typeof val === 'object' ? JSON.stringify(val) : String(val);
+        await env.DB.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)").bind(key, strVal).run();
+      }
+      return new Response(JSON.stringify({ success: true, message: "Settings saved to D1" }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    if (action === "addComment") {
+      const c = payload.comment;
+      if (!c || !c.reelId || !c.text) {
+        return new Response(JSON.stringify({ success: false, error: "Missing comment details" }), { status: 400 });
+      }
+      const commentId = c.id || 'cm_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+      await env.DB.prepare("INSERT INTO comments (id, reel_id, client_id, author, text) VALUES (?, ?, ?, ?, ?)").bind(
+        commentId,
+        c.reelId,
+        c.clientId || '',
+        c.author || 'Client',
+        c.text
+      ).run();
+      return new Response(JSON.stringify({ success: true, commentId, message: "Comment saved to D1" }), {
         headers: { "Content-Type": "application/json" }
       });
     }

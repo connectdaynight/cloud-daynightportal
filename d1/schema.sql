@@ -43,3 +43,13 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT
 );
 
+CREATE TABLE IF NOT EXISTS comments (
+  id TEXT PRIMARY KEY,
+  reel_id TEXT NOT NULL,
+  client_id TEXT NOT NULL,
+  author TEXT NOT NULL,
+  text TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (reel_id) REFERENCES reels(id) ON DELETE CASCADE
+);
+
