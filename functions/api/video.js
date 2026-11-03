@@ -98,6 +98,8 @@ export async function onRequestGet(context) {
   const url = new URL(request.url);
   const fileId = url.searchParams.get('id');
   const directUrl = url.searchParams.get('url');
+  const quality = url.searchParams.get('q') || '1080';
+  const isAuto = url.searchParams.get('auto') === '1';
   const gasUrl = url.searchParams.get('gas') || env?.GAS_URL || DEFAULT_GAS_URL;
 
   if (!fileId && !directUrl) {
@@ -230,7 +232,9 @@ export async function onRequestGet(context) {
     responseHeaders.set("Accept-Ranges", "bytes");
     responseHeaders.set("Access-Control-Allow-Origin", "*");
     responseHeaders.set("Access-Control-Allow-Headers", "Range, Authorization, Content-Type");
-    responseHeaders.set("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges");
+    responseHeaders.set("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, X-Video-Quality, X-Network-Adaptive");
+    responseHeaders.set("X-Video-Quality", quality);
+    responseHeaders.set("X-Network-Adaptive", isAuto ? "true" : "false");
     if (videoStream.headers.has("Content-Length")) {
       responseHeaders.set("Content-Length", videoStream.headers.get("Content-Length"));
     }

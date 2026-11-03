@@ -297,14 +297,82 @@
       return id ? `https://drive.google.com/uc?export=download&id=${id}` : u;
     };
 
-    function getStreamUrl(reel, quality = 'auto') {
+    // --------------------------------------------------------------------------
+    // Real-Time Network Speed & Adaptive Video Quality Engine
+    // --------------------------------------------------------------------------
+    function getNetworkMetrics() {
+      const conn = typeof navigator !== 'undefined' ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
+      const downlink = conn && typeof conn.downlink === 'number' ? conn.downlink : null;
+      const rtt = conn && typeof conn.rtt === 'number' ? conn.rtt : null;
+      const effectiveType = conn && conn.effectiveType ? conn.effectiveType.toLowerCase() : null;
+      const saveData = conn ? Boolean(conn.saveData) : false;
+
+      let strengthLabel = 'Optimal';
+      let badgeText = (conn && conn.type === 'wifi') ? 'WiFi' : (effectiveType ? effectiveType.toUpperCase() : '4G');
+      let isSlow = false;
+      let recommendedQuality = '1080';
+
+      if (saveData || effectiveType === 'slow-2g' || effectiveType === '2g' || (downlink !== null && downlink < 1.8) || (rtt !== null && rtt > 350)) {
+        strengthLabel = 'Low Bandwidth';
+        badgeText = effectiveType ? effectiveType.toUpperCase() : '2G';
+        isSlow = true;
+        recommendedQuality = '480';
+      } else if (effectiveType === '3g' || (downlink !== null && downlink < 4.5) || (rtt !== null && rtt > 180)) {
+        strengthLabel = 'Moderate';
+        badgeText = '3G';
+        isSlow = false;
+        recommendedQuality = '720';
+      } else {
+        strengthLabel = 'High Speed';
+        badgeText = (conn && conn.type === 'wifi') ? 'WiFi' : (effectiveType ? effectiveType.toUpperCase() : '4G');
+        isSlow = false;
+        recommendedQuality = '1080';
+      }
+
+      const speedDesc = downlink ? `${downlink >= 10 ? Math.round(downlink) : downlink.toFixed(1)} Mbps` : (effectiveType ? effectiveType.toUpperCase() : 'Adaptive');
+
+      return {
+        conn,
+        downlink,
+        rtt,
+        effectiveType,
+        saveData,
+        strengthLabel,
+        badgeText,
+        speedDesc,
+        isSlow,
+        recommendedQuality
+      };
+    }
+    window.getNetworkMetrics = getNetworkMetrics;
+
+    function resolveVideoQuality(reqQuality) {
+      const q = reqQuality || (function() {
+        try { return localStorage.getItem('dn_video_quality') || 'auto'; } catch(_) { return 'auto'; }
+      })();
+      const net = getNetworkMetrics();
+      const isAuto = (!q || q === 'auto');
+      const applied = isAuto ? net.recommendedQuality : (q === '480' || q === '720' ? q : '1080');
+      const label = applied === '1080' ? '1080p HD' : (applied === '720' ? '720p' : '480p Fast');
+      return {
+        requested: q,
+        applied,
+        label,
+        isAuto,
+        net
+      };
+    }
+    window.resolveVideoQuality = resolveVideoQuality;
+
+    function getStreamUrl(reel, quality) {
       if (!reel) return '';
       const id = reel.fileId || driveId(reel.url);
       if (!id) return reel.url || '';
-      const qParam = quality && quality !== 'auto' ? `&q=${quality}` : '';
+      const qInfo = resolveVideoQuality(quality);
+      const qParam = `&q=${qInfo.applied}&auto=${qInfo.isAuto ? '1' : '0'}`;
       if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
         const tok = window.__DN_STREAM_TOKEN__ || window.DNM_STORAGE?.auth?.get('stream_token') || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('dn_st') : '') || '';
-        return CONFIG_HELPERS.getApiUrl ? CONFIG_HELPERS.getApiUrl(`/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}${qParam}&v=3`) : `/api/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}${qParam}&v=3`;
+        return CONFIG_HELPERS.getApiUrl ? CONFIG_HELPERS.getApiUrl(`/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}${qParam}&v=4`) : `/api/video?id=${encodeURIComponent(id)}${tok ? '&token=' + encodeURIComponent(tok) : ''}${qParam}&v=4`;
       }
       return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
     }
@@ -2549,8 +2617,8 @@
       // be viewed without entering the valid 4-digit PIN!
       if (view.client && c && view.screen !== 'splash' && view.screen !== 'dn-intro' && view.screen !== 'client-pin') {
         if (!isClientAuthenticated(c.id)) {
+          if (!view.targetScreen && view.screen) view.targetScreen = view.screen;
           view.screen = 'splash';
-          later(() => openCode(c, 'genesis'), 60);
         }
       }
 
@@ -2591,8 +2659,14 @@
         playIntro(() => {
           const sp = app.querySelector('.splash');
           if (sp) sp.classList.add('ready');
-          if (view.screen === 'splash' && c && isClientAuthenticated(c.id)) {
-            go({ screen: 'landing', client: c.id });
+          if (view.screen === 'splash' && c) {
+            if (isClientAuthenticated(c.id)) {
+              const dest = view.targetScreen || 'genesis';
+              go({ screen: dest, client: c.id });
+            } else {
+              // Intro loading animation is DONE! Only now prompt for PIN!
+              openCode(c, view.targetScreen || 'genesis');
+            }
           }
         });
       }
@@ -2635,8 +2709,8 @@
       // Screen 1L: Client Dedicated Landing Screen with Individual Custom Loading Animation
       else if (view.screen === 'landing' || view.screen === 'client-landing') {
         if (!c || !isClientAuthenticated(c.id)) {
+          if (!view.targetScreen) view.targetScreen = 'genesis';
           go({ screen: 'splash', client: c ? c.id : null });
-          if (c) later(() => openCode(c, 'genesis'), 60);
           return;
         }
 
@@ -2707,8 +2781,8 @@
       // Screen 2: Client Genesis Screen (Home / Feeds Tab)
       else if (view.screen === 'genesis') {
         if (!c || !isClientAuthenticated(c.id)) {
+          if (!view.targetScreen) view.targetScreen = 'genesis';
           go({ screen: 'splash', client: c ? c.id : null });
-          if (c) later(() => openCode(c, 'genesis'), 60);
           return;
         }
         app.innerHTML = renderFeedsPage(c);
@@ -2718,8 +2792,8 @@
       // Screen 2A: Dedicated Client Approval Portal (Assigned Code Protected)
       else if (view.screen === 'preapproval') {
         if (!c || !isClientAuthenticated(c.id)) {
+          view.targetScreen = 'preapproval';
           go({ screen: 'splash', client: c ? c.id : null });
-          if (c) later(() => openCode(c, 'preapproval'), 60);
           return;
         }
         app.innerHTML = renderPreApprovalPage(c, false);
@@ -2729,8 +2803,8 @@
       // Screen 2B: Dedicated Store Branches Screen
       else if (view.screen === 'branches') {
         if (!c || !isClientAuthenticated(c.id)) {
+          view.targetScreen = 'branches';
           go({ screen: 'splash', client: c ? c.id : null });
-          if (c) later(() => openCode(c, 'branches'), 60);
           return;
         }
         const list = c.branches || [];
@@ -2775,8 +2849,8 @@
       // Screen 2C: Dedicated Collections Screen
       else if (view.screen === 'collections' || view.screen === 'albums') {
         if (!c || !isClientAuthenticated(c.id)) {
+          view.targetScreen = 'collections';
           go({ screen: 'splash', client: c ? c.id : null });
-          if (c) later(() => openCode(c, 'collections'), 60);
           return;
         }
         const list = c.albums || [];
@@ -2821,8 +2895,8 @@
       // Screen 3: Library Navigator (Months Calendar view if explicitly requested)
       else if (view.screen === 'months') {
         if (!c || !isClientAuthenticated(c.id)) {
+          view.targetScreen = 'months';
           go({ screen: 'splash', client: c ? c.id : null });
-          if (c) later(() => openCode(c, 'months'), 60);
           return;
         }
         const y = view.year;
@@ -2932,8 +3006,8 @@
       // Screen 4: Reels Gallery & Content Hub (Reference Concept UI)
       else if (view.screen === 'reels') {
         if (!c || !isClientAuthenticated(c.id)) {
+          view.targetScreen = 'reels';
           go({ screen: 'splash', client: c ? c.id : null });
-          if (c) later(() => openCode(c, 'reels'), 60);
           return;
         }
         const { year: y, month: m, branch: b, album: alb } = view;
@@ -3117,8 +3191,8 @@
       // Screen 5: Saved Favorites Page
       else if (view.screen === 'favorites') {
         if (!c || !isClientAuthenticated(c.id)) {
+          view.targetScreen = 'favorites';
           go({ screen: 'splash', client: c ? c.id : null });
-          if (c) later(() => openCode(c, 'favorites'), 60);
           return;
         }
         const favIds = [];
@@ -3228,8 +3302,8 @@
       // Screen 6: Client Profile & Brand Security Page
       else if (view.screen === 'profile') {
         if (!c || !isClientAuthenticated(c.id)) {
+          view.targetScreen = 'profile';
           go({ screen: 'splash', client: c ? c.id : null });
-          if (c) later(() => openCode(c, 'profile'), 60);
           return;
         }
         const clientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) && (CONFIG.isAdmin || (!r.hidden && r.status === 'approved')));
@@ -3830,7 +3904,7 @@
           if (cl && isClientAuthenticated(cl.id)) {
             go({ screen: 'landing', client: cl.id });
           } else {
-            openCode(cl, 'genesis');
+            openCode(cl, view.targetScreen || 'genesis');
           }
         };
       }
@@ -4350,10 +4424,10 @@
     // 4-DIGIT PIN AUTHENTICATION
     // --------------------------------------------------------------------------
     function openCode(preselectedClient, targetScreen) {
-      const targetClient = preselectedClient || client();
-      const isAlreadyAuth = targetClient && isClientAuthenticated(targetClient.id);
-      // Strictly direct unauthenticated users to Home tab only (genesis)
-      const effectiveScreen = isAlreadyAuth ? (targetScreen || 'genesis') : 'genesis';
+      const targetClient = preselectedClient || client() || (DATA.clients || []).find(c => (c.slug && c.slug.toLowerCase() === (view.client || '').toLowerCase()) || (c.id && c.id.toLowerCase() === (view.client || '').toLowerCase()));
+      // Respective linked page: route directly to requested tab upon successful PIN verification
+      const effectiveScreen = targetScreen || view.targetScreen || 'genesis';
+      view.targetScreen = effectiveScreen;
       sheet(`
         <div class="code-head">
           <span class="key">${ic.key}</span>
@@ -4372,23 +4446,54 @@
         const check = async () => {
           const code = ins.map(i => i.value).join('');
           if (code.length < 4) return;
+          const cleanCode = String(code).trim();
 
-          let matched = targetClient ? (code === targetClient.code ? targetClient : null) : (DATA.clients || []).find(x => x.code === code);
+          // 1. Direct match with target client (string & number safe)
+          let matched = null;
+          if (targetClient && targetClient.code && String(targetClient.code).trim() === cleanCode) {
+            matched = targetClient;
+          }
 
-          if (!matched && (isFetchingLiveData || !DATA.clients || DATA.clients.length === 0)) {
+          // 2. Search local in-memory client list
+          if (!matched && Array.isArray(DATA.clients)) {
+            const found = DATA.clients.find(x => x && x.code && String(x.code).trim() === cleanCode);
+            if (found) {
+              if (!targetClient || found.id === targetClient.id || found.slug === targetClient.slug || (targetClient.slug && found.slug && found.slug.toLowerCase() === targetClient.slug.toLowerCase())) {
+                matched = found;
+              }
+            }
+          }
+
+          // 3. Authoritative real-time Cloudflare D1 verification via /api/client?code=...
+          if (!matched) {
             if (msg) {
               msg.className = 'code-msg';
               msg.innerHTML = '<span class="spin-dot" style="display:inline-block;width:10px;height:10px;border:2px solid #2F7DF6;border-top-color:transparent;border-radius:50%;animation:v-spin 0.6s linear infinite;vertical-align:middle;margin-right:6px;"></span> Verifying access code...';
             }
             try {
-              if (liveDataPromise) {
-                await liveDataPromise;
-              } else {
-                await fetchLiveData(true);
+              const cfRes = await fetch(`/api/client?code=${encodeURIComponent(cleanCode)}`);
+              if (cfRes.ok) {
+                const cfData = await cfRes.json();
+                if (cfData && cfData.success && cfData.client) {
+                  const cl = cfData.client;
+                  if (!targetClient || cl.id === targetClient.id || cl.slug === targetClient.slug || (targetClient.slug && cl.slug && cl.slug.toLowerCase() === targetClient.slug.toLowerCase()) || (targetClient.id && cl.id && cl.id.toLowerCase() === targetClient.id.toLowerCase())) {
+                    matched = cl;
+                    if (!DATA.clients) DATA.clients = [];
+                    const idx = DATA.clients.findIndex(x => x.id === cl.id);
+                    if (idx >= 0) DATA.clients[idx] = cl;
+                    else DATA.clients.push(cl);
+                  }
+                }
               }
             } catch (_) {}
-            const refreshedTarget = targetClient ? ((DATA.clients || []).find(x => x.id === targetClient.id) || targetClient) : null;
-            matched = refreshedTarget ? (code === refreshedTarget.code ? refreshedTarget : null) : (DATA.clients || []).find(x => x.code === code);
+
+            if (!matched && (isFetchingLiveData || !DATA.clients || DATA.clients.length === 0)) {
+              try {
+                if (liveDataPromise) await liveDataPromise;
+                else await fetchLiveData(true);
+              } catch (_) {}
+              matched = (DATA.clients || []).find(x => x && x.code && String(x.code).trim() === cleanCode);
+            }
           }
 
           if (matched) {
@@ -4418,6 +4523,7 @@
             msg.textContent = 'Welcome ' + matched.name + ' · Opening portal...';
             setClientAuthenticated(matched.id);
             if (matched.slug) setClientAuthenticated(matched.slug);
+            view.client = matched.id;
             try { localStorage.setItem('dn_last_client', matched.id); } catch(_) {}
             setTimeout(() => {
               sc.remove();
@@ -4601,6 +4707,7 @@
       let selectedQuality = (function() {
         try { return localStorage.getItem('dn_video_quality') || 'auto'; } catch(_) { return 'auto'; }
       })();
+      let curQInfo = resolveVideoQuality(selectedQuality);
 
       let wifiToastTimer = null;
       function showWifiNotice() {
@@ -4625,18 +4732,7 @@
         }, 4000);
       }
 
-      function getNetworkInfo() {
-        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-        if (!conn) return { isSlow: false, label: 'Fast' };
-        const isSlow = conn.saveData || conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g' || conn.effectiveType === '3g' || (conn.downlink && conn.downlink < 2.5);
-        let label = 'Fast';
-        if (conn.type === 'wifi') label = 'WiFi';
-        else if (conn.effectiveType) label = conn.effectiveType.toUpperCase();
-        return { isSlow, label };
-      }
-
-      const net = getNetworkInfo();
-      if (selectedQuality === '480' || selectedQuality === '720' || (selectedQuality === 'auto' && net.isSlow)) {
+      if (selectedQuality === '480' || selectedQuality === '720' || (selectedQuality === 'auto' && curQInfo.net.isSlow)) {
         setTimeout(() => showWifiNotice(), 1200);
       }
 
@@ -4862,24 +4958,43 @@
 
               <!-- 6. Quality Selection Buttons with Current Selected Effect -->
               <div style="margin-bottom:14px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                   <small style="font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:0.5px;">Video Quality &amp; Speed</small>
-                  <span style="font-size:10.5px;font-weight:600;color:var(--mute);display:inline-flex;align-items:center;gap:4px;">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
-                    <span id="ig-net-indicator">${net.label}</span>
+                  <span style="font-size:11px;font-weight:700;color:#0D3B2E;display:inline-flex;align-items:center;gap:5px;background:rgba(13,59,46,0.08);padding:3px 8px;border-radius:999px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+                    <span id="ig-net-indicator">${curQInfo.net.badgeText} · ${curQInfo.net.speedDesc}</span>
                   </span>
                 </div>
+
+                <!-- Live Applied Quality Banner -->
+                <div id="ig-applied-quality-banner" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--soft);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#0D3B2E;box-shadow:0 0 0 3px rgba(13,59,46,0.15);" id="ig-applied-quality-dot"></span>
+                    <div>
+                      <div style="font-size:12px;font-weight:700;color:var(--navy);" id="ig-applied-quality-title">
+                        Applied: ${curQInfo.label} ${curQInfo.isAuto ? '(Auto Adaptive)' : '(Manual)'}
+                      </div>
+                      <div style="font-size:10.5px;color:var(--mute);" id="ig-applied-quality-sub">
+                        ${curQInfo.isAuto ? `Network: ${curQInfo.net.badgeText} · ${curQInfo.net.speedDesc} · ${curQInfo.net.strengthLabel}` : 'Manual Quality Override Active'}
+                      </div>
+                    </div>
+                  </div>
+                  <span style="font-size:11px;font-weight:800;background:#0D3B2E;color:#FFFFFF;padding:3px 8px;border-radius:6px;letter-spacing:0.3px;" id="ig-applied-badge">
+                    ${curQInfo.applied}p
+                  </span>
+                </div>
+
                 <div class="ig-quality-pills" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
-                  <button type="button" class="ig-quality-btn ${selectedQuality === 'auto' ? 'active' : ''}" data-q="auto" style="padding:7px 4px;border-radius:8px;border:1px solid ${selectedQuality === 'auto' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === 'auto' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === 'auto' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === 'auto' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
-                    Auto
+                  <button type="button" class="ig-quality-btn ${selectedQuality === 'auto' ? 'active' : ''}" data-q="auto" id="ig-btn-q-auto" style="padding:8px 4px;border-radius:8px;border:1px solid ${selectedQuality === 'auto' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === 'auto' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === 'auto' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === 'auto' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
+                    Auto (${curQInfo.applied}p)
                   </button>
-                  <button type="button" class="ig-quality-btn ${selectedQuality === '1080' ? 'active' : ''}" data-q="1080" style="padding:7px 4px;border-radius:8px;border:1px solid ${selectedQuality === '1080' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === '1080' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === '1080' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === '1080' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
+                  <button type="button" class="ig-quality-btn ${selectedQuality === '1080' ? 'active' : ''}" data-q="1080" style="padding:8px 4px;border-radius:8px;border:1px solid ${selectedQuality === '1080' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === '1080' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === '1080' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === '1080' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
                     1080p HD
                   </button>
-                  <button type="button" class="ig-quality-btn ${selectedQuality === '720' ? 'active' : ''}" data-q="720" style="padding:7px 4px;border-radius:8px;border:1px solid ${selectedQuality === '720' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === '720' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === '720' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === '720' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
+                  <button type="button" class="ig-quality-btn ${selectedQuality === '720' ? 'active' : ''}" data-q="720" style="padding:8px 4px;border-radius:8px;border:1px solid ${selectedQuality === '720' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === '720' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === '720' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === '720' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
                     720p
                   </button>
-                  <button type="button" class="ig-quality-btn ${selectedQuality === '480' ? 'active' : ''}" data-q="480" style="padding:7px 4px;border-radius:8px;border:1px solid ${selectedQuality === '480' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === '480' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === '480' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === '480' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
+                  <button type="button" class="ig-quality-btn ${selectedQuality === '480' ? 'active' : ''}" data-q="480" style="padding:8px 4px;border-radius:8px;border:1px solid ${selectedQuality === '480' ? '#0D3B2E' : 'var(--line)'};background:${selectedQuality === '480' ? '#0D3B2E' : 'var(--card)'};color:${selectedQuality === '480' ? '#FFFFFF' : 'var(--ink)'};font-size:11px;font-weight:${selectedQuality === '480' ? '700' : '600'};cursor:pointer;text-align:center;transition:all 0.15s ease;">
                     480p Fast
                   </button>
                 </div>
@@ -5678,12 +5793,29 @@
         }
         updateLiveStatusUI();
 
-        // 6. Quality Selection Buttons with Current Selected Effect
+        // 6. Quality Selection Buttons with Current Selected Effect & Live Banner Sync
+        function updateQualityModalUI(res) {
+          const bannerTitle = modalSc.querySelector('#ig-applied-quality-title');
+          const bannerSub = modalSc.querySelector('#ig-applied-quality-sub');
+          const bannerBadge = modalSc.querySelector('#ig-applied-badge');
+          const autoBtn = modalSc.querySelector('#ig-btn-q-auto');
+          const netIndicator = modalSc.querySelector('#ig-net-indicator');
+
+          if (bannerTitle) bannerTitle.textContent = `Applied: ${res.label} ${res.isAuto ? '(Auto Adaptive)' : '(Manual)'}`;
+          if (bannerSub) bannerSub.textContent = res.isAuto ? `Network: ${res.net.badgeText} · ${res.net.speedDesc} · ${res.net.strengthLabel}` : 'Manual Quality Override Active';
+          if (bannerBadge) bannerBadge.textContent = `${res.applied}p`;
+          if (autoBtn) autoBtn.textContent = `Auto (${res.applied}p)`;
+          if (netIndicator) netIndicator.textContent = `${res.net.badgeText} · ${res.net.speedDesc}`;
+        }
+
         modalSc.querySelectorAll('.ig-quality-btn').forEach(btn => {
           btn.addEventListener('click', () => {
             const q = btn.dataset.q;
             selectedQuality = q;
             try { localStorage.setItem('dn_video_quality', q); } catch(_) {}
+
+            const res = resolveVideoQuality(q);
+            updateQualityModalUI(res);
 
             modalSc.querySelectorAll('.ig-quality-btn').forEach(b => {
               const isActive = b.dataset.q === q;
@@ -5694,18 +5826,40 @@
               b.style.fontWeight = isActive ? '700' : '600';
             });
 
-            const netCheck = getNetworkInfo();
-            if (q === '480' || q === '720' || (q === 'auto' && netCheck.isSlow)) {
+            if (q === '480' || q === '720' || (q === 'auto' && res.net.isSlow)) {
               showWifiNotice();
             } else {
-              toast(`Quality switched to ${q === 'auto' ? 'Auto Adaptive' : q + 'p HD'}`, 'info');
+              toast(`Quality switched to ${q === 'auto' ? `Auto Adaptive (${res.applied}p)` : res.label}`, 'info');
             }
 
             const curTime = vid.currentTime || 0;
             const wasPaused = vid.paused;
-            vid.src = getStreamUrl(currentReel, q);
-            vid.currentTime = curTime;
-            if (!wasPaused) vid.play().catch(() => {});
+            const newSrc = getStreamUrl(currentReel, q);
+            if (vid.src !== newSrc) {
+              const spinner = modalSc.querySelector('#ig-loading-circle');
+              if (spinner) spinner.classList.add('active');
+
+              let restored = false;
+              const onMeta = () => {
+                if (restored) return;
+                restored = true;
+                vid.removeEventListener('loadedmetadata', onMeta);
+                vid.removeEventListener('canplay', onMeta);
+                try {
+                  if (curTime > 0) {
+                    vid.currentTime = Math.min(curTime, vid.duration ? vid.duration - 0.2 : curTime);
+                  }
+                } catch(_) {}
+                if (!wasPaused) {
+                  vid.play().catch(() => {});
+                }
+                if (spinner) spinner.classList.remove('active');
+              };
+              vid.addEventListener('loadedmetadata', onMeta);
+              vid.addEventListener('canplay', onMeta);
+              vid.src = newSrc;
+              vid.load();
+            }
           });
         });
 
@@ -8115,6 +8269,7 @@
     const requestedBranch = urlParams.get('branch');
     if (requestedMonth != null && !isNaN(Number(requestedMonth))) view.month = Number(requestedMonth);
     if (requestedBranch) view.branch = requestedBranch;
+    if (requestedScreen) view.targetScreen = requestedScreen;
 
     if (targetSlug) {
       const matchedClient = (DATA.clients || []).find(c => (c.slug && c.slug.toLowerCase() === targetSlug.toLowerCase()) || (c.id && c.id.toLowerCase() === targetSlug.toLowerCase()));
@@ -8128,38 +8283,16 @@
         if (isClientAuthenticated(matchedClient.id) || isClientAuthenticated(targetSlug)) {
           view.screen = requestedScreen || 'genesis';
         } else {
-          // Unauthenticated visitors: strictly direct to Home tab only
+          // Unauthenticated visitors: splash intro animation plays cleanly to completion before PIN modal
           view.screen = 'splash';
-          try {
-            const cleanUrl = new URL(window.location.href);
-            cleanUrl.searchParams.delete('screen');
-            cleanUrl.searchParams.delete('tab');
-            cleanUrl.searchParams.delete('month');
-            cleanUrl.searchParams.delete('branch');
-            window.history.replaceState({ view: { screen: 'splash', client: matchedClient.id } }, '', cleanUrl.pathname + cleanUrl.search);
-          } catch(_) {}
-          // Auto prompt PIN immediately so client PIN entry is required, leading strictly to Home
-          setTimeout(() => {
-            if (!isClientAuthenticated(matchedClient.id) && !isClientAuthenticated(targetSlug)) {
-              openCode(matchedClient, 'genesis');
-            }
-          }, 200);
         }
       } else {
-        // If server data is still in flight, check if client was already authenticated locally
+        // If server data is still in flight, store target slug for client
+        view.client = targetSlug;
         if (isClientAuthenticated(targetSlug)) {
-          view.client = targetSlug;
           view.screen = requestedScreen || 'genesis';
         } else {
           view.screen = 'splash';
-          try {
-            const cleanUrl = new URL(window.location.href);
-            cleanUrl.searchParams.delete('screen');
-            cleanUrl.searchParams.delete('tab');
-            cleanUrl.searchParams.delete('month');
-            cleanUrl.searchParams.delete('branch');
-            window.history.replaceState({ view: { screen: 'splash' } }, '', cleanUrl.pathname + cleanUrl.search);
-          } catch(_) {}
         }
       }
     }
