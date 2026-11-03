@@ -1385,16 +1385,16 @@
       opacity: 1;
     }
 
-    /* Right-Hand Floating Actions Stack - Pulled down flush to bottom */
+    /* Right-Hand Floating Actions Stack - Natural Instagram spacing */
     .ig-actions-stack {
       position: absolute;
-      right: 8px;
-      bottom: 12px;
+      right: 10px;
+      bottom: 28px;
       z-index: 25;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
     .ig-action-item {
       display: flex;
@@ -1493,16 +1493,16 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    /* Bottom-Left Information Overlay - Pulled down flush to bottom */
+    /* Bottom-Left Information Overlay - Natural Instagram spacing */
     .ig-meta-overlay {
       position: absolute;
       left: 12px;
-      bottom: 8px;
-      right: 68px;
+      bottom: 22px;
+      right: 72px;
       z-index: 25;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 5px;
       color: #FFFFFF;
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
       pointer-events: none;
@@ -1559,16 +1559,16 @@
       text-overflow: ellipsis;
     }
 
-    /* Scrubber Progress Bar - Flush at bottom edge like real Instagram */
+    /* Scrubber Progress Bar - Natural Instagram spacing */
     .ig-scrubber-bar {
       position: absolute;
       bottom: 0px;
       left: 0;
       right: 0;
-      height: 12px;
+      height: 14px;
       display: flex;
       align-items: flex-end;
-      padding-bottom: 0px;
+      padding-bottom: 2px;
       z-index: 35;
       cursor: pointer;
       touch-action: none;
@@ -1576,19 +1576,19 @@
     @media (max-width: 640px) {
       .ig-scrubber-bar {
         bottom: 0px !important;
-        height: 12px !important;
-        padding-bottom: 0px !important;
+        height: 14px !important;
+        padding-bottom: 2px !important;
       }
       .ig-meta-overlay {
-        bottom: 8px !important;
+        bottom: 22px !important;
         left: 12px !important;
-        right: 68px !important;
-        gap: 4px !important;
+        right: 70px !important;
+        gap: 5px !important;
       }
       .ig-actions-stack {
-        bottom: 12px !important;
-        right: 8px !important;
-        gap: 12px !important;
+        bottom: 28px !important;
+        right: 10px !important;
+        gap: 14px !important;
       }
     }
     .ig-scrubber-track {
