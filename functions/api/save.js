@@ -1,11 +1,6 @@
 /**
  * Cloudflare Pages Function: /api/save
- * Handles client and reel metadata saves
- */
-
-/**
- * Cloudflare Pages Function: /api/save
- * Handles client, reel, and admin settings saves directly into Cloudflare D1
+ * Authoritative batch sync and single action handler saving directly into Cloudflare D1
  */
 
 export async function onRequestPost(context) {
@@ -13,7 +8,14 @@ export async function onRequestPost(context) {
   try {
     const payload = await request.json();
 
-    if (env.DB && payload) {
+    if (!env.DB) {
+      return new Response(JSON.stringify({ success: false, error: "Cloudflare D1 binding missing" }), {
+        status: 503,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+      });
+    }
+
+    if (payload) {
       // Direct Single Action: Update Reel Approval Status
       if (payload.action === 'updateReelStatus' || payload.action === 'updateStatus') {
         const reelId = payload.reelId || payload.id;
@@ -25,6 +27,18 @@ export async function onRequestPost(context) {
           });
         }
       }
+
+      // Direct Single Action: Save Settings
+      if (payload.action === 'saveSettings' && payload.settings) {
+        for (const [key, val] of Object.entries(payload.settings)) {
+          const strVal = typeof val === 'object' ? JSON.stringify(val) : String(val);
+          await env.DB.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)").bind(key, strVal).run();
+        }
+        return new Response(JSON.stringify({ success: true, message: "Settings saved to D1" }), {
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+        });
+      }
+
       // 1. Sync Settings (Agency branding, portal controls, social links, intro speed)
       if (payload.settings && typeof payload.settings === 'object') {
         for (const [key, val] of Object.entries(payload.settings)) {
@@ -33,14 +47,19 @@ export async function onRequestPost(context) {
         }
       }
 
-      // 2. Sync Clients
+      // 2. Sync Clients (Including Hero Banners, Store Branch Covers, Album Covers)
       if (Array.isArray(payload.clients) && payload.clients.length > 0) {
         for (const c of payload.clients) {
           if (!c.id || !c.name || !c.code) continue;
           const banner = c.bannerUrl || c.heroBanner || c.banner || c.coverUrl || '';
+          const branchesJson = JSON.stringify(c.branches || []);
+          const albumsJson = JSON.stringify(c.albums || []);
+          const branchCoversJson = JSON.stringify(c.branchCovers || {});
+          const albumCoversJson = JSON.stringify(c.albumCovers || {});
+
           await env.DB.prepare(`
-            INSERT OR REPLACE INTO clients (id, slug, name, code, tagline, accent, anim_style, branches, albums, logo, banner_url)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT OR REPLACE INTO clients (id, slug, name, code, tagline, accent, anim_style, branches, albums, logo, banner_url, branch_covers, album_covers, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `).bind(
             c.id,
             (c.slug || c.id).toLowerCase(),
@@ -49,22 +68,27 @@ export async function onRequestPost(context) {
             c.tagline || '',
             c.accent || '',
             c.animStyle || 'confetti',
-            JSON.stringify(c.branches || []),
-            JSON.stringify(c.albums || []),
+            branchesJson,
+            albumsJson,
             c.logo || '',
-            banner
+            banner,
+            branchCoversJson,
+            albumCoversJson,
+            c.status || 'active'
           ).run();
         }
       }
 
-      // 3. Sync Reels
+      // 3. Sync Reels (Including Comments, Status, Views, Downloads)
       if (Array.isArray(payload.reels) && payload.reels.length > 0) {
         for (const r of payload.reels) {
           const cid = r.c || r.clientId;
           if (!r.id || !cid || !r.title) continue;
+          const commentsJson = JSON.stringify(r.comments || []);
+
           await env.DB.prepare(`
-            INSERT OR REPLACE INTO reels (id, client_id, type, year, month, branch, album, title, date, url, file_id, dur, cover_url, hidden, status, views, downloads)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT OR REPLACE INTO reels (id, client_id, type, year, month, branch, album, title, date, url, file_id, dur, cover_url, hidden, status, views, downloads, comments)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `).bind(
             r.id,
             cid,
@@ -82,7 +106,8 @@ export async function onRequestPost(context) {
             r.hidden ? 1 : 0,
             r.status || 'approved',
             Number(r.views || 0),
-            Number(r.downloads || 0)
+            Number(r.downloads || 0),
+            commentsJson
           ).run();
         }
       }
@@ -110,7 +135,7 @@ export async function onRequestOptions() {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
+      "Access-Control-Allow-Headers": "Content-Type, x-admin-passkey"
     }
   });
 }

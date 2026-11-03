@@ -1,5 +1,5 @@
 -- Cloudflare D1 Database Schema for Day Night Media Client Portal
--- Run: npx wrangler d1 execute <DATABASE_NAME> --file=./d1/schema.sql
+-- Production Database: daynight-portal-db (8e86b2d4-2a65-4145-a473-46fe37633c5a)
 
 CREATE TABLE IF NOT EXISTS clients (
   id TEXT PRIMARY KEY,
@@ -9,10 +9,13 @@ CREATE TABLE IF NOT EXISTS clients (
   tagline TEXT,
   accent TEXT,
   anim_style TEXT DEFAULT 'confetti',
-  branches TEXT, -- JSON array
-  albums TEXT,   -- JSON array
-  logo TEXT,     -- Base64 or CDN URL
-  banner_url TEXT,
+  branches TEXT,       -- JSON array of branch names e.g. ["T. Nagar", "Velachery"]
+  albums TEXT,         -- JSON array of collection names e.g. ["Diwali 2026", "Bridal"]
+  logo TEXT,           -- Logo URL or path
+  banner_url TEXT,     -- 16:9 Hero Banner URL
+  branch_covers TEXT DEFAULT '{}', -- JSON map of branch to cover URL
+  album_covers TEXT DEFAULT '{}',  -- JSON map of album to cover URL
+  status TEXT DEFAULT 'active',    -- 'active' | 'archived'
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -31,9 +34,10 @@ CREATE TABLE IF NOT EXISTS reels (
   dur TEXT,
   cover_url TEXT,
   hidden INTEGER DEFAULT 0,
-  status TEXT DEFAULT 'approved',
+  status TEXT DEFAULT 'approved', -- 'approved' | 'rejected' | 'pending'
   views INTEGER DEFAULT 0,
   downloads INTEGER DEFAULT 0,
+  comments TEXT DEFAULT '[]',     -- JSON array of client feedback and comments
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
 );
@@ -52,4 +56,3 @@ CREATE TABLE IF NOT EXISTS comments (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (reel_id) REFERENCES reels(id) ON DELETE CASCADE
 );
-

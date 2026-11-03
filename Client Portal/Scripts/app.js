@@ -77,6 +77,7 @@
         .then(res => {
           if (res && res.success && Array.isArray(res.clients) && res.clients.length > 0) {
             DATA.clients = res.clients;
+            if (Array.isArray(res.reels) && res.reels.length > 0) DATA.reels = res.reels;
             if (res.settings) DATA.settings = Object.assign(DATA.settings || {}, res.settings);
             try { localStorage.setItem('dn_cloud_cache', JSON.stringify(DATA)); } catch(_) {}
             if (view.screen !== 'splash' && !document.querySelector('.ig-modal')) {
@@ -802,8 +803,20 @@
       }, true);
     }
 
-    // Google Apps Script Engine API
+    // Backend API router: Media file upload -> Google Drive, All database records -> Cloudflare D1
     async function gasApi(action, payload = {}) {
+      const driveActions = ['initVideoUpload', 'finalizeVideoUpload', 'scanDriveVideos', 'createFolder', 'renameFolder'];
+      if (!driveActions.includes(action)) {
+        try {
+          const res = await fetch('/api/client', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, ...payload })
+          });
+          return await res.json();
+        } catch (_) {}
+      }
+
       const gasUrl = await CONFIG.gasUrl;
       if (!gasUrl) throw new Error('Backend URL not configured');
       payload.action = action;
@@ -1056,112 +1069,87 @@
       isFetchingLiveData = true;
       liveDataPromise = (async () => {
         try {
-          // 1. Primary fast query to Cloudflare D1 (/api/client)
-          try {
-            const cfRes = await fetch('/api/client');
-            if (cfRes.ok) {
-              const cfData = await cfRes.json();
-              if (cfData.success && Array.isArray(cfData.clients) && cfData.clients.length > 0) {
+          // Authoritative Cloudflare D1 Query (/api/client)
+          const urlParams = new URLSearchParams(window.location.search);
+          const targetSlug = urlParams.get('client') || urlParams.get('c') || window.location.hash.replace(/^#[/]?/, '').toLowerCase();
+          const apiUrl = targetSlug ? `/api/client?slug=${encodeURIComponent(targetSlug)}` : '/api/client';
+
+          const cfRes = await fetch(apiUrl);
+          if (cfRes.ok) {
+            const cfData = await cfRes.json();
+            if (cfData.success) {
+              if (Array.isArray(cfData.clients) && cfData.clients.length > 0) {
                 DATA.clients = cfData.clients;
-                if (cfData.settings) DATA.settings = Object.assign(DATA.settings || {}, cfData.settings);
-                connectionState = { status: 'online', message: 'Cloudflare Connected' };
+              } else if (cfData.client) {
+                // Update or insert single client into DATA.clients
+                const idx = (DATA.clients || []).findIndex(x => x.id === cfData.client.id || x.slug === cfData.client.slug);
+                if (idx >= 0) DATA.clients[idx] = cfData.client;
+                else DATA.clients.push(cfData.client);
               }
-            }
-          } catch (_) {}
+              if (Array.isArray(cfData.reels)) {
+                DATA.reels = cfData.reels;
+              }
+              if (cfData.settings && typeof cfData.settings === 'object') {
+                DATA.settings = Object.assign(DATA.settings || {}, cfData.settings);
+              }
 
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 20000);
-          const cb = '&_cb=' + Date.now();
-          const res = await fetch(CONFIG.gasUrl + '?action=getData' + cb, { signal: controller.signal });
-          clearTimeout(timeoutId);
-          const json = await res.json();
-          if (json.success && json.data) {
-            connectionState = { status: 'online', message: 'Google Drive connected' };
+              DATA._updatedAt = Date.now();
+              connectionState = { status: 'online', message: 'Cloudflare D1 Connected' };
 
-            let deletedReelIds = Array.isArray(json.data.deletedReelIds) ? json.data.deletedReelIds : [];
-            let deletedClientIds = Array.isArray(json.data.deletedClientIds) ? json.data.deletedClientIds : [];
-
-            try {
-              const locReels = await window.DNM_STORAGE?.cache?.get('deleted_reel_ids') || [];
-              if (Array.isArray(locReels)) locReels.forEach(id => { if (!deletedReelIds.includes(id)) deletedReelIds.push(id); });
-              const locClients = await window.DNM_STORAGE?.cache?.get('deleted_client_ids') || [];
-              if (Array.isArray(locClients)) locClients.forEach(id => { if (!deletedClientIds.includes(id)) deletedClientIds.push(id); });
-            } catch(e) {
               try {
-                const locReels = JSON.parse(localStorage.getItem('dn_deleted_reel_ids') || '[]');
-                if (Array.isArray(locReels)) locReels.forEach(id => { if (!deletedReelIds.includes(id)) deletedReelIds.push(id); });
-                const locClients = JSON.parse(localStorage.getItem('dn_deleted_client_ids') || '[]');
-                if (Array.isArray(locClients)) locClients.forEach(id => { if (!deletedClientIds.includes(id)) deletedClientIds.push(id); });
-              } catch(e) {}
-            }
-
-            DATA.deletedReelIds = deletedReelIds;
-            DATA.deletedClientIds = deletedClientIds;
-
-            DATA.clients = (json.data.clients || []).filter(c => !deletedClientIds.includes(c.id));
-            DATA.reels = (json.data.reels || []).filter(r => !deletedReelIds.includes(r.id));
-            if (json.data.settings) {
-              DATA.settings = Object.assign({}, DATA.settings, json.data.settings);
-            }
-
-            DATA._updatedAt = Date.now();
-            try {
-              await window.DNM_STORAGE?.cache?.set('cloud_cache', {
-                clients: DATA.clients,
-                reels: DATA.reels,
-                settings: DATA.settings,
-                deletedReelIds: DATA.deletedReelIds,
-                deletedClientIds: DATA.deletedClientIds
-              });
-            } catch(e) {
-              try {
-                localStorage.setItem('dn_cloud_cache', JSON.stringify({
+                await window.DNM_STORAGE?.cache?.set('cloud_cache', {
                   clients: DATA.clients,
                   reels: DATA.reels,
-                  settings: DATA.settings,
-                  deletedReelIds: DATA.deletedReelIds,
-                  deletedClientIds: DATA.deletedClientIds
-                }));
+                  settings: DATA.settings
+                });
+              } catch(e) {
+                try {
+                  localStorage.setItem('dn_cloud_cache', JSON.stringify({
+                    clients: DATA.clients,
+                    reels: DATA.reels,
+                    settings: DATA.settings
+                  }));
+                } catch(e) {}
+              }
+
+              try {
+                if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
               } catch(e) {}
-            }
 
-            try {
-              if (syncHub) syncHub.postMessage({ type: 'DATA_MUTATED', data: DATA, time: DATA._updatedAt });
-            } catch(e) {}
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const targetSlug = urlParams.get('client') || urlParams.get('c') || window.location.hash.replace(/^#[/]?/, '').toLowerCase();
-            if (targetSlug) {
-              const matchedClient = (DATA.clients || []).find(c => c.slug === targetSlug || c.id === targetSlug);
-              if (matchedClient) {
-                view.client = matchedClient.id;
-                const logo = (matchedClient.id === 'tcs' ? '/Logo/tcs-logo.png' : (matchedClient.logo || '/Logo/logo.png'));
-                setFavicon(logo);
-                document.title = matchedClient.name + ' | DAY NIGHT';
-                // Only route screen if user has not yet entered a screen (prevents double-reloading)
-                if (!view.screen || view.screen === 'splash') {
-                  const reqScreen = urlParams.get('screen') || urlParams.get('tab');
-                  if (isClientAuthenticated(matchedClient.id)) {
-                    view.screen = reqScreen || 'genesis';
+              // Update dynamic branding and routing
+              if (targetSlug) {
+                const matchedClient = (DATA.clients || []).find(c => c.slug === targetSlug || c.id === targetSlug);
+                if (matchedClient) {
+                  view.client = matchedClient.id;
+                  const logo = (matchedClient.id === 'tcs' ? '/Logo/tcs-logo.png' : (matchedClient.logo || '/Logo/logo.png'));
+                  setFavicon(logo);
+                  document.title = matchedClient.name + ' | DAY NIGHT';
+                  if (!view.screen || view.screen === 'splash') {
+                    const reqScreen = urlParams.get('screen') || urlParams.get('tab');
+                    if (isClientAuthenticated(matchedClient.id)) {
+                      view.screen = reqScreen || 'genesis';
+                    }
                   }
                 }
               }
-            }
 
-            if (view.screen !== 'splash' && view.screen !== 'dn-intro' && view.screen !== 'landing') {
-              render();
-            } else if (view.screen === 'splash' || view.screen === 'dn-intro') {
-              const startBtn = document.getElementById('dn-start-btn');
-              if (startBtn) {
-                const c = client();
-                startBtn.innerHTML = c ? 'Access ' + esc(c.name) + ' ' + ic.arrow : 'Start ' + ic.arrow;
+              if (view.screen !== 'splash' && view.screen !== 'dn-intro' && view.screen !== 'landing') {
+                render();
+              } else if (view.screen === 'splash' || view.screen === 'dn-intro') {
+                const startBtn = document.getElementById('dn-start-btn');
+                if (startBtn) {
+                  const c = client();
+                  startBtn.innerHTML = c ? 'Access ' + esc(c.name) + ' ' + ic.arrow : 'Start ' + ic.arrow;
+                }
               }
             }
           }
-        } catch (e) {
-          console.warn('Live fetch notice:', e);
+        } catch(err) {
+          console.warn('[Cloudflare D1] Fetch failed, using local cache:', err);
+          connectionState = { status: 'offline', message: 'Local Offline Cache' };
         } finally {
           isFetchingLiveData = false;
+          liveDataPromise = null;
         }
       })();
       return liveDataPromise;
@@ -1446,28 +1434,9 @@
 
       let serverSaved = false;
 
-      // 1. Primary Cloud Server Save via Google Apps Script Backend (Server-based)
-      if (CONFIG.gasUrl) {
-        try {
-          const res = await gasApi('updateReelStatus', { id: r.id, reelId: r.id, status: newStatus });
-          if (res && (res.success || res.status)) {
-            serverSaved = true;
-          }
-        } catch(e) {
-          console.warn('[ServerSync] updateReelStatus failed, attempting syncData fallback:', e.message);
-          try {
-            const fallbackRes = await gasApi('syncData', { data: DATA });
-            if (fallbackRes && fallbackRes.success) serverSaved = true;
-          } catch(e2) {
-            console.error('[ServerSync] Full syncData failed:', e2.message);
-          }
-        }
-      }
-
-      // 2. Secondary API endpoint save (/api/save or /api/updateReelStatus)
+      // Cloudflare D1 Server Save (/api/client & /api/save)
       try {
-        const apiUrl = window.DNM_CONFIG_HELPERS?.getApiUrl?.('/save') || '/api/save';
-        const apiRes = await fetch(apiUrl, {
+        const res = await fetch('/api/client', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1477,8 +1446,21 @@
             updatedAt: DATA._updatedAt
           })
         });
-        if (apiRes.ok) serverSaved = true;
-      } catch(_) {}
+        if (res.ok) serverSaved = true;
+      } catch(_) {
+        try {
+          const apiRes = await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'updateReelStatus',
+              reelId: r.id,
+              status: newStatus
+            })
+          });
+          if (apiRes.ok) serverSaved = true;
+        } catch(_) {}
+      }
 
       // 3. Tab Sync & StorageAdapter Cache
       try {
@@ -1539,10 +1521,17 @@
         }
       } catch(e) {}
       toast(parentId ? 'Reply posted in real time' : 'Suggestion sent to Day Night Media admin in real time', 'success');
-      if (CONFIG.gasUrl) {
-        gasApi('modifyReel', { reel: r })
-          .catch(() => gasApi('syncData', { data: DATA }).catch(() => {}));
-      }
+      fetch('/api/client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'addComment', reelId: r.id, comment: newComment })
+      }).catch(() => {
+        fetch('/api/client', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'modifyReel', reel: r })
+        }).catch(() => {});
+      });
       render();
     }
 
@@ -1883,7 +1872,26 @@
 
     // Pre-Approval Screen Renderer (Replaces Home Page Buttons & Provides Pre-Approval Screen)
     function renderPreApprovalPage(c, isHome = false) {
-      const currentMonth = view.month != null ? view.month : TODAY.getMonth();
+      // Get real reels for this client (Strictly real data only, zero fakes)
+      function isClientMatch(rCid, targetCid) {
+        if (!rCid || !targetCid) return false;
+        if (rCid === targetCid) return true;
+        if ((rCid === 'tcs' || rCid === 'cmvje2zfy') && (targetCid === 'tcs' || targetCid === 'cmvje2zfy')) return true;
+        return false;
+      }
+      const allClientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) );
+
+      // If user hasn't explicitly chosen a month, default to the month of the latest delivered reel, or current calendar month
+      let defaultMonth = TODAY.getMonth();
+      if (allClientReels.length > 0) {
+        const hasCurrentMonthReels = allClientReels.some(r => Number(r.m) === defaultMonth || (r.date && new Date(r.date).getMonth() === defaultMonth));
+        if (!hasCurrentMonthReels) {
+          const latestReel = allClientReels[0];
+          if (latestReel.m != null) defaultMonth = Number(latestReel.m);
+          else if (latestReel.date) defaultMonth = new Date(latestReel.date).getMonth();
+        }
+      }
+      const currentMonth = view.month != null ? view.month : defaultMonth;
       const currentPhase = view.preappPhase || view.phase || 'all';
       view.phase = currentPhase;
       view.preappPhase = currentPhase;
@@ -1892,14 +1900,7 @@
         try { return localStorage.getItem('dn_preapp_view_mode') || 'grid'; } catch(_) { return 'grid'; }
       })();
 
-      // Get real reels for this client (Strictly real data only, zero fakes)
-      function isClientMatch(rCid, targetCid) {
-        if (!rCid || !targetCid) return false;
-        if (rCid === targetCid) return true;
-        if ((rCid === 'tcs' || rCid === 'cmvje2zfy') && (targetCid === 'tcs' || targetCid === 'cmvje2zfy')) return true;
-        return false;
-      }
-      let clientReels = (DATA.reels || []).filter(r => isClientMatch(r.c, c.id) );
+      let clientReels = [...allClientReels];
 
       // Determine Active Wave Label
       const clientWaves = (c.waves && Array.isArray(c.waves) && c.waves.length) ? c.waves : ['Phase 1', 'Phase 2', 'Phase 3'];

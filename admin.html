@@ -1172,17 +1172,17 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="btn-portal" id="btn-manual-sync" title="Sync with Google Drive">
+      <button class="btn-portal" id="btn-manual-sync" title="Sync with Cloudflare D1 Database">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="sync-icon"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
         <span>Sync Cloud</span>
       </button>
-      <div class="status-pill" id="pill-drive-status" title="Google Drive Engine Status">
+      <div class="status-pill" id="pill-drive-status" title="Cloudflare D1 Database Status">
         <span class="status-dot" id="hdr-dot"></span>
-        <span id="hdr-status">Checking Connection...</span>
+        <span id="hdr-status">Cloudflare D1 Online</span>
       </div>
-      <div class="status-pill" id="pill-cf-status" title="Cloudflare Stream & Edge Engine Status">
+      <div class="status-pill" id="pill-cf-status" title="Cloudflare Edge Engine Status">
         <span class="status-dot online" id="hdr-cf-dot"></span>
-        <span id="hdr-cf-status">Cloudflare Engine Online</span>
+        <span id="hdr-cf-status">Cloudflare Edge Online</span>
       </div>
       <a href="/" target="_blank" class="btn-portal"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg> View Client Portal</a>
       <button class="btn-portal" id="btn-lock-admin" title="Lock admin dashboard" style="color:var(--red);border-color:#FCDAD7;">
@@ -1403,9 +1403,25 @@
       if (action === 'saveReel') action = 'addReel';
       payload.action = action;
       payload.passkey = PASSKEY;
-      const res = await fetch(GAS_URL, {
+
+      const driveActions = ['initVideoUpload', 'finalizeVideoUpload', 'scanDriveVideos', 'createFolder', 'renameFolder'];
+      if (driveActions.includes(action)) {
+        if (!GAS_URL) throw new Error('Google Apps Script URL is not configured');
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(payload)
+        });
+        return await res.json();
+      }
+
+      // All database, client, reel, comment, and settings operations go to Cloudflare D1
+      const res = await fetch('/api/client', {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-passkey': PASSKEY
+        },
         body: JSON.stringify(payload)
       });
       return await res.json();
@@ -1825,65 +1841,42 @@
       }
     });
 
-    // Cloud Sync with Google Drive Engine
+    // Cloud Sync with Cloudflare D1 Authoritative Database Engine
     async function sync(manual = false) {
       const syncBtn = document.getElementById('btn-manual-sync');
       if (syncBtn && manual) { syncBtn.classList.add('spinning'); setTimeout(() => syncBtn.classList.remove('spinning'), 1200); }
       try {
-        const res = await fetch(`${GAS_URL}?action=getData`);
+        const res = await fetch('/api/client');
         const json = await res.json();
-        if (json.success && json.data) {
-          let deletedReelIds = getDeletedReelIds();
-          let deletedClientIds = getDeletedClientIds();
-          if (Array.isArray(json.data.deletedReelIds)) {
-            let upd = false;
-            json.data.deletedReelIds.forEach(id => {
-              if (!deletedReelIds.includes(id)) { deletedReelIds.push(id); upd = true; }
-            });
-            if (upd) setDeletedReelIds(deletedReelIds);
+        if (json && json.success) {
+          if (Array.isArray(json.clients) && json.clients.length > 0) {
+            DATA.clients = json.clients;
           }
-          if (Array.isArray(json.data.deletedClientIds)) {
-            let upd = false;
-            json.data.deletedClientIds.forEach(id => {
-              if (!deletedClientIds.includes(id)) { deletedClientIds.push(id); upd = true; }
-            });
-            if (upd) setDeletedClientIds(deletedClientIds);
+          if (Array.isArray(json.reels)) {
+            DATA.reels = json.reels;
           }
-          DATA.deletedReelIds = deletedReelIds;
-          DATA.deletedClientIds = deletedClientIds;
-
-          // Strip deleted and mock items; Google Drive is the source of truth
-          const gasReels = (json.data.reels || []).filter(r => !deletedReelIds.includes(r.id));
-          const pendingLocal = (DATA.reels || []).filter(lr => lr && lr._isLocalDraft && !deletedReelIds.includes(lr.id));
-          const mergedReels = [...gasReels];
-          pendingLocal.forEach(plr => {
-            if (!mergedReels.some(gr => gr.id === plr.id)) mergedReels.unshift(plr);
-          });
-
-          const gasClients = (json.data.clients || []).filter(c => !deletedClientIds.includes(c.id));
-          const localClients = (DATA.clients || []).filter(c => !deletedClientIds.includes(c.id));
-          const mergedClients = [...gasClients];
-          localClients.forEach(lc => {
-            if (!mergedClients.some(gc => gc.id === lc.id)) mergedClients.push(lc);
-          });
-
-          DATA.settings = json.data.settings || DATA.settings;
-          DATA.clients = mergedClients.length ? mergedClients : DATA.clients;
-          DATA.reels = mergedReels;
+          if (json.settings && typeof json.settings === 'object') {
+            DATA.settings = Object.assign(DATA.settings || {}, json.settings);
+          }
 
           saveAndBroadcast('');
 
-          document.getElementById('hdr-dot').className = 'status-dot online';
-          document.getElementById('hdr-status').textContent = 'Drive Engine Online';
-          document.getElementById('hdr-agency').textContent = DATA.settings?.agency || 'Day Night Media';
-          if (manual) toast('Live sync complete with Google Drive Engine!', 'success');
+          const hdrDot = document.getElementById('hdr-dot');
+          const hdrStatus = document.getElementById('hdr-status');
+          if (hdrDot) hdrDot.className = 'status-dot online';
+          if (hdrStatus) hdrStatus.textContent = 'Cloudflare D1 Online';
+          const hdrAgency = document.getElementById('hdr-agency');
+          if (hdrAgency) hdrAgency.textContent = DATA.settings?.agency || 'Day Night Media';
+          if (manual) toast('Live sync complete with Cloudflare D1 Database!', 'success');
         } else {
-          throw new Error((json && json.error) || 'Invalid GAS response');
+          throw new Error((json && json.error) || 'Invalid D1 response');
         }
       } catch(e) {
-        document.getElementById('hdr-dot').className = 'status-dot offline';
-        document.getElementById('hdr-status').textContent = 'Drive Engine Offline';
-        if (manual) toast('Drive Engine Offline (cached local data active)', 'info');
+        const hdrDot = document.getElementById('hdr-dot');
+        const hdrStatus = document.getElementById('hdr-status');
+        if (hdrDot) hdrDot.className = 'status-dot offline';
+        if (hdrStatus) hdrStatus.textContent = 'Cloudflare D1 Offline';
+        if (manual) toast('Cloudflare D1 Offline (cached local data active)', 'info');
       } finally {
         if (syncBtn) syncBtn.classList.remove('spinning');
         checkCloudflareStatus();
@@ -2752,7 +2745,7 @@
             try {
               await api('batchUpdateReels', { ids: targets.map(r => r.id), updates: { status: 'approved' } });
               await api('syncData', { data: DATA });
-              toast(`Synced ${targets.length} approved items to Google Drive!`, 'success');
+              toast(`Updated ${targets.length} approved items in Cloudflare D1!`, 'success');
             } catch (e) {
               console.warn('Batch approve sync error:', e);
             }
@@ -3632,7 +3625,7 @@
         saveAndBroadcast('Portal controls and social links saved!');
         try {
           await api('saveSettings', { settings: DATA.settings });
-          toast('Settings synced to Google Drive!', 'success');
+          toast('Portal controls and social links saved to Cloudflare D1 Database!', 'success');
         } catch(e) {}
       };
     }
@@ -3752,15 +3745,15 @@
         </div>`;
 
       document.getElementById('btn-save-branding').onclick = async () => {
-        DATA.settings = {
+        DATA.settings = Object.assign(DATA.settings || {}, {
           agency: document.getElementById('br-name').value.trim(),
           agencySub: document.getElementById('br-sub').value.trim(),
           slogan: document.getElementById('br-slogan').value.trim()
-        };
+        });
         saveAndBroadcast('Branding saved!');
         try {
           await api('saveSettings', { settings: DATA.settings });
-          toast('Branding saved to Google Drive!', 'success');
+          toast('Branding saved to Cloudflare D1 Database!', 'success');
         } catch(e) {}
       };
     }
@@ -4829,7 +4822,7 @@
 
             try {
               await api('addReel', { reel: newReel });
-              toast('Reel synced to Google Drive!', 'success');
+              toast('Reel saved to Cloudflare D1!', 'success');
             } catch(e) {}
             return;
           }
@@ -5583,7 +5576,7 @@ function openEditModal(r) {
           sc.remove();
           try {
             await api('modifyReel', { reel: r });
-            toast('Reel synced to Google Drive', 'success');
+            toast('Reel updated in Cloudflare D1', 'success');
           } catch(e) {}
         };
       });
@@ -5723,7 +5716,7 @@ function openEditModal(r) {
 
             saveAndBroadcast(`Cover saved for ${name || 'Hero Banner'}!`);
             try { await api('saveClient', { client }); } catch(e) {}
-            toast(`Cover updated successfully!`, 'success');
+            toast(`Cover saved to Cloudflare D1 Database!`, 'success');
           }
           sc.remove();
           renderClients();
@@ -5972,7 +5965,7 @@ function openEditModal(r) {
           sc.remove();
           try {
             await api('saveClient', { client: rec });
-            toast('Client synced to Google Drive!', 'success');
+            toast('Client saved to Cloudflare D1 Database!', 'success');
           } catch(e) {}
         };
       });
