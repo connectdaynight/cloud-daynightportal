@@ -109,15 +109,15 @@
       border-radius: 18px;
       overflow: hidden;
       margin: 12px 0 16px;
-      box-shadow: 0 8px 24px rgba(18, 41, 74, 0.08);
-      background: #12294A;
+      box-shadow: 0 8px 24px rgba(18, 41, 74, 0.08), inset 0 -24px 36px rgba(0, 0, 0, 0.32);
+      background: #0F172A;
       width: 100%;
       aspect-ratio: 16 / 9;
       height: auto;
       min-height: unset;
       display: flex;
       align-items: flex-end;
-      border: 1.2px solid rgba(184, 147, 90, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
     @media (max-width: 640px) {
       .preapp-hero-banner {
@@ -155,17 +155,17 @@
       height: 100% !important;
       object-fit: cover;
       object-position: center;
-      filter: saturate(1.08) brightness(1.02);
       display: block;
     }
     .preapp-banner-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(13, 59, 46, 0.94) 0%, rgba(13, 59, 46, 0.45) 45%, rgba(0, 0, 0, 0.04) 100%);
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.4) 42%, rgba(0, 0, 0, 0) 78%);
       z-index: 1;
+      pointer-events: none;
     }
     .preapp-hero-banner.has-gradient-bg {
-      background: linear-gradient(135deg, #0D3B2E 0%, #175443 50%, #B8935A 100%);
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 55%, #334155 100%);
     }
     .preapp-banner-content {
       position: relative;

@@ -2567,7 +2567,7 @@
         playIntro(() => {
           const sp = app.querySelector('.splash');
           if (sp) sp.classList.add('ready');
-          if (c && isClientAuthenticated(c.id)) {
+          if (view.screen === 'splash' && c && isClientAuthenticated(c.id)) {
             go({ screen: 'landing', client: c.id });
           }
         });
@@ -2613,6 +2613,11 @@
         if (!c || !isClientAuthenticated(c.id)) {
           go({ screen: 'splash', client: c ? c.id : null });
           if (c) later(() => openCode(c, 'genesis'), 60);
+          return;
+        }
+
+        // If client landing animation is ALREADY active and running, do not wipe DOM or replay!
+        if (app.querySelector('.client-landing')) {
           return;
         }
         app.innerHTML = `
@@ -3871,6 +3876,8 @@
         }
 
         if (code === activeClient.code) {
+          clearTimers();
+          if (raf) cancelAnimationFrame(raf);
           if (msg) {
             msg.className = 'code-msg';
             msg.style.color = 'var(--green)';
@@ -4380,6 +4387,8 @@
               return;
             }
 
+            clearTimers();
+            if (raf) cancelAnimationFrame(raf);
             msg.className = 'code-msg';
             msg.textContent = 'Welcome ' + matched.name + ' · Opening portal...';
             setClientAuthenticated(matched.id);
