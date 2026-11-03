@@ -336,29 +336,29 @@
       let isSlow = false;
       let recommendedQuality = '1080';
 
-      // 1. Poor / Low Network: High latency (> 400ms), 2g/slow-2g, or saveData active
-      if (saveData || effectiveType === 'slow-2g' || effectiveType === '2g' || (downlink !== null && downlink < 1.8) || (activeRtt !== null && activeRtt > 400)) {
+      // 1. Poor / Low Network: High latency (> 450ms), 2g/slow-2g, saveData active, or very low bandwidth (< 1.2 Mbps)
+      if (saveData || effectiveType === 'slow-2g' || effectiveType === '2g' || (downlink !== null && downlink < 1.2) || (activeRtt !== null && activeRtt > 450)) {
         strengthLabel = 'Poor / Low Network';
-        badgeText = (activeRtt ? `${activeRtt}ms` : 'Low') + ' · 2G/3G';
+        badgeText = (effectiveType === '2g' || effectiveType === 'slow-2g') ? '2G Low' : 'Low Speed';
         isSlow = true;
         recommendedQuality = '480';
       }
-      // 2. Moderate Network: Medium latency (180ms - 400ms), 3g, or downlink 1.8 - 4.5 Mbps
-      else if (effectiveType === '3g' || (downlink !== null && downlink < 4.5) || (activeRtt !== null && activeRtt > 180)) {
+      // 2. Moderate Network: Medium latency (200ms - 450ms), 3g, or downlink 1.2 - 3.5 Mbps
+      else if (effectiveType === '3g' || (downlink !== null && downlink < 3.5) || (activeRtt !== null && activeRtt > 200)) {
         strengthLabel = 'Moderate Network';
-        badgeText = (activeRtt ? `${activeRtt}ms` : 'Med') + ' · 3G/4G';
+        badgeText = '3G Medium';
         isSlow = false;
         recommendedQuality = '720';
       }
-      // 3. High Speed Network: Low latency (<= 180ms), 4g/5g/wifi, downlink >= 4.5 Mbps
+      // 3. High Speed Network: Low latency (<= 200ms), 4g/5g/wifi, downlink >= 3.5 Mbps
       else {
         strengthLabel = 'High Speed Network';
-        badgeText = (conn && conn.type === 'wifi') ? 'WiFi Fast' : ((activeRtt ? `${activeRtt}ms` : 'Fast') + ' · 4G/5G');
+        badgeText = (conn && conn.type === 'wifi') ? 'WiFi Fast' : '4G/5G Fast';
         isSlow = false;
         recommendedQuality = '1080';
       }
 
-      const speedDesc = activeRtt !== null ? `${activeRtt}ms latency` : (downlink ? `${downlink >= 10 ? Math.round(downlink) : downlink.toFixed(1)} Mbps` : 'Adaptive');
+      const speedDesc = activeRtt !== null ? `${activeRtt}ms ping` : (downlink ? `${downlink >= 10 ? Math.round(downlink) : downlink.toFixed(1)} Mbps` : 'Adaptive');
 
       return {
         conn,
