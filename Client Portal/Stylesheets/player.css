@@ -1389,7 +1389,7 @@
     .ig-actions-stack {
       position: absolute;
       right: 10px;
-      bottom: 52px;
+      bottom: 62px;
       z-index: 28;
       display: flex;
       flex-direction: column;
@@ -1491,7 +1491,7 @@
     .ig-meta-overlay {
       position: absolute;
       left: 12px;
-      bottom: 50px;
+      bottom: 62px;
       right: 70px;
       z-index: 25;
       display: flex;
@@ -1553,18 +1553,18 @@
       text-overflow: ellipsis;
     }
 
-    /* Scrubber Progress Bar - 80% width centered with slightly increased height */
+    /* Scrubber Progress Bar - 80% width centered, elevated above mobile gesture bar */
     .ig-scrubber-bar {
       position: absolute !important;
-      bottom: 8px !important;
+      bottom: 18px !important;
       left: 10% !important;
       right: 10% !important;
       width: 80% !important;
       margin: 0 auto !important;
-      height: 28px !important;
+      height: 24px !important;
       display: flex !important;
       align-items: center !important;
-      padding: 6px 0 !important;
+      padding: 4px 0 !important;
       box-sizing: border-box !important;
       z-index: 38 !important;
       cursor: pointer !important;
@@ -1587,22 +1587,22 @@
     }
     @media (max-width: 640px) {
       .ig-scrubber-bar {
-        bottom: 8px !important;
+        bottom: 18px !important;
         left: 10% !important;
         right: 10% !important;
         width: 80% !important;
         margin: 0 auto !important;
-        height: 28px !important;
-        padding: 6px 0 !important;
+        height: 24px !important;
+        padding: 4px 0 !important;
       }
       .ig-meta-overlay {
-        bottom: 50px !important;
+        bottom: 62px !important;
         left: 12px !important;
         right: 70px !important;
         gap: 4px !important;
       }
       .ig-actions-stack {
-        bottom: 52px !important;
+        bottom: 62px !important;
         right: 10px !important;
         gap: 12px !important;
       }

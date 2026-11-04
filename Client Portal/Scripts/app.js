@@ -1,6 +1,9 @@
   (function() {
     'use strict';
 
+    const siteInitTime = Date.now();
+    let initialLoaderDismissed = false;
+
     // Application State & Configuration (100% Cloud-Driven)
     let DATA = {
       settings: {
@@ -761,49 +764,65 @@
     }
 
     // Global Website Loading Indicator (Neat & Minimal Client Portal Loader)
-    function dismissInitialLoader() {
+    function dismissInitialLoader(forceDelay) {
+      if (initialLoaderDismissed) return;
       const loader = document.getElementById('site-portal-loader');
-      if (loader && !loader.classList.contains('fade-out')) {
-        loader.classList.add('fade-out');
-        setTimeout(() => {
-          try { loader.remove(); } catch(_) {}
-        }, 360);
-      }
+      if (!loader) return;
+
+      const minDisplayDuration = 1100; // Keep visible for at least 1.1s so user visibly experiences the neat minimal loading screen
+      const elapsed = Date.now() - siteInitTime;
+      const waitTime = forceDelay != null ? forceDelay : Math.max(150, minDisplayDuration - elapsed);
+
+      setTimeout(() => {
+        if (loader && !loader.classList.contains('fade-out')) {
+          loader.classList.add('fade-out');
+          initialLoaderDismissed = true;
+          setTimeout(() => {
+            try { loader.style.display = 'none'; } catch(_) {}
+          }, 380);
+        }
+      }, waitTime);
     }
     window.dismissInitialLoader = dismissInitialLoader;
 
-    function showSiteLoader(title, subtitle) {
+    function showSiteLoader(title, subtitle, logoUrl) {
       let el = document.getElementById('site-portal-loader');
       if (!el) {
         el = document.createElement('div');
         el.id = 'site-portal-loader';
         el.className = 'site-portal-loader';
-        el.innerHTML = `
-          <div class="site-loader-box">
-            <div class="site-loader-mark">
-              <img src="/Logo/logo.png" alt="Day Night Media">
-            </div>
-            <div class="site-loader-ring"></div>
-            <div class="site-loader-name">${esc(title || 'Day Night Media')}</div>
-            <div class="site-loader-caption">${esc(subtitle || 'Client Delivery Portal')}</div>
-          </div>
-        `;
         document.body.appendChild(el);
       }
-      el.classList.remove('fade-out');
+      const c = (typeof client === 'function') ? client() : null;
+      const displayTitle = title || (c ? c.name : 'Day Night Media');
+      const displaySub = subtitle || 'Client Delivery Portal';
+      const displayLogo = logoUrl || (c && c.logo ? c.logo : '/Logo/logo.png');
+      el.innerHTML = `
+        <div class="site-loader-box">
+          <div class="site-loader-mark">
+            <img src="${esc(displayLogo)}" alt="${esc(displayTitle)}" onerror="this.src='/Logo/logo.png'">
+          </div>
+          <div class="site-loader-ring"></div>
+          <div class="site-loader-name">${esc(displayTitle)}</div>
+          <div class="site-loader-caption">${esc(displaySub)}</div>
+        </div>
+      `;
       el.style.display = 'flex';
+      el.classList.remove('fade-out');
     }
+    window.showSiteLoader = showSiteLoader;
 
-    function hideSiteLoader() {
-      dismissInitialLoader();
+    function hideSiteLoader(delay = 250) {
       const el = document.getElementById('site-portal-loader');
-      if (el) {
+      if (!el) return;
+      setTimeout(() => {
         el.classList.add('fade-out');
         setTimeout(() => {
-          try { el.remove(); } catch(_) {}
-        }, 360);
-      }
+          try { el.style.display = 'none'; } catch(_) {}
+        }, 380);
+      }, delay);
     }
+    window.hideSiteLoader = hideSiteLoader;
 
     // Custom Modal Bottom / Center Sheet (Protected against accidental backdrop close)
     function sheet(html, onMount, center, customClass, onClose) {
@@ -4692,12 +4711,17 @@
 
             setTimeout(() => {
               sc.remove();
-              // Direct tab link: go straight to the respective requested screen!
-              if (destScreen) {
-                go({ screen: destScreen, client: matched.id });
-              } else {
-                go({ screen: 'landing', client: matched.id });
-              }
+              // Show neat minimal loading screen during client portal entry!
+              showSiteLoader(matched.name, 'Opening Client Delivery Portal...', matched.logo);
+              setTimeout(() => {
+                // Direct tab link: go straight to the respective requested screen!
+                if (destScreen) {
+                  go({ screen: destScreen, client: matched.id });
+                } else {
+                  go({ screen: 'landing', client: matched.id });
+                }
+                hideSiteLoader(300);
+              }, 400);
             }, 220);
           } else {
             isChecking = false;
@@ -8162,8 +8186,13 @@
       else if (a === 'enter-client-portal') {
         clearTimers();
         if (raf) cancelAnimationFrame(raf);
-        const dest = (view.targetScreen && view.targetScreen !== 'splash' && view.targetScreen !== 'dn-intro') ? view.targetScreen : 'genesis';
-        go({ screen: dest, client: view.client });
+        const cl = client();
+        showSiteLoader(cl ? cl.name : 'Day Night Media', 'Opening Client Portal...', cl ? cl.logo : null);
+        setTimeout(() => {
+          const dest = (view.targetScreen && view.targetScreen !== 'splash' && view.targetScreen !== 'dn-intro') ? view.targetScreen : 'genesis';
+          go({ screen: dest, client: view.client });
+          hideSiteLoader(300);
+        }, 400);
       }
       else if (a === 'replay-intro') {
         go({ screen: 'landing', client: view.client });
@@ -8592,6 +8621,12 @@
         const logo = matchedClient.logo || '/Logo/logo.png';
         setFavicon(logo);
         document.title = `${matchedClient.name} | DAY NIGHT`;
+
+        // Update initial loader text so it reflects the client being visited!
+        const lName = document.querySelector('.site-loader-name');
+        if (lName) lName.textContent = matchedClient.name;
+        const lMark = document.querySelector('.site-loader-mark img');
+        if (lMark && matchedClient.logo) lMark.src = matchedClient.logo;
 
         // Persisted PIN check: if authenticated, go directly to requested tab or home
         if (isClientAuthenticated(matchedClient.id) || isClientAuthenticated(targetSlug)) {

@@ -37,11 +37,11 @@
   <!-- Client Portal Modular Stylesheets by Tab / Feature -->
   <link rel="stylesheet" href="Client%20Portal/Stylesheets/base.css?v=6.1">
   <link rel="stylesheet" href="Client%20Portal/Stylesheets/feed.css?v=6.1">
-  <link rel="stylesheet" href="Client%20Portal/Stylesheets/reels.css?v=7.0">
-  <link rel="stylesheet" href="Client%20Portal/Stylesheets/preapproval.css?v=7.0">
-  <link rel="stylesheet" href="Client%20Portal/Stylesheets/profile.css?v=7.0">
-  <link rel="stylesheet" href="Client%20Portal/Stylesheets/player.css?v=7.4">
-  <link rel="stylesheet" href="Client%20Portal/Stylesheets/classic-player.css?v=7.4">
+  <link rel="stylesheet" href="Client%20Portal/Stylesheets/reels.css?v=7.5">
+  <link rel="stylesheet" href="Client%20Portal/Stylesheets/preapproval.css?v=7.5">
+  <link rel="stylesheet" href="Client%20Portal/Stylesheets/profile.css?v=7.5">
+  <link rel="stylesheet" href="Client%20Portal/Stylesheets/player.css?v=7.5">
+  <link rel="stylesheet" href="Client%20Portal/Stylesheets/classic-player.css?v=7.5">
 
   <!-- Initial Website Minimal Loading Screen Styles (Renders immediately at 0ms) -->
   <style>
@@ -112,6 +112,25 @@
       letter-spacing: 0.2px;
       margin-top: 3px;
     }
+    @media (prefers-color-scheme: dark) {
+      .site-portal-loader {
+        background: #0B1017;
+      }
+      .site-loader-mark {
+        background: #151D2A;
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+      .site-loader-ring {
+        border-color: rgba(56, 189, 248, 0.15);
+        border-top-color: #38bdf8;
+      }
+      .site-loader-name {
+        color: #F8FAFC;
+      }
+      .site-loader-caption {
+        color: #94A3B8;
+      }
+    }
     @keyframes loaderSpin {
       to { transform: rotate(360deg); }
     }
@@ -142,6 +161,6 @@
   <script src="shared/storage/storage-adapter.js?v=7.3"></script>
 
   <!-- Client Portal Modular Production Engine Script -->
-  <script src="Client%20Portal/Scripts/app.js?v=7.4"></script>
+  <script src="Client%20Portal/Scripts/app.js?v=7.5"></script>
 </body>
 </html>
