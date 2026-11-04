@@ -73,7 +73,7 @@ export async function onRequestGet(context) {
           tagline: c.tagline || '',
           accent: c.accent || '',
           animStyle: c.anim_style || 'confetti',
-          logo: c.logo || '',
+          logo: (c.logo && c.logo !== '/Logo/logo.png' && c.logo !== '/Logo/tcs-logo.png') ? c.logo : '',
           bannerUrl: c.banner_url || '',
           banner: c.banner_url || '',
           heroBanner: c.banner_url || '',
@@ -162,6 +162,9 @@ export async function onRequestGet(context) {
     client.heroBanner = client.banner_url || '';
     client.coverUrl = client.banner_url || '';
     client.animStyle = client.anim_style || 'confetti';
+    if (client.logo === '/Logo/logo.png' || client.logo === '/Logo/tcs-logo.png') {
+      client.logo = '';
+    }
 
     // Fetch reels for this specific client
     const reelsQuery = await env.DB.prepare("SELECT * FROM reels WHERE client_id = ? AND hidden = 0 ORDER BY date DESC").bind(client.id).all();

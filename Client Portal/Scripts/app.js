@@ -515,7 +515,6 @@
 
     const topbar = (small, title) => {
       const c = client();
-      const logoSrc = (c && c.logo) ? c.logo : '/Logo/logo.png';
       return `
       <div class="top">
         <button class="back" data-act="back" aria-label="Back">${ic.back}</button>
@@ -527,7 +526,7 @@
             <span>PIN Secured</span>
           </div>
           <div class="top-profile-avatar" data-act="bnav-profile" title="Client Profile & Security">
-            <img src="${esc(logoSrc)}" alt="${esc(c.name || 'Client')}">
+            ${c.logo ? `<img src="${esc(c.logo)}" alt="${esc(c.name || 'Client')}">` : `<div style="width:28px;height:28px;border-radius:50%;background:var(--navy);color:#FFF;display:grid;place-items:center;font-size:11px;font-weight:700;">${esc((c.name || 'C').slice(0, 2).toUpperCase())}</div>`}
           </div>` : dnLogo('mini')}
         </div>
       </div>`;
@@ -2013,7 +2012,7 @@
               <span>PIN Secured</span>
             </div>
             <div class="top-profile-avatar" data-act="bnav-profile" title="Client Profile & Security">
-              <img src="${esc(c.logo || '/Logo/logo.png')}" alt="${esc(c.name || 'Client')}">
+              ${c.logo ? `<img src="${esc(c.logo)}" alt="${esc(c.name || 'Client')}">` : `<div style="width:28px;height:28px;border-radius:50%;background:var(--navy);color:#FFF;display:grid;place-items:center;font-size:11px;font-weight:700;">${esc((c.name || 'C').slice(0, 2).toUpperCase())}</div>`}
             </div>
           </div>
         </div>
@@ -2247,7 +2246,6 @@
 
       const activeBranch = (view.branch && view.branch !== 'all') ? (view.branch.toUpperCase() + ' BRANCH') : 'ALL BRANCHES';
       const bannerSrc = c.bannerUrl || c.heroBanner || c.banner || c.coverUrl || '';
-      const logoSrc = c.logo || '/Logo/logo.png';
 
       return `
         <!-- Approval Portal Top Bar Header -->
@@ -2265,7 +2263,7 @@
               <span>PIN Secured</span>
             </div>
             <div class="top-profile-avatar" data-act="bnav-profile" title="Client Profile & Security">
-              <img src="${esc(logoSrc)}" alt="${esc(c.name || 'Client')}">
+              ${c.logo ? `<img src="${esc(c.logo)}" alt="${esc(c.name || 'Client')}">` : `<div style="width:28px;height:28px;border-radius:50%;background:var(--navy);color:#FFF;display:grid;place-items:center;font-size:11px;font-weight:700;">${esc((c.name || 'C').slice(0, 2).toUpperCase())}</div>`}
             </div>
           </div>
         </div>
@@ -2276,7 +2274,7 @@
           <div class="preapp-banner-overlay"></div>
           <div class="preapp-banner-content">
             <div class="preapp-banner-logo-wrap">
-              <img src="${esc(logoSrc)}" alt="${esc(c.name)}">
+              ${c.logo ? `<img src="${esc(c.logo)}" alt="${esc(c.name)}">` : `<div style="width:58px;height:58px;border-radius:50%;background:var(--navy);color:#FFF;display:grid;place-items:center;font-size:18px;font-weight:700;">${esc((c.name || 'C').slice(0, 2).toUpperCase())}</div>`}
             </div>
             <h2 class="preapp-banner-title">Content Pre-Approval</h2>
             <div class="preapp-banner-sub">Review &amp; Feedback for ${esc(c.name)}</div>
@@ -5085,7 +5083,7 @@
             <div class="ig-meta-overlay" id="ig-meta-overlay">
               <div class="ig-profile-row" id="ig-profile-row">
                 <div class="ig-avatar-ring">
-                  <img src="${c.logo || '/Logo/logo.png'}" alt="">
+                  ${c.logo ? `<img src="${esc(c.logo)}" alt="">` : `<div style="width:100%;height:100%;background:#FFF;color:var(--navy);display:grid;place-items:center;font-weight:700;font-size:12px;border-radius:50%;">${esc((c.name || 'C').slice(0, 2).toUpperCase())}</div>`}
                 </div>
                 <span class="ig-handle">@${(c.slug || c.id || 'client').toLowerCase()}</span>
                 <span class="ig-branch-tag">${esc(currentReel.b || currentReel.album || 'General')}</span>
@@ -5120,7 +5118,7 @@
                 <button type="button" id="ig-cancel-reply" class="ig-reply-cancel">&times;</button>
               </div>
               <form class="ig-comments-input-bar" id="ig-comments-form" onsubmit="return false;">
-                <img src="${c.logo || '/Logo/logo.png'}" class="ig-inp-avatar" alt="">
+                ${c.logo ? `<img src="${esc(c.logo)}" class="ig-inp-avatar" alt="">` : `<div class="ig-inp-avatar" style="background:var(--navy);color:#FFF;display:grid;place-items:center;font-size:11px;font-weight:700;">${esc((c.name || 'C').slice(0, 1).toUpperCase())}</div>`}
                 <input type="text" class="ig-drawer-inp" id="ig-drawer-inp" placeholder="Add a comment or feedback..." autocomplete="off">
                 <button type="submit" class="ig-drawer-post-btn" id="ig-drawer-post-btn">Post</button>
               </form>
@@ -5485,7 +5483,9 @@
               if (topTitle) topTitle.innerHTML = '<div style="display:flex;align-items:center;gap:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF0000"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg><span style="color:#FFF;font-size:15px;letter-spacing:-0.2px;font-weight:700;">Shorts</span></div>';
               if (profileRow) {
                 profileRow.innerHTML = `
-                  <div class="ig-avatar-ring" style="background:transparent;border:2px solid #FFF;"><img src="${c.logo || '/Logo/logo.png'}" alt=""></div>
+                  <div class="ig-avatar-ring" style="background:transparent;border:2px solid #FFF;">
+                    ${c.logo ? `<img src="${esc(c.logo)}" alt="">` : `<div style="width:100%;height:100%;background:#FFF;color:var(--navy);display:grid;place-items:center;font-weight:700;font-size:12px;border-radius:50%;">${esc((c.name || 'C').slice(0, 2).toUpperCase())}</div>`}
+                  </div>
                   <span class="ig-handle" style="font-weight:700;font-size:14px;">@${(c.name || 'client').toLowerCase().replace(/\s+/g, '')}</span>
                   <button type="button" class="ig-sub-btn" style="background:#FF0000;color:#FFF;border:none;border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;margin-left:8px;cursor:pointer;">Subscribe</button>
                 `;
@@ -5497,7 +5497,9 @@
               if (topTitle) topTitle.innerHTML = '<div style="display:flex;align-items:center;gap:6px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg><span style="color:#FFF;font-size:15px;font-weight:700;">Reels</span></div>';
               if (profileRow) {
                 profileRow.innerHTML = `
-                  <div class="ig-avatar-ring" style="background:#1877F2;padding:2px;"><img src="${c.logo || '/Logo/logo.png'}" alt=""></div>
+                  <div class="ig-avatar-ring" style="background:#1877F2;padding:2px;">
+                    ${c.logo ? `<img src="${esc(c.logo)}" alt="">` : `<div style="width:100%;height:100%;background:#FFF;color:var(--navy);display:grid;place-items:center;font-weight:700;font-size:12px;border-radius:50%;">${esc((c.name || 'C').slice(0, 2).toUpperCase())}</div>`}
+                  </div>
                   <span class="ig-handle" style="font-weight:700;font-size:13.5px;">${esc(c.name || 'Client')}</span>
                   <button type="button" class="ig-fol-btn" style="background:#1877F2;color:#FFF;border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;margin-left:8px;cursor:pointer;">Follow</button>
                 `;
@@ -5510,7 +5512,9 @@
               if (topTitle) topTitle.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg><span>Reels</span>';
               if (profileRow) {
                 profileRow.innerHTML = `
-                  <div class="ig-avatar-ring"><img src="${c.logo || '/Logo/logo.png'}" alt=""></div>
+                  <div class="ig-avatar-ring">
+                    ${c.logo ? `<img src="${esc(c.logo)}" alt="">` : `<div style="width:100%;height:100%;background:#FFF;color:var(--navy);display:grid;place-items:center;font-weight:700;font-size:12px;border-radius:50%;">${esc((c.name || 'C').slice(0, 2).toUpperCase())}</div>`}
+                  </div>
                   <span class="ig-handle">@${(c.slug || c.id || 'client').toLowerCase()}</span>
                   <span class="ig-verified-badge" title="Verified Creator"><svg width="14" height="14" viewBox="0 0 24 24" fill="#20D5EC"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span>
                   <span class="ig-branch-tag">${esc(currentReel.b || currentReel.album || (c ? c.name : ''))}</span>
@@ -5574,7 +5578,7 @@
             return `
               <div class="ig-comment-item" data-id="${item.id}">
                 <div class="ig-comment-avatar">
-                  <img src="${item.authorRole === 'admin' ? '/Logo/logo.png' : (c.logo || '/Logo/logo.png')}" alt="">
+                  ${item.authorRole === 'admin' ? '<img src="/Logo/logo.png" alt="Admin">' : (c.logo ? `<img src="${esc(c.logo)}" alt="">` : `<div style="width:100%;height:100%;background:var(--navy);color:#FFF;display:grid;place-items:center;font-weight:700;font-size:11px;border-radius:50%;">${esc((item.author || 'C').slice(0, 2).toUpperCase())}</div>`)}
                 </div>
                 <div class="ig-comment-body">
                   <div class="ig-comment-meta">
@@ -5595,7 +5599,7 @@
                       ${itemReplies.map(rep => `
                         <div class="ig-reply-item">
                           <div class="ig-reply-avatar">
-                            <img src="${rep.authorRole === 'admin' ? '/Logo/logo.png' : (c.logo || '/Logo/logo.png')}" alt="">
+                            ${rep.authorRole === 'admin' ? '<img src="/Logo/logo.png" alt="Admin">' : (c.logo ? `<img src="${esc(c.logo)}" alt="">` : `<div style="width:100%;height:100%;background:var(--navy);color:#FFF;display:grid;place-items:center;font-weight:700;font-size:11px;border-radius:50%;">${esc((rep.author || 'C').slice(0, 2).toUpperCase())}</div>`)}
                           </div>
                           <div class="ig-comment-body">
                             <div class="ig-comment-meta">
