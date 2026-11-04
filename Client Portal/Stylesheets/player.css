@@ -1569,8 +1569,21 @@
       z-index: 38 !important;
       cursor: pointer !important;
       touch-action: none !important;
+      -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
       user-select: none !important;
+      overscroll-behavior: none !important;
+    }
+    .ig-scrubber-bar * {
+      touch-action: none !important;
+      -webkit-touch-callout: none !important;
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      pointer-events: none !important;
+    }
+    .ig-scrubber-bar .ig-scrubber-track,
+    .ig-scrubber-bar .ig-scrubber-thumb-handle {
+      pointer-events: auto !important;
     }
     @media (max-width: 640px) {
       .ig-scrubber-bar {

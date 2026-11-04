@@ -665,32 +665,47 @@
           if (scrubberFill) scrubberFill.style.width = (pos * 100) + '%';
         }
 
+        const onMediaGlobalTouchMove = e => {
+          if (isScrubbingMedia && e.touches && e.touches.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            seekMedia(e.touches[0].clientX);
+          }
+        };
+
+        const onMediaGlobalTouchEnd = e => {
+          if (isScrubbingMedia) {
+            e.preventDefault();
+            e.stopPropagation();
+            isScrubbingMedia = false;
+            window.removeEventListener('touchmove', onMediaGlobalTouchMove, { passive: false });
+            window.removeEventListener('touchend', onMediaGlobalTouchEnd, { passive: false });
+            window.removeEventListener('touchcancel', onMediaGlobalTouchEnd, { passive: false });
+          }
+        };
+
         scrubber.addEventListener('touchstart', e => {
           if (e.touches && e.touches.length > 0) {
             e.preventDefault();
             e.stopPropagation();
             isScrubbingMedia = true;
             seekMedia(e.touches[0].clientX);
+            window.addEventListener('touchmove', onMediaGlobalTouchMove, { passive: false });
+            window.addEventListener('touchend', onMediaGlobalTouchEnd, { passive: false });
+            window.addEventListener('touchcancel', onMediaGlobalTouchEnd, { passive: false });
           }
         }, { passive: false });
 
         scrubber.addEventListener('touchmove', e => {
+          e.preventDefault();
+          e.stopPropagation();
           if (isScrubbingMedia && e.touches && e.touches.length > 0) {
-            e.preventDefault();
-            e.stopPropagation();
             seekMedia(e.touches[0].clientX);
           }
         }, { passive: false });
 
-        const endMediaTouch = e => {
-          if (isScrubbingMedia) {
-            e.preventDefault();
-            e.stopPropagation();
-            isScrubbingMedia = false;
-          }
-        };
-        scrubber.addEventListener('touchend', endMediaTouch, { passive: false });
-        scrubber.addEventListener('touchcancel', endMediaTouch, { passive: false });
+        scrubber.addEventListener('touchend', onMediaGlobalTouchEnd, { passive: false });
+        scrubber.addEventListener('touchcancel', onMediaGlobalTouchEnd, { passive: false });
 
         scrubber.addEventListener('pointerdown', e => {
           e.preventDefault();
@@ -701,10 +716,13 @@
           const onMove = ev => {
             if (isScrubbingMedia) {
               ev.preventDefault();
+              ev.stopPropagation();
               seekMedia(ev.clientX);
             }
           };
           const onUp = ev => {
+            ev.preventDefault();
+            ev.stopPropagation();
             isScrubbingMedia = false;
             try { scrubber.releasePointerCapture(ev.pointerId); } catch (_) {}
             window.removeEventListener('pointermove', onMove);

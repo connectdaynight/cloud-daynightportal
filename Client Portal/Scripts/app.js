@@ -5727,6 +5727,7 @@
 
         // Video Progress Scrubber & Interactive Drag Seeking with Live Seconds
         let isScrubbing = false;
+        let touchedOnScrubber = false;
 
         function fmtSec(sec) {
           if (isNaN(sec) || sec < 0) sec = 0;
@@ -5814,58 +5815,81 @@
           updateScrubberUi(targetTime, vid.duration);
         }
 
-        // Dedicated Touch Events with e.preventDefault() & { passive: false }
-        // Completely isolates drag gesture from Android navigation bar and iOS home swipe
-        scrubber.addEventListener('touchstart', e => {
-          if (e.touches && e.touches.length > 0) {
-            e.preventDefault();
-            e.stopPropagation();
-            isScrubbing = true;
-            scrubber.classList.add('is-scrubbing');
-            seekFromPointer(e.touches[0].clientX);
-          }
-        }, { passive: false });
-
-        scrubber.addEventListener('touchmove', e => {
+        // Global Window Touch Handlers to completely lock down scrolling while adjusting scrubber
+        const onScrubberGlobalTouchMove = e => {
           if (isScrubbing && e.touches && e.touches.length > 0) {
             e.preventDefault();
             e.stopPropagation();
             seekFromPointer(e.touches[0].clientX);
           }
-        }, { passive: false });
+        };
 
-        const onTouchEnd = e => {
+        const onScrubberGlobalTouchEnd = e => {
           if (isScrubbing) {
             e.preventDefault();
             e.stopPropagation();
             isScrubbing = false;
             scrubber.classList.remove('is-scrubbing');
+            window.removeEventListener('touchmove', onScrubberGlobalTouchMove, { passive: false });
+            window.removeEventListener('touchend', onScrubberGlobalTouchEnd, { passive: false });
+            window.removeEventListener('touchcancel', onScrubberGlobalTouchEnd, { passive: false });
+            setTimeout(() => { touchedOnScrubber = false; }, 320);
           }
         };
-        scrubber.addEventListener('touchend', onTouchEnd, { passive: false });
-        scrubber.addEventListener('touchcancel', onTouchEnd, { passive: false });
+
+        // Dedicated Touch Events with e.preventDefault() & { passive: false }
+        // Completely isolates drag gesture from video scrolling, swipe-to-next reel, and page scrolling
+        scrubber.addEventListener('touchstart', e => {
+          if (e.touches && e.touches.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            isScrubbing = true;
+            touchedOnScrubber = true;
+            scrubber.classList.add('is-scrubbing');
+            seekFromPointer(e.touches[0].clientX);
+            window.addEventListener('touchmove', onScrubberGlobalTouchMove, { passive: false });
+            window.addEventListener('touchend', onScrubberGlobalTouchEnd, { passive: false });
+            window.addEventListener('touchcancel', onScrubberGlobalTouchEnd, { passive: false });
+          }
+        }, { passive: false });
+
+        scrubber.addEventListener('touchmove', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (isScrubbing && e.touches && e.touches.length > 0) {
+            seekFromPointer(e.touches[0].clientX);
+          }
+        }, { passive: false });
+
+        scrubber.addEventListener('touchend', onScrubberGlobalTouchEnd, { passive: false });
+        scrubber.addEventListener('touchcancel', onScrubberGlobalTouchEnd, { passive: false });
 
         // Pointer Events with Pointer Capture
         scrubber.addEventListener('pointerdown', e => {
           e.preventDefault();
           e.stopPropagation();
           isScrubbing = true;
+          touchedOnScrubber = true;
           scrubber.classList.add('is-scrubbing');
           try { scrubber.setPointerCapture(e.pointerId); } catch (_) {}
           seekFromPointer(e.clientX);
           const onPointerMove = moveEvt => {
             if (isScrubbing) {
               moveEvt.preventDefault();
+              moveEvt.stopPropagation();
               seekFromPointer(moveEvt.clientX);
             }
           };
           const onPointerUp = upEvt => {
+            upEvt.preventDefault();
+            upEvt.stopPropagation();
             isScrubbing = false;
             scrubber.classList.remove('is-scrubbing');
             try { scrubber.releasePointerCapture(upEvt.pointerId); } catch (_) {}
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerup', onPointerUp);
             window.removeEventListener('pointercancel', onPointerUp);
+            setTimeout(() => { touchedOnScrubber = false; }, 320);
           };
           window.addEventListener('pointermove', onPointerMove, { passive: false });
           window.addEventListener('pointerup', onPointerUp);
@@ -6307,6 +6331,7 @@
         let wheelCooldown = false;
         modalSc.addEventListener('wheel', e => {
           if (isCommentsOpen && commentsList.contains(e.target)) return;
+          if (isScrubbing || touchedOnScrubber || e.target.closest('#ig-scrubber') || e.target.closest('.ig-scrubber-bar')) return;
           if (wheelCooldown) return;
           if (e.deltaY > 25) {
             wheelCooldown = true;
@@ -6319,21 +6344,34 @@
           }
         }, { passive: true });
 
-        // Touch Swipe (Next / Prev Reels)
+        // Touch Swipe (Next / Prev Reels) - Completely ignored during scrubber adjustment
         let touchStartX = 0;
         let touchStartY = 0;
         modalSc.addEventListener('touchstart', e => {
+          if (isScrubbing || touchedOnScrubber || e.target.closest('#ig-scrubber') || e.target.closest('.ig-scrubber-bar')) {
+            touchedOnScrubber = true;
+            return;
+          }
           touchStartX = e.touches[0].clientX;
           touchStartY = e.touches[0].clientY;
         }, { passive: true });
 
+        modalSc.addEventListener('touchmove', e => {
+          if (isScrubbing || touchedOnScrubber || e.target.closest('#ig-scrubber') || e.target.closest('.ig-scrubber-bar')) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }, { passive: false });
+
         modalSc.addEventListener('touchend', e => {
-          if (isCommentsOpen || isSettingsOpen) return;
+          if (isCommentsOpen || isSettingsOpen || isScrubbing || touchedOnScrubber || e.target.closest('#ig-scrubber') || e.target.closest('.ig-scrubber-bar')) {
+            return;
+          }
           const touchEndX = e.changedTouches[0].clientX;
           const touchEndY = e.changedTouches[0].clientY;
           const diffY = touchStartY - touchEndY;
           const diffX = touchStartX - touchEndX;
-          if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 30) {
+          if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 35) {
             if (diffY > 0) {
               navigateToReel(currentIndex + 1, 'next');
             } else {
